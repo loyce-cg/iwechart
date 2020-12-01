@@ -1,0 +1,65 @@
+@import "../../editor/template/main";
+@import "../../../component/playercontrols/index.less";
+
+.window-editor-main {
+  .independent-player-container {
+    display: none;
+  }
+  .inner {
+    .file-info {
+      .name {
+        .fa {
+          color: #AAA;
+          font-size: calc(var(--font-size-xxl) + 2px);
+          margin-right: 7px;
+        }
+        .text {
+          font-size: calc(var(--font-size-xxl) + 2px);
+          display: inline-block;
+        }
+      }
+      .file-info-inner {
+        margin: 10px 20px 10px 28px;
+        
+        .entry {
+          margin: 1px 0;
+          font-size: var(--font-size);
+        }
+      }
+      .audio-buttons {
+        display: none !important;
+        display: block;
+        margin: 20px 0 0 0;
+        text-align: center;
+        
+        .btn-play {
+          background: #2c91b7;
+          color: #fff;
+          border-radius: 100px;
+          font-size: var(--font-size);
+          width: calc(2 * var(--font-size) + 5px);
+          height: calc(2 * var(--font-size) + 5px);
+          display: block;
+          margin: -10px auto 10px auto;
+        }
+      }
+      .independent-player-container {
+        display: block;
+      }
+    }
+  }
+  &:not(.preview-mode) {
+    .component-slider > .text,
+    .info .title-container {
+      color: #fff;
+    }
+    
+    .volume-slider-container .component-slider > .inner > .draggable {
+      background: var(--body-extra-info-fg);
+    }
+    
+    .volume-slider-container .component-slider > .inner > .fill {
+      background: var(--body-extra-info-fg);
+    }
+  }
+}

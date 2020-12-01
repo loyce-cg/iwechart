@@ -1,0 +1,8 @@
+@import { TaskModel } from "../TaskChooserController";
+@import { Context } from "../../extlist/ExtListView";
+@model TaskModel
+@context Context<TaskModel>
+<div class="task{{@context.isActive ? ' active' : ''}}" data-task-id="{{@model.id}}">
+  <span class="task-label task-status-{{@model.status}} has-task-tooltip" data-task-id="{{@model.id}}">#{{@model.id}}</span>
+  <span>{{@model.title}}</span>
+</div>

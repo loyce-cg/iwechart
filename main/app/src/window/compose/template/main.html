@@ -1,0 +1,42 @@
+@import {Model} from "../ComposeWindowController";
+@model Model
+<div class="window-compose-main">
+  <div class="toolbar">
+    <button data-action="send" class="btn btn-success">
+        <i class="fa fa-paper-plane-o"></i>
+        {{@Helper.i18n("window.compose.button.send.label")}}
+    </button>
+    <button data-action="add-attachment" class="btn btn-default attachment-button">
+        <i class="fa fa-paperclip"></i>
+        {{@Helper.i18n("window.compose.button.attach.label")}}
+      </button>
+  </div>
+  <div class="meta">
+    <div class="attachments">
+    </div>
+    <div class="fields fields-to">
+      <div class="field field-to">
+        <div class="info"></div>
+        <div class="input">
+            <input type="text" name="hashmail" placeholder="{{@Helper.i18n("window.compose.input.hashmail.placeholder")}}" />
+        </div>
+      </div>
+      <div class="fake-field-to"></div>
+    </div>
+    <div class="fields">
+      <div class="field">
+        <div class="info">
+            {{@Helper.i18n("window.compose.input.subject.label")}}:
+        </div>
+        <div class="input">
+            <input type="text" name="subject" placeholder="{{@Helper.i18n("window.compose.input.subject.placeholder")}}" />
+        </div>
+      </div>
+    </div>
+    <span class="fields-to-label">{{@Helper.i18n("window.compose.input.to.label")}}:</span>
+  </div>
+  <div class="content">
+    <div placeholder="{{@Helper.i18n("window.compose.input.message.placeholder")}}" class="message-field" data-role="message-field"></div>
+  </div>
+  <div class="status-bar"></div>
+</div>

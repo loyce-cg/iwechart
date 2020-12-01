@@ -1,0 +1,30 @@
+@import { Model } from "../DateTimePickerController";
+@model Model
+{{
+  let cls = "";
+}}
+<div class="date-time-picker-component popup{{@cls}}">
+  <div class="flex-container">
+    <div class="left"><div class="date">
+        <div class="prev-btn btn btn-default"><i class="fa fa-chevron-left"></i></div>
+        <div class="month-container"></div>
+        <div class="year-container"></div>
+        <div class="next-btn btn btn-default"><i class="fa fa-chevron-right"></i></div>
+      </div>
+      <div class="day-container">
+        {{ for (let i = 0, n = 7 * 6; i < n; ++i) { }}
+          <div></div>
+        {{ } }}
+      </div>
+    </div>
+    <div class="right">
+      <div class="time">
+        <div class="time-container"></div>
+      </div>
+    </div>
+  </div>
+  <div class="popup-buttons">
+    <button class="btn btn-success ok-btn">{{@Helper.i18n("plugin.calendar.component.dateTimePicker.buttons.ok")}}</button>
+    <button class="btn btn-default cancel-btn">{{@Helper.i18n("plugin.calendar.component.dateTimePicker.buttons.cancel")}}</button>
+  </div>
+</div>

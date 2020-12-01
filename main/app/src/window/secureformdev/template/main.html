@@ -1,0 +1,28 @@
+@import {Model} from "../SecureFormDevWindowController";
+@model Model
+<div>
+  <h2>
+      {{@Helper.i18n("window.secureFormDev.formInfo")}}
+  </h2>
+  
+  <p><strong>{{@Helper.i18n("window.secureFormDev.sid.text")}}</strong> {{@model.sinkID}}</p>
+  
+  <h2>
+      {{@Helper.i18n("window.secureFormDev.exampleCode")}}
+  </h2>
+  
+  <p class="with-border">
+    <a href="javascript:;" data-action="open-formtest">{{@Helper.i18n("window.secureFormDev.link.example.text")}}</a>
+  </p>
+  
+  <p>{{@Helper.i18n("window.secureFormDev.src.text")}}</p>
+  
+  <pre class="selectable" data-source="script-src"></pre>
+  
+  <p>{{@Helper.i18n("window.secureFormDev.usage.text")}}</p>
+  
+  <pre class="selectable" data-source="script-send"></pre>
+  
+  <a href="https://privmx.com/faqsecureforms" target="_blank" rel="noopener noreferrer">{{@Helper.i18n("window.secureFormDev.link.more.text")}}</a>
+  
+</div>

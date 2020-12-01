@@ -1,0 +1,128 @@
+@import {Model} from "../AdminAddUserWindowController"
+@model Model
+<div>
+  <h3>
+    {{@Helper.i18n("window.admin.userAdd.title")}}
+  </h3>
+  <form class="base-form" action="javascript:void(0)">
+    <div class="fields">
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.admin.userAdd.usertype.label")}}
+        </div>
+        <div class="select">
+          <select id="usertype" name="usertype" vf-model="usertype" vf-disabled="adding" style="width: 200px; height: 30px; margin-left: 10px; display:inline-block;">
+            <option value="keeper">{{@Helper.i18n("window.admin.userAdd.usertype.keeper.label")}}</option>
+            <option value="regular" selected>{{@Helper.i18n("window.admin.userAdd.usertype.regular.label")}}</option>
+            <option value="basic">{{@Helper.i18n("window.admin.userAdd.usertype.basic.label")}}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.admin.userAdd.username.label")}}
+          <span class="if-managable">*</span>
+        </div>
+        <div class="input">
+          <input type="text" vf-model="username" vf-disabled="adding" placeholder="{{@Helper.i18n('window.admin.userAdd.username.placeholder')}}" style="width: 200px; display:inline-block;"/>
+          <span>#</span>
+          <span>{{@model.config.hosts[0]}}</span>
+        </div>
+      </div>
+      <div class="radiobox type-regular">
+        <label>
+          <input type="radio" vf-model="mode" vf-disabled="adding" checked="checked" value="managable" />
+          <strong>{{@Helper.i18n("window.admin.userAdd.type.managable")}}</strong> - {{@Helper.i18n("window.admin.userAdd.type.managable.description")}}
+        </label>
+        <label>
+          <input type="radio" vf-model="mode" vf-disabled="adding" value="default" />
+          <strong>{{@Helper.i18n("window.admin.userAdd.type.default")}}</strong> - {{@Helper.i18n("window.admin.userAdd.type.default.description")}}
+        </label>
+      </div>
+      <div class="field type-basic">
+        <div class="field">
+          <div class="input text-only">
+            {{@Helper.i18n("window.admin.userAdd.usertype.basic.description")}}   
+          </div>
+
+        </div>
+
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" vf-model="privateSectionAllowed" vf-disabled="adding" checked="checked" />
+            {{@Helper.i18n("window.admin.userAdd.withPrivateSection")}}
+          </label>
+        </div>
+      </div>
+      <div class="field type-keeper">
+        <div class="field">
+          <div class="input text-only">
+            {{@Helper.i18n("window.admin.userAdd.usertype.keeper.description")}}   
+          </div>
+
+        </div>
+      </div>
+
+      <!-- <div class="field collapsable-switch" collapsable-id="additional-info">
+        <div class="link" collapsable-role="extend">
+          <i class="fa fa-angle-down" aria-hidden="true"></i>
+          <span>{{@Helper.i18n("window.admin.userAdd.showAdditionalOptions")}}</span>        </div>
+        <div class="link collapsed" collapsable-role="collapse">
+          <i class="fa fa-angle-up" aria-hidden="true"></i>
+          <span>{{@Helper.i18n("window.admin.userAdd.hideAdditionalOptions")}}</span>
+        </div>
+      </div> -->
+      <div class="field collapsable-group collapsed" collapsable-id="additional-info">
+        <div class="info">
+          {{@Helper.i18n("window.admin.userAdd.email.label")}}
+          {{Helper.i18n("window.admin.userAdd.optional")}}
+        </div>
+        <div class="input">
+          <input type="text" vf-model="email" vf-disabled="adding" placeholder="{{@Helper.i18n('window.admin.userAdd.email.placeholder')}}" />
+        </div>
+        <div class="info-ex">
+          {{@Helper.i18n("window.admin.userAdd.email.info")}}
+        </div>
+        <div class="checkbox if-not-managable">
+          {{ if (model.showSendActivationLink) { {{
+          <label>
+              <input type="checkbox" vf-model="sendActivationLink" vf-disabled="adding" checked="checked" />
+              {{@Helper.i18n("window.admin.userAdd.email.sendActivationLink")}}
+          </label>
+          }} } }}
+          <label>
+            <input type="checkbox" vf-model="notificationEnabled" vf-disabled="adding"/>
+            {{@Helper.i18n("window.admin.userAdd.email.notificationEnabled")}}
+          </label>
+        </div>
+      </div>
+      <div class="field collapsable-group collapsed" collapsable-id="additional-info">
+        <div class="info">
+          {{@Helper.i18n("window.admin.userAdd.description.label")}}
+        </div>
+        <div class="input">
+          <textarea vf-model="description" vf-disabled="adding" placeholder="{{@Helper.i18n('window.admin.userAdd.description.placeholder')}}">
+          </textarea>
+        </div>
+        <div class="info-ex">
+          {{@Helper.i18n("window.admin.userAdd.description.info")}}
+        </div>
+      </div>
+      <div class="field buttons with-margin">
+        <div class="info">
+        </div>
+        <div class="input">
+          <button class="btn btn-success add-button" vf-click="addUser()" vf-disabled="adding">
+            <i class="fa" vf-class="{'fa-plus': !this.adding, 'fa-spin': this.adding, 'fa-circle-o-notch': this.adding}"></i>
+            <span class="if-managable" vf-model="{this.adding ? '{{@Helper.i18n('window.admin.userAdd.form.button.adding2')}}' : '{{@Helper.i18n('window.admin.userAdd.form.button.add2')}}'}"></span>
+            <span class="if-not-managable" vf-model="{this.adding ? '{{@Helper.i18n('window.admin.userAdd.form.button.adding')}}' : (this.sendActivationLink ? '{{@Helper.i18n('window.admin.userAdd.form.button.addAndSend')}}' : '{{@Helper.i18n('window.admin.userAdd.form.button.add')}}')}"></span>
+          </button>
+          <button class="btn btn-default" vf-click="close()" vf-disabled="adding">
+            {{@Helper.i18n("core.button.cancel.label")}}
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

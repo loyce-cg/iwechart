@@ -1,0 +1,53 @@
+@import { TaskGroupModel } from "../TaskGroupsPanelController";
+@model TaskGroupModel
+@context {render(model: TaskGroupModel):string}
+<tr class="entry">
+  <td class="for-task task-unread"></td>
+  <td class="for-task task-id"><span class="task-label"></span><button class="pin pin-task"><i class="fa fa-thumb-tack"></i></button></td>
+  <td class="for-task task-text">
+    <div class="task-main-cell">
+      <div class="task-main-cell-text" data-keep-text="1"><strong></strong> <span></span></div>
+      <ul class="task-taskgroups-badges">
+        <li class="has-comments-icon" title="{{@Helper.i18n('plugin.tasks.component.taskGroupsPanel.task.hasComments')}}"><span class="privmx-icon privmx-icon-chat"></span>-</li>
+        <li class="has-attachments-icon" title="{{@Helper.i18n('plugin.tasks.component.taskGroupsPanel.task.hasAttachments')}}"><span class="privmx-icon privmx-icon-notes2"></span></li>
+        <li class="has-calendar-icon" title="{{@Helper.i18n('plugin.tasks.component.taskGroupsPanel.task.hasCalendar')}}"><span class="privmx-icon privmx-icon-calendar"></span></li>
+      </ul>
+    </div>
+  </td>
+  <td class="for-task task-status"></td>
+  <td class="for-task task-assigned-to"></td>
+  <td class="for-task task-attachments"></td>
+  <td class="for-task task-created av-date-wrapper"><div data-timeago-type="calendarDate"></div></td>
+  <td class="for-task task-modified av-date-wrapper"><div data-timeago-type="calendarDate"></div></td>
+  <td class="for-taskgroup taskgroup" colspan="8">{{#context.render(model)}}</td>
+  <td class="for-header"></td>
+  <td class="for-header" data-col="hash-id" data-sort-by="hash-id" data-keep-text="1">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.header.hashId")}}</td>
+  <td class="for-header" data-col="task" data-sort-by="task" data-keep-text="1">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.header.task")}}<span class="col-resizer"></span></td>
+  <td class="for-header" data-col="status" data-sort-by="status" data-keep-text="1">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.header.status")}}<span class="col-resizer"></span></td>
+  <td class="for-header" data-col="assigned-to" data-sort-by="assigned-to" data-keep-text="1">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.header.assignedTo")}}<span class="col-resizer"></span></td>
+  <td class="for-header" data-col="attachments" data-sort-by="attachments" data-keep-text="1">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.header.attachments")}}<span class="col-resizer"></span></td>
+  <td class="for-header" data-col="created" data-sort-by="created" data-keep-text="1">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.header.created")}}<span class="col-resizer"></span></td>
+  <td class="for-header" data-col="modified" data-sort-by="modified" data-keep-text="1">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.header.modified")}}<span class="col-resizer"></span></td>
+  <td class="for-empty-tg-info empty-tg-info" colspan="8" data-keep-text="1"><span>{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.empty")}}</span></td>
+  <td class="for-hidden-tasks-info hidden-tasks-info" colspan="8" data-keep-text="1"><span class="info"></span><span class="link" data-action="show-hidden-tasks">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.hiddenTasks.show")}}</span></td>
+  {{ let statuses = ["idea", "todo", "inprogress", "done"]; }}
+  {{ for (let status of statuses) { }}
+    <td class="for-kanban-header for-kanban-header-{{@status}}" data-keep-text="1">{{@Helper.i18n("plugin.tasks.status-" + status)}}</td>
+  {{ } }}
+  {{ for (let status of statuses) { }}
+  <td class="for-kanban-tasks for-kanban-{{@status}} kanban-dropzone" data-kanban-dropzone-status="{{@status}}">
+    <div class="kanban-task-box-content">
+      <span class="clamped">
+        <span class="task-label has-task-tooltip"></span>
+        <span class="task-title"></span>
+        <span class="task-description"></span>
+      </span>
+      <span class="lower-panel">
+        <span class="modified-by"></span>
+        <span class="modified-dt"></span>
+        <span class="assigned-to"></span>
+      </span>
+    </div>
+  </td>
+  {{ } }}
+</tr>

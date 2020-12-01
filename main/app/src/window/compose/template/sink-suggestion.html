@@ -1,0 +1,29 @@
+@import {AutocompleteEntry} from "../ComposeWindowView";
+@model AutocompleteEntry
+<div class="sink-suggestion {{@model.email ? 'email-entry' : ''}}">
+  <div>
+      <div class="image-wrapper">
+        <img src="{{@model.profile && model.profile.image ? model.profile.image : (model.email ? Helper.getAssetByName('DEFAULT_EMAIL_AVATAR_INVERSE') : Helper.getAssetByName('DEFAULT_USER_AVATAR'))}}" alt="" />
+      </div>
+    {{ if(model.displayName) { }}
+      <span class="display-name">{{@model.displayName}}</span> &lt;<span class="hashmail">{{@model.hashmail}}</span>&gt;
+    {{ } else { }}
+      <span class="hashmail">{{@model.hashmail}}</span>
+    {{ } }}
+    {{ if (model.email) { {{
+      <span class="email-info">
+        ({{@Helper.i18n("window.compose.emailInfo")}})
+      </span>
+    }} } }}
+    {{ if(model.starred) { }}
+      <i class="fa fa-star"></i>
+    {{ } }}
+    {{ if(model.sink) { }}
+      - <span class="sink-name">{{@model.sink.name}}</span>
+    {{ } }}
+  </div>
+  {{ if(model.sink) { }}
+    <div class="sink-description">{{@model.sink.description}}</div>
+    <div class="sink-id">{{@model.sink.id}}</div>
+  {{ } }}
+</div>

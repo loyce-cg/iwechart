@@ -1,0 +1,49 @@
+@import {Model} from "../AudioConfigController";
+@model Model
+<div class="section audioconfig-section">
+  <div class="section-header">
+    <i class="fa fa-volume-up"></i>
+    {{@Helper.i18n("window.settings.section.audioconfig.header")}}
+  </div>
+  <div class="base-form">
+    <div class="sounds-categories fields">
+      <!-- <div class="field">
+        <div class="info">{{@Helper.i18n("window.settings.section.audioconfig.notifications")}}:</div>
+        <div class="input">
+          <span class="switch {{@model.audioNotifications ? 'active' : ''}}" data-setting="notifications"></span>
+        </div>
+      </div> -->
+      <div class="field">
+        <div class="info">{{@Helper.i18n("window.settings.section.audioconfig.audioNotifications")}}:</div>
+        <div class="input">
+          <span class="switch {{@model.audioNotifications ? 'active' : ''}}" data-setting="audioNotifications"></span>
+        </div>
+      </div>
+      {{ for (let soundsCategory of model.soundsCategories) { }}
+        <div class="sounds-category field">
+          <div class="sounds-category-name info">{{@Helper.i18n("window.settings.section.audioconfig.soundsCategories." + soundsCategory.spec.name)}}:</div>
+          <div class="sounds-category-sounds input">
+            <select data-sound-category="{{@soundsCategory.spec.name}}" name="sounds.{{@soundsCategory.spec.name}}">
+              {{ for (let sound of soundsCategory.sounds) { }}
+                <option value="{{@sound.fileName}}" {{@soundsCategory.currentSound == sound.fileName ? ' selected' : ''}}>
+                  {{@Helper.i18n("window.settings.section.audioconfig.sounds." + sound.i18nKey)}}
+                </option>
+              {{ } }}
+            </select>
+            <span data-play="{{@soundsCategory.spec.name}}"><i class="fa fa-play-circle"></i></span>
+          </div>
+        </div>
+      {{ } }}
+      <div class="field buttons">
+        <div class="info">
+        </div>
+        <div class="input">
+          <button class="btn btn-success save-button progress-button">
+            <i class="fa fa-save"></i>
+            <span class="button-text">{{@Helper.i18n("window.settings.section.audioconfig.button.save.text")}}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

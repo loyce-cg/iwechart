@@ -1,0 +1,50 @@
+@import {Context} from "../../../../component/extlist/ExtListView";
+@import {WhiteListEntry} from "../WhitelistController";
+@import {FilterMode} from "../../../../mail/FilterMode";
+@import {BaseCollection} from "../../../../utils/collection/BaseCollection";
+@model WhiteListEntry
+@context Context<WhiteListEntry>
+<tr class="domain-entry {{@model.data.mode != null ? 'with-mode' : ''}}" data-domain="{{@model.domain}}">
+  <td class="domain-col">
+    {{if (model.newOne) { {{
+      <span class="new-badge">{{@Helper.i18n("window.settings.section.whitelist.new")}}</span>
+    }} } }}
+    {{@model.domain}}
+    ({{@model.count}})
+  </td>
+  <td class="last-col">
+    {{ if (model.lastDate != null) { {{
+      {{@Helper.timeAgo(model.lastDate)}}
+      <div class="btn btn-link" data-action="whitelist-show-last-messages">
+        <i class="fa fa-search "></i>
+      </div>
+    }} } }}
+  </td>
+  <td class="switch-col">
+    <span class="switch-desc">
+      {{if (model.data.mode == FilterMode.ALLOW) { {{
+        {{@Helper.i18n("window.settings.section.whitelist.allow")}}
+      }} } else { {{
+        {{@Helper.i18n("window.settings.section.whitelist.deny")}}
+      }} } }}
+    </span>
+    {{ if (model.domain == Helper.getDefaultHost()) { {{
+      <span class="switch-const-desc">{{@Helper.i18n("core.bool.yes")}}</span>
+    }} } else { {{
+      <span class="switch {{@model.data.mode == FilterMode.ALLOW ? 'active' : ''}}" data-mode="{{@model.data.mode == FilterMode.ALLOW ? FilterMode.DENY : FilterMode.ALLOW}}"></span>
+    }} } }}
+  </td>
+  <td class="report-col">
+    {{ if (model.domain != Helper.getDefaultHost()) { {{
+      <button class="btn btn-default gray btn-xs" title="{{@Helper.i18n('window.settings.section.whitelist.report.info')}}" data-action="whitelist-suggest">
+        <i class="fa fa-exclamation"></i>
+        {{@Helper.i18n("window.settings.section.whitelist.report.label")}}
+      </button>
+    }} } }}
+  </td>
+  <td class="del-col">
+    <button class="btn btn-xs btn-warning" data-action="whitelist-delete">
+      <i class="fa fa-trash"></i>
+    </button>
+  </td>
+</tr>

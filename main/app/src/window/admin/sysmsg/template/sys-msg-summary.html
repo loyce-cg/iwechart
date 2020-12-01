@@ -1,0 +1,47 @@
+@import {SendResult} from "../SysMsgController";
+@model SendResult[]
+<div class="sys-msg-summary">
+  
+  <div class="summary-header">
+    {{@Helper.i18n("window.admin.sysmsg.summary.header")}}
+  </div>
+  <table class="table small">
+    <tbody>
+      {{model.forEach(function(user) { {{
+        <tr>
+          <td>
+              {{@user.username}}
+          </td>
+          <td>
+              {{ if (user.status == "ok") { {{
+                 <span class="text-success">
+                      {{@Helper.i18n("window.admin.sysmsg.summary.sent")}}
+                      <i class="fa fa-check"></i>
+                  </span>
+              }} } else if (user.status == "error") { {{
+                  <span class="text-danger">
+                      {{@Helper.i18n("window.admin.sysmsg.summary.error")}}
+                      <i class="fa fa-times"></i>
+                  </span>
+              }} } else if (user.status == "no-sink") { {{
+                  <span class="text-muted">
+                      {{@Helper.i18n("window.admin.sysmsg.summary.nosink")}}
+                  </span>
+              }} } else if (user.status == "no-activated") { {{
+                  <span class="text-muted">
+                      {{@Helper.i18n("window.admin.sysmsg.summary.notactivated")}}
+                  </span>
+              }} } }}
+          </td>
+        </tr>
+      }} }); }}
+    </tbody>
+  </table>
+
+  <div class="buttons">
+    <button class="btn btn-default" data-action="close-summary">
+      {{@Helper.i18n("window.admin.sysmsg.summary.close")}}
+    </button>
+  </div>
+  
+</div>

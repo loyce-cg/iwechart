@@ -1,0 +1,53 @@
+@import "../../editor/template/main";
+
+.window-editor-main {
+  background-color: var(--preview-panel-bg);
+  color: #000;
+  
+  .inner {
+    .pdf-container {
+      display: block;
+      position: fixed;
+      top:0;
+      left:0;
+      bottom:0;
+      right:0;
+      overflow: auto;
+      padding: 10px;
+      .pdf-canvas {
+        width: 100%;
+      }
+    }
+  }
+}
+html.print-mode {
+  .window-editor-main {
+    .inner {
+      .pdf-container {
+        position: static;
+        padding: 0;
+        text-align: center;
+        
+        canvas.pdf-canvas {
+          width: auto;
+          max-width: 98%;
+          max-height: 295mm;
+          page-break-after: always;
+          page-break-before: always;
+          
+          &:after {
+            display: block;
+            content: " ";
+            page-break-after: always;
+            page-break-before: always;
+          }
+          
+          &:last-child {
+            page-break-after: auto;
+            page-break-before: always;
+          }
+        }
+      }
+    }
+  }
+}

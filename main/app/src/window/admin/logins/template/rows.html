@@ -1,0 +1,23 @@
+@import {Model} from "../LoginsController";
+@model Model
+<tbody>
+  {{model.logins.forEach(login => { {{
+    <tr>
+      <td>{{@Helper.dateWithHourLocal(login.time * 1000)}}</td>
+      <td>{{@login.username}}</td>
+      <td>{{@login.ip}}</td>
+      <td>{{@login.deviceId}}</td>
+      <td>
+        {{ if (login.success) { {{
+          <span>
+            {{@Helper.i18n("core.bool.yes")}}
+          </span>
+        }} } else { {{
+          <span class="text-warning">
+            {{@Helper.i18n("core.bool.no")}}
+          </span>
+        }} } }}
+      </td>
+    </tr>
+  }} }); }}
+</tbody>

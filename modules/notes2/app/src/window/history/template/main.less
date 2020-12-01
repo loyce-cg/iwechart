@@ -1,0 +1,132 @@
+//@import "../../base/BaseWindow";
+@import "../../../../node_modules/pmc-web/src/themes/default/less/global";
+@import "../../../../node_modules/pmc-web/src/themes/default/less/vars";
+@import "../../../../node_modules/pmc-web/src/themes/default/less/mixins";
+
+@import "../../../../node_modules/pmc-web/src/component/notification/index";
+@import "../../../../node_modules/pmc-web/src/component/template/conversation.less";
+@import "../../../../node_modules/pmc-web/src/component/template/wi-element.less";
+@import "../../../../node_modules/pmc-web/src/component/template/bckg-icon.less";
+@import "../../../../node_modules/pmc-web/src/component/persontooltip/template/main.less";
+
+body, html {
+  font-size: var(--font-size);
+  background: var(--main-panel-bg);;
+  overflow: auto;
+}
+
+.window-history-main {
+  height: 100%;
+  
+  &:focus {
+    outline: none;
+  }
+  .header {
+    padding: 10px 7px;
+    font-weight: 500;
+    font-size: var(--font-size);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    i {
+      margin-right: 3px;
+    }
+  }
+  .table-container {
+    position: absolute;
+    top: 40px;
+    bottom: 53px;
+    left: 0;
+    right: 0;
+    overflow-y: auto;
+  }
+  .buttons {
+    position: absolute;
+    background: var(--main-panel-bg);;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    padding: 10px 0;
+    
+    button {
+      margin: 0 8px;
+      i {
+        margin-right: 3px;
+      }
+    }
+  }
+  table {
+    table-layout: fixed;
+    width: 100%;
+  }
+  tr {
+    font-size: var(--font-size-s);
+    line-height: 30px;
+    color: var(--body-fg);
+    padding: 0 10px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--main-panel-tasks-separator-bg);
+    overflow: hidden;
+    
+    &:first-child {
+      border-top: 1px solid var(--main-panel-tasks-separator-bg);
+    }
+    &.active {
+      background-color: var(--main-panel-task-active-bg);
+    }
+  }
+  .version-entry {
+    &:hover {
+      background-color: var(--main-panel-task-hover-bg);
+    }
+    &.active {
+      background-color: var(--main-panel-task-active-bg);
+    }
+  }
+  th, td {
+    padding: 0 7px;
+  }
+  .name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    
+    i {
+      margin-right: 3px;
+    }
+  }
+  .date {
+    color: var(--body-extra-info-fg);
+    font-size: var(--font-size-xxs);
+    white-space: nowrap;
+    width: 40px;
+    
+    canvas {
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+  }
+  .size {
+    color: var(--body-extra-info-fg);
+    font-size: var(--font-size-xxs);
+    white-space: nowrap;
+    width: 50px;
+    text-align: right;
+  }
+  .user {
+    width: 40px;
+  }
+  .signature div {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .actions {
+    width: 65px;
+    text-align: center;
+  }
+  canvas {
+    vertical-align: middle;
+  }
+}

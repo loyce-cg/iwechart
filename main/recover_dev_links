@@ -1,0 +1,7 @@
+#!/bin/bash
+rm -rf ./electron/dist/dist
+rm -rf ./electron/dist/app
+cd ./electron/dist
+ln -s ../../app
+ln -s ../../dist
+

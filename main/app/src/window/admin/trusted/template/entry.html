@@ -1,0 +1,51 @@
+@import {Cosigner} from "../TrustedController";
+@import {Context} from "../../../../component/extlist/ExtListView";
+@import {BaseCollection} from "../../../../utils/collection/BaseCollection";
+@model Cosigner
+@context Context<Cosigner>
+<tr data-domain="{{@model.domain}}">
+  <td class="domain">
+    {{@model.domain}}
+  </td>
+  <td>
+    {{ /*if (model.result != null) { {{
+      <i class="fa {{@model.result ? 'text-success fa-check' : 'text-danger fa-times'}}"></i>
+    }} } */}}
+  </td>
+  <td>{{@model.hashmail}}</td>
+  <td>{{@model.ip}}</td>
+  <td>{{@Helper.dateWithHourLocal(model.modification_timestamp * 1000)}}</td>
+  <td>{{@model.response_count}} / {{@model.requests_count}}</td>
+  <td class="fingerprint">
+    {{@model.fingerprint.substr(0, 8)}}
+  </td>
+  <td class="state {{#model.toPublish ? 'publish' : ''}}">
+    {{ if( model.state === "PENDING" ) { {{
+      {{@Helper.i18n("window.admin.trusted.state.pending")}}
+    }} } else if( model.state === "ACTIVE" ) {
+      if ( model.published) { {{
+        {{@Helper.i18n("window.admin.trusted.state.active")}}
+      }} } else { {{
+        {{@Helper.i18n("window.admin.trusted.state.readyToPublish")}}
+      }} }
+    } else if( model.state === "INVITED" ) { {{
+      {{@Helper.i18n("window.admin.trusted.state.invited")}}
+    }} } else if( model.state === "DELETED" ) { {{
+      {{@Helper.i18n("window.admin.trusted.state.deleted")}}
+    }} } }}
+  </td>
+  <td class="action-col">
+    <div class="btn-cnt">
+    {{ if( model.state === "INVITED" ) { {{
+      <button class="btn btn-xs btn-success icon-only" title="{{@Helper.i18n('window.admin.trusted.table.accept')}}" data-action="accept-domain">
+        <i class="fa fa-check" data-org="fa fa-check" data-proc="fa fa-spin fa-circle-o-notch"></i>
+      </button>
+    }} } }}
+    {{ if (model.state != "DELETED" && model.domain != Helper.getDefaultHost()) { {{
+      <button class="btn btn-xs btn-warning icon-only" title="{{@Helper.i18n('window.admin.trusted.table.delete')}}" data-action="delete-domain">
+        <i class="fa fa-trash" data-org="fa fa-trash" data-proc="fa fa-spin fa-circle-o-notch"></i>
+      </button>
+    }} } }}
+    </div>
+  </td>
+</tr>

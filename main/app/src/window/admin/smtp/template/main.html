@@ -1,0 +1,94 @@
+<div class="smtp-inner inner" vf-visible="loaded">
+  <div class="header">
+    {{@Helper.i18n("window.admin.smtp.header")}}
+  </div>
+  <div class="base-form">
+    <div class="fields">
+      <div class="field">
+        <div class="info">
+        </div>
+        <div class="input radio">
+          <label>
+            <input type="radio" value="php" vf-model="type" />
+            {{@Helper.i18n("window.admin.smtp.type.php")}}
+          </label>
+          <label>
+            <input type="radio" value="smtp" vf-model="type" />
+            {{@Helper.i18n("window.admin.smtp.type.smtp")}}
+          </label>
+        </div>
+      </div>
+      <div class="smtp-settings" vf-visible="{this.type == 'smtp'}">
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.admin.smtp.host")}}
+          </div>
+          <div class="input">
+            <input type="text" class="form-control" vf-model="smtpCfg.host" />
+          </div>
+        </div>
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.admin.smtp.port")}}
+          </div>
+          <div class="input">
+            <input type="text" class="form-control" vf-model="smtpCfg.port" />
+          </div>
+        </div>
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.admin.smtp.secure.label")}}
+          </div>
+          <div class="input">
+            <select class="form-control" vf-model="smtpCfg.secure">
+              <option value="">{{@Helper.i18n("window.admin.smtp.secure.plain")}}</option>
+              <option value="tls">{{@Helper.i18n("window.admin.smtp.secure.tls")}}</option>
+              <option value="ssl">{{@Helper.i18n("window.admin.smtp.secure.ssl")}}</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <div class="info">
+          </div>
+          <div class="input checkbox">
+            <label>
+              <input type="checkbox" vf-model="smtpCfg.auth" />
+              {{@Helper.i18n("window.admin.smtp.auth")}}
+            </label>
+          </div>
+        </div>
+        <div class="auth-settings" vf-visible="smtpCfg.auth">
+          <div class="field">
+            <div class="info">
+              {{@Helper.i18n("window.admin.smtp.username")}}
+            </div>
+            <div class="input">
+              <input type="text" class="form-control" vf-model="smtpCfg.username" />
+            </div>
+          </div>
+          <div class="field">
+            <div class="info">
+              {{@Helper.i18n("window.admin.smtp.password")}}
+            </div>
+            <div class="input">
+              <input type="password" class="form-control" vf-model="smtpCfg.password" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="field buttons">
+        <div class="info">
+        </div>
+        <div class="input">
+          <button class="btn btn-primary" vf-click="saveCfg(event)">
+            <i class="fa fa-floppy-o" data-org="fa fa-floppy-o" data-proc="fa fa-spin fa-circle-o-notch"></i>
+            {{@Helper.i18n("core.button.save.label")}}
+          </button>
+          <div class="error" vf-visible="error">
+            {{@Helper.i18n("window.admin.smtp.error")}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

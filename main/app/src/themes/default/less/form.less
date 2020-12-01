@@ -1,0 +1,79 @@
+.base-form {
+  .fields {
+    margin: 10px;
+    .field {
+      margin: 10px 0;
+      clear: both;
+      .info {
+        float: left;
+        text-align: right;
+        width: 120px;
+        line-height: calc(var(--font-size) + 4px);
+        font-size: var(--font-size);
+        padding: 5px 0 0 0;
+      }
+      .input {
+        margin: 0 10px 0 130px;
+        input[type=text],
+        input[type=password],
+        textarea,
+        label {
+          width: 100%;
+          line-height: calc(var(--font-size) + 4px);
+          font-size: var(--font-size);
+          padding: 5px 10px 5px 0;
+          display: block;
+          input {
+            margin-left: 0;
+          }
+          .hint {
+            color: #7E7E7E;
+            font-size: var(--font-size-xs);
+            margin-left: 15px;
+          }
+        }
+        label + label {
+          padding-top: 0;
+        }
+        input[type=text],
+        input[type=password],
+        textarea {
+          border: 1px solid var(--login-input-shadow);
+          color: var(--body-fg);
+          padding-left: 10px;
+        }
+        textarea {
+          height: 100px;
+        }
+        &.text-only {
+          padding-top: 2px;
+        }
+      }
+      &.buttons {
+        margin-bottom: 20px;
+        button {
+          padding: 5px 10px;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+  .image-field {
+    .input > div {
+      float: left;
+    }
+    a {
+      margin: 8px 0;
+      text-decoration: none;
+      display: block;
+      font-size: var(--font-size-xs);
+    }
+    img {
+      max-width: 80px;
+      max-height: 80px;
+      float: left;
+      margin-right: 10px;
+    }
+
+  }
+}

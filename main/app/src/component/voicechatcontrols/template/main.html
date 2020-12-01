@@ -1,0 +1,39 @@
+@import {Model} from "../VoiceChatControlsController";
+@import {func as sectionTemplate} from "../../template/section.html";
+@import {func as conversationTemplate} from "../../template/conversation.html";
+@model Model
+<div class="component-voice-chat-controls {{@model.isInVoiceChat ? 'is-in-voice-chat' : 'is-not-in-voice-chat'}} {{@model.isTalking ? 'is-talking' : 'is-not-talking'}}">
+  <i class="fa fa-microphone" data-action="toggle-talking"></i>
+  <div class="talking-section-container">
+    {{ if (model.sectionModel) { }}
+      <div class="talking-section--section-container">
+        {{#Helper.createTemplate(sectionTemplate).render(model.sectionModel, <any>{isActive:false})}}
+          <div class="visible-avatars-list" data-action="toggle-listening-users-dropdown"></div>
+      </div>
+    {{ } }}
+    {{ if (model.conversationModel) { }}
+      <div class="talking-section--conversation-container">
+        {{#Helper.createTemplate(conversationTemplate).render(model.conversationModel, <any>{isActive:false})}}
+          <div class="visible-avatars-list" data-action="toggle-listening-users-dropdown"></div>
+      </div>
+    {{ } }}
+  </div>
+  <!-- <div class="listening-users-dropdown-container">
+    <button class=" btn btn-default btn-sm small gray" data-action="toggle-listening-users-dropdown">
+      <i class="fa fa-user"></i>
+      <span class="listening-users-count">{{@model.listeningUsers.length}}</span>
+      <i class="fa fa-chevron-down dropdown-icon"></i>
+    </button>
+    <div class="listening-users-dropdown"></div>
+  </div> -->
+  <div class="listening-users-dropdown-container">
+    <div class="listening-users-dropdown"></div>
+  </div>
+  <button class="btn btn-default btn-sm small gray" data-action="leave-voice-chat">
+    <span class="left fa fa-phone" style="vertical-align:middle"></span>
+  </button>
+  <!-- <button class="btn btn-default btn-sm small gray" data-action="ring-the-bell">
+    <span class="left fa fa-bell" style="vertical-align:middle"></span>
+  </button> -->
+  <div class="listening-users-dropdown-backdrop"></div>
+</div>

@@ -1,0 +1,70 @@
+@import {Model} from "../SecureFormsController";
+@model Model
+<div class="section secure-forms-section">
+  <div class="section-header">
+    <i class="fa fa-list-alt"></i>
+    {{@Helper.i18n("window.settings.section.secureForms.header")}}
+    <button class="btn btn-success pull-right" data-action="new-secure-form"><i class="fa fa-plus"></i> {{@Helper.i18n("window.settings.section.secureForms.create.button.label")}}</button>
+  </div>
+  <div class="section-info">
+    {{$Helper.i18n("window.settings.section.secureForms.info")}}
+    <a href="https://privmx.com/faqsecureforms" target="_blank" rel="noopener noreferrer">
+      {{@Helper.i18n("window.settings.section.secureForms.info.moreLink")}}
+    </a>
+  </div>
+  
+  <table class="table small">
+    <thead>
+      <tr>
+        <th>{{@Helper.i18n("window.settings.section.secureForms.table.header.name.text")}}</th>
+        <th title="{{@Helper.i18n('window.settings.section.secureForms.table.header.verifyEmail.info')}}">
+          {{@Helper.i18n("window.settings.section.secureForms.table.header.verifyEmail.text")}}
+          <i class="fa fa-question-circle"></i>
+        </th>
+        <th>{{@Helper.i18n("window.settings.section.secureForms.table.header.messages.text")}}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ if (model.forms.length == 0) { {{
+        <tr class="empty-row">
+          <td colspan="3">
+            {{@Helper.i18n("window.settings.section.secureForms.table.empty")}}
+          </td>
+        </tr>
+      }} } else { {{
+      {{ model.forms.forEach(function(form){ }}
+        <tr data-sid="{{@form.id}}">
+          <td class="form-name">
+            {{@form.name}}
+          </td>
+          <td>
+            <span class="switch {{@form.verifyEmail ? 'active' : ''}}" data-action="switch-verify-email-secure-form"></span>
+          </td>
+          <td>
+            {{@form.stats.total}} ({{@form.stats.unread}})
+          </td>
+          <td class="text-right form-actions">
+            {{ if (form.subtype != "main-page-form") { {{
+            <button class="btn btn-default gray btn-xs" data-action="show-secure-form-test" data-id="{{@form.id}}">
+              {{@Helper.i18n("window.settings.section.secureForms.test.button.label")}} {{@form.subtype}}
+            </button>
+            }} } }}
+            
+            <button class="btn btn-default gray btn-xs" data-action="show-secure-form-dev" data-id="{{@form.id}}">
+              <i class="fa fa-code"></i>
+              {{@Helper.i18n("window.settings.section.secureForms.dev.button.label")}}
+            </button>
+            {{ if (form.removable) { {{
+            <button class="btn btn-warning btn-xs" data-action="delete-secure-form" data-id="{{@form.id}}">
+              <i class="fa fa-trash"></i>
+              {{@Helper.i18n("window.settings.section.secureForms.delete.button.label")}}
+            </button>
+            }} } }}
+          </td>
+        </tr>
+      {{ }); } }}
+    </tbody>
+  </table>
+  
+</div>

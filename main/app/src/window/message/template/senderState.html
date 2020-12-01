@@ -1,0 +1,20 @@
+@import {SinkIndexEntry} from "../../../mail/SinkIndexEntry";
+@model SinkIndexEntry
+{{var status = model.getVerifiedStatus(); }}
+{{ if (status == null) { {{
+  <i class="fa fa-circle-o-notch fa-spin text-muted" data-action="verify-info"></i>
+}} } else if (status === 0) { {{
+  <i class="fa fa-check text-success" data-action="verify-info"></i>
+}} } else if (status === 1) { {{
+  <i class="fa fa-times-circle text-danger" data-action="verify-info"></i>
+}} } else if (status === 2) { {{
+  <i class="fa fa-times-circle text-danger" data-action="verify-info"></i>
+}} } else if (status === 3) { {{
+  <i class="fa fa-exclamation-triangle text-warning" data-action="verify-info"></i>
+}} } else if (status === 4) { {{
+  <i class="fa fa-exclamation-triangle text-warning" data-action="verify-info"></i>
+}} } else if (status === 5) { {{
+  <i class="fa fa-exclamation-triangle text-warning" data-action="verify-info"></i>
+}} } else if (status === 6) { {{
+  <i class="fa fa-times-circle text-danger" data-action="verify-info"></i>
+}} } }}

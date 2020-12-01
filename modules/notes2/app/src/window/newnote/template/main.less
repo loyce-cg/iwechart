@@ -1,0 +1,124 @@
+//@import "../../base/BaseWindow";
+@import "../../../../node_modules/pmc-web/src/themes/default/less/global";
+@import "../../../../node_modules/pmc-web/src/themes/default/less/vars";
+@import "../../../../node_modules/pmc-web/src/themes/default/less/mixins";
+
+@import "../../../../node_modules/pmc-web/src/component/template/conversation.less";
+@import "../../../../node_modules/pmc-web/src/component/template/wi-element.less";
+@import "../../../../node_modules/pmc-web/src/component/template/bckg-icon.less";
+
+body {
+  font-size: var(--font-size);
+  background: var(--main-panel-bg);
+}
+
+.window-new-note-main {
+  width: 498px;
+  margin: auto;
+  padding: 30px;
+  .types {
+    height: 156px;
+    margin: -10px;
+    .type {
+      width: 130px;
+      height: 130px;
+      margin: 10px;
+      display: inline-block;
+      color: var(--preview-panel-input-active-bg);
+      border-radius: 5px;
+      background-color: var(--preview-panel-bg);
+      position: relative;
+      cursor: pointer;
+      text-align: center;
+      font-size: var(--font-size);
+      &:hover {
+        background-color: var(--preview-panel-input-active-bg);
+        color: var(--preview-panel-input-active-fg);
+      }
+      &.active {
+        background-color: var(--preview-panel-input-active-bg);
+        color: var(--preview-panel-input-active-fg);
+      }
+      &.active:hover {
+        background-color: var(--preview-panel-input-active-bg);
+        color: var(--preview-panel-input-active-fg);
+      }
+      &.disabled {
+        cursor: not-allowed;
+        opacity: 0.4;
+      }
+      i {
+        position: absolute;
+        right: 0;
+        left: 0;
+        top: 25px;
+        display: block;
+        font-size: 50px;
+      }
+      .label-text {
+        position: absolute;
+        right: 0;
+        left: 0;
+        bottom: 20px;
+      }
+      &.disabled .label-text {
+        bottom: 10px;
+      }
+    }
+  }
+  > .name {
+    margin: 10px 0 20px 0;
+    .input input {
+      display: block;
+      width: 100%;
+      font-size: var(--font-size);
+      background: var(--preview-panel-bg);
+      color: var(--preview-panel-input-fg);
+      border-color: var(--preview-panel-bg);
+    }
+  }
+  .directory-container {
+    margin: 0 0 20px 0;
+  }
+  > .destinations-entry {
+    margin: 10px 0 20px 0;
+  }
+  .destinations {
+    // overflow-y: auto; // FOR LATER USE
+    overflow: hidden;
+    height: 42px;
+  }
+  .conversation-element > span {
+    padding-left: 3px;
+  }
+  .conversation-element {
+    .avatars-names span.name,
+    .text-col .name,
+    .text-col .desc {
+      color: var(--body-fg);
+    }
+  }
+  .buttons {
+    position: relative;
+    text-align: center;
+    bottom: 10px;
+    button {
+      margin: 0 10px;
+      min-width: 65px;
+    }
+  }
+  .status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+  }
+  .wi-element .wi-element-name,
+  .conversation-element .text-col .name {
+    color: var(--wi-element-fg);
+  }
+  .wi-element[data-conversation-id=local] {
+    i.fa {
+      font-size: var(--font-size-xl);
+    }
+  }
+}

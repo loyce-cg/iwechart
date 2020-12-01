@@ -1,0 +1,201 @@
+@import "../../main/template/common.less";
+@import "../../component/calendarPanel/template/main.less";
+@import "../../component/dateTimePicker/template/main.less";
+@import "../../../../node_modules/pmc-web/src/component/disabledsection/index.less";
+
+body {
+  background: transparent;
+}
+.calendar-plugin {
+  .entry *:not(.fa):not(.privmx-icon) {
+    font-family: var(--ff-default-user);
+  }
+  .wi-element .small-icon i {
+    display: inline;
+    font-size: var(--font-size-xl);
+    vertical-align: middle;
+    
+    &.ico-bin {
+      position: relative;
+      top: 1px;
+    }
+  }
+  .wi-element-icon.bckg-icon-border img {
+    filter: brightness(70%);
+  }
+  .sidebar {
+    height: 100%;
+    .wi-element-icon.bckg-icon-border img {
+      filter: none;
+    }
+  }
+  .panel-calendar1,
+  .panel-calendar2,
+  .panel-preview {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+  }
+  .panel-calendar1,
+  .panel-calendar2 {
+    background: var(--main-panel-bg);
+  }
+  .panel-preview {
+    background: var(--preview-panel-bg);
+  }
+  
+  .close-day-preview-btn {
+    display: none;
+    position: absolute;
+    right: 2px;
+    top: 41px;
+    z-index: 99999;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 20px;
+    font-size: var(--font-size);
+    border-radius: 100px;
+    background: var(--body-extra-info-fg);
+    color: var(--preview-panel-bg);
+    cursor: pointer;
+    opacity: 0.5;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+  
+  .two-calendars {
+    .component-splitter-panel.component-splitter-panel-left {
+      overflow: visible;
+    }
+    .panel-calendar1 {
+      z-index: 99;
+    }
+    .panel-calendar2 {
+      .top {
+        display: none;
+      }
+    }
+    >.component-splitter-vertical {
+      >.component-splitter-handle:after {
+        position: absolute;
+        left: 0;
+        right: 9px;
+        top: 39px;
+        bottom: 0;
+        display: block;
+        content: " ";
+        background: var(--main-panel-header-separator-bg);
+        pointer-events: none;
+      }
+    }
+    &.multiline-header>.component-splitter-vertical {
+      >.component-splitter-handle:after {
+        top: 78px;
+      }
+    }
+  }
+  
+  .one-calendar {
+    >.component-splitter-vertical {
+      >.component-splitter-panel-left {
+        right: 0 !important;
+      }
+      >.component-splitter-panel-right,
+      >.component-splitter-handle {
+        display: none;
+      }
+    }
+    .common-datepicker-container {
+      display: none !important;
+    }
+    
+    .close-day-preview-btn {
+      display: none;
+    }
+    >.component-splitter.component-splitter-vertical>.component-splitter-panel.component-splitter-panel-left {
+      width: auto !important;
+    }
+  }
+  
+  .common-datepicker-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    display: none !important;
+    
+    .date-time-picker-component {
+      height: 30px;
+    }
+  }
+  
+  
+  .calendarpanel-container {
+    display: none;
+    
+    &.active {
+      display: block;
+    }
+  }
+  
+  .hide-task-preview-panel {
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1;
+  }
+  
+  .component-splitter-panel-left.hide-preview.show-task-preview-panel {
+    width: 100% !important;
+    z-index: 1;
+  }
+  
+  .component-splitter-panel-top.hide-preview.show-task-preview-panel {
+    height: 100% !important;
+    z-index: 1;
+  }
+  
+  .hide-task-preview-panel,
+  .hide-preview {
+    ~.component-splitter-panel-bottom,
+    ~.component-splitter-panel-right {
+      display: none;
+    
+      ~.component-splitter-handle {
+        display: none;
+      }
+    }
+  }
+  .component-splitter-panel-right+.component-splitter-handle,
+  .component-splitter-panel-left > .component-splitter-horizontal > .component-splitter-handle {
+    z-index: 99;
+  }
+  
+  .component-task-panel-main {
+    border-top: 1px solid var(--main-panel-header-separator-bg);
+  }
+  
+  .handle-dot-horizontal,
+  .handle-dot-vertical {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+}
+
+.focus-highlight {
+  z-index: 8000;
+  border: 5px solid var(--unread-color);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}

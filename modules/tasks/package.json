@@ -1,0 +1,10 @@
+{
+  "name": "privmx-desktop-client-tasks-module-builder",
+  "version": "1.0.0",
+  "description": "Tasks plugin builder",
+  "license": "PrivMX Source Code License",
+  "private": true,
+  "dependencies": {
+    "privmx-builder": "^1.4.1"
+  }
+}

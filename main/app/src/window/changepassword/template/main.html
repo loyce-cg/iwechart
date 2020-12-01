@@ -1,0 +1,61 @@
+<div class="window-change-password-main">
+  <div class="content">
+    <div class="section-header">
+      <i class="fa fa-ellipsis-h"></i>
+      {{@Helper.i18n("window.changePassword.header")}}
+    </div>
+    <div class="section-info">
+      {{@Helper.i18n("window.changePassword.info")}}
+    </div>
+    <div class="base-form">
+      <div class="fields">
+        
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.changePassword.temporaryPassword")}}
+          </div>
+          <div class="input">
+            <input placeholder="" vf-model="currentPassword" type="password">
+          </div>
+        </div>
+        
+        <div class="new-password-fields">
+          <div class="field">
+            <div class="info">
+              {{@Helper.i18n("window.changePassword.newPassword")}}
+            </div>
+            <div class="input">
+              <input placeholder="" vf-model="newPassword" name="newPassword" type="password">
+            </div>
+          </div>
+          
+          <div class="field">
+            <div class="info">
+              {{@Helper.i18n("window.changePassword.repeatPassword")}}
+            </div>
+            <div class="input">
+              <input placeholder="" vf-model="repeatedPassword" name="repeatedPassword" type="password">
+            </div>
+          </div>
+          
+          <div class="password-meter">
+            <div class="score-text">{{$Helper.i18n("passwordStrengthMeter.info")}}</div>
+          </div>
+        </div>
+        
+        
+        <div class="field buttons">
+          <div class="info">
+          </div>
+          <div class="input">
+            <button class="btn btn-success change-password-button progress-button" data-working-text="{{@Helper.i18n('window.changePassword.saving')}}" vf-click="changePassword()">
+              <i class="fa fa-save"></i>
+              <span class="button-text">{{@Helper.i18n("window.changePassword.setPassword")}}</span>
+            </button>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</div>

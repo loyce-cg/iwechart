@@ -1,0 +1,47 @@
+@import {IndexViewHelper} from "../../../../web-utils/IndexViewHelper";
+@import {RequirementsModel} from "../../Initializer";
+@helper IndexViewHelper
+@model {result: RequirementsModel}
+<div class="window-requirements-main">
+  
+  <div class="content-wrapper">
+    <div class="content">
+      {{ if( ! model.result.type ) { }}
+        <span class="error">{{@Helper.i18n("window.requirements.error.general")}}</span>
+      {{ } else { }}
+        {{ if( model.result.type == 'not-desktop' ) { }}
+          <div class="logotype-wrapper">
+            <span class="logotype-text"></span>
+          </div>
+          <p>
+            {{$ Helper.i18n("window.requirements.result.notDesktop.text") }}
+          </p>
+        {{ } else if( model.result.type == 'unsupported-browser' || model.result.type == 'old-version' ) { }}
+          <h3>{{@Helper.i18n("window.requirements.title")}}</h3>
+          <p>
+            {{@Helper.i18n("window.requirements.info", [model.result.usedBrowser])}}
+            <a href="https://privmx.com/forum" target="_blank" rel="noopener noreferrer">{{@Helper.i18n("window.requirements.info2")}}</a>.
+          </p>
+          <div>
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" class="do-not-show-again-checkbox" />
+                  {{@Helper.i18n("window.requirements.donNotShowAgain")}}
+                </label>
+              </div>
+              <button class="btn btn-default action-continue">
+                {{@Helper.i18n("window.requirements.continueBtn")}}
+              </button>
+          </div>
+        {{ } else if( model.result.type == 'ok') { }}
+          <span class="success">{{@Helper.i18n("window.requirements.ok")}}</span>
+          <br/>
+          <span class="small">{{#Helper.i18n("window.requirements.redirect.text", ['<span class="seconds-left"></span>'])}}</span>
+        {{ } else { }}
+          <span class="error">{{@Helper.i18n("window.requirements.error.check")}}</span>
+        {{ } }}
+      {{ } }}
+    </div>
+  </div>
+  
+</div>

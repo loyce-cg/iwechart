@@ -1,0 +1,62 @@
+@import { ItemModel } from "../CustomSelectController";
+@import { func as iconTemplate } from "../../../window/taskGroupForm/template/icon.html";
+@model ItemModel
+{{
+  let checkedStr = "";
+  let cls = "";
+  let cls2 = "";
+  let tooltipStr = "";
+  if (model.item.selected) {
+    cls = "selected";
+    checkedStr = "checked";
+  }
+  let extraAttributesStr = "";
+  if (model.item.extraAttributes) {
+    for (let k in model.item.extraAttributes) {
+      let v = model.item.extraAttributes[k];
+      extraAttributesStr += Helper.escapeHtml(k) + "=\"" + Helper.escapeHtml(v) + "\" ";
+      if (k == "data-section-id") {
+        cls2 += " has-section-tooltip";
+        tooltipStr += Helper.escapeHtml(k) + "=\"" + Helper.escapeHtml(v) + "\" ";
+      }
+    }
+  }
+  let iconStr = "";
+}}
+<li class="item {{@cls}}" data-val="{{@model.item.val}}" {{#extraAttributesStr}}>
+  <span>
+    {{ if (model.multi) { }}
+    <input type="checkbox" {{@checkedStr}} />
+    {{ } }}
+    {{ if (model.item.icon) {
+      if (model.item.icon[0] == "@" && model.item.icon[1] != "j") {
+        }}<span class="icon {{@model.extraClass}} {{@cls2}}" {{#tooltipStr}}>{{
+        if (model.item.icon[1] == "a") {
+          }}<img src="{{@Helper.getAssetByName(model.item.icon.substr(7))}}" />{{
+        }
+        else {
+          }}<i class="fa {{@model.item.icon.substr(1)}}"></i>{{
+        }
+        }}</span>{{
+      }
+      else if (model.item.icon[0] == "!") {
+        }}<span class="avatar-container"><canvas class="not-rendered icon" data-auto-refresh="true" data-auto-size="true" data-hashmail-image="{{@model.item.icon.substr(1)}}"></canvas></span>{{
+      }
+      else if (model.item.icon[0] == "@" && model.item.icon[1] == "j") {
+        iconStr = Helper.createTemplate(iconTemplate).render(model.item.icon.substr(6));
+      }
+      else {
+        }}<img src="{{@model.item.icon}}" />{{
+      }
+    } }}
+    {{ if (model.item.val == "__new_taskgroup__") { }}
+      <span class="text new-taskgroup {{@model.extraClass}}" style="{{@model.extraStyle}}"><i class="fa fa-plus"></i><span>{{@Helper.i18n("plugin.tasks.component.customSelect.newTaskGroup")}}</span></span>
+    {{ } else if (model.item.extraClass == "task-label") { }}
+      <span class="text taskgroup-label-container" style="{{@model.item.extraStyle}}"><span class="task-label {{@model.item.extraArg[0]}}">#{{@model.item.extraArg[1]}}</span><span class="{{@model.item.extraArg[0]}}-color" style="font-weight:600;margin-left:5px;">{{@model.item.text}}</span></span>
+    {{ } else if (model.textNoEscape) { }}
+      <span class="text {{@model.extraClass}}" style="{{@model.extraStyle}}">{{#iconStr}}{{#model.item.text}}</span>
+    {{ } else { }}
+      <span class="text {{@model.extraClass}}" style="{{@model.extraStyle}}">{{#iconStr}}{{@model.item.text}}</span>
+    {{ } }}
+  </span>
+</li>

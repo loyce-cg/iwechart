@@ -1,0 +1,134 @@
+@import {EmailInfoModel} from "../EmailInfoWindowController";
+@model EmailInfoModel
+<div class="window-email-info-main-content">
+  <div class="content">
+    <div class="main-info">
+      {{@Helper.i18n("window.emailinfo.main")}}
+    </div>
+      {{ if (model.lowUser && model.lowUser.blocked) { {{
+      <div class="section">
+        <span class="fa fa-lock span-icon-gap"></span>{{@Helper.i18n("window.emailinfo.blockedUser")}}
+      </div>
+      {{ if (model.link) { {{
+        <div class="section">
+            <div class="field-label">
+              {{@Helper.i18n("window.emailinfo.link")}}
+            </div>
+            <div>
+              <a target="_blank" href="{{@model.link}}">{{@model.link}}</a>
+            </div>
+        </div>
+        <div class="section">
+            <button class="btn btn-warning" data-action="unblock-user">
+              <i class="fa fa-unlock"></i>
+              {{@Helper.i18n("window.emailinfo.unblockAccess")}}
+            </button>
+        </div>
+      }} } }}
+      
+
+
+      
+    }} } else { {{
+      {{ if (model.link) { {{
+      <div class="section">
+        <div class="field-label">
+          {{@Helper.i18n("window.emailinfo.link")}}
+        </div>
+        <div>
+          <a target="_blank" href="{{@model.link}}">{{@model.link}}</a>
+        </div>
+        
+      </div>
+      <div class="section">
+          <button class="btn btn-warning" data-action="block-user">
+            <i class="fa fa-lock"></i>
+            {{@Helper.i18n("window.emailinfo.blockAccess")}}
+          </button>
+      </div>
+      
+      }} } }}
+      {{ if (model.password || model.hint) { {{
+      <div class="section"></div>
+      <div class="section">
+        {{ if (model.password) { {{
+        <div>
+          <span class="field-label">
+            {{@Helper.i18n("window.emailinfo.password")}}
+          </span>
+          <span class="fake-password">
+            ******
+          </span>
+          <span class="real-password selectable hide">
+            {{@model.password}}
+          </span>
+          <button class="btn btn-link" data-trigger="show-password">
+            {{@Helper.i18n("window.emailinfo.showPassword")}}
+          </button>
+          <button class="btn btn-link hide" data-trigger="hide-password">
+            {{@Helper.i18n("window.emailinfo.hidePassword")}}
+          </button>
+        </div>
+        }} } }}
+        {{ if (model.hint) { {{
+        <div>
+          <span class="field-label">
+            {{@Helper.i18n("window.emailinfo.hint")}}:
+          </span>
+          <span>
+            {{@model.hint}}
+          </span>
+        </div>
+        }} } }}
+        <div class="section"></div>
+        <button class="btn btn-default" data-action="edit-user">
+          <i class="fa fa-pencil"></i>
+          {{@Helper.i18n("window.emailinfo.button.edit")}}
+        </button>
+        
+        
+      </div>
+    }} } else if (model.lowUser) { {{
+      <div class="section">
+        <div>
+          <span class="field-label">
+            {{@Helper.i18n("window.emailinfo.noPassword")}}
+          </span>
+        </div>
+        <button class="btn btn-default" data-action="edit-user">
+          <i class="fa fa-pencil"></i>
+          {{@Helper.i18n("window.emailinfo.button.edit")}}
+        </button>
+      </div>
+      <div class="section"></div>
+      <button class="btn btn-default" data-action="edit-user">
+        <i class="fa fa-pencil"></i>
+        {{@Helper.i18n("window.emailinfo.button.edit")}}
+      </button>
+
+      }} } }}
+      {{ if (!model.link && !model.password && !model.hint) { {{
+      <div>
+        {{@Helper.i18n("window.emailinfo.noData")}}
+      </div>
+      }} } }}
+      {{ if (model.lowUser && !model.lowUser.blocked) { {{
+      <div class="section">
+      </div>
+      }} } }}
+    }} } }}
+  </div>
+  <div class="buttons">
+    {{ if (model.lowUser) { {{
+
+      <button class="btn btn-default" data-trigger="ok">
+        {{@Helper.i18n("core.button.close.label")}}
+      </button>
+    }} } else { {{
+      <button class="btn btn-success" data-trigger="ok">
+        <i class="fa fa-check"></i>
+        {{@Helper.i18n("core.button.ok.label")}}
+      </button>
+    }} } }}
+  </div>
+</div>

@@ -1,0 +1,7 @@
+@import {Context} from "../../../component/extlist/ExtListView";
+@import {SimpleAsset} from "../LicenseVendorsWindowController";
+@model SimpleAsset
+@context Context<SimpleAsset>
+<li class="assetEntry" data-element-id="{{@model.elementId}}">
+  <span>{{@model.assetName}}</span>
+</li>

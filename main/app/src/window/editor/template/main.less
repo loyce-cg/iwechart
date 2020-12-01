@@ -1,0 +1,65 @@
+@import "../../base/BaseWindow";
+@import "../../../component/notification/index";
+
+.window-editor-main {
+  background-color: #000;
+  color: #fff;
+  &.docked {
+    background-color: var(--preview-panel-bg);
+    color: #000;
+  }
+}
+.print-styles() {
+  &, body {
+    overflow: visible;
+    height: auto;
+    background: #fff;
+  }
+  
+  .window-editor-main {
+    background-color: #fff;
+    color: #000;
+    height: auto;
+    width: auto;
+    display: block;
+    
+    .inner {
+      display: block;
+      vertical-align: baseline;
+      height: auto;
+      
+      .screen-loading {
+        display: none;
+      }
+      .notifications {
+        display: none;
+      }
+      .buttons {
+        display: none;
+      }
+    }
+  }
+  .screen-buttons {
+    display: none !important;
+  }
+}
+.print-header {
+  display: none;
+  color: var(--body-fg);
+  font-size: var(--font-size-l);
+  text-align: center;
+  padding: 5px;
+}
+@media print {
+  .print-styles();
+  html {
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .print-header {
+    display: none !important;
+  }
+}
+html.print-mode {
+  .print-styles();
+}

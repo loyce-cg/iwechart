@@ -1,0 +1,18 @@
+@import {Model} from "../AccountController";
+@model Model
+@import {func as sectionChangePasswordTemplate} from "./section-change-password.html";
+@import {func as sectionAlternativeLoginTemplate} from "./section-alternative-login.html";
+<div class="section account-section">
+    {{ if (Helper.isDemo()) { {{
+      <div class="section-header">
+        <i class="fa fa-ellipsis-h"></i>
+        {{@Helper.i18n("window.settings.section.account.header")}}
+      </div>
+      {{@Helper.i18n("core.demo.featureNotAvailable")}}
+    }} } else { {{
+      {{#Helper.createTemplate(sectionChangePasswordTemplate).render(model)}}
+      {{ if (model.isMnemonicEnabled) { }}
+        {{#Helper.createTemplate(sectionAlternativeLoginTemplate).render()}}
+      {{ } }}
+    }} } }}
+</div>

@@ -1,0 +1,31 @@
+@import {Entry} from "../BlacklistController";
+@import {Context} from "../../../../component/extlist/ExtListView";
+@import {BaseCollection} from "../../../../utils/collection/BaseCollection";
+@model Entry
+@context Context<Entry>
+<tr class="domain-entry {{@model.data.mode == 'SUGGEST' ? 'suggest' : 'with-mode'}}" data-domain="{{@model.domain}}">
+  <td class="domain-col">
+    {{@model.domain}}
+  </td>
+  <td>
+    {{if(model.data.last) { var date = new Date(model.data.last.time * 1000); {{
+      <span>{{@model.data.last.username}}</span>
+      <span title="{{@Helper.standardDate(date)}}">({{@Helper.timeAgo(date)}})</span>
+    }} } }}
+  </td>
+  <td class="action-col">
+    <div class="pf-switcher small">
+      <div class="option option-1 {{@model.data.mode == 'ALLOW' ? 'active' : ''}}" data-mode="ALLOW">
+        {{@Helper.i18n("window.admin.blacklist.mode.allow")}}
+      </div>
+      <div class="option option-2 {{@model.data.mode == 'DENY' ? 'active' : ''}}" data-mode="DENY">
+        {{@Helper.i18n("window.admin.blacklist.mode.deny")}}
+      </div>
+    </div>
+  </td>
+  <td class="del-col">
+    <button class="btn btn-warning btn-xs icon-only" data-action="delete-domain" title="{{@Helper.i18n('window.admin.blacklist.table.delete')}}">
+      <i class="fa fa-trash" data-org="fa fa-trash" data-proc="fa fa-spin fa-circle-o-notch"></i>
+    </button>
+  </td>
+</tr>

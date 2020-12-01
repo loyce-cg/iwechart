@@ -1,0 +1,22 @@
+@model {[name: string]: any}
+<table class="small">
+  <tbody>
+    {{
+      Object.keys(model).forEach(function(key){
+        var value = model[key];
+        {{
+          <tr>
+            <td>
+              {{@key}}
+            </td>
+            <td>
+              <strong>
+                {{#Helper.nl2br(Helper.escapeHtml(value))}}
+              </strong>
+            </td>
+          </tr>
+        }}
+      });
+    }}
+  </tbody>
+<table>

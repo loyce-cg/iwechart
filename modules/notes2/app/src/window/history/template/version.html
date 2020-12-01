@@ -1,0 +1,20 @@
+@import {component} from "pmc-web";
+@import {DescriptorVersion} from "../HistoryWindowController";
+@context component.extlist.Context<DescriptorVersion>
+@model DescriptorVersion
+<tr class="version-entry {{@context.isActive ? 'active' : ''}}" data-signature="{{@model.signature}}">
+  <td class="name">
+     <i class="fa fa-circle"></i>
+     <span title="{{@Helper.dateWithHourLocal(model.modifiedDate)}}" data-timeago-type="calendarDate" data-timeago="{{@model.modifiedDate}}">
+       {{@Helper.calendarDate(model.modifiedDate)}}
+     </span>
+  </td>
+  <td class="size">
+     {{@Helper.bytesSize(model.size)}}
+  </td>
+  <td class="date">
+    {{ if (model.modifier) { {{
+      <canvas class="not-rendered" data-tooltip-trigger="{{@model.modifier}}" data-hashmail-image="{{@model.modifier}}" data-width="16" data-height="16" data-auto-size="true" data-auto-refresh="true" width="10" height="10"></canvas>
+    }} } }}
+  </td>
+</tr>

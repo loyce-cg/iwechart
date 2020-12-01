@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <script type="text/javascript">
+        console.log("hey from root");
+        require("devtron").install();
+        var ipc = require("electron").ipcRenderer;
+        var remote = require("electron").remote;
+        var map = remote.require("./ipc-test/ObjectMap");
+        var manager = map.get("manager");
+        console.log("manager", manager);
+        var i = 0;
+        var stop = false;
+        var someAction = function() {
+            var start = new Date().getTime();
+            manager.list[i].method1();
+            console.log("Interval", i, (new Date().getTime() - start));
+            i = (i + 1) % manager.list.length;
+            if (stop == false) {
+                setTimeout(someAction, 10);
+            }
+        };
+        setTimeout(someAction, 1);
+    </script>
+</head>
+<body>
+    <h1>IPC test</h1>
+</body>
+</html>

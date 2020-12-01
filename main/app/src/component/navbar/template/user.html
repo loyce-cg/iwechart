@@ -1,0 +1,49 @@
+@import {UserModel} from "../NavBarController";
+@model UserModel
+{{
+  var data = model;
+  var person = model.person;
+}}
+<div class="login-data">
+  <p class="image">
+    <img src="{{#person.avatar ? person.avatar : Helper.getAssetByName('DEFAULT_USER_AVATAR')}}" alt="" />
+  </p>
+  {{ var description = Helper.shortDescription(person.description); }}
+  <div class="text-col {{@description ? 'with-description' : 'without-description'}}">
+    <p class="name">{{@Helper.truncate(person.name, 25)}}{{ if (model.isAdmin) { }}<span class="user-is-admin-info"> <i class="fa fa-users"></i><i class="fa fa-cog"></i></span>{{ } }}</p>
+    {{if (description) { {{
+      <p class="desc">{{@Helper.truncate(description, 25)}}</p>
+    }} } }}
+  </div>
+  <div class="menu">
+    <div class="dropdown">
+      <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+        <span class="ico-arrow-down"></span>
+      </button>
+      <div class="context-menu-nav-bar {{@model.showWindowControls ? 'context-menu-narrow-mode' : ''}}">
+        <div class="context-menu-backdrop"></div>
+        <ul class="context-menu-content">
+          {{data.menu.groups.forEach((group, groupIndex) => { {{
+            {{ if (groupIndex > 0 && group.elements.length > 0 && data.menu.groups[groupIndex-1].elements.length > 0) { {{
+              <li class="divider"></li>
+            }} } }}
+            {{group.elements.forEach(x => { {{
+              <li>
+                <span data-action="{{@x.action}}" tabindex="-1" data-window-opener="true">
+                  {{ if (Array.isArray(x.icon)) { }}
+                    {{ for (let str of x.icon) { }}
+                      <span class="{{@str.indexOf('fa-') == 0 ? 'fa ' + str : str}}"></span>
+                    {{ } }}
+                  {{ } else { }}
+                    <span class="{{@x.icon.indexOf('fa-') == 0 ? 'fa ' + x.icon : x.icon}}"></span>
+                  {{ } }}
+                  {{@x.label}}
+                </span>
+              </li>
+            }} }); }}
+          }} }); }}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

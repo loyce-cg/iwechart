@@ -1,0 +1,177 @@
+@import {VerifyInfoModel} from "../VerifyDomainWindowController";
+@import * as privfs from "privfs-client";
+@import CosignedVerifyStatus = privfs.pki.messages.CosignedVerifyStatus;
+@model VerifyInfoModel
+{{type Cosigner = {domain: string, status: CosignedVerifyStatus};}}
+<div class="verify-info">
+{{ if (typeof(model) == "string") { {{
+{{ if (model == "loading") { {{
+  <div class="main-info">
+    <i class="fa fa-circle-o-notch fa-spin"></i>
+    {{@Helper.i18n('window.admin.verifydomain.process')}}
+  </div>
+}} } else if (model == "fetch-error") { {{
+
+}} } else if (model == "no-verified") { {{
+
+}} } else if (model == "anonymous") { {{
+
+}} } else { {{
+    <div class="main-info">
+      Unknown
+    </div>
+}} } }}
+}} } else { {{
+  {{
+    var status = model.verified.status;
+    var res = model.fetch.result;
+    var cosigners = res ? res.cosigners || [] : [];
+    
+
+    var validCosigners: Cosigner[] = [], invalidCosigners: Cosigner[] = [], noAnswerCosigners: Cosigner[] = [];
+    cosigners.forEach(function(cosigner:Cosigner) {
+      if (cosigner.status == 0) {
+        validCosigners.push(cosigner);
+      }
+      else if (cosigner.status == 1) {
+        invalidCosigners.push(cosigner);
+      }
+      else if (cosigner.status == 2) {
+        noAnswerCosigners.push(cosigner);
+      }
+    });
+    var fingerprint = model.fetch.fingerprint;
+    var timestamp = model.fetch.timestamp;
+  }}
+  <div class="result">
+    {{ if (status === 0) { // OK {{
+      <div class="status-info">
+        <i class="fa fa-check text-success"></i>
+        <div class="info">
+          {{@Helper.i18n('window.admin.verifydomain.state.valid', model.domain)}}
+        </div>
+      </div>
+    }} } else if (status === 1) { // INVALID_KEY (never happends, there is no if for that) {{
+      <div class="status-info">
+        <i class="fa fa-times text-danger"></i>
+        <div class="info">
+          {{@Helper.i18n('window.admin.verifydomain.state.invalid')}}
+        </div>
+      </div>
+    }} } else if (status === 2) { // KEY_DOESNT_EXISTS (should never happends but its possible, no server key in PKI) {{
+      <div class="status-info">
+        <i class="fa fa-times text-danger"></i>
+        <div class="info">
+          {{@Helper.i18n('window.admin.verifydomain.state.unknown')}}
+        </div>
+      </div>
+      <div class="the-line"></div>
+      <div class="info">
+          {{@Helper.i18n('window.admin.verifydomain.state.tree_signatures_verification_failed', model.domain)}}
+      </div>
+    }} } else if (status === 3) { // INVALID_SIGNATURE (when invalid response will be returned) {{
+      <div class="status-info">
+        <i class="fa fa-exclamation-triangle text-warning"></i>
+        <div class="info">
+          {{@Helper.i18n('window.admin.verifydomain.state.invalidSignature')}}
+        </div>
+      </div>
+      <div class="domains">
+        <i class="fa fa-certificate"></i>
+        <div class="header">
+          {{@Helper.i18n('window.admin.verifydomain.state.badResponse', model.domain)}}
+        </div>
+      </div>
+    }} } else if (status === 4) { // INVALID_NET_STATE (its normal error, when something is wrong with pki) {{
+      <div class="status-info">
+        <i class="fa fa-times text-danger"></i>
+        <div class="info">
+          {{@Helper.i18n('window.admin.verifydomain.state.invalidState')}}
+        </div>
+      </div>
+      <div class="the-line"></div>
+      <div class="info">
+          {{@Helper.i18n('window.admin.verifydomain.state.tree_signatures_verification_failed', model.domain)}}
+      </div>
+    }} } else if (status === 5) { // NO_QUORUM (when 50% or more cosigners did not reponse) {{
+      <div class="status-info">
+        <i class="fa fa-exclamation-triangle text-warning"></i>
+        <div class="info">
+          {{@Helper.i18n('window.admin.verifydomain.state.noQuorum')}}
+        </div>
+      </div>
+      <div class="the-line"></div>
+      <div class="domains">
+        <i class="fa fa-certificate"></i>
+        <div class="header">
+          {{@Helper.i18n('window.admin.verifydomain.state.noConsensus', model.domain)}}
+        </div>
+      </div>
+    }} } else if (status === 6) { // INVALID_SERVER_KEYSTORE (should never happends but its possible when domain server key is in client cache) {{
+      <div class="status-info">
+        <i class="fa fa-times text-danger"></i>
+        <div class="info">
+          {{@Helper.i18n('window.admin.verifydomain.state.invalidServerKeystore')}}
+        </div>
+      </div>
+    }} } }}
+    {{ if (cosigners.length > 0) { {{
+    <div class="the-line"></div>
+    <div class="domains">
+      <i class="fa fa-certificate"></i>
+      {{ if (validCosigners.length > 0) { {{
+        <div class="header">
+          {{@Helper.i18n(status < 3 ? 'window.admin.verifydomain.state.info.validCosigners' : 'window.admin.verifydomain.state.info.validCosigners2')}}
+          ({{#validCosigners.length}}/{{#cosigners.length}}):
+        </div>
+        <div class="domains-list">
+          {{validCosigners.forEach(function(cosigner) { {{
+            <div class="domain">
+              {{#cosigner.domain}}
+            </div>
+          }} }); }}
+        </div>
+      }} } }}
+      {{ if (invalidCosigners.length > 0) { {{
+        <div class="header">
+          {{@Helper.i18n('window.admin.verifydomain.state.info.invalidCosigners')}}
+          ({{#invalidCosigners.length}}/{{#cosigners.length}}):
+        </div>
+        <div class="domains-list">
+          {{invalidCosigners.forEach(function(cosigner) { {{
+            <div class="domain">
+              {{#cosigner.domain}}
+            </div>
+          }} }); }}
+        </div>
+      }} } }}
+      {{ if (noAnswerCosigners.length > 0) { {{
+        <div class="header">
+          {{@Helper.i18n('window.admin.verifydomain.state.info.noAnswerCosigners')}}
+          ({{#noAnswerCosigners.length}}/{{#cosigners.length}}):
+        </div>
+        <div class="domains-list">
+          {{noAnswerCosigners.forEach(function(cosigner) { {{
+            <div class="domain">
+              {{#cosigner.domain}}
+            </div>
+          }} }); }}
+        </div>
+      }} } }}
+    </div>
+    }} } }}
+    <div class="db-info">
+      <div class="header">
+      </div>
+      <div class="db-info-entry">
+        {{@Helper.i18n('window.admin.verifydomain.header.sender.state.info.blochain.header')}}:
+        {{@fingerprint}}
+      </div>
+      <div class="db-info-entry">
+       {{@Helper.i18n('window.admin.verifydomain.header.sender.state.info.blochain.date')}}:
+       {{@Helper.standardDate(timestamp * 1000)}}
+      </div>
+    </div>
+  </div>
+}} } }}
+</div>

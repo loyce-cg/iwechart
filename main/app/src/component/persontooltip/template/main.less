@@ -1,0 +1,109 @@
+.avatar-placeholder {
+  background-color: transparent;
+  position: fixed;
+  z-index: 99999999;
+  margin: 30px 0 0 30px;
+  color: var(--body-fg);
+  
+  .avatar-item {
+    padding: 10px;
+    background-color: var(--preview-panel-bg);
+    width: 420px;
+    position: absolute;
+    z-index: 1000;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    display: none;
+    pointer-events: none;
+    
+    &.visible {
+      display: block;
+    }
+    
+    .img-container {
+      float: left;
+      .img-bg {
+        background-color: #eee;
+        width: 200px;
+        height: 200px;
+      }
+    }
+    
+    .data-container {
+      height: 200px;
+      overflow: hidden;
+      margin-left: 210px;
+      
+      .name, .address, .description-container {
+        font-family: var(--misc-ui-font-family);
+        width: 180px;
+      }
+      .name {
+        font-size: var(--font-size-l);
+      }
+      .address, .description-container {
+        font-size: var(--font-size-xs);
+      }
+      .name, .address, .external-user-info, .extanded-info {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        // margin-bottom: 10px;
+      }
+      .external-user-info {
+        font-size: var(--font-size-xs);
+        opacity: 0.75;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-bottom: 0;
+        font-style: italic;
+        &.full {
+          margin-top: 10px;
+        }
+      }
+      .extanded-info {
+        font-size: var(--font-size-xs);
+        opacity: 0.75;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-bottom: 0;
+        font-style: italic;
+      }
+
+      .status-online {
+        color: var(--color-success);
+        font-weight: bold;
+      }
+
+      .description-container {
+        overflow: hidden;
+        max-height: 100px;
+      }
+    }
+  }
+  .avatar-item.as-list {
+    width: 320px;
+  }
+  .avatar-item-row {
+    margin-bottom: 10px;
+    
+    .avatar-item-list-item {
+      .data-container {
+        height: 100px;
+        overflow: hidden;
+        margin-left: 110px;
+      }
+      .img-container {
+        .img-bg {
+          width: 100px;
+          height: 100px;
+        }
+      }
+    }
+  }
+  .avatar-item-row:last-child {
+    margin-bottom: 0;
+  }
+}

@@ -1,0 +1,35 @@
+@import {Model} from "../SidebarController";
+@model Model
+<div class="sidebar">
+  <div class="custom-section-list"></div>
+  <div class="custom-element-list"></div>
+  <div class="section-list"></div>
+  <div class="sidebar-buttons-sections">
+    {{(model.sidebarButtons || []).filter(x => x.onSectionList && x.onSectionList == true).forEach(btn => { {{
+      <div class="section-element wi-element" data-sidebar-button-id="{{@btn.id}}">
+        <div class="wi-element-inner">
+          <div class="wi-element-icon fa fa-plus"></div>
+          <div class="wi-element-name" title="{{@btn.title}}">
+            <div class="name-wrapper">{{@btn.label}}</div>
+          </div>
+        </div>
+      </div>
+    }} }); }}
+  </div>
+  <div class="custom-element-list-a"></div>
+  <div class="conv2-list"></div>
+  <div class="sidebar-buttons">
+    {{(model.sidebarButtons || []).filter(x => !x.onSectionList).forEach(btn => { {{
+      <div class="section-element wi-element" data-sidebar-button-id="{{@btn.id}}">
+        <div class="wi-element-inner">
+          <div class="wi-element-icon fa fa-plus"></div>
+          <div class="wi-element-name" title="{{@btn.title}}">
+            <div class="name-wrapper">{{@btn.label}}</div>
+          </div>
+        </div>
+      </div>
+    }} }); }}
+  </div>
+  <div class="host-list"></div>
+
+</div>

@@ -1,0 +1,10 @@
+{
+  "name": "privmx-desktop-client-editor-module-builder",
+  "version": "1.0.0",
+  "description": "Editor module builder",
+  "license": "PrivMX Source Code License",
+  "private": true,
+  "dependencies": {
+    "privmx-builder": "1.4.1"
+  }
+}

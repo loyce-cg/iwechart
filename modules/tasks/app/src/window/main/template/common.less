@@ -1,0 +1,184 @@
+@import "../../../../node_modules/pmc-web/src/themes/default/less/mixins";
+
+*:not(.fa):not(.privmx-icon) {
+  font-family: var(--tasks-font-family);
+}
+
+html body {
+  color: var(--body-fg);
+}
+
+.btn-disabled() {
+  cursor: not-allowed;
+  opacity: 0.65;
+  
+  .fa {
+    cursor: not-allowed;
+  }
+  
+  &:active {
+    box-shadow: none;
+    border-color: transparent;
+  }
+}
+
+.panel {
+  outline: none;
+}
+
+.bottom-sticky-panel() {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-top: 1px solid var(--main-panel-lower-buttons-border);
+}
+
+.btn-micro {
+  padding: 4px 6px 3px 6px;
+  line-height: 1;
+}
+
+.tasks-plugin-window {
+  height: 100%;
+  
+  .base-form.pf-scrollable,
+  .scrollable-content.pf-scrollable {
+    .buttons {
+      .bottom-sticky-panel();
+      margin: 0;
+      padding: 5px 10px;
+    }
+  }
+  
+  .scrollable-content.pf-scrollable {
+    bottom: 0;
+  }
+  
+  input,
+  textarea,
+  .textarea-like,
+  select {
+    border-radius: 0;
+    box-shadow: none !important;
+  }
+  
+  select[multiple],
+  .textarea-like,
+  textarea {
+    height: 175px !important;
+  }
+  
+  label {
+    font-weight: normal;
+  }
+  
+  button.cancel {
+    float: right;
+  }
+  
+  .buttons {
+    margin-top: 20px;
+  }
+  
+  .base-form .fields .field {
+    .input {
+      &.just-info {
+        font-size: var(--font-size);
+        padding-top: 4px;
+      }
+    }
+  }
+  
+  .ok-cancel-buttons {
+    text-align: center;
+    
+    button {
+      margin: 0 10px;
+    }
+  }
+}
+
+.flex-row {
+  display: flex;
+  margin: 0 10px;
+  
+  >div {
+    flex: 1 1 0;
+    width: 0;
+    margin: 5px;
+    
+    &.flex-2 {
+      flex: 2 2 0;
+    }
+    &.flex-3 {
+      flex: 3 3 0;
+    }
+    
+    &.flex-00a {
+      flex: 0 0 auto;
+      width: auto;
+    }
+    &.flex-11a {
+      flex: 1 1 auto;
+      width: auto;
+    }
+  }
+}
+
+.task-label {
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: var(--task-label-font-family);
+  font-size: var(--font-size-xs);
+}
+
+.taskgroup-label {
+  padding: 1px 3px;
+  font-weight: 600;
+  font-size: var(--font-size-xs);
+  border: 1px solid var(--main-panel-transparent-button-color);
+  border-radius: 5px;
+  line-height: normal;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--main-panel-taskgroup-fg);
+  text-align: left;
+  
+  &, & *:not(.fa):not(.privmx-icon) {
+    font-family: var(--ff-default-user);
+  }
+  
+  &.small {
+    font-size: var(--font-size-xxxxs);
+    padding: 1px 3px;
+    max-width: 50px;
+  }
+}
+
+.custom-select-button .taskgroup-label {
+  width: auto;
+  max-width: 80px;
+}
+
+.component-splitter-vertical>.component-splitter-handle {
+  background: transparent;
+}
+      
+.notifications-container-wrapper {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+.pf-scrollable .pf-scroll-panel .pf-scroll {
+  background-color: var(--scrollbar-bg);
+}
+
+.av-cnv canvas {
+  border-radius: 5px;
+}

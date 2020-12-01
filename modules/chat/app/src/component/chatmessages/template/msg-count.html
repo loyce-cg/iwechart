@@ -1,0 +1,5 @@
+@model number
+<div class="msg-count" title="{{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.messagesCount')}}: {{@model}}">
+  <span class="privmx-icon privmx-icon-chat"></span>
+  {{@webUtils.NumberFormatter.formatSimpleWithSuffix(model)}}
+</div>

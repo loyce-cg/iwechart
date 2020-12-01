@@ -1,0 +1,58 @@
+.infotooltip.not-rendered {
+  display: none;
+}
+.info-tooltip-component {
+  position: fixed;
+  z-index: 99999999;
+  width: 100%;
+  display: block;
+  visibility: hidden;
+  pointer-events:none;
+  .info-tooltip {
+    line-height: 32px;
+    position:absolute;
+    font-size: var(--font-size-xs);
+    color: #fff;
+    min-width: 100px;
+    padding: 0 15px;
+    background-color: rgba(0, 0, 0, 1);
+    pointer-events: all;
+    display: inline-block;
+    border-radius: 2px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    
+    
+    &.light {
+      color: var(--body-fg);
+      font-weight: normal;
+      background-color: var(--preview-panel-bg);
+    }
+    
+    i {
+      margin-left: 10px;
+    }
+    
+    .avatar-item {
+      max-width: 400px;
+      
+      .image-with-data {
+        padding: 10px 10px 10px 0;
+      }
+      p.name {
+        padding-top:0;
+        margin-bottom: 0;
+        line-height: 26px;
+      }
+    }
+  }
+}
+
+.search-on .info-tooltip-component {
+  .wi-element:not(.with-search-count),
+  .conversation-element:not(.with-search-count) {
+    opacity: 1;
+  }
+}
+
+@import "../tasktooltip/index.less";
+@import "../sectiontooltip/index.less";

@@ -1,0 +1,16 @@
+@import {Model} from "../LoginWindowController";
+@model Model
+
+<div class="updates">
+  <span class="text available {{@model.updateReadyToInstall ? 'hide' : ''}}">{{@Helper.i18n("core.updater.updatesAvailable")}}</span>
+  <span class="link available {{@model.updateReadyToInstall ? 'hide' : ''}}" data-action-id="download-updates">{{@Helper.i18n("core.updater.downloadUpdates")}}</span>
+  <span class="text readyToInstall {{@model.updateReadyToInstall ? '' : 'hide'}}">{{@Helper.i18n("core.updater.updatesReadyToInstall")}}</span>
+  <span class="link readyToInstall {{@model.updateReadyToInstall ? '' : 'hide'}}" data-action-id="install-updates">{{@Helper.i18n("core.updater.installUpdates")}}</span>
+</div>
+<div class="updates-in-progress hide">
+  <span class="text checking hide"><i class="fa fa-circle-o-notch fa-spin"></i>{{@Helper.i18n("core.updater.checkingUpdates")}}</span>
+  <span class="text downloading hide"><i class="fa fa-circle-o-notch fa-spin"></i>{{@Helper.i18n("core.updater.downloadingUpdates")}} </span><span class="text downloading download-progress hide"></span>
+  <span class="text extracting hide"><i class="fa fa-circle-o-notch fa-spin"></i>{{@Helper.i18n("core.updater.extractingUpdates")}}</span>
+  <span class="text error hide">{{@Helper.i18n("core.updater.updatesError")}}</span>
+</div>
+

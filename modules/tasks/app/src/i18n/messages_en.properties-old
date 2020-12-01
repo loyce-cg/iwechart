@@ -1,0 +1,268 @@
+plugin.tasks.tasks-assigned-to-me=Assigned to me
+plugin.tasks.tasks-created-by-me=Created by me
+plugin.tasks.trash=Trash
+plugin.tasks.all-tasks=All issues
+plugin.tasks.private-tasks=My private issues
+plugin.tasks.task-doesnt-exist=Issue does not exist
+
+plugin.tasks.window.main.label=Issues
+plugin.tasks.window.main.title=Issues
+
+plugin.tasks.window.ok=Ok
+plugin.tasks.window.save=Save
+plugin.tasks.window.cancel=Cancel
+plugin.tasks.window.edit=Edit
+plugin.tasks.window.add_attachment=Add
+plugin.tasks.window.delete=Delete issue
+plugin.tasks.window.move-to-trash=Move to trash
+plugin.tasks.window.restore-from-trash=Restore from trash
+plugin.tasks.window.delete-taskgroup=Delete list
+
+plugin.tasks.notifier.adding_attachment=Adding attachment ...
+
+plugin.tasks.status0=New
+plugin.tasks.status1=In progress
+plugin.tasks.status2=Done
+plugin.tasks.status3=Done
+plugin.tasks.status-unknown=Unknown
+plugin.tasks.status-idea=Idea
+plugin.tasks.status-todo=Todo
+plugin.tasks.status-inprogress=In progress
+plugin.tasks.status-done=Done
+
+plugin.tasks.window.tasks.new-task=New issue
+plugin.tasks.window.tasks.new-task-tooltip=Create new issue
+plugin.tasks.window.tasks.cut-task=Cut
+plugin.tasks.window.tasks.cut-task-tooltip=Cut issue (ctrl+X)
+plugin.tasks.window.tasks.copy-task=Copy
+plugin.tasks.window.tasks.copy-task-tooltip=Copy issue (ctrl+C)
+plugin.tasks.window.tasks.paste-task=Paste
+plugin.tasks.window.tasks.paste-task-tooltip=Paste issue (ctrl+V)
+plugin.tasks.window.tasks.move-task=Move...
+plugin.tasks.window.tasks.move-task-tooltip=Move issue to another list
+plugin.tasks.window.tasks.move-to-trash=Trash
+plugin.tasks.window.tasks.move-to-trash-tooltip=Move to trash
+plugin.tasks.window.tasks.restore-from-trash=Restore
+plugin.tasks.window.tasks.restore-from-trash-tooltip=Restore from trash
+plugin.tasks.window.tasks.delete-task=Delete
+plugin.tasks.window.tasks.delete-task-tooltip=Delete issue (del)
+plugin.tasks.window.tasks.new-taskgroup=New list
+plugin.tasks.window.tasks.new-taskgroup-tooltip=Create new list
+plugin.tasks.window.tasks.edit-taskgroup=Edit list
+plugin.tasks.window.tasks.edit-taskgroup-tooltip=Edit list
+plugin.tasks.window.tasks.paste-into-taskgroup=Paste
+plugin.tasks.window.tasks.paste-into-taskgroup-tooltip=Paste issues into this list
+plugin.tasks.window.tasks.toggle-collapsed-tooltip=Use ctrl key to apply this action to all lists.
+plugin.tasks.window.tasks.new-dots=New ...
+plugin.tasks.window.tasks.new-dots-title=Create new issue or list
+plugin.tasks.window.tasks.has-comments=Has comments
+plugin.tasks.window.tasks.has-attachments=Has attachments
+plugin.tasks.window.tasks.has-calendar=Is in calendar
+plugin.tasks.window.tasks.context-menu-headers.view-settings=View options
+plugin.tasks.window.tasks.context-menu-headers.columns=Columns
+plugin.tasks.window.tasks.hidden-tasks-info=and {0} issues without a list
+plugin.tasks.window.tasks.hidden-tasks-show=[Show them]
+plugin.tasks.window.tasks.file-doesnt-exist=File doesn't exist
+
+plugin.tasks.window.taskGroupForm.title=List
+plugin.tasks.window.taskGroupForm.nameTaken=A list with this name already exists
+plugin.tasks.window.taskGroupForm.icon=Icon
+
+plugin.tasks.window.taskForm.title=Issue
+
+plugin.tasks.window.task.title=Issue
+plugin.tasks.window.task.enter-saves-task=[Enter] saves
+plugin.tasks.window.task.enter-adds-comment=[Enter] saves
+
+plugin.tasks.window.taskGroupSelector.title=Select lists
+plugin.tasks.window.taskGroupSelector.save=Select
+plugin.tasks.window.taskGroupSelector.cancel=Cancel
+
+plugin.tasks.settings.show-task-panel=Show preview
+plugin.tasks.settings.show-orphans=Show issues without a list
+plugin.tasks.settings.show-header-per-list=Show header in each list
+plugin.tasks.settings.show-list-progress=Show list progress bars
+plugin.tasks.settings.show-task-numbers=Show issue numbers
+plugin.tasks.settings.show-all-other-list-names=Show all other list names
+plugin.tasks.settings.show-recently-modified=Show recently modified
+plugin.tasks.settings.show-recently-modified-checked=Show lists view
+plugin.tasks.settings.hide-done=Hide done
+plugin.tasks.settings.show-hash-id-column=#
+plugin.tasks.settings.show-task-column=Issue
+plugin.tasks.settings.show-description-column=Description
+plugin.tasks.settings.show-type-column=Type
+plugin.tasks.settings.show-status-column=Status
+plugin.tasks.settings.show-priority-column=Priority
+plugin.tasks.settings.show-assigned-to-column=Assigned to
+plugin.tasks.settings.show-attachments-column=Attachments
+plugin.tasks.settings.show-created-column=Created
+plugin.tasks.settings.show-modified-column=Modified
+plugin.tasks.settings.toggle-collapsed-all-collapse=Collapse lists
+plugin.tasks.settings.toggle-collapsed-all-expand=Expand lists
+plugin.tasks.settings.horizontal-task-window-layout=Horizontal issue layout
+plugin.tasks.settings.show-full-task-descriptions=Show full descriptions
+plugin.tasks.settings.show-only-unread=Show only unread
+plugin.tasks.settings.texts-with-status-color=Color tasks using their status
+
+plugin.tasks.mark-all-as-read=Mark all as read
+
+plugin.tasks.task.name=Name
+plugin.tasks.task.description=Description
+plugin.tasks.task.description.placeholder=The first line will be the title
+plugin.tasks.task.type=Type
+plugin.tasks.task.status=Status
+plugin.tasks.task.priority=Priority
+plugin.tasks.task.attachments=Attachments
+plugin.tasks.task.assigned-to=Assigned to
+plugin.tasks.task.history=History
+plugin.tasks.task.taskGroupId=List
+plugin.tasks.task.assignedTo=Assigned to
+plugin.tasks.task.created=Created
+plugin.tasks.task.modified=Modified
+plugin.tasks.task.project-name=Section
+plugin.tasks.task.taskGroup-name=List
+plugin.tasks.task.delete-confirm=Do you want to delete this issue?
+plugin.tasks.task.delete-confirm-multi=Do you want to delete those issues?
+plugin.tasks.delete-all-instances=Delete all instances
+plugin.tasks.task.move-to-trash-confirm=Do you want to move this issue to trash?
+plugin.tasks.task.move-to-trash-confirm-multi=Do you want to move those issues to trash?
+plugin.tasks.task.none=(none)
+plugin.tasks.task.nobody=(nobody)
+plugin.tasks.task.history.created={0} created the issue.
+plugin.tasks.task.history.trashed={0} moved the issue to trash.
+plugin.tasks.task.history.restored={0} restored the issue from trash.
+plugin.tasks.task.history.moved={0} moved the issue from {1} to {2}
+plugin.tasks.task.history.moved-added={0} added the issue to {1}
+plugin.tasks.task.history.moved.orphansL=Issues without a list
+plugin.tasks.task.history.moved.orphansR=Issues without a list
+plugin.tasks.task.history.modified.name={0} changed the name from "{1}" to "{2}".
+plugin.tasks.task.history.modified.startTimestamp={0} set the start date from {1} to {2}.
+plugin.tasks.task.history.modified.duration={0} changed the duration from {1} to {2}.
+plugin.tasks.task.history.modified.endTimestamp={0} set the end date from {1} to {2}.
+plugin.tasks.task.history.modified.description={0} changed the description.
+plugin.tasks.task.history.modified.type={0} changed type from "{1}" to "{2}".
+plugin.tasks.task.history.modified.status={0} changed status from {1} to {2}.
+plugin.tasks.task.history.modified.priority={0} changed priority from "{1}" to "{2}".
+plugin.tasks.task.history.modified.project={0} moved the issue from section {1} to {2}.
+plugin.tasks.task.history.modified.attachment={0} modified attachment {1}.
+plugin.tasks.task.history.modified.attachment.multi={0} modified attachment {1} {2} times.
+plugin.tasks.task.history.added.attachment={0} added attachment {1}.
+plugin.tasks.task.history.added.person={0} assigned person {1}.
+plugin.tasks.task.history.removed.attachment={0} removed attachment {1}.
+plugin.tasks.task.history.removed.person={0} unassigned person {1}.
+plugin.tasks.task.history.unknown=unknown
+plugin.tasks.task.history.revert=Revert
+plugin.tasks.task.history.more=More
+plugin.tasks.task.history.oldDescription=Previous description
+plugin.tasks.task.history.newDescription=New description
+plugin.tasks.task.history.revert-confirm=Do you want to revert this change?
+plugin.tasks.task.del-attachment-confirm=Do you want to delete this attachment?
+
+plugin.tasks.table.task.hash-id=#
+plugin.tasks.table.task.task=Issue
+plugin.tasks.table.task.description=Description
+plugin.tasks.table.task.type=Type
+plugin.tasks.table.task.status=Status
+plugin.tasks.table.task.priority=Priority
+plugin.tasks.table.task.assigned-to=Assigned
+plugin.tasks.table.task.attachments=Attachments
+plugin.tasks.table.task.created=Created
+plugin.tasks.table.task.modified=Modified
+plugin.tasks.table.empty=No issues
+
+plugin.tasks.taskgroup.name=Name
+plugin.tasks.taskgroup.due-date=Due date
+plugin.tasks.taskgroup.due-date.none=No due date
+plugin.tasks.taskgroup.project-name=Section
+plugin.tasks.taskgroup.delete-confirm=Do you want to delete this list? Issues will not be deleted.
+plugin.tasks.taskgroup.detach=Close the list
+plugin.tasks.taskgroup.detach-info=If the list is done, you can close it using the button below. <span class="irreversible-warning">This operation is irreversible!</span> The list will be unpinned, moved down and collapsed. Issues will be detached from other lists.
+plugin.tasks.taskgroup.detach-confirm=Do you want to close this list?
+
+plugin.tasks.orphansGroup.name=Issues without a list
+plugin.tasks.recentlyModifiedGroup.name=Recently modified
+
+plugin.tasks.error.project-does-not-exist=Section does not exist.
+plugin.tasks.error.taskGroup-does-not-exist=List does not exist.
+plugin.tasks.error.task-does-not-exist=Issue does not exist.
+plugin.tasks.error.task-conflict=The issue was not saved, because someone else modified it first.
+plugin.tasks.error.taskgroup-conflict=The list was not saved, because someone else modified it first.
+
+plugin.tasks.taskPanel.noTaskSelected=No issue selected
+plugin.tasks.taskPanel.multipleTasksSelected=Multiple issues selected
+
+plugin.tasks.comments.comments-header=Comments
+plugin.tasks.comments.add-button=Add comment
+plugin.tasks.comments.add-placeholder=Enter a comment...
+plugin.tasks.history.history-header=History
+plugin.tasks.assigned-to-header=Assigned to
+
+plugin.tasks.notifications.refreshing=Refreshing...
+plugin.tasks.notifications.taskgroup-created=Created list
+plugin.tasks.notifications.taskgroup-modified=Saved list
+plugin.tasks.notifications.taskgroup-deleted=Deleted list
+plugin.tasks.notifications.task-created=Created issue
+plugin.tasks.notifications.task-modified=Saved issue
+plugin.tasks.notifications.task-deleted=Deleted issue
+plugin.tasks.notifications.tasks-deleted=Deleted issues
+plugin.tasks.notifications.task-deleting=Deleting issue...
+plugin.tasks.notifications.tasks-deleting=Deleting issues...
+plugin.tasks.notifications.task-restoring=Restoring issue from trash...
+plugin.tasks.notifications.tasks-restoring=Restoring issues from trash...
+plugin.tasks.notifications.task-cut=Issue cut
+plugin.tasks.notifications.tasks-cut=Issues cut
+plugin.tasks.notifications.task-copied=Issue copied
+plugin.tasks.notifications.tasks-copied=Issues copied
+plugin.tasks.notifications.task-moved=Issue moved
+plugin.tasks.notifications.tasks-moved=Issues moved
+plugin.tasks.notifications.task-pasted=Issue pasted
+plugin.tasks.notifications.tasks-pasted=Issues pasted
+plugin.tasks.notifications.pasting-tasks=Pasting issues...
+plugin.tasks.notifications.moving-tasks=Moving issues...
+plugin.tasks.notifications.task-pinned=Issue pinned
+plugin.tasks.notifications.task-unpinned=Issue unpinned
+plugin.tasks.notifications.taskgroup-pinned=List pinned
+plugin.tasks.notifications.taskgroup-unpinned=List unpinned
+plugin.tasks.notifications.marked-all-as-read=Marked all as read
+plugin.tasks.notifications.added-comment=Added comment
+plugin.tasks.notifications.visible_for_you_only=Visible only for you
+plugin.tasks.notifications.cross-project-copy-disabled=Use issue window to move issues into a different project.
+plugin.tasks.notifications.cross-project-move-disabled=Use issue window to move issues into a different project.
+plugin.tasks.notifications.taskgroup-detaching=Closing the list...
+plugin.tasks.notifications.taskgroup-detached=The list was closed
+plugin.tasks.notification.newTask=New issue {0} has been created.
+plugin.tasks.notification.modifyTask=Issue {0} has been modified.
+plugin.tasks.notification.deleteTask=Issue {0} has been deleted.
+plugin.tasks.notification.commentTask=Issue {0} has been commented.
+
+plugin.tasks.attachments.attachments-header=Attachments:
+plugin.tasks.attachments.no-attachments-info=No attachments
+
+plugin.tasks.calendar.header=In calendar:
+plugin.tasks.calendar.add=Add
+
+plugin.tasks.view-mode-rm-tooltip=Single list mode
+plugin.tasks.view-mode-lists-tooltip=Multiple lists mode
+plugin.tasks.view-refresh-tooltip=Refresh view
+plugin.tasks.view-options-tooltip=View options
+
+plugin.tasks.no-taskgroup-selected=No list
+plugin.tasks.no-users-selected=Unassigned
+plugin.tasks.app.tray.newTask=New issue ...
+
+plugin.tasks.filter.show-all-tasks=all issues
+plugin.tasks.filter.show-only-unread=<span>unread</span>
+plugin.tasks.filter.show-only-idea=<span class="task-label task-status-idea">idea</span>
+plugin.tasks.filter.show-only-todo=<span class="task-label task-status-todo">todo</span>
+plugin.tasks.filter.show-only-in-progress=<span class="task-label task-status-inprogress">in progress</span>
+plugin.tasks.filter.show-only-done=<span class="task-label task-status-done">done</span>
+plugin.tasks.filter.show-only-not-done=<strong>not done</strong>
+
+plugin.tasks.sidebar.newsection=New section
+
+plugin.tasks.whole-day=Whole day
+
+plugin.tasks.taskGroupIcon.none=none
+
+plugin.tasks.component.iconPicker.icon=Icon
+plugin.tasks.component.iconPicker.color=Color

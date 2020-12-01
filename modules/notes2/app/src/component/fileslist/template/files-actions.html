@@ -1,0 +1,73 @@
+@import {Model} from "../FilesListController";
+@model Model
+<div class="center buttons-columns">
+  <div class="col-left">
+    <button class="action-item btn btn-default btn-sm small gray" action-id="copy" title="{{@Helper.i18n('plugin.notes2.component.filesList.actions.copy')}} Ctrl-C">
+      <i class="fa fa-copy"></i>
+      {{@Helper.i18n("plugin.notes2.component.filesList.actions.copy")}}
+    </button>
+    <button class="action-item btn btn-default btn-sm small gray" action-id="cut" title="{{@Helper.i18n('plugin.notes2.component.filesList.actions.cut')}} Ctrl-X" {{#model.editable ? '' : 'disabled="disabled"'}}>
+      <i class="fa fa-cut"></i>
+      {{@Helper.i18n("plugin.notes2.component.filesList.actions.cut")}}
+    </button>
+    <button class="action-item btn btn-default btn-sm small gray" action-id="paste" title="{{@Helper.i18n('plugin.notes2.component.filesList.actions.paste')}} Ctrl-V" {{#model.clipboard ? '' : 'disabled="disabled"'}}>
+      <i class="fa fa-paste"></i>
+      {{@Helper.i18n("plugin.notes2.component.filesList.actions.paste")}}
+    </button>
+  </div>
+  <div class="col-mid">
+    <button class="action-item btn btn-default btn-sm small gray" action-id="openExternal" title="{{@Helper.i18n('plugin.notes2.component.filesList.actions.open.tooltip')}}">
+      <i class="fa fa-folder-open-o"></i>
+      {{@Helper.i18n("plugin.notes2.component.filesList.actions.open")}}
+    </button>
+    <button class="action-item btn btn-default btn-sm small gray" action-id="rename" title="{{@Helper.i18n('plugin.notes2.component.filesList.actions.rename')}} F2" {{#model.isTrash || model.editable ? '' : 'disabled="disabled"'}}>
+      <i class="fa fa-pencil"></i>
+      {{@Helper.i18n("plugin.notes2.component.filesList.actions.rename")}}
+    </button>
+    <span class="delete-button-wrapper has-basic-tooltip" data-basic-id="delete">
+      <button class="action-item btn btn-default btn-sm small gray" action-id="delete" title="{{@Helper.i18n('plugin.notes2.component.filesList.actions.delete')}} DEL" {{#model.editable ? '' : 'disabled="disabled"'}}>
+        <span class="ico-bin"></span>
+        {{@Helper.i18n("plugin.notes2.component.filesList.actions.delete")}}
+      </button>
+    </span>
+    <button class="action-item btn btn-default btn-sm small gray hide" action-id="lock" title="{{@Helper.i18n('plugin.notes2.component.filesList.actions.lock')}}" {{#model.editable ? '' : 'disabled="disabled"'}}>
+      <span class="fa fa-lock"></span>
+      {{@Helper.i18n("plugin.notes2.component.filesList.actions.lock")}}
+    </button>
+    <button class="action-item btn btn-default btn-sm small gray hide" action-id="unlock" title="{{@Helper.i18n('plugin.notes2.component.filesList.actions.unlock')}}" {{#model.editable ? '' : 'disabled="disabled"'}}>
+      <span class="fa fa-unlock"></span>
+      {{@Helper.i18n("plugin.notes2.component.filesList.actions.unlock")}}
+    </button>
+
+    <button class="action-item btn btn-default btn-sm small gray" action-id="print" title="{{@Helper.i18n('plugin.notes2.component.filesList.actions.print')}}">
+      <i class="fa fa-print"></i>
+      {{@Helper.i18n("plugin.notes2.component.filesList.actions.print")}}
+    </button>
+  </div>
+  <div class="col-right">
+    <button class="action-item btn btn-default btn-sm small gray" action-id="send" title="{{@Helper.i18n('plugin.notes2.component.filesList.actions.send')}}">
+      <span class="left ico-paper-airplane"></span>
+      {{@Helper.i18n("plugin.notes2.component.filesList.actions.send")}}
+    </button>
+    <button class="action-item btn btn-default btn-sm small gray" data-window-opener="true" action-id="export" title="{{@Helper.i18n('plugin.notes2.component.filesList.actions.export')}} F9">
+      <i class="fa fa-download"></i>
+      {{ if (model.systemLabel) { {{
+        {{@Helper.i18n("plugin.notes2.component.filesList.actions.export.osSpecific", model.systemLabel)}}
+      }} } else { {{
+        {{@Helper.i18n("plugin.notes2.component.filesList.actions.export")}}
+      }} } }}
+    </button>
+    <!-- <button class="action-item btn btn-default btn-sm small gray" action-id="saveAsPdf" title="{{@Helper.i18n('plugin.notes2.component.filesList.actions.saveAsPdf')}}">
+      <i class="fa fa-file-pdf-o"></i>
+      {{@Helper.i18n("plugin.notes2.component.filesList.actions.saveAsPdf")}}
+    </button> -->
+    <button class="action-item btn btn-default btn-sm small gray" action-id="attach-to-task" title="{{@Helper.i18n('plugin.notes2.component.filesList.actions.attachToTask')}}">
+      <i class="fa privmx-icon privmx-icon-tasks"></i>
+      {{@Helper.i18n("plugin.notes2.component.filesList.actions.attachToTask")}}
+    </button>
+    <button class="action-item btn btn-default btn-sm small gray" data-window-opener="true" action-id="history" title="{{@Helper.i18n('plugin.notes2.component.filesList.actions.history')}} F8">
+      <i class="fa fa-book"></i>
+      {{@Helper.i18n("plugin.notes2.component.filesList.actions.history")}}
+    </button>
+  </div>
+</div>

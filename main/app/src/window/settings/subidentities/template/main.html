@@ -1,0 +1,19 @@
+@import {Model} from "../SubidentitiesController";
+@model Model
+<div class="section subidentties-section">
+  
+  <div class="section-header">
+    <i class="fa fa-users"></i>
+    {{@Helper.i18n("window.settings.section.subidentities.header")}}
+    <button class="btn btn-default gray pull-right" data-action="refresh">
+      <i class="fa fa-refresh"></i>
+      <span>{{@Helper.i18n("core.button.refresh.label")}}</span>
+    </button>
+  </div>
+  <div class="section-info">
+    {{@Helper.i18n("window.settings.section.subidentities.info")}}
+  </div>
+  <div class="list-container">
+  </div>
+  
+</div>

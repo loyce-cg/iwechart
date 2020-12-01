@@ -1,0 +1,114 @@
+.panel.payments {
+  .privmx-info-box {
+    position: relative;
+    display: flex;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    flex-direction: row;
+
+    .privmx-panel {
+      padding: 20px;
+      &.right {
+        width: 50%;
+        order: 1;
+      }
+      &.left {
+        width: 50%;
+        order: 0;
+      }
+      
+      ul {
+        padding-left: 20px;
+      }
+      div.info.center {
+        position: relative;
+        transform: translateY(-50%);
+        top: 50%;
+        
+      }
+    }
+
+  }
+  .cc-link {
+    display: inline-block;
+    position: absolute;
+    right: 0;
+    margin-top: 10px;
+    font-size: var(--font-size);
+  }
+  table {
+    width: 100%;
+  }
+  
+  table td.logo-column {
+    padding-top: 20px;
+    width: 230px;
+    text-align: center;
+    
+    img {
+      width: 127px;
+    }
+  }
+  
+  table td.values-column {
+    padding-top: 20px;
+    
+    .base-form .fields .field {
+        margin-top: 0;
+        margin-bottom: 0;
+        .info, .input {
+            padding: 0;
+        }
+    }
+  }
+  
+  table td {
+    vertical-align: top;
+  }
+  
+  .base-form {
+    .fields {
+      margin: 0;
+    }
+    .fields .field {
+      max-width: none;
+      .info {
+        width: 180px;
+        line-height: calc(var(--font-size) + 6px);
+      }
+      .input {
+        margin-left: 190px;
+        padding-top: 5px;
+        font-size: var(--font-size);
+        min-height: 40px;
+      }
+    }
+    .separate {
+      margin-top: 40px;
+    }
+  }
+  
+  .links {
+    text-align: left;
+    
+    ul {
+      list-style-type: none;
+    }
+  }
+  
+  .main-description {
+    margin: 20px 0;
+    text-align: center;
+  }
+  
+  .mail-version {
+    margin: 40px 0 20px 0;
+  }
+  .host-info {
+    margin: 20px 0;
+    font-weight: bold;
+  }
+  .users-info {
+    margin: 20px 0;
+  }
+}

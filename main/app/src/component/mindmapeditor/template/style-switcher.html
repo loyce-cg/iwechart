@@ -1,0 +1,31 @@
+@import {StyleSwitcherTemplateModel} from "../MindmapEditorController";
+@import {Mindmap} from "../Mindmap";
+@model StyleSwitcherTemplateModel
+{{
+  var styleName = model.style && model.style.name;
+  var styles = model.availableNotesStyles;
+  
+  var currSize = model.style && model.style.fontSize;
+  var sizes = Mindmap.AVAILABLE_FONT_SIZES;
+}}
+<div class="style-switcher">
+  <button class="btn" data-action="open">
+      <i class="fa fa-paint-brush"></i> {{@Helper.i18n("component.mindmapEditor.toolbar.style.name")}}  <span class="ico-arrow-down trigger"></span>
+  </button>
+  <ul data-prevent-toolbar-hide-when-visible="true">
+    {{ for(var name in styles) { }}
+      <li class="{{@ styleName == name ? 'active' : '' }}" data-action="switch-style" data-name="{{@name}}">
+        {{@styles[name]}}
+        <span class="preview" data-style-name="{{@name}}">abc</span>
+      </li>
+    {{ } }}
+    <li class="divider"></li>
+    {{ for(var size in sizes) { }}
+      <li class="{{@ currSize == size ? 'active' : '' }}" data-action="switch-font-size" data-name="{{@size}}">
+        {{@sizes[size]}}
+        <span class="preview" style="font-size:{{@size}}">abc</span>
+      </li>
+    {{ } }}
+  </ul>
+  <div class="backdrop"></div>
+</div>

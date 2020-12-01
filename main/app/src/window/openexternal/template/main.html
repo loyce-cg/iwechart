@@ -1,0 +1,26 @@
+@import {Model} from "../OpenExternalWindowController";
+@model Model
+<div class="window-openexternal">
+  <div class="content">
+    <div class="info">
+      <div class="bold">{{@Helper.i18n("window.openExternal.info1")}}</div>
+      <div>{{@Helper.i18n("window.openExternal.info2")}}</div>
+      <div>{{@Helper.i18n("window.openExternal.info3")}}</div>
+    </div>
+  </div>
+  <div class="buttons">
+    <button class="btn btn-success" data-action="ok" tabindex="0">
+      <i class="fa fa-check"></i>
+      {{@Helper.i18n("window.openExternal.button.ok.label")}}
+    </button>
+    <button class="btn btn-default" data-action="close" tabindex="1">
+      <i class="fa fa-times"></i>
+      {{@Helper.i18n("window.openExternal.button.cancel.label")}}</button>
+    <div class="input checkbox">
+    <label>
+      <input type="checkbox" name="window.openexternal.dontshow" data-action="check" {{#model.showWarning ? 'checked="checked"' : '' }} tabindex="2"/>
+      {{@Helper.i18n("window.openExternal.checkbox.dontshow.label")}}
+    </label>
+    </div>
+  </div>
+</div>

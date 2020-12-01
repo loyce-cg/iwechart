@@ -1,0 +1,162 @@
+@import "../../../../node_modules/pmc-web/src/themes/default/less/global";
+@import "../../../../node_modules/pmc-web/src/themes/default/less/vars";
+@import "../../../../node_modules/pmc-web/src/themes/default/less/mixins";
+
+@import "../../../../node_modules/pmc-web/src/component/template/conversation.less";
+@import "../../../../node_modules/pmc-web/src/component/template/wi-element.less";
+@import "../../../../node_modules/pmc-web/src/component/template/bckg-icon.less";
+@import "../../../../node_modules/pmc-web/src/component/notification/index.less";
+
+@window-height: 300px;
+@space: 15px;
+@chooser-height: @window-height - (@space + 20 + 10 + 10 + @space + 33 + @space);
+@list-height: @chooser-height;
+
+body {
+  font-size: var(--font-size);
+  min-height: 0;
+  height: 100%;
+  background: var(--main-panel-bg);
+}
+
+.window-recentfiles-main {
+  padding-bottom: 50px;
+  height: 100%;
+  
+  &:focus {
+    outline: none;
+  }
+  .notifications-container {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 9999;
+    pointer-events: none;
+  }
+  .header {
+    padding: 10px 7px;
+    font-weight: bold;
+    font-size: var(--font-size);
+  }
+  .table-container {
+    position: absolute;
+    top: 40px;
+    bottom: 53px;
+    left: 0;
+    right: 0;
+    overflow-y: auto;
+    
+    table {
+      width: 100%;
+      table-layout: fixed;
+    }
+  }
+  .conversation-element .settings-button {
+    display: none;
+  }
+  span.btn.refresh {
+    position: absolute;
+    right: 6px;
+    top: 6px;
+  }
+  .buttons-container {
+    position: absolute;
+    background: var(--main-panel-bg);
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    padding: 10px 0;
+    
+    button {
+      margin: 0 8px;
+      outline: none !important;
+      
+      i {
+        margin-right: 3px;
+      }
+      &:focus {
+        outline: var(--body-extra-info-fg) dotted 1px;
+      }
+    }
+    
+    span.button-clear-list {
+      color: var(--color-warning);
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      border-bottom: 1px solid transparent;
+      text-decoration: none;
+      
+      &.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      
+      &:hover {
+        text-decoration: none;
+      }
+      
+      &:not(.disabled):hover {
+        border-bottom: 1px solid var(--color-warning);
+      }
+    }
+  }
+  
+  .loading-container {
+    display: none;
+  }
+  
+  &.refreshing {
+    .loading-container {
+      display: block;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      
+      >span.loading {
+        margin-left: -15px;
+        margin-top: -15px;
+        line-height: 0;
+        font-size: 30px;
+        display: inline-block;
+      }
+    }
+    >:not(.loading-container):not(.header),
+    >.header>span[data-action="refresh"] {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  }
+}
+
+.empty {
+  display: block;
+  margin: 0 auto;
+  text-align: center;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  margin-top: -20px;
+  
+  .no-files {
+    display: none;
+  }
+  .loading {
+    display: inline-block;
+    font-size: 30px;
+  }
+  .window-recentfiles-main.recent-files-list-loaded & {
+    .no-files {
+      display: inline-block;
+    }
+    .loading {
+      display: none;
+    }
+  }
+}
+
+@import "fileItem";

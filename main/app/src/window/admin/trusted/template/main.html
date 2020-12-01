@@ -1,0 +1,76 @@
+@import {Model} from "../TrustedController";
+@model Model
+<div>
+  
+  <div class="panel-header">
+    <i class="fa fa-certificate"></i>
+    {{@Helper.i18n("window.admin.menu.trusted")}}
+    (<span class="domains-count"></span>)
+    <button class="btn" data-action="refresh-domains">
+      <i class="fa fa-refresh" data-org="fa fa-refresh" data-proc="fa fa-spin fa-circle-o-notch"></i>
+      <span data-org="" data-proc="{{@Helper.i18n("window.admin.trusted.refresh.button")}}"></span>
+    </button>
+    <div class="btn-group pull-right">
+        <button class="btn btn-success" data-action="add-domain">
+          <i class="fa fa-plus"></i>
+          {{@Helper.i18n("window.admin.trusted.add.button")}}
+        </button>
+    </div>
+  </div>
+  
+  <div class="panel-info">
+    {{#Helper.i18n("window.admin.trusted.info", '<a href="https://privmx.com/faqwot" target="_blank" rel="noopener noreferrer">' + Helper.i18n("window.admin.trusted.info2") + '</a>')}}
+  </div>
+  
+  <table class="table small domains">
+    <thead>
+      <tr>
+        <th>
+          {{@Helper.i18n("window.admin.trusted.table.domain")}}
+        </th>
+        <th>
+        </th>
+        <th>{{@Helper.i18n("window.admin.trusted.table.hashmail")}}</th>
+        <th>{{@Helper.i18n("window.admin.trusted.table.ip")}}</th>
+        <th title="{{@Helper.i18n('window.admin.trusted.table.modified.info')}}">
+          {{@Helper.i18n("window.admin.trusted.table.modified")}} [?]
+        </th>
+        <th title="{{@Helper.i18n('window.admin.trusted.table.signatures.info')}}">
+          {{@Helper.i18n("window.admin.trusted.table.signatures")}} [?]
+        </th>
+        <th>
+          {{@Helper.i18n("window.admin.trusted.table.fingerprint")}}
+        </th>
+        <th>{{@Helper.i18n("window.admin.trusted.table.state")}}</th>
+        <th>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+  
+  <div class="buttons">
+    <div class="button-with-info">
+      <button class="btn btn-default" vf-click="publishTrustedServerList(event)" vf-class="{publish: this.hasEntriesToPublish}">
+        <i class="fa fa-share-alt" data-org="fa fa-share-alt" data-proc="fa fa-spin fa-circle-o-notch"></i>
+        {{@Helper.i18n("window.admin.trusted.publish")}}
+      </button>
+      <div class="info">
+        {{@Helper.i18n("window.admin.trusted.publish.info")}}
+      </div>
+    </div>
+
+    <div class="btn-group center btn-block">
+        <a href="#verify-domain" data-action="verify-domain" rel="noreferrer noopener">
+          {{@Helper.i18n("window.admin.trusted.verifydomain")}}
+      </a>
+      &nbsp;
+        <a href="#clear-domain" data-action="clear-domain-cache" rel="noreferrer noopener">
+          {{@Helper.i18n("window.admin.trusted.clearcache")}}
+      </a>
+    </div>
+        
+  </div>
+  
+</div>

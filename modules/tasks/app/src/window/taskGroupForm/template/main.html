@@ -1,0 +1,43 @@
+@import { Model } from "../TaskGroupFormWindowController";
+@import { func as IconTemplate } from "./icon.html";
+@model Model
+<div class="window-taskgroup-form tasks-plugin-window">
+  <div class="flex-row">
+    <div class="custom-select-project"></div>
+  </div>
+  <div class="flex-row title">
+    <input type="text" id="taskgroup-name" class="taskgroup-name form-control" value="{{@model.name}}" data-v-not-empty="1" />
+  </div>
+  <div class="flex-row icon">
+    <span class="inline-header">{{@Helper.i18n("plugin.tasks.window.taskGroupForm.taskGroupIcon")}}: </span>
+    {{#Helper.createTemplate(IconTemplate).render(model.icon)}}
+    <span class="link" data-action="change-icon">Change</span>
+    <div class="iconpicker-container{{@!model.id||model.detached?' fullscreen':''}}"><i class="fa fa-times" data-action="close-iconpicker"></i></div>
+  </div>
+  <div class="flex-row due-date due-date-field">
+    <input type="date" id="taskgroup-duedate" class="taskgroup-duedate form-control" value="{{@model.dueDate}}" />
+  </div>
+  <div class="flex-row">
+    <div class="ok-cancel-buttons">
+      <button class="btn btn-success ok edit-save">{{@Helper.i18n("plugin.tasks.window.taskGroupForm.save")}}</button>
+      <button class="btn btn-default cancel gray edit-cancel">{{@Helper.i18n("plugin.tasks.window.taskGroupForm.cancel")}}</button>
+      {{ if (model.id) { }}
+        <button class="btn btn-delete btn-sm small">
+          <span>
+            <i class="fa fa-trash"></i>
+            <span>{{@Helper.i18n("plugin.tasks.window.taskGroupForm.delete")}}</span>
+          </span>
+        </button>
+        {{ if (!model.detached) { }}
+          <button class="btn btn-detach btn-sm small">
+            <span>
+              <i class="fa fa-check-circle-o"></i>
+              <span>{{@Helper.i18n("plugin.tasks.window.taskGroupForm.detach")}}</span>
+            </span>
+          </button>
+        {{ } }}
+      {{ } }}
+    </div>
+  </div>
+  <div class="notifications-container-wrapper"></div>
+</div>

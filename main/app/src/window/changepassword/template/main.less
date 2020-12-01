@@ -1,0 +1,94 @@
+@import "../../base/BaseWindow";
+@import "../../../themes/default/less/form";
+@import "../../base/template/password-meter";
+
+body {
+  background: @colorBackground;
+  font-size: var(--font-size-l);
+}
+
+.window-change-password-main {
+  padding: 12px 30px 30px 30px;
+  background-color: var(--preview-panel-bg);
+  
+  .base-form {
+    .fields {
+      margin: 0;
+      .field {
+        .input {
+          margin-right: 0;
+        }
+      }
+      &.buttons {
+        margin: 20px 0;
+      }
+    }
+  }
+  .section-header {
+    font-weight: bold;
+    font-size: calc(var(--font-size-xxl) + 2px);
+    border-bottom: 1px solid var(--main-panel-chats-separator-bg);
+    padding: 10px 0 10px 0;
+    margin-bottom: 30px;
+    margin-top: 50px;
+    &:first-child {
+      margin-top: 0;
+    }
+    i {
+      margin-right: 10px;
+    }
+  }
+  .section-info {
+    font-size: var(--font-size);
+    margin-bottom: 30px;
+    color: #666;
+  }
+  .base-form .fields .field {
+    .info {
+      width: 200px;
+    }
+    .input {
+      margin-left: 210px;
+      &.image-input .link {
+        font-size: var(--font-size-xs);
+      }
+    }
+    .input-text {
+      font-size: var(--font-size);
+    }
+    .input-info {
+      color: #666;
+      font-size: var(--font-size-xxs);
+      margin: 4px 0 0 180px;
+    }
+    textarea {
+      height: auto;
+    }
+    input[type=text], input[type=password], textarea {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+  }
+  small {
+    font-size: var(--font-size-xs);
+    line-height: 26px;
+    vertical-align: top;
+  }
+  .btn > .fa {
+    margin-right: 4px;
+  }
+  
+  .new-password-fields {
+    position: relative;
+    .field {
+      margin-right: 160px !important;
+    }
+    .password-meter {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 71px;
+      line-height: 16px;
+    }
+  }
+}

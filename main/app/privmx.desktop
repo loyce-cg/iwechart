@@ -1,0 +1,8 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Terminal=false
+Name=PrivMX
+Exec="{{APP_PATH}}"
+Icon={{ICON_PATH}}
+Categories=Utility;

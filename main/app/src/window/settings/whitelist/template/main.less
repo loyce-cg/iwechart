@@ -1,0 +1,118 @@
+.whitelist-section {
+  .section-info {
+    padding: 0 8px;
+  }
+  table {
+    width: 600px;
+    
+    td, th {
+    }
+    th {
+      vertical-align: bottom;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .domain-col {
+    }
+    .last-col {
+      .btn {
+        padding: 0;
+        position: relative;
+        display: inline-block;
+        margin-left: 5px;
+        
+        .component-dropdown {
+          cursor: default;
+        }
+        .whitelist-messages {
+          color: #fff;
+          text-align: left;
+          padding: 0 10px;
+          width: 520px;
+          
+          .no-msg-info {
+            margin: 20px 0;
+            text-align: center;
+          }
+          table {
+            width: 500px;
+            table-layout: fixed;
+            
+            td, th {
+              padding: 1px 5px;
+            }
+            td > div {
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              overflow: hidden;
+              width: 100%;
+            }
+            .sender {
+              width: 200px;
+              
+              img {
+                max-width: 16px;
+                max-height: 16px;
+                vertical-align: middle;
+                margin-right: 3px;
+              }
+              span.ico {
+                margin: 0 3px;
+                font-size: var(--font-size-xs);
+              }
+              i.fa {
+                margin: 0 4px;
+              }
+            }
+            .title {
+              width: 200px;
+              
+              &.special {
+                font-style: italic;
+                color: var(--body-extra-info-fg);
+              }
+            }
+            .date {
+              width: 100px;
+            }
+          }
+        }
+      }
+    }
+    .switch-col {
+      width: 100px;
+      text-align: left;
+      
+      .switch-const-desc {
+        margin-left: 8px;
+      }
+    }
+    .report-col {
+      width: 50px;
+    }
+    .del-col {
+      width: 30px;
+      padding-bottom: 4px;
+      display: none;
+    }
+    .new-badge {
+      background-color: var(--unread-color);
+      border-radius: 1000px;
+      color: #fff;
+      padding: 0px 9px;
+      display: inline-block;
+      font-size: var(--font-size-xs);
+      margin-right: 3px;
+      line-height: 19px;
+      text-shadow: 0 1px 0 #fff;
+    }
+    .switch-desc {
+      width: 50px;
+      text-align: right;
+      display: inline-block;
+      font-size: var(--font-size-xs);
+      color: var(--body-extra-info-fg);
+      display: none;
+    }
+  }
+}

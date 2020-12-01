@@ -1,0 +1,225 @@
+@import {Model} from "../FilesListController";
+@model Model
+@context {render(model: any, context?: any):string}
+@import {func as userProfileTemplate} from "./user-profile.html";
+<div class="files-list{{@model.id == 'trash' ? ' trash' : ''}}">
+  <div class="files-header {{@model.id.indexOf('conversation') == 0 ? 'is-conversation' : ''}}">
+    <div class="current-path"></div>
+    <div class="current-root">
+      {{ if (model.id == "my") { {{
+        <div class="inner">
+          <li class="conversation-element contact without-description" data-conversation-id="{{@model.hashmail}}">
+            <span>
+              <div class="image-with-data">
+                <p class="image">
+                  <canvas class="not-rendered" data-tooltip-trigger="{{@model.hashmail}}" data-hashmail-image="{{@model.hashmail}}" data-width="30" data-height="30" data-auto-size="true" data-auto-refresh="true" width="30" height="30"></canvas>
+                </p>
+                <div class="text-col">
+                  <p class="name">
+                    {{@Helper.i18n("plugin.notes2.component.filesList.filter.my")}}
+                  </p>
+                </div>
+              </div>
+            </span>
+          </li>
+          <div class="go-to-modules" style="display:none;">
+            {{ if (model.hasChat) { {{
+              <span class="btn btn-sm go-to-chat" data-action="open-chat" data-window-opener="true">
+                <i class="ico-comment"></i>
+              </span>
+            }} } }}
+            {{ if (model.hasTasks) { {{
+              <span class="btn btn-sm go-to-tasks" data-action="open-tasks" data-window-opener="true">
+                <i class="fa fa-tasks"></i>
+              </span>
+            }} } }}
+          </div>
+        </div>
+      }} } }}
+      {{ if(model.id == "all") { {{
+        <div class="inner">
+          <div class="wi-element">
+            <div class="wi-element-inner">
+              <div class="wi-element-icon bckg-icon bckg-icon-inverse2 small-icon">
+                <i class="fa fa-file-o"></i>
+              </div>
+              <div class="wi-element-name">
+                {{@Helper.i18n("plugin.notes2.component.filesList.filter.all")}}
+              </div>
+            </div>
+          </div>
+          <div class="go-to-modules" style="display:none;">
+            {{ if (model.hasChat) { {{
+              <span class="btn btn-sm go-to-chat" data-action="open-chat" data-window-opener="true">
+                <i class="ico-comment"></i>
+              </span>
+            }} } }}
+            {{ if (model.hasTasks) { {{
+              <span class="btn btn-sm go-to-tasks" data-action="open-tasks" data-window-opener="true">
+                <i class="fa fa-tasks"></i>
+              </span>
+            }} } }}
+          </div>
+        </div>
+      }} } }}
+      {{ if (model.id == "local") { {{
+        <div class="inner">
+          <div class="wi-element">
+            <div class="wi-element-inner">
+              <div class="wi-element-icon bckg-icon bckg-icon-inverse2 small-icon">
+                <i class="fa fa-desktop"></i>
+              </div>
+              <div class="wi-element-name">
+                {{@model.computerLocalName}}
+              </div>
+            </div>
+          </div>
+        </div>
+      }} } }}
+      {{ if (model.id == "trash") { {{
+        <div class="inner">
+          <div class="wi-element">
+            <div class="wi-element-inner">
+              <div class="wi-element-icon bckg-icon bckg-icon-inverse2 small-icon">
+                <i class="fa ico-bin"></i>
+              </div>
+              <div class="wi-element-name">
+                {{@Helper.i18n("plugin.notes2.component.filesList.filter.trash")}}
+              </div>
+            </div>
+          </div>
+        </div>
+      }} } }}
+      {{ if (model.id.indexOf("channel") == 0 || model.id.indexOf("conversation") == 0) { }}
+        <div class="inner">
+        {{ if (model.id.indexOf("channel") == 0) { {{
+            <div class="wi-element">
+              <div class="wi-element-inner">
+                <div class="wi-element-icon bckg-icon bckg-icon-inverse2 {{@model.channelScope == 'private' ? 'bckg-icon-border' : ''}} has-section-tooltip" data-section-id="{{@model.id.substr(model.id.indexOf("/") + 1)}}">
+                  <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+                </div>
+                <div class="wi-element-name">
+                  {{@model.channelName}}
+                </div>
+              </div>
+            </div>
+            <div class="wi-element compact-summary-view">
+              <div class="wi-element-inner">
+                <div class="wi-element-icon">
+                  <span class="ico-note"></span>
+                </div>
+                <div class="wi-element-name">
+                  {{@Helper.i18n("plugin.notes2.component.filesList.title")}}
+                </div>
+              </div>
+            </div>
+        }} } }}
+        {{ if (model.id.indexOf("conversation") == 0) {
+          var template = Helper.createTemplate(userProfileTemplate);
+          if (model.persons.length == 1) { {{
+            <div class="single-contact">
+              {{#template.render(model.persons[0], { truncateDescription: false })}}
+            </div>
+          }} } else { {{
+          <div class="many-profiles">
+            {{ model.persons.forEach(person => { {{
+              {{#template.render(person, { truncateDescription: true })}}
+            }} }); }}
+          </div>
+          }} }
+          {{
+            <button class="btn btn-success btn-sm small in-summary-as-icon" data-action="add-person" title="{{@Helper.i18n('plugin.notes2.component.filesList.add-user.title')}}">
+              <i class="fa fa-user-plus"></i>
+            </button>
+          }}
+        } }}
+        <div class="go-to-modules" style="display:none;">
+          {{ if (model.hasChat) { {{
+            <span class="btn btn-sm go-to-chat" data-action="open-chat" data-window-opener="true">
+              <i class="ico-comment"></i>
+            </span>
+          }} } }}
+          {{ if (model.hasTasks) { {{
+            <span class="btn btn-sm go-to-tasks" data-action="open-tasks" data-window-opener="true">
+              <i class="fa fa-tasks"></i>
+            </span>
+          }} } }}
+        </div>
+      </div>
+    {{ } }}
+    </div>
+    <div class="button-container">
+      <button class="btn btn-xs btn-default view-mode" action-id="toggle-view-mode" data-action="toggle-view-mode" title="{{@Helper.i18n('plugin.notes2.component.filesList.buttonViewModeTooltip')}}">
+        <i class="fa fa-th"></i>
+      </button>
+      
+      <button class="btn btn-xs btn-default refresh" action-id="refresh" data-action="refresh" title="{{@Helper.i18n('plugin.notes2.component.filesList.buttonRefreshTooltip')}}">
+        <i class="fa fa-refresh"></i>
+      </button>
+      
+      <button class="btn btn-xs btn-default settings" data-action="open-settings" title="{{@Helper.i18n('plugin.notes2.component.filesList.buttonSettingsTooltip')}}">
+        <i class="ico-settings"></i>
+      </button>
+
+      {{ if (!model.isTrash && !(model.isAll && model.hasNoPrivateSection) && !model.isDeletedUserSection) { {{
+        <button class="btn btn-success btn-sm small" data-action="new-note" data-window-opener="true" title="{{@Helper.i18n('plugin.notes2.component.filesList.button.new.title')}}">
+          <i class="fa fa-plus"></i>
+          <span>{{@Helper.i18n("plugin.notes2.component.filesList.button.new.label")}}</span>
+        </button>
+      }} } }}
+    </div>
+  </div>
+  <div class="files-container {{@model.id == 'my' ? 'no-modifiers' : ''}}">
+      <table>
+          <thead></thead>
+          <tbody>
+          </tbody>
+      </table>
+  </div>
+  <div class="files-actions-container">
+  </div>
+  <div class="context-menu-settings">
+    <div class="context-menu-backdrop2"></div>
+    <ul class="context-menu-settings-content">
+      <li class="with-icon" action-id="mark-all-as-read" data-action="mark-all-as-read">
+        <span>
+          <i class="fa fa-check"></i><span></span>{{@Helper.i18n("plugin.notes2.component.filesList.settings.markAllAsRead")}}</span>
+        </span>
+      </li>
+      <li class="with-icon" action-id="export-files" data-action="export-files">
+        <span>
+          <i class="fa fa-download"></i><span>{{@Helper.i18n("plugin.notes2.component.filesList.settings.exportFiles")}}</span>
+        </span>
+      </li>
+      {{ if (model.isTrash) { }}
+        <li class="with-icon" action-id="empty-trash" data-action="empty-trash">
+          <span>
+            <i class="fa ico-bin"></i><span>{{@Helper.i18n("plugin.notes2.component.filesList.settings.emptyTrash")}}</span>
+          </span>
+        </li>
+      {{ } }}
+      <!--<li class="with-icon" action-id="add-dir-to-playlist" data-action="add-dir-to-playlist">
+        <span>
+          <i class="fa fa-music"></i><span></span>{{@Helper.i18n("plugin.notes2.component.filesList.settings.addDirToPlaylist")}}</span>
+        </span>
+      </li>-->
+      <li class="context-menu-group-header">{{@Helper.i18n("plugin.notes2.component.filesList.settings.header.viewOptions")}}</li>
+      <li action-id="show-file-preview" data-setting="show-file-preview">
+        <span>
+          <input type="checkbox" {{@model.showFilePreview ? "checked" : ""}} />
+          <span>
+            {{@Helper.i18n("plugin.notes2.component.filesList.settings.showFilePreview")}}
+          </span>
+        </span>
+      </li>
+      <li action-id="show-url-files" data-setting="show-url-files">
+        <span>
+          <input type="checkbox" {{@model.showUrlFiles ? "checked" : ""}} />
+          <span>
+            {{@Helper.i18n("plugin.notes2.component.filesList.settings.showUrlFiles")}}
+          </span>
+        </span>
+      </li>
+    </ul>
+  </div>
+</div>

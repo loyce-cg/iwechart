@@ -1,0 +1,35 @@
+@import * as privfs from "privfs-client";
+@import MessageSinkPriv = privfs.message.MessageSinkPriv;
+@model privfs.message.MessageSinkPriv[]
+<div class="sink-list">
+  {{model.forEach(function(sink) { {{
+    <div class="sink" data-action="move-to" data-sink-id="{{@sink.id}}">
+      {{ if (sink.extra.type == "inbox") { {{
+        <span class="ico ico-inbox"></span>
+        <span class="holder" title="{{@Helper.i18n('core.sink.inbox')}}">
+          {{@Helper.i18n("core.sink.inbox")}}
+        </span>
+      }} } else if (sink.extra.type == "outbox") { {{
+        <span class="ico ico-outbox"></span>
+        <span class="holder" title="{{@Helper.i18n('core.sink.outbox')}}">
+          {{@Helper.i18n("core.sink.outbox")}}
+        </span>
+      }} } else if (sink.extra.type == "trash") { {{
+        <span class="ico ico-bin"></span>
+        <span class="holder" title="{{@Helper.i18n('core.sink.trash')}}">
+          {{@Helper.i18n("core.sink.trash")}}
+        </span>
+      }} } else if (sink.extra.type == "form") { {{
+        <i class="fa fa-list-alt"></i>
+        <span class="holder" title="{{@sink.description}}">
+          {{@sink.name}}
+        </span>
+      }} } else { {{
+        <span class="holder" title="{{@sink.description}}">
+          {{@sink.name}}
+        </span>
+      }} } }}
+    </div>
+  }} }); }}
+</div>
+

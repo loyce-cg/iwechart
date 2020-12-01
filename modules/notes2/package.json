@@ -1,0 +1,11 @@
+{
+  "name": "privmx-desktop-client-notes2-module-builder",
+  "version": "1.0.0",
+  "description": "Notes2 module builder",
+  "license": "PrivMX Source Code License",
+  "private": true,
+  "dependencies": {
+    "privmx-builder": "1.4.1"
+  },
+  "devDependencies": {}
+}

@@ -1,0 +1,15 @@
+@import {app} from "pmc-mail";
+@model app.common.voicechat.PersonModel[]
+
+<div class="small-avatars-list">
+    {{ model.forEach(person => {
+        {{
+            <div class="person">
+                <canvas class="not-rendered" data-tooltip-trigger="{{@person.hashmail}}" data-hashmail-image="{{@person.hashmail}}" data-width="15" data-height="15" data-auto-size="true" data-auto-refresh="true"></canvas>
+                <span class="name">{{@person.name}}</span>
+            </div>
+        
+        }}
+        }) }}
+        
+</div>

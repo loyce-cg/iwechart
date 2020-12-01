@@ -1,0 +1,31 @@
+<div>
+  
+  <div class="panel-header">
+    <div class="ico ico-teamserver white"></div>
+    {{@Helper.i18n("window.admin.proxywhitelist.header")}}
+    <button class="btn btn-success pull-right" data-action="add-domain">
+      <i class="fa fa-plus"></i>
+      {{@Helper.i18n("window.admin.proxywhitelist.addRule.button")}}
+    </button>
+  </div>
+  
+  <div class="panel-info"></div>
+  
+  <table class="table small">
+    <thead>
+      <tr>
+        <th>{{@Helper.i18n("window.admin.proxywhitelist.table.host")}}</th>
+        <th>{{@Helper.i18n("window.admin.proxywhitelist.table.createDate")}}</th>
+        <th>{{@Helper.i18n("window.admin.proxywhitelist.table.enabled")}}</th>
+        <!-- <th>{{@Helper.i18n("window.admin.proxywhitelist.table.inEnabled")}}</th>
+        <th>{{@Helper.i18n("window.admin.proxywhitelist.table.outEnabled")}}</th>
+        
+        <th class="action-col">{{@Helper.i18n("window.admin.proxywhitelist.table.acl")}}</th> -->
+        <th class="del-col"></th>
+      </tr>
+    </thead>
+    <tbody class="list-container">
+    </tbody>
+  </table>
+  
+</div>

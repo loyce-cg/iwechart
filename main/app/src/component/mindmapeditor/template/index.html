@@ -1,0 +1,12 @@
+@import { Model } from "../MindmapEditorController";
+@model Model
+<div class="component-mindmap-editor">
+  <div class="scrollable">
+    <div class="mindmap">
+      <div class="nodes"></div>
+      <!-- The <i> inside .hidden-nodes is a hack fixing chromium's bug that was causing wrong element widths being reported by getBoundingClientRect()  -->
+      <div class="hidden-nodes"><i></i></div>
+      <svg xmlns="http://www.w3.org/2000/svg" version="1.1"></svg>
+    </div>
+  </div>
+</div>

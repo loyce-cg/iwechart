@@ -1,0 +1,22 @@
+@import {ActionsModel} from "../CalendarPanelView";
+@model ActionsModel
+<div class="actions-menu actions-list">
+  {{model.items.forEach(function(item) { if (item.hidden) return; {{
+    {{
+      if (item.isSeparator) {
+        {{
+          <div class="separator"></div>
+        }}
+        return;
+      }
+    }}
+    <div class="action" data-action-id="{{@item.id}}">
+      {{ if (item.icon) { {{
+        <span class="ico {{@item.icon}}"></span>
+      }} } }}
+      <span class="holder">
+        {{@Helper.i18n(item.labelKey)}}
+      </span>
+    </div>
+  }} }); }}
+</div>

@@ -1,0 +1,203 @@
+@import {State} from "../../../component/mindmapeditor/MindmapEditorController";
+@model State
+
+<div class="toolbar  {{@model.editMode ? 'edit-mode' : ''}} {{@model.dirty ? 'dirty' : ''}}">
+  
+  <span class="file-name-with-rename-trigger">
+    {{ if(model.docked) { }}
+      <i class="fa fa-circle dirty-marker"></i>
+    {{ } }}
+    <i class="file-icon fa file-icon fa privmx-icon privmx-icon-mindmap"></i>
+    <span class="file-name">{{@model.entry.fileName}}</span>
+    <span class="attached-task-badge">
+      {{ let bindedTasks: { taskId: string, labelClass: string }[] = model.boundTasksStr ? JSON.parse(model.boundTasksStr) : []; }}
+      {{ let bindedTask = bindedTasks[0]; }}
+      {{ if (bindedTask) {
+        let taskLabelClass = bindedTask.labelClass || "task-status-unknown";
+        let tId = bindedTask.taskId;
+        let taskLabel = "#" + (tId.indexOf(",") < 0 ? tId.substr(0, 5) : "...");
+        {{
+          <span class="task-id has-task-tooltip task-label {{@taskLabelClass}}" data-task-id="{{@bindedTask.taskId}}">{{@taskLabel}}</span>
+        }}
+      } }}
+    </span>
+    <!--<span class="link" data-action="rename">{{@Helper.i18n("window.mindmapeditor.toolbar.button.rename.label")}}</span>-->
+  </span>
+  
+  <span class="toolbar-separator"></span>
+  
+  
+  <!-- EDIT MODE -->
+  <span class="edit-mode-buttons">
+    <!-- Save -->
+    <button class="btn" data-action="save" {{#model.dirty ? '' : 'disabled="disabled"'}}>
+      <i class="fa fa-floppy-o"></i>
+      {{@Helper.i18n("window.mindmapeditor.toolbar.button.save.label")}}
+    </button>
+    
+    <!-- Print -->
+    {{ if (model.canPrint) { }}
+    <button class="btn" data-action="print">
+      <i class="fa left fa-print"></i>
+      {{@Helper.i18n("window.mindmapeditor.toolbar.button.print.label")}}
+    </button>
+    {{ } }}
+    
+    <!-- History -->
+    <button class="btn" data-action="history">
+      <i class="fa fa-book"></i>
+      {{@Helper.i18n("window.mindmapeditor.toolbar.button.history.label")}}
+    </button>
+    
+    <!-- Exit edit mode -->
+    {{ if (model.previewMode==false && model.editModeFromPreview) { {{
+    <button class="btn exit-btn" data-action="exit-edit-mode">
+      <i class="fa fa-times"></i>
+      {{@Helper.i18n("window.mindmapeditor.toolbar.button.exitEditMode.label")}}
+    </button>
+    }} } }}
+    
+    <span class="toolbar-separator"></span>
+  </span>
+    
+  {{ if (model.customHtml) { {{
+    {{#model.customHtml}}
+  }} } }}
+  
+  <!-- EDIT MODE -->
+  <span class="edit-mode-buttons">
+    
+    <!-- Tools -->
+    <button class="btn" data-action="open-tools-menu">
+        <i class="fa fa-wrench"></i> {{@Helper.i18n("window.mindmapeditor.toolbar.button.tools.label")}} <span class="ico-arrow-down trigger"></span>
+    </button>
+    
+    <div class="context-menu-toolbar-tools">
+      <div class="context-menu-backdrop2"></div>
+      <div class="context-menu-content">
+        <!-- Send -->
+        <button class="btn" data-action="send">
+          <i class="fa left ico-paper-airplane"></i>
+          {{@Helper.i18n("window.mindmapeditor.toolbar.button.send.label")}}
+        </button>
+        
+        <!-- Download -->
+        <button class="btn" data-action="download">
+          <i class="fa fa-download"></i>
+          {{@Helper.i18n("window.mindmapeditor.toolbar.button.export.label")}}
+        </button>
+        
+        <!-- Save as PDF -->
+        {{ if (model.canSaveAsPdf) { }}
+        <button class="btn" data-action="save-as-pdf">
+          <i class="fa left fa-file-pdf-o"></i>
+          {{@Helper.i18n("window.mindmapeditor.toolbar.button.saveAsPdf.label")}}
+        </button>
+        {{ } }}
+        
+        <!-- Attach to task -->
+        <button class="btn" data-action="attach-to-task">
+          <i class="fa privmx-icon privmx-icon-tasks"></i>
+          {{@Helper.i18n("window.mindmapeditor.toolbar.button.attachToTask.label")}}
+        </button>
+        
+        <!-- Rename -->
+        <button class="btn" data-action="rename">
+          <i class="fa fa-pencil-square-o"></i>
+          {{@Helper.i18n("window.mindmapeditor.toolbar.button.rename.label")}}
+        </button>
+
+        <!-- Lock -->
+        <button class="btn" data-action="lock">
+          <i class="fa fa-lock"></i>
+          {{@Helper.i18n("window.mindmapeditor.toolbar.button.lock.label")}}
+        </button>
+
+        <!-- Unlock -->
+        <button class="btn" data-action="unlock">
+          <i class="fa fa-unlock"></i>
+          {{@Helper.i18n("window.mindmapeditor.toolbar.button.unlock.label")}}
+        </button>        
+
+      </div>
+    </div>
+
+  </span>
+  
+  <!-- READONLY MODE -->
+  <span class="read-mode-buttons">
+    <!-- Start edit mode -->
+    <button class="btn" data-action="enter-edit-mode">
+      <i class="fa fa-pencil"></i>
+      {{@Helper.i18n("window.mindmapeditor.toolbar.button.startEditMode.label")}}
+    </button>
+    
+    <!-- Print -->
+    {{ if (model.canPrint) { }}
+    <button class="btn" data-action="print">
+      <i class="fa left fa-print"></i>
+      {{@Helper.i18n("window.mindmapeditor.toolbar.button.print.label")}}
+    </button>
+    {{ } }}
+  
+    <span class="toolbar-separator"></span>
+    
+  </span>
+  
+  <!-- READONLY MODE -->
+  <span class="read-mode-buttons">
+    
+    <!-- Tools -->
+    <button class="btn" data-action="open-tools-menu">
+        <i class="fa fa-wrench"></i> {{@Helper.i18n("window.mindmapeditor.toolbar.button.tools.label")}} <span class="ico-arrow-down trigger"></span>
+    </button>
+    
+    <div class="context-menu-toolbar-tools">
+      <div class="context-menu-backdrop2"></div>
+      <div class="context-menu-content">
+  
+          <!-- Send -->
+          <button class="btn" data-action="send">
+            <i class="fa left ico-paper-airplane"></i>
+            {{@Helper.i18n("window.mindmapeditor.toolbar.button.send.label")}}
+          </button>
+          
+          <!-- Download -->
+          <button class="btn" data-action="download">
+            <i class="fa fa-download"></i>
+            {{@Helper.i18n("window.mindmapeditor.toolbar.button.export.label")}}
+          </button>
+          
+          <!-- Save as PDF -->
+          {{ if (model.canSaveAsPdf) { }}
+          <button class="btn" data-action="save-as-pdf">
+            <i class="fa left fa-file-pdf-o"></i>
+            {{@Helper.i18n("window.mindmapeditor.toolbar.button.saveAsPdf.label")}}
+          </button>
+          {{ } }}
+          
+      </div>
+    </div>
+
+  </span>
+  
+  <!-- RIGHT SIDE -->
+  <span class="right-side-buttons">
+    {{ if (model.rightSideHtml) { {{
+      {{#model.rightSideHtml}}
+    }} } }}
+    
+    <span class="float-right read-mode-buttons">
+      <button class="btn float-right" data-action="reload">
+        <i class="fa fa-refresh"></i>
+        {{@Helper.i18n("window.mindmapeditor.toolbar.button.reload.label")}}
+      </button>
+    </span>
+  </span>
+</div>
+<span class="more-button hide" data-action="open-toolbar-more">&raquo;</span>
+<div class="context-menu-toolbar-more {{@model.editMode ? 'edit-mode' : ''}}">
+  <div class="context-menu-backdrop2"></div>
+  <div class="context-menu-content">
+  </div>
+</div>

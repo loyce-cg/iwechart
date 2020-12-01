@@ -1,0 +1,67 @@
+@import {ChatType} from "../../../main/Types";
+@import {PersonModel, GUISettings} from "../../../main/ChatPlugin";
+@import {func as chatReplyProfileTemplate} from "./chat-reply-profile.html";
+@import {ChannelModel} from "../ChatMessagesController";
+@model {chatType: ChatType, persons: PersonModel[], channel: ChannelModel, hasNotes2:boolean, hasTasks:boolean, usersWithAccess: PersonModel[] }
+<div class="single-contact without-description channel-avatar compact-summary-view">
+  <div class="image-with-data">
+    <div class="bckg-icon">
+      <span class="ico-comment"></span>
+    </div>
+    <div class="text-col">
+      <p class="name">{{@Helper.i18n("plugin.chat.component.chatMessages.title")}}</p>
+    </div>
+  </div>
+</div>
+
+{{ if (model.chatType == ChatType.CHANNEL) { {{
+  <div class="single-contact without-description channel-avatar">
+    <div class="image-with-data">
+      <div class="bckg-icon bckg-icon-inverse2 {{@model.channel.scope == 'private' ? 'bckg-icon-border' : ''}} has-section-tooltip" data-section-id="{{@model.channel.id}}">
+        <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+      </div>
+      <div class="text-col"><p class="name">{{@model.channel.name}}<p></div>
+    </div>
+  </div>
+  <div class="small-avatars-list">
+    {{ var template = Helper.createTemplate(chatReplyProfileTemplate); }}
+    {{ for (let person of model.usersWithAccess) { }}
+      <div class="small-avatar">
+        {{#template.render(person, { truncateDescription: false, canvasSize: 15 })}}
+      </div>
+    {{ } }}
+  </div>
+  <div class="small-avatars-fade"></div>
+}} } else if (model.chatType == ChatType.CONVERSATION) {
+  var template = Helper.createTemplate(chatReplyProfileTemplate);
+  if (model.persons.length == 1) { {{
+    <div class="single-contact">
+      {{#template.render(model.persons[0], { truncateDescription: false })}}
+    </div>
+  }} } else { {{
+  <div class="many-profiles">
+    {{ model.persons.forEach(person => { {{
+      <div class="remove-person-button" data-action="remove-person" data-hashmail="{{@person.hashmail}}" title="{{@Helper.i18n('plugin.chat.component.chatMessages.remove-user.title')}}"><i class="fa fa-minus"></i></div>
+      {{#template.render(person, { truncateDescription: true })}}
+    }} }); }}
+  </div>
+  }} }
+  {{
+    <!-- <div class="add-person-button" data-action="add-person" title="{{@Helper.i18n('plugin.chat.component.chatMessages.add-user.title')}}"><i class="fa fa-plus"></i></div> -->
+    <button class="btn btn-success btn-sm small in-summary-as-icon" data-action="add-person" title="{{@Helper.i18n('plugin.chat.component.chatMessages.add-user.title')}}">
+      <i class="fa fa-user-plus"></i>
+    </button>
+  }}
+} }}
+<div class="go-to-modules" style="display: none;">
+  {{ if (model.hasNotes2) { {{
+    <span class="btn btn-sm go-to-notes2" data-action="open-notes2" data-window-opener="true">
+      <i class="privmx-icon privmx-icon-notes2"></i>
+    </span>
+  }} } }}
+  {{ if (model.hasTasks) { {{
+    <span class="btn btn-sm go-to-tasks" data-action="open-tasks" data-window-opener="true">
+      <i class="privmx-icon privmx-icon-tasks"></i>
+    </span>
+  }} } }}
+</div>

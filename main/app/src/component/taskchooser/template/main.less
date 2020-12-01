@@ -1,0 +1,128 @@
+@import "../../../themes/default/less/form.less";
+@import "../../infotooltip/index.less";
+@import "../../template/wi-element.less";
+
+.task-chooser-component {
+  .flex-container {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    
+    input[type=text] {
+      border: 1px solid var(--login-input-shadow);
+      color: var(--body-fg);
+      padding: 3px 6px;
+      width: calc(100% - 20px);
+      font-size: var(--font-size);
+    }
+    
+    >.fixed-content {
+      flex: 0 0 auto;
+    }
+    
+    >.fixed-content.top {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: row;
+      font-size: var(--font-size);
+      padding: 10px;
+      
+      input {
+        flex: 1 1 auto;
+      }
+      span.results-count {
+        flex: 0 0 auto;
+        margin-left: 10px;
+        line-height: 28px;
+        
+        >[data-content=results-count] {
+          margin-left: 5px;
+          font-weight: 500;
+          display: inline-block;
+          width: 40px;
+        }
+      }
+    }
+    
+    >.scrollable-content {
+      flex: 1 1 auto;
+      
+      .task {
+        font-size: var(--font-size);
+        padding: 2px 4px;
+        color: var(--body-fg);
+        cursor: pointer;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin: 0 10px 0 10px;
+        
+        &, *:not(.fa):not(.privmx-icon) {
+          font-family: var(--ff-default-user);
+        }
+        
+        &:hover {
+          background: var(--main-panel-task-hover-bg);
+        }
+        
+        &.active,
+        &.active:hover {
+          background: var(--main-panel-task-active-bg);
+        }
+      }
+    }
+    
+    .buttons-container {
+      margin: 10px;
+      text-align: center;
+      
+      .btn {
+        margin: 0 5px;
+      }
+      
+      .new-task {
+        position: absolute;
+        right: 5px;
+        bottom: 10px;
+      }
+    }
+    
+    .task-label {
+      margin-right: 3px;
+    }
+  }
+  
+  &.popup {
+    display: none;
+    position: fixed;
+    left: 18px;
+    top: 4px;
+    width: 300px;
+    height: 200px;
+    z-index: 9;
+    background: var(--preview-panel-bg);
+    outline: none;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    
+    .flex-container>.fixed-content.top {
+      display: none;
+    }
+    
+    .scrollable-content {
+      margin-top: 10px;
+    }
+    
+    &.visible {
+      display: block;
+    }
+  }
+  
+  .pf-scrollable .pf-scroll-panel .pf-scroll {
+    background-color: var(--scrollbar-bg);
+  }
+}

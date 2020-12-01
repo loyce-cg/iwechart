@@ -1,0 +1,69 @@
+@import "../../base/BaseWindow";
+@import "../../../component/template/bckg-icon.less";
+@import "../../../component/template/wi-element.less";
+
+@fullSize: {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+};
+
+body {
+    font-size: var(--font-size);
+    min-height: 0;
+    height: auto;
+    background: var(--cc-color-main-bg);
+    color: var(--cc-color-main-fg);
+}
+
+div:focus {
+    outline: none;
+}
+
+.hide {
+    display: none !important;
+}
+
+.window-support-main {
+    .window-center {
+      width: 100%;
+      text-align: center;
+      margin: 0;
+      position: absolute;
+      top: 50%;
+      -ms-transform: translateY(-50%);
+      transform: translateY(-50%);
+    }
+    .loader {
+        .fa {
+            color: #fff;
+        }
+        background: var(--cc-color-main-bg);
+    }
+    .inner-view {
+        @fullSize();
+        background: var(--cc-color-main-bg);
+        display: none;
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    }
+    .inner-static-view {
+      color: var(--cc-color-main-fg);
+    }
+
+    .buttons {
+      width: 100%;
+      padding: 20px;
+      text-align: center;
+      position: absolute;
+      bottom: 0;
+      i {
+        margin-right: 5px;
+      }
+    }
+}

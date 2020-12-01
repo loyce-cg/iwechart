@@ -1,0 +1,328 @@
+@nodeMaxWidth: 800px;
+@nodeMaxLines: 3;
+@mindmapPaddingLeft: 15px;
+@mindmapPaddingRight: 25px;
+@mindmapPaddingTop: 15px;
+@mindmapPaddingBottom: 25px;
+@defaultFont: var(--ff-editors-default);
+@monospaceFont: var(--ff-monospace);
+
+.component-mindmap-editor {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  
+  .node {
+    min-width: 8px;
+    min-height: 24px; // font-size * line-height + padding-top + padding-bottom
+    max-width: @nodeMaxWidth;
+    position: absolute;
+    display: inline-block;
+    white-space: pre-wrap;
+    // display: -webkit-inline-box;
+    // -webkit-box-orient: vertical;
+    // -webkit-line-clamp: @nodeMaxLines;
+    // overflow: hidden;
+    outline: none !important;
+    padding: 2px;
+    margin: 1px;
+    font-size: var(--font-size);
+    font-family: var(--ff-editors-default);
+    border-radius: 4px;
+    cursor: pointer;
+    
+    *:not(.fa):not(.privmx-icon) {
+      font-family: inherit;
+    }
+    
+    .message-text-from-user {
+      display: inline;
+      
+      &.selectable {
+        cursor: pointer;
+        user-select: none;
+      }
+    }
+    
+    &.edit-mode {
+      z-index: 9999;
+      max-width: 800px !important;
+      width: auto !important;
+      height: auto !important;
+      border: 1px dashed var(--body-extra-info-fg) !important;
+      padding: 1px;
+      
+      .editor {
+        outline: none;
+      }
+      
+      .message-text-from-user {
+        display: none;
+      }
+    }
+    
+    &.invisible {
+      display: none;
+    }
+  }
+  
+  .nodes {
+    position: absolute;
+    left: @mindmapPaddingLeft;
+    right: @mindmapPaddingRight;
+    top: @mindmapPaddingTop;
+    bottom: @mindmapPaddingBottom;
+    z-index: 999;
+  }
+  
+  .hidden-nodes {
+    position: fixed;
+    width: 10000px;
+    height: 10000px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  svg {
+    pointer-events: none;
+    position: relative;
+    left: @mindmapPaddingLeft;
+    top: @mindmapPaddingTop;
+    
+    path {
+      stroke: #ccc;
+      stroke-width: 1px;
+      fill: none;
+    }
+    
+    circle {
+      stroke: #000;
+      stroke-width: 1px;
+      fill: #808080;
+    }
+  }
+  
+  .pf-scroll-panel {
+    z-index: 99999;
+  }
+  
+  .scrollable {
+    height: 100%;
+    &.pf-scrollable .pf-scroll-panel {
+      right: 0;
+      position: fixed;
+    }
+    &.pf-scrollable.pf-scrollable-horizontal>.pf-content.pf-scrollable>.pf-content {
+      right: unset;
+      min-width: 100%;
+      padding-right: @mindmapPaddingLeft;
+    }
+    &.pf-scrollable.pf-scrollable-horizontal>.pf-scroll-panel {
+      right: 15px;
+      bottom: 0;
+    }
+    &.pf-scrollable.pf-scrollable-horizontal>.pf-content>.pf-scroll-panel {
+      top: 40px;
+      bottom: 15px;
+    }
+    &.pf-scrollable.pf-scrollable-horizontal>.pf-content {
+      &.h-scrollbar-hidden {
+        .pf-scroll-panel {
+          bottom: 5px;
+        }
+      }
+      &.v-scrollbar-hidden {
+        &~.pf-scroll-panel {
+          right: 5px;
+        }
+      }
+    }
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  .editorStyle(@color, @background, @fontFamily: @defaultFont) {
+    .editor-theme-preview&,
+    & {
+      color: @color;
+      background-color: @background;
+    }
+    .mindmap {
+      *:not(.fa):not(.privmx-icon) {
+        font-family: @fontFamily !important;
+      }
+      .node {
+        color: @color;
+        &.style-1 {
+          font-weight: bold;
+        }
+        &.style-2 {
+          font-weight: bold;
+          color: #008000;
+        }
+        &.style-3 {
+          font-weight: bold;
+          color: #aa0114;
+        }
+        &.style-4 {
+          font-weight: bold;
+          color: #0007d5;
+        }
+        &.important {
+          background: #fee;
+        }
+        &.task-state-todo::before,
+        &.task-state-todo>.editor::before {
+          content: "☐ ";
+          font-size: 120%;
+          color: rgb(0, 0, 0);
+        }
+        &.task-state-done::before,
+        &.task-state-done>.editor::before {
+          content: "☑ ";
+          font-size: 120%;
+          color: rgb(0, 128, 0);
+        }
+        &.edit-mode::before {
+          display: none;
+        }
+      }
+    }
+  }
+  .mindmapStyleExt(@pathColor, @labelBorderColor, @linkColor, @selectedLabelBackground) {
+    .mindmap {
+      path {
+        stroke: @pathColor;
+      }
+      div.node {
+        border-color: @labelBorderColor;
+      }
+      div.node.selected {
+        background: @selectedLabelBackground;
+      }
+      div.node.cut {
+        opacity: 0.5;
+      }
+      .link {
+        color: @linkColor;
+      }
+    }
+  }
+  .defaultStyle() {
+    .editorStyle(#555, #fff);
+    //.mindmapStyleExt(#ccc, #fff, #2222dd, darken(#f0f0f0, 10%));
+    .mindmapStyleExt(#ccc, #fff, var(--color-link), darken(#f0f0f0, 10%));
+    .scrollbarStyle(#E4E4E4, #909090, #444);
+  }
+  
+  &[data-style-name=default] {
+    .defaultStyle();
+  }
+  
+  &[data-style-name=terminal] {
+    .editorStyle(#5BF75B, #111, @monospaceFont);
+    //.mindmapStyleExt(#1C651A, #111, #7272FF, lighten(#2f2f2f, 10%));
+    .mindmapStyleExt(#1C651A, #111, var(--color-link), lighten(#2f2f2f, 10%));
+    .scrollbarStyle(#313131, #666, #777);
+  }
+  
+  &[data-style-name=black-on-white] {
+    .editorStyle(#000, #fff);
+    //.mindmapStyleExt(#000, #fff, #2222dd, darken(#f0f0f0, 10%));
+    .mindmapStyleExt(#000, #fff, var(--color-link), darken(#f0f0f0, 10%));
+    .scrollbarStyle(#E4E4E4, #909090, #444);
+  }
+  
+  &[data-style-name=white-on-black] {
+    .editorStyle(#fff, #000);
+    //.mindmapStyleExt(#fff, #000, #7272FF, lighten(#2f2f2f, 10%));
+    .mindmapStyleExt(#fff, #000, var(--color-link), lighten(#2f2f2f, 10%));
+    .scrollbarStyle(#313131, #666, #777);
+  }
+  
+  &[data-style-name=papyrus] {
+    .editorStyle(#692D00, #EAE39F);
+    //.mindmapStyleExt(#D2A47E, #EAE39F, #2222dd, darken(#DAD288, 10%));
+    .mindmapStyleExt(#D2A47E, #EAE39F, var(--color-link), darken(#DAD288, 10%));
+    .scrollbarStyle(#bbab6a, #84722d, #79692a);
+  }
+
+  &[data-style-name=terminal],
+  &[data-style-name=white-on-black] {
+    & {
+      [contenteditable],
+      [contenteditable] * {
+        &::selection {
+          background: #628340;
+          color: #fff;
+        }
+        &::-moz-selection {
+          background: #628340;
+          color: #fff;
+        }
+      }
+    }
+  }
+  .scrollbarStyle(@scrollColor, @moverColor, @moverHoverColor) {
+    .pf-scrollable .pf-scroll-panel .pf-scroll {
+      background-color: @scrollColor;
+      .pf-mover {
+        background-color: @moverColor;
+        &:hover {
+          background-color: @moverHoverColor;
+        }
+      }
+    }
+  }
+  .table-layout {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    .inner-1 {
+      display: table;
+      height: 100%;
+      width: 100%;
+      .inner-2 {
+        display: table-cell;
+        vertical-align: middle;
+        text-align: center;
+      }
+    }
+  }
+}
+
+.styleSwitcherStyle(@color, @background, @fontFamily: @defaultFont) {
+  color: @color;
+  background: @background;
+  font-family: @fontFamily;
+}
+.toolbar .style-switcher .preview,
+.toolbar .font-size-switcher .preview {
+  &[data-style-name=default] {
+    .styleSwitcherStyle(#555, #fff);
+  }
+  
+  &[data-style-name=terminal] {
+    .styleSwitcherStyle(#5BF75B, #111, @monospaceFont);
+  }
+  
+  &[data-style-name=black-on-white] {
+    .styleSwitcherStyle(#000, #fff);
+  }
+  
+  &[data-style-name=white-on-black] {
+    .styleSwitcherStyle(#fff, #000);
+  }
+  
+  &[data-style-name=papyrus] {
+    .styleSwitcherStyle(#692D00, #EAE39F);
+  }
+}

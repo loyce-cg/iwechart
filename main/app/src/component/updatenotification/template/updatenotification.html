@@ -1,0 +1,23 @@
+@import {UpdateNotificationViewOptions} from "../UpdateNotificationController";
+@model {id: number, options: UpdateNotificationViewOptions}
+<div class="notification-entry" data-update-notification-id="{{@model.id}}">
+    <div class="update-msg">
+        <div class="updates">
+            <span class="text available {{@model.options.updateReadyToInstall ? 'hide' : ''}}">{{@Helper.i18n("core.updater.updatesAvailable")}} ({{@Helper.i18n("core.updater.newVersion", model.options.updateVersion)}})</span>
+            <span class="text readyToInstall {{@model.options.updateReadyToInstall ? '' : 'hide'}}">{{@Helper.i18n("core.updater.updatesReadyToInstall")}}</span>
+        </div>
+        <div class="updates-in-progress hide">
+          <span class="text checking hide"><i class="fa fa-circle-o-notch fa-spin"></i>{{@Helper.i18n("core.updater.checkingUpdates")}}</span>
+          <span class="text downloading hide"><i class="fa fa-circle-o-notch fa-spin"></i>{{@Helper.i18n("core.updater.downloadingUpdates")}} </span><span class="text downloading download-progress hide"></span>
+          <span class="text extracting hide"><i class="fa fa-circle-o-notch fa-spin"></i>{{@Helper.i18n("core.updater.extractingUpdates")}}</span>
+          <span class="text error hide">{{@Helper.i18n("core.updater.updatesError")}}</span>
+        </div>
+    </div>
+    <div class="update-btn hide-button link" data-action-id="hide"><i class="fa fa-times"></i></div>
+    <div class="update-btn">
+        <div class="updates">
+            <span class="link available {{@model.options.updateReadyToInstall ? 'hide' : ''}}" data-action-id="download-updates">{{@Helper.i18n("core.updater.downloadUpdates")}}</span>
+            <span class="link readyToInstall {{@model.options.updateReadyToInstall ? '' : 'hide'}}" data-action-id="install-updates">{{@Helper.i18n("core.updater.installUpdates")}}</span>
+        </div>
+    </div>
+</div>

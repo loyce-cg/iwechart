@@ -1,0 +1,6 @@
+@import {Contact} from "../InitDataEditor";
+@model Contact
+<div class="item">
+  <input type="text" name="hashmail" value="{{@model.hashmail}}" placeholder="{{@Helper.i18n("window.admin.initData.contact.hashmail.placeholder")}}" />
+  <button type="button" class="btn btn-xs btn-warning" data-action="remove-item"><i class="fa fa-remove"></i></button>
+</div>

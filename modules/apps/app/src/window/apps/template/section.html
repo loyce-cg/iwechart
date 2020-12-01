@@ -1,0 +1,26 @@
+@import {component} from "pmc-web";
+@import {SectionModel} from "../AppsWindowController";
+@context component.extlist.Context<SectionModel>
+@model SectionModel
+<div class="wi-element" data-section-id="{{@model.id}}" title="{{@model.name}}">
+  <div class="wi-element-inner">
+    <div class="pin-button {{@model.pinned?'pinned':'not-pinned'}}">
+      <i class="fa fa-thumb-tack"></i>
+    </div>
+    {{ if (model.private) { {{
+      <div class="wi-element-icon bckg-icon bckg-icon-border">
+        <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+      </div>
+    }} } else { {{
+      <div class="wi-element-icon bckg-icon">
+        <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+      </div>
+    }} } }}
+    <div class="wi-element-name {{@model.primary ? 'bold' : ''}}">
+      {{ if (model.breadcrumb.length > 0) { {{
+        <span class="section-breadcrumb">{{#model.breadcrumb}}</span>
+      }} } }}
+      {{@model.name}}
+    </div>
+  </div>
+</div>

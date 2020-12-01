@@ -1,0 +1,17 @@
+@import {Model} from "../SubIdWindowController";
+@model Model
+<div class="window-subid-main">
+  <div class="header">
+    {{@Helper.i18n("window.subid.info")}}
+  </div>
+  <div class="canvas-placeholder"></div>
+  <div class="textarea-container">
+    <textarea class="form-control" readonly="readonly">{{@model.mnemonic}}</textarea>
+  </div>
+  <div class="buttons">
+    <button class="btn btn-success" data-action="close">
+      <i class="fa fa-check"></i>
+      {{@Helper.i18n("core.button.ok.label")}}
+    </button>
+  </div>
+</div>

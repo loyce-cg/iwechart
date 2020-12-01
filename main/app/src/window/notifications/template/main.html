@@ -1,0 +1,44 @@
+@import {Model} from "../NotificationsWindowController";
+@model Model
+<div class="window-notifications-main">
+  <div class="window-header">
+    <h3><i class="fa fa-bell-o"></i> {{@Helper.i18n("window.notifications.title")}}</h3>
+    <p>{{@Helper.i18n("window.notifications.help-text")}}</p>
+  </div>
+  <div class="buttons-container">
+    <span class="notifications-main-switch-container">
+      <span class="switch {{ if (model.notificationsEnabled) { {{active}} } }}" data-action="toggle-global"></span>
+      <label class="toggle-global" data-action="toggle-global">{{@Helper.i18n("window.notifications.enable-notifications")}}</label>
+    </span>
+  </div>
+  <div class="section-entry wi-element-parent header  {{ if (!model.notificationsEnabled) { {{disabled}} } }}">
+    <div class="section-name wi-element">
+      <div class="wi-element-inner">
+        <div class="wi-element-name">
+          {{@Helper.i18n("window.notifications.header")}}
+        </div>
+        <div class="wi-element-module-icon">
+          <div class="module-icon" data-action="change-muted-col" data-module="tasks">
+            <i class="fa privmx-icon privmx-icon-tasks"></i>
+          </div>
+          <div class="module-icon" data-action="change-muted-col" data-module="notes2">
+            <span class="privmx-icon privmx-icon-notes2"></span>
+          </div>
+          <div class="module-icon" data-action="change-muted-col" data-module="chat">
+            <span class="privmx-icon privmx-icon-chat"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sections-list {{ if (!model.notificationsEnabled) { {{disabled}} } }}"></div>
+  <div class="buttons-container2">
+    <button class="btn btn-success save" data-action="save">
+      <i class="fa fa-floppy-o"></i>
+      {{@Helper.i18n("window.notifications.save")}}
+    </button>
+    <button class="btn btn-default cancel" data-action="close">
+      {{@Helper.i18n("window.notifications.cancel")}}
+    </button>
+  </div>
+</div>

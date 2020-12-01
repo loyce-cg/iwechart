@@ -1,0 +1,98 @@
+@import * as privfs from "privfs-client";
+@import RawUserAdminData = privfs.types.core.RawUserAdminData;
+@import {Context} from "../../../../component/extlist/ExtListView";
+@import {BaseCollection} from "../../../../utils/collection/BaseCollection";
+@import {ImageTypeDetector} from "../../../../utils/ImageTypeDetector";
+@import {UserInfo} from "../../users/UsersController";
+@model UserInfo & {twofa: boolean, blocked: boolean}
+@context Context<UserInfo>  
+{{
+  var hasWeakPassword = model.weakPassword !== false;
+  var profileName = "";
+  var avatar = Helper.getAssetByName('DEFAULT_USER_AVATAR');
+  var defaultAvatar = true;
+  var username = model.displayName || model.username; 
+  if (model.cachedPkiEntry) {
+    if (model.cachedPkiEntry.image) {
+      avatar = ImageTypeDetector.createDataUrlFromBase64(model.cachedPkiEntry.image);
+      defaultAvatar = false;
+    }
+    if (model.cachedPkiEntry.name) {
+      profileName = model.cachedPkiEntry.name;
+    }
+  }
+}}
+
+<tr>
+  <td class="image-col" style="width: 1%;">
+    <img class="{{#defaultAvatar ? 'default-avatar' : ''}}" src="{{@avatar}}" alt="" />
+  </td>
+  <td>
+    <span class="username">{{@username}}</span>
+  </td>
+  <td>
+      {{@Helper.i18n("window.admin.users.table.description.managedPostfix")}}
+  </td>
+  <td class="online-status">
+    {{
+    if (model.present) { {{
+      {{@Helper.i18n("core.onlineStatus.onlineFor", Helper.timeAgo(model.loggedInSince, true))}}
+    }} }
+    else { {{
+      {{@Helper.i18n("core.onlineStatus.lastSeen")}} {{@Helper.timeAgoWithNull(model.lastSeenDate)}}
+    }} }
+  }}
+  </td>
+
+  <td>
+    {{ if (!model.registrationDate) { {{
+      <span title="{{@Helper.i18n('window.admin.externalUsers.table.noRegisteredYet')}}">[?]</span>
+    }} } else if (model.generatedPassword) { {{
+      <span title="{{@Helper.i18n('window.admin.externalUsers.table.generatedPassword.info')}}">
+        {{@Helper.i18n("window.admin.externalUsers.table.generatedPassword")}}
+      </span>
+    }} } else if (hasWeakPassword) { {{
+      <span style="color: yellow;">{{@Helper.i18n("window.admin.externalUsers.table.passwordIsWeak")}}</span>
+    }} } else { {{
+      {{@Helper.i18n("window.admin.externalUsers.table.passwordIsOK")}}
+    }} } }}
+  </td>
+  <td class="last-client-version">
+    {{@model.lastClientVersion}}
+</td>
+<td class="last-device">
+  {{@model.lastDevice}}
+</td>
+<td class="last-ip">
+  {{@model.lastIp}}
+</td>
+  
+  <td class="center">
+    {{
+      if (model.twofa) { {{
+        <span class="disable-2fa" data-action="disable-2fa" data-username="{{@model.username}}">
+          <i class="fa fa-lock" title='{{@Helper.i18n("window.admin.users.table.disable2fa")}}'></i>
+        </span>
+      }} }
+      else { {{
+        <span class="disable-2fa">{{@Helper.i18n("window.admin.users.table.2fadisabled")}}</span>
+      }} }
+    }}
+  </td>
+  <td class="center">
+    {{
+      if (model.blocked) { {{
+        <span class="block-unblock" data-action="unblock-user" data-username="{{@model.username}}"><i class="fa fa-lock" title='{{@Helper.i18n("window.admin.users.table.unblockUserHint")}}'></i></span>
+      }} }
+      else { {{
+        <span class="block-unblock" data-action="block-user" data-username="{{@model.username}}"><i class="fa fa-unlock" title='{{@Helper.i18n("window.admin.users.table.blockUserHint")}}'></i></span>
+      }} }
+    }}
+  </td>
+  <td class="text-right">
+    <button class="btn btn-default gray btn-xs" data-action="edit-user" data-username="{{@model.username}}">
+      <i class="fa fa-pencil"></i>
+      {{@Helper.i18n("window.admin.externalUsers.details.action.edit")}}
+    </button>
+  </td>
+</tr>

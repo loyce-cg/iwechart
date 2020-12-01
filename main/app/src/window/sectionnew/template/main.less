@@ -1,0 +1,148 @@
+@import "../../base/BaseWindow";
+@import "../../../themes/default/less/form";
+@import "../../../component/template/wi-element";
+@import "../../../component/template/bckg-icon";
+body {
+  font-size: var(--font-size);
+  min-height: 0;
+  height: auto;
+}
+body,html {
+  overflow: auto;
+}
+div:focus {
+  outline: none;
+}
+.hide {
+  display: none !important;
+}
+
+.window-section-new {
+  .wi-element {
+    margin: 0;
+    padding: 0;
+    cursor: inherit;
+    
+    .wi-element-icon.not-selected {
+      display: none;
+    }
+  }
+  .wi-element:hover {
+    background-color: transparent;
+  }
+  span.parent-name:not(.not-selected) {
+    margin-left: 40px;
+  }
+
+  .base-form .fields .field div.info.parent-name {
+      line-height: 30px;
+  }
+  
+  .manage-info {
+    margin: 10px 0;
+    font-weight: bold;
+  }
+  .base-form {
+    margin-bottom: 60px;
+    .fields {
+      .field {
+        line-height: 18px;
+        
+        .info {
+          width: 160px;
+          
+          &.input-info {
+            padding-top: 11px;
+          }
+        }
+        .input, .field-value {
+          margin-left: 170px;
+          padding: 5px 0 0 0;
+        }
+        .checkbox, .radio {
+          margin: 0 0 5px 0;
+        }
+        input[type=checkbox], input[type=radio] {
+          margin-top: 3px;
+        }
+        .text {
+          line-height: 18px;
+          padding-top: 5px;
+        }
+        .preview {
+          line-height: 18px;
+          margin-right: 50px;
+        }
+        .field-value {
+          position: relative;
+          
+          .edit-btn {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            z-index: 1;
+          }
+          .edit-btn.btn-value {
+              position: static;
+          }
+          
+          .checkbox > label > .module-icon {
+            position: absolute;
+            i {
+              position: absolute;
+              top: 1px;
+            }
+            span {
+              position: absolute;
+              top: 2px;
+            }
+          }
+          
+          .checkbox > label > .module-text {
+            margin-left: 18px;
+          }
+          
+          .radio > label > span.bolder, span.bolder {
+            font-weight: bolder;
+          }
+          
+          &.sorted-modules {
+            display: flex;
+            flex-direction: column;
+            
+            .sorted-module-chat { order: 1; }
+            .sorted-module-file { order: 2; }
+            .sorted-module-kvdb { order: 3; }
+            .sorted-module-calendar { order: 4; }
+          }
+        }
+        .btn-link {
+          padding: 0;
+          margin-left: 5px;
+          line-height: 18px;
+          vertical-align: baseline;
+        }
+        .users {
+          margin-left: 20px;
+        }
+      }
+    }
+  }
+  .buttons-container {
+    position: fixed;
+    bottom: 0;
+    left: 170px;
+    right: 0;
+    padding: 10px 0;
+    
+    button {
+      margin: 0 8px;
+      i {
+        margin-right: 3px;
+      }
+      &:focus {
+        outline: #aaa dotted 1px;
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+//@import "../../base/BaseWindow";
+
+body {
+  background: var(--preview-panel-bg);
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+}
+
+#mindmap-keyboard-help {
+  margin: 10px;
+  font-size: var(--font-size);
+}
+
+#mindmap-keyboard-help td {
+  padding: 5px;
+}
+
+#mindmap-keyboard-help td.header {
+  text-align: center;
+  text-decoration: underline;
+  font-size: var(--font-size-l);
+  padding: 10px 0px;
+}
+
+#mindmap-keyboard-help kbd {
+  margin-left: 1px;
+  background: rgb(80, 80, 80);
+  background: -moz-linear-gradient(top, rgb(60, 60, 60), rgb(80, 80, 80));
+  background: -webkit-gradient(linear, left top, left bottom, from(rgb(60, 60, 60)), to(rgb(80, 80, 80)));
+}

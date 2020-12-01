@@ -1,0 +1,123 @@
+@import {Model} from "../NotificationsController";
+@model Model
+<div class="section notifications-section">
+  <div class="section-header">
+    <i class="fa fa-bell-o"></i>
+    {{@Helper.i18n("window.settings.section.notifications.header")}}
+  </div>
+  <div class="section-info" style="display: none;">
+  </div>
+  
+  {{ if(Helper.isDemo()) { {{
+    {{@Helper.i18n("core.demo.featureNotAvailable")}}
+  }} } else { {{
+  
+  <div class="base-form">
+    <div class="fields">
+      
+      <div class="field">
+        <div class="info">{{@Helper.i18n("window.settings.section.notifications.uiNotifications.label")}}:</div>
+        <div class="input checkbox">
+          <label class="with-checkbox">
+            <input type="checkbox" name="ui.notifications" {{@model.uiNotifications?'checked':''}}>
+            <span>{{@Helper.i18n("window.settings.section.notifications.uiNotifications.enabled.label")}}</span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="field">
+        <div class="info"></div>
+        <div class="input checkbox">
+          <label class="audio-notifications-checkbox with-checkbox">
+            <input type="checkbox" {{@model.audioNotifications ? 'checked' : ''}} data-setting="ui.audio" name="ui.audio"></span>
+            <span class="checkbox-label">{{@Helper.i18n("window.settings.section.notifications.audioNotifications.label")}}</span>
+          </label>
+        </div>
+      </div>
+      
+      {{ for (let soundsCategory of model.soundsCategories) { }}
+        {{ if (soundsCategory.spec.name != "notification") { continue; } }}
+        <div class="sounds-category field">
+          <div class="sounds-category-name info"></div>
+          <div class="sounds-category-sounds input" style="padding-left:21px">
+            <span class="field-inline-info">{{@Helper.i18n("window.settings.section.audioconfig.soundsCategories." + soundsCategory.spec.name)}}:</span>
+            <select data-sound-category="{{@soundsCategory.spec.name}}" name="sounds.{{@soundsCategory.spec.name}}" {{@model.audioNotifications?'':'disabled'}}>
+              {{ for (let sound of soundsCategory.sounds) { }}
+                <option value="{{@sound.fileName}}" {{@soundsCategory.currentSound == sound.fileName ? ' selected' : ''}}>
+                  {{@Helper.i18n("window.settings.section.audioconfig.sounds." + sound.i18nKey)}}
+                </option>
+              {{ } }}
+            </select>
+            <span data-play="{{@soundsCategory.spec.name}}"><i class="fa fa-play-circle"></i></span>
+          </div>
+        </div>
+      {{ } }}
+      
+      <div class="field-separator extra-info" style="display:none">
+        {{@Helper.i18n("window.settings.section.notifications.info")}}
+      </div>
+      
+      <div class="field-separator" style="margin-bottom:-10px"></div>
+      
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.settings.section.notifications.notifyAbout.label")}}
+        </div>
+        <div class="input checkbox">
+          {{model.entries.forEach(entry => { {{
+            <label>
+              <input type="checkbox" name="notifications.{{@entry.userPreferencesKey}}" {{#model.notifications[entry.userPreferencesKey] ? 'checked="checked"' : ''}}>
+              {{@Helper.i18n(model.entries.length == 1 ? "window.settings.section.notifications.sendNotifications" : entry.i18nKey)}}
+            </label>
+          }} }); }}
+        </div>
+      </div>
+      
+      <div class="field" style="display: none;">
+        <div class="input checkbox">
+          <label class="with-checkbox">
+            <input type="checkbox" name="notifications.enabled" checked="checked">
+            <span>{{@Helper.i18n("window.settings.section.notifications.enabled.label")}}</span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="field" style="margin-top:-10px">
+        <div class="info"></div>
+        <div class="input" style="padding-left:21px">
+          <span class="field-inline-info">{{@Helper.i18n("window.settings.section.notifications.email.label")}}</span>
+          <input type="text" name="notifications.email" value="{{@model.notifications.email}}" placeholder="user@server.com" style="width: 250px;" />
+          <small class="error">{{@Helper.i18n("window.settings.section.notifications.email.error.label")}}</small>
+        </div>
+      </div>
+
+      <div class="field" style="display: none">
+        <div class="input checkbox">
+          <label>
+            <input type="checkbox" name="ui.appSilentMode" {{@model.uiAppSilentMode?'checked':''}}>
+            {{@Helper.i18n("window.settings.section.notifications.appSilentMode.enabled.label")}}
+          </label>
+        </div>
+      </div>
+
+      <div class="field buttons">
+        <div class="info">
+        </div>
+        <div class="input">
+          <button class="btn btn-success save-button progress-button">
+            <i class="fa fa-save"></i>
+            <span class="button-text">{{@Helper.i18n("window.settings.section.notifications.button.save.text")}}</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="extra-info" style="text-align:center">
+        {{#Helper.i18n("window.settings.section.notifications.extraInfo.text")}}
+      </div>
+      
+    </div>
+  </div>
+  
+  }} } }}
+  
+</div>

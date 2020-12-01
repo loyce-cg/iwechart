@@ -1,0 +1,98 @@
+@import "../../base/BaseWindow";
+@import "../../../component/template/bckg-icon.less";
+@import "../../../component/template/wi-element.less";
+
+body {
+  font-size: var(--font-size);
+  min-height: 0;
+  height: auto;
+}
+
+div:focus {
+  outline: none;
+}
+
+.hide {
+  display: none !important;
+}
+
+.window-sectionpicker-main {
+  .sections-list {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 53px;
+    right: 0;
+    overflow-y: auto;
+    background: var(--main-panel-bg);
+    
+    .section-root {
+      .wi-element-name {
+        font-weight: bold;
+      }
+    }
+    .section-name:hover .bckg-icon {
+       background-color: var(--section-color-icon);
+       
+       &.bckg-icon-border {
+         background-color: transparent;
+         border-color: var(--section-color-icon);
+         
+         img {
+           filter: brightness(60%);
+         }
+       }
+    }
+    .section-entry.active > .section-name .bckg-icon {
+      background-color: rgba(255,255,255,.37);
+       
+       &.bckg-icon-border {
+         background-color: transparent;
+         border-color: rgba(255,255,255,.37);
+         
+         img {
+           filter: none;
+         }
+       }
+    }
+    .tree-children {
+
+    }
+  }
+  
+  .buttons-container {
+    position: absolute;
+    background: var(--main-panel-bg);
+    bottom: 0;
+    left: 0;
+    text-align: center;
+    padding: 10px 0;
+    width: 100%;
+    
+    button {
+      margin: 0 8px;
+      i {
+        margin-right: 3px;
+      }
+      &:focus {
+        outline: #aaa dotted 1px;
+      }
+    }
+  }
+  
+  .section-entry .section-name .wi-element-inner .wi-element-name span.section-breadcrumb {
+    color: hsla(var(--wi-element-breadcrumb-fg-h), var(--wi-element-breadcrumb-fg-s), calc(var(--wi-element-breadcrumb-fg-l) - 20%), var(--wi-element-breadcrumb-fg-a));
+  }
+  
+  .wi-element-name.with-breadcrumb {
+    white-space: normal;
+  }
+  .wi-element-parent>.wi-element.section-name:hover {
+    background-color: var(--sidebar-item-hover-bg) !important;
+  }
+  .wi-element-parent.active>.wi-element.section-name,
+  .wi-element-parent.active>.wi-element.section-name:not(.hover) {
+    background-color: var(--sidebar-item-active-bg) !important;
+  }
+}
+

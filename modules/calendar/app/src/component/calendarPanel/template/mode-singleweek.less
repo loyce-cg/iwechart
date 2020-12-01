@@ -1,0 +1,81 @@
+@import "../../../window/main/template/vars.less";
+
+.mode-singleweek,
+.mode-singleday {
+  flex-direction: column;
+  
+  .fixed-tasks-container {
+    max-height: 30%;
+    min-height: 23px;
+    margin-left: 39px;
+    border-left: 1px solid var(--main-panel-tasks-separator-bg);
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    
+    .task {
+      position: static;
+    }
+    .task-inner {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  
+    .entry-tasks {
+      top: 23px;
+      background: var(--preview-panel-bg);
+    }
+  }
+  
+  .second-container {
+    position: relative;
+    flex: 1 1 auto;
+  }
+  
+  .left-hours-header,
+  .hours-lines {
+    padding-top: 0;
+  }
+  
+  .hours-container {
+    top: 0;
+  }
+  
+  .entries-container {
+    position: absolute;
+    left: 40px;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    overflow: hidden;
+  }
+  
+  .entry {
+    border-top: 0;
+    border-right: 1px solid var(--main-panel-tasks-separator-bg);
+    
+    &:last-child {
+      border-right: 0;
+    }
+    
+    &.day {
+      &:nth-child(6) .entry-header {
+        color: @saturdayFg;
+      }
+      &:nth-child(7) .entry-header {
+        color: @sundayFg;
+      }
+    }
+  }
+  
+  .entry-tasks {
+    top: 0;
+  }
+  
+  .entry-inner {
+    position: static;
+    transform: none;
+  }
+}

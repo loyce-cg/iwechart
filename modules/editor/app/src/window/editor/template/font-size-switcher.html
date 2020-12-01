@@ -1,0 +1,21 @@
+@import { component } from "pmc-web";
+@import {StyleSwitcherTemplateModel} from "../editors/StyledEditor";
+@model StyleSwitcherTemplateModel
+{{
+  var currSize = model.style && model.style.fontSize;
+  var sizes = component.mindmap.Mindmap.AVAILABLE_FONT_SIZES;
+}}
+<div class="font-size-switcher" id="font-size-{{@model.id}}">
+  <button class="btn" data-action="open">
+      <i class="fa fa-font"></i> {{@Helper.i18n("plugin.editor.window.editor.toolbar.fontSize.name")}} <span class="ico-arrow-down trigger"></span>
+  </button>
+  <ul data-prevent-toolbar-hide-when-visible="true">
+    {{ for(var size in sizes) { }}
+      <li class="{{@ currSize == size ? 'active' : '' }}" data-action="switch-font-size" data-name="{{@size}}">
+        {{@sizes[size]}}
+        <span class="preview" style="font-size:{{@size}}">abc</span>
+      </li>
+    {{ } }}
+  </ul>
+  <div class="backdrop"></div>
+</div>

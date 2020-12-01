@@ -1,0 +1,10 @@
+{
+  "name": "privmx-desktop-client-calendar-module-builder",
+  "version": "1.0.0",
+  "description": "Calendar module builder",
+  "license": "PrivMX Source Code License",
+  "private": true,
+  "dependencies": {
+    "privmx-builder": "1.4.1"
+  }
+}

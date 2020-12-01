@@ -1,0 +1,10 @@
+@import {SliderOptions,SliderOrientation} from "../SliderView";
+@model SliderOptions
+<div class="component-slider {{@model.orientation==SliderOrientation.HORIZONTAL?'horizontal':'vertical'}} {{@model.reverse?'reverse':''}}">
+  <div class="inner">
+    <div class="fill"></div>
+    <div class="draggable"></div>
+  </div>
+  <div class="text"></div>
+  <div class="backdrop"></div>
+</div>

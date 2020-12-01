@@ -1,0 +1,20 @@
+@import {InnerMessageModel} from "../ChatMessagesController";
+@model InnerMessageModel
+<div class="chat-message {{@model.myMessage ? 'outgoing' : 'incoming' }} {{@model.read ? 'read' : 'unread'}}" data-msg-id="{{@model.msgId}}">
+  <div class="sender-picture" data-hashmail-image="{{@model.sender.hashmail}}" data-auto-refresh="true">
+    <canvas class="not-rendered"></canvas>
+  </div>
+  <div class="text-col">
+    <div class="sender-name" data-hashmail-name="{{@model.sender.hashmail}}" data-hashmail-default-name="{{@model.sender.defaultName}}" data-auto-refresh="true">
+      {{@model.sender.name}}
+    </div>
+    <div class="message">
+      {{ if (model.sending) { {{
+        <div class="date" title="{{@Helper.i18n("plugin.chat.component.chatMessages.chatMessageSending.date.title")}}"><i class="fa fa-circle-o-notch fa-spin "></i></div>
+      }} } else { {{
+        <div class="date" title="{{@Helper.dateWithHourLocal(model.serverDate)}}">{{@Helper.calendarDate(model.serverDate)}}</div>
+      }} } }}
+      <div class="text">{{#Helper.formatRichMessage(model.text, model.contentType, model.taskStatuses)}}</div>
+    </div>
+  </div>
+</div>

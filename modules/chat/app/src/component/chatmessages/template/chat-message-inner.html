@@ -1,0 +1,375 @@
+@import {InnerMessageModel} from "../ChatMessagesController";
+@import {component} from "pmc-web"
+@import emojiTemplate = component.template.emoji;
+@model InnerMessageModel
+{{let thumbnailsEnabled = false;}}
+{{
+  let objType: string = model.type == "chat" && model.textAsJson && model.textAsJson.type ? model.textAsJson.type : "";
+  let fileBoxClass = objType == 'create-file' || objType == 'delete-file' || objType == 'rename-file' || model.attachments.length > 0 ? ' file-box' : '';
+  let taskBoxClass = objType == 'create-task' || objType == 'delete-task' || objType == 'change-task' ? ' task-box' : '';
+  let isCreated = objType == "create-file";
+  let normalDate = objType != "create-task" && objType != "create-file";
+  let voicechatMessage = objType == "joined-voicechat" || objType == "left-voicechat";
+}}
+<div class="{{@model.sending ? 'chat-sending' : ''}} {{@model.distanceFromClosestMatch !== null ? `dist-${model.distanceFromClosestMatch}` : ''}}" data-msg-id="{{@model.msgId}}" data-msg-num="{{@model.msgNum}}" data-sent-id="sending-{{@model.sendingId}}" data-hashmail="{{@model.sender.hashmail}}" data-date="{{@Helper.dateDay(model.serverDate)}}">
+  <div class="chat-date-separator" style="user-select:none">
+    <div class="day-date"><div>{{@Helper.dateDay(model.serverDate)}}</div></div>
+  </div>
+  <div class="chat-message {{@model.myMessage ? 'outgoing' : 'incoming' }} {{@(model.read || model.contentType == 'application/json') ? 'read' : 'unread'}} {{@model.deleted ? 'deleted' : ''}} {{@model.isTldr ? 'tldr' : '' }} {{@model.distanceFromClosestMatch !== null ? `dist-${model.distanceFromClosestMatch}` : ''}}">
+    <div class="sender-picture" data-tooltip-trigger="{{@model.sender.hashmail}}">
+      <canvas class="not-rendered" data-hashmail-image="{{@model.sender.hashmail}}" data-width="30" data-height="30" data-auto-size="true" data-auto-refresh="true"></canvas>
+    </div>
+    <div class="text-col">
+      <div class="sender-name" data-hashmail-name="{{@model.sender.hashmail}}" data-hashmail-default-name="{{@model.sender.defaultName}}" data-auto-refresh="true" style="user-select:none">
+        {{@model.sender.name}}
+      </div>
+      <div class="message {{@voicechatMessage ? 'voicechat' : ''}} {{@model.attachments.length > 0 ? 'with-attachments':''}}{{@fileBoxClass}}{{@isCreated ? ' created':''}} {{@isCreated && model.textAsJson && model.textAsJson.mimeType.startsWith('image/') && !model.nonExistantFileLink ? ' with-not-loaded-image':''}} {{@model.isEditable ? 'editable' : ''}}">
+        {{ if (normalDate) { {{
+          {{ if (model.sending) { {{
+            <div class="date date-sending" data-sending="true" title="{{@Helper.i18n("plugin.chat.component.chatMessages.chatMessageSending.date.title")}}"><i class="fa fa-circle-o-notch fa-spin "></i></div>
+          }} } }}
+          
+          <div class="date" title="{{@Helper.dateWithHourLocal(model.serverDate)}}" data-timeago-type="calendarDate" data-timeago="{{@model.serverDate}}" style="user-select:none">
+            {{@Helper.calendarDate(model.serverDate)}}
+          </div>
+        }} } }}
+        {{ if (model.deleted) { {{
+          <div class="deleted-text">
+            {{@Helper.i18n("plugin.chat.component.chatMessages.messageDeleted")}}
+            {{ if (model.lastEdit) { {{
+              <span title="{{@Helper.dateWithHourLocal(model.lastEdit)}}" data-timeago-type="calendarDate" data-timeago="{{@model.lastEdit}}">
+                {{@Helper.calendarDate(model.lastEdit)}}
+              </span>
+            }} } }}
+          </div>
+        }} } else { {{
+          {{
+            if (fileBoxClass == '') {
+              {{
+                <div class="emoji-view off-edit">{{#Helper.createTemplate(emojiTemplate).render(model.emoji)}}</div>
+              }}
+            }
+          }}
+
+          {{
+            if (! model.nonExistantFileLink) {
+              {{
+                <div class="message-options-overlay">
+                  <button class="btn btn-xs btn-default emoji-btn" data-action="emoji-picker"><i class="fa fa-smile-o"></i></button>
+                  <button class="btn btn-xs btn-default toggle-context-btn" title="{{@Helper.i18n('plugin.chat.component.chatMessages.showContextButton.title')}}" data-action="toggle-context"><i class="fa fa-binoculars"></i></button>              
+                  {{ if (model.myMessage && !model.sending && (!model.textAsJson || !model.textAsJson.type)) { {{
+                    {{ if (model.isEditable) { {{
+                      <button class="btn btn-xs btn-default edit-message-btn" data-action="edit-message" title="{{@Helper.i18n('plugin.chat.component.chatMessages.button.edit.label')}}">
+                        <i class="fa fa-pencil"></i>
+                      </button>    
+                    }} } }}
+                  }} } }}
+                  {{ if (model.myMessage && !model.sending && (!model.textAsJson || !model.textAsJson.type)) { {{
+                    <button class="btn btn-xs btn-warning delete-message-btn" data-action="delete-message" title="{{@Helper.i18n('plugin.chat.component.chatMessages.button.deleteMessage.label')}}">
+                      <i class="fa fa-trash"></i>
+                    </button>                
+                  }} } }}
+                  {{ if (!model.sending && (!model.textAsJson || !model.textAsJson.type)) { {{
+                    <button class="btn btn-xs btn-default quote-message-btn" data-action="quote-message" data-hashmail="{{@model.sender.hashmail}}" data-username="{{@model.sender.name}}" data-timestamp="{{@model.serverDate}}" title="{{@Helper.i18n('plugin.chat.component.chatMessages.button.quoteMessage.label')}}">
+                      <i class="fa fa-quote-right"></i>
+                    </button>
+                  }} } }}
+                  <div class="emoji-view on-edit">{{#Helper.createTemplate(emojiTemplate).render(model.emoji)}}</div>
+      
+                  <div class="date" title="{{@Helper.dateWithHourLocal(model.serverDate)}}" data-timeago-type="calendarDate" data-timeago="{{@model.serverDate}}" style="user-select:none">
+                    {{@Helper.calendarDate(model.serverDate)}}
+                  </div>
+        
+                </div>
+      
+              }}
+            }
+          }}
+
+        {{ if (model.type == "chat") { {{
+          {{ if (model.contentType == "application/json") {
+            let obj = model.textAsJson;
+            let path = obj.path || "";
+            if (model.newFilePaths[obj.did]) {
+              path = model.newFilePaths[obj.did];
+            }
+            let fileDid = obj.did || "";
+            let fileName = path.substring(path.lastIndexOf("/") + 1);
+            let showExtraButtons = !model.sending;
+            if (obj.type == "create-file") {
+              {{
+                <div class="file-box created">
+                  {{ if (model.fileInfoIcon) { {{
+                    <i class="{{@model.fileInfoIcon}}"></i>
+                  }} } else { {{
+                    <i class="fa fa-file-o"></i>
+                  }} } }}
+                  <div class="text">
+                    <div class="line">
+                      {{ if (model.nonExistantFileLink) { {{
+                        <span class="inactive-link">{{@fileName}}</span>
+                      }} } else { {{ 
+                        <span class="channel-file link" data-action="open-channel-file" data-path="{{@path}}" data-did="{{@fileDid}}">{{@fileName}}</span>
+                        {{ if (model.fileTaskBadges) { }}
+                          <span class="file-task-badges">
+                            {{ for (let taskBadge of model.fileTaskBadges) { }}
+                              <span class="task task-id has-task-tooltip {{@taskBadge.labelClass}}" data-task-id="{{@taskBadge.taskId}}" data-task-badge-autoupdate="false">#{{@taskBadge.taskId}}</span>
+                            {{ } }}
+                          </span>
+                        {{ } }}
+
+                      }} } }}
+                      <span class="flex-spacer"></span>
+                      {{
+                        if (!model.nonExistantFileLink) { {{
+                          <div class="emoji-view off-edit">{{#Helper.createTemplate(emojiTemplate).render(model.emoji)}}</div>
+
+                        }} }
+                      }}
+
+                      <div class="date" title="{{@Helper.dateWithHourLocal(model.serverDate)}}" data-timeago-type="calendarDate" data-timeago="{{@model.serverDate}}" style="user-select:none">
+                        {{@Helper.calendarDate(model.serverDate)}}
+                      </div>
+                    </div>
+                    {{ if (obj.size != null) { {{
+                      <div class="size-line"><span class="size">{{@Helper.bytesSize(obj.size)}}</span></div>
+                    }} } }}
+                  </div>
+                  {{ if (model.sending) { {{
+                    <span class="date date-sending" data-sending="true" title="{{@Helper.i18n("plugin.chat.component.chatMessages.chatMessageSending.date.title")}}"><i class="fa fa-circle-o-notch fa-spin "></i></span>
+                  }} } }}
+
+                  
+                  {{ if ((<any>obj.mimeType).startsWith("image/") && !model.nonExistantFileLink) { }}
+                    <img class="img-in-chat not-loaded" data-action="open-channel-file" data-path="{{@path}}" data-did="{{@fileDid}}" data-thumb-did="{{@fileDid}}" data-thumb-host-hash="{{@model.hostHash}}" data-thumb-section-id="{{@model.sectionId}}" data-thumb-state="{{@component.thumbs.ThumbState.UNINITIALIZED}}" data-thumb-in-place="true" alt="" />
+                  {{ } }}
+                </div>
+            
+              }}
+            }
+            else if (obj.type == "delete-file") {
+              {{
+              <div class="file-box deleted">
+                <div class="text">
+                  {{ if (model.fileInfoIcon) { {{
+                    <i class="{{@model.fileInfoIcon}}"></i>
+                  }} } else { {{
+                    <i class="fa fa-file-o"></i>
+                  }} } }}
+                  
+                  <span class="channel-file-delete">{{@fileName}} {{@Helper.i18n("plugin.chat.component.chatMessages.message.deleteFile")}}.</span>
+                </div>
+
+              </div>
+              }}
+            }
+            else if (obj.type == "rename-file") {
+              let oldPath = obj.oldPath || "";
+              let newPath = obj.newPath || "";
+              let oldName = oldPath.substring(oldPath.lastIndexOf("/") + 1);
+              let newName = newPath.substring(newPath.lastIndexOf("/") + 1);
+              {{
+                <div class="file-box renamed">
+                  <div class="text">
+                    {{ if (model.fileInfoIcon) { {{
+                      <i class="{{@model.fileInfoIcon}}"></i>
+                    }} } else { {{
+                      <i class="fa fa-file-o"></i>
+                    }} } }}
+
+                    <span class="channel-file-delete">{{@oldName}}</span>
+                    <span class="channel-file-delete">{{@Helper.i18n("plugin.chat.component.chatMessages.message.renameFile")}} {{@Helper.i18n("plugin.chat.component.chatMessages.message.renameFile.to")}}</span>
+                    <span class="channel-file" data-action="open-channel-file" data-path="{{@newPath}}">{{@newName}}</span>
+                    {{ if (model.fileTaskBadges) { }}
+                      {{ for (let taskBadge of model.fileTaskBadges) { }}
+                        <span class="task task-id has-task-tooltip {{@taskBadge.labelClass}}" data-task-id="{{@taskBadge.taskId}}" data-task-badge-autoupdate="false">#{{@taskBadge.taskId}}</span
+                      {{ } }}
+                    {{ } }}
+                  </div>
+                </div>
+              }}
+            }
+            else
+            if (obj.type == "create-task") {
+              let taskLabelClass = model.taskLabelClass || obj.taskLabelClass || "#fff";
+              let statusName = obj.statusLocaleName || "";
+              let assignedTo = Array.isArray(obj.assignedTo) ? obj.assignedTo.join(" ") : obj.assignedTo;
+              {{
+                <div class="task-box created" data-task-id="{{@obj.id}}">
+                  <i class="privmx-icon privmx-icon-tasks"></i>
+
+                  <div class="text">
+                    <div class="line">
+                      <span class="task task-id has-task-tooltip {{@taskLabelClass}}" data-task-id="{{@obj.id}}" data-task-badge-autoupdate="false">{{@obj.label}}</span><span class="task task-name">{{#Helper.formatRichMessage(obj.name, "html")}}</span>
+                    </div>
+                  </div>
+                  {{ if (model.sending) { {{
+                    <span class="date date-sending" data-sending="true" title="{{@Helper.i18n("plugin.chat.component.chatMessages.chatMessageSending.date.title")}}"><i class="fa fa-circle-o-notch fa-spin "></i></span>
+                  }} } }}
+
+                  <span class="date" title="{{@Helper.dateWithHourLocal(model.serverDate)}}">
+                    {{@Helper.i18n("plugin.chat.component.chatMessages.message.createFile")}}: <span data-timeago-type="calendarDate" data-timeago="{{@model.serverDate}}"> {{@Helper.calendarDate(model.serverDate)}}</span>
+                  </span>
+                </div>
+            
+              }}
+            }
+            else
+            if (obj.type == "modify-task") {
+              let taskLabelClass = model.taskLabelClass || obj.taskLabelClass || "#fff";
+              let statusName = obj.statusLocaleName || "";
+              {{
+                <div class="task-box modified" data-task-id="{{@obj.id}}">
+                  <i class="privmx-icon privmx-icon-tasks"></i>
+                  <div class="text">
+                    <div class="line">
+                      <span>
+                        <span class="task task-id has-task-tooltip {{@taskLabelClass}}" data-task-id="{{@obj.id}}" data-task-badge-autoupdate="false">{{@obj.label}}</span><span class="task task-name">{{#Helper.formatRichMessage(obj.name, "html")}}</span>
+                        <span class="task task-modified"><span class="task task-label">{{@Helper.i18n("plugin.chat.component.chatMessages.message.task.modified")}}.</span></span>
+                        <span class="task task-status"><span class="task task-label">{{@Helper.i18n("plugin.chat.component.chatMessages.message.task.status")}}:</span>{{@statusName}}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+            
+              }}
+            }
+            else
+            if (obj.type == "delete-task") {
+              let taskLabelClass = model.taskLabelClass || obj.taskLabelClass || "#fff";
+              let statusName = obj.statusLocaleName || "";
+              {{
+                <div class="task-box modified" data-task-id="{{@obj.id}}">
+                  <i class="privmx-icon privmx-icon-tasks"></i>
+                  <div class="text">
+                    <div class="line">
+                      <span>
+                        <span class="task task-id has-task-tooltip {{@taskLabelClass}}" data-task-id="{{@obj.id}}" data-task-badge-autoupdate="false">{{@obj.label}}</span><span class="task task-name">{{#Helper.formatRichMessage(obj.name, "html")}}</span>
+                        <span class="task task-modified"><span class="task task-label">{{@Helper.i18n("plugin.chat.component.chatMessages.message.task.deleted")}}.</span></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+            
+              }}
+            }
+            else
+            if (obj.type == "task-comment") {
+              let taskLabelClass = model.taskLabelClass || obj.taskLabelClass || "#fff";
+              let statusName = obj.statusLocaleName || "";
+              {{
+                <div class="task-box task-comment" data-task-id="{{@obj.id}}">
+                  <div class="text {{@model.isExpanded ? 'expanded' : '' }}" data-tldr-processed="0">
+                    <div class="line">
+                      <span>
+                        <span class="task task-id has-task-tooltip {{@taskLabelClass}}" data-task-id="{{@obj.id}}" data-task-badge-autoupdate="false">{{@obj.label}}</span>
+                        <span class="task task-comment">{{#Helper.formatRichMessage(obj.comment, "html", model.taskStatuses)}}</span>
+                        <span class="link reply">{{@Helper.i18n("plugin.chat.component.chatMessages.message.task.replyComment")}}</span>
+                      </span>
+                    </div>
+                    <div class="tldr-overlay" style="user-select:none"></div>
+                  </div>
+                  <div class="link toggle-expanded-link" data-action="toggle-expanded" style="user-select:none"><span class="text-expand"><i class="fa fa-angle-down expand-or-collapse" aria-hidden="true"></i> {{@Helper.i18n("plugin.chat.component.chatMessages.message.expandLink.text")}}</span><span class="text-collapse"><i class="fa fa-angle-up expand-or-collapse" aria-hidden="true"></i> {{@Helper.i18n("plugin.chat.component.chatMessages.message.collapseLink.text")}}</span></div>
+                </div>
+            
+              }}
+            }
+            else
+            if (obj.type == "joined-voicechat" || obj.type == "left-voicechat") {
+              {{
+              <div class="voicechat-box {{@obj.type}}"><span class="fa fa-phone"></span><span class="voicechat-text">{{@Helper.i18n("plugin.chat.component.chatMessages.voicechatmessage." + obj.type)}}</span></div>
+              }}
+            }
+            else {
+              {{<div class="text">{{@model.text}}</div>}}
+            }
+          } else {
+            {{ <!-- /* style="user-select:none" in the line below is a hack - Chromium el.style.userSelect is an empty string if user-select is set in a selector... --> }}
+            {{<div class="text {{@model.isExpanded ? 'expanded' : '' }}" data-tldr-processed="0"><div class="text-inner">{{#Helper.formatRichMessage(model.text, model.contentType, model.taskStatuses, "default", model.expandedQuotes)}}</div><div class="tldr-overlay" style="user-select:none"></div></div><div class="link toggle-expanded-link" data-action="toggle-expanded" style="user-select:none"><span class="text-expand"><i class="fa fa-angle-down" aria-hidden="true"></i> {{@Helper.i18n("plugin.chat.component.chatMessages.message.expandLink.text")}}</span><span class="text-collapse"><i class="fa fa-angle-up" aria-hidden="true"></i> {{@Helper.i18n("plugin.chat.component.chatMessages.message.collapseLink.text")}}</span></div>}}
+          } }}
+          {{ if (model.attachments.length > 0) { {{
+            {{ model.attachments.forEach((attachment, i) => { {{
+            
+              <div class="attachments {{@thumbnailsEnabled ? 'with-thumbnails' : ''}} file-box">
+                <i class="{{@attachment.icon}}"></i>
+
+                <div class="attachments-text">
+                  <div class="attachment" data-attachment-index="{{@i}}">
+                    <div class="line">
+                      {{ if (thumbnailsEnabled && attachment.mimeType.indexOf("image/") == 0) { {{
+                        <img class="attachment-image not-rendered hide" data-action="open-attachment" />
+                        <i class="fa fa-circle-o-notch fa-spin attachment-loading"></i>
+                      }} } }}
+                      <span class="link" data-action="open-attachment">{{@attachment.name}}</span>
+                      {{ if (attachment.size != null) { {{
+                        <span class="size">{{@Helper.bytesSize(attachment.size)}}</span>
+                      }} } }}
+                    </div>
+                  </div>
+                  
+                  {{ if (model.sending) { {{
+                    <span class="date date-sending" data-sending="true" title="{{@Helper.i18n("plugin.chat.component.chatMessages.chatMessageSending.date.title")}}"><i class="fa fa-circle-o-notch fa-spin "></i></span>
+                  }} } }}
+                  
+                  <span class="date" title="{{@Helper.dateWithHourLocal(model.serverDate)}}">
+                     {{@Helper.i18n("plugin.chat.component.chatMessages.message.createFile")}}: <span data-timeago-type="calendarDate" data-timeago="{{@model.serverDate}}"> {{@Helper.calendarDate(model.serverDate)}}</span>
+                  </span>
+                </div>
+              </div>
+            }} }); }}
+          
+          }} } }}
+        }} } else { {{
+          {{
+            let withMessageTitleAndAttachments = "";
+            if (model.title != "" && model.attachments && model.attachments.length > 0) {
+              withMessageTitleAndAttachments = "with-title";
+            }
+          }}
+          <span class="ico-letter {{@withMessageTitleAndAttachments}}"></span>
+          <div class="mail-info file-box {{@withMessageTitleAndAttachments}}">
+            
+            <div class="attachments-text">
+              <div class="link message-title" data-action="open-mail">{{@model.title}}</div>
+
+              {{ model.attachments.forEach((attachment, i) => { {{
+                <div class="attachment">
+                  <div class="line">
+                    <i class="{{@attachment.icon}}"></i>
+                    <span class="link" data-action="open-attachment" data-attachment-index="{{@i}}">{{@attachment.name}}</span>
+                    {{ if (attachment.size != null) { {{
+                      <span class="size">{{@Helper.bytesSize(attachment.size)}}</span>
+                    }} } }}
+                  </div>
+                </div>
+              }} }); }}
+
+              {{ if (model.sending) { {{
+                <span class="date date-sending" data-sending="true" title="{{@Helper.i18n("plugin.chat.component.chatMessages.chatMessageSending.date.title")}}"><i class="fa fa-circle-o-notch fa-spin "></i></span>
+              }} } }}
+              
+              <div class="date" title="{{@Helper.dateWithHourLocal(model.serverDate)}}">
+                 {{@Helper.i18n("plugin.chat.component.chatMessages.message.createFile")}}: <span data-timeago-type="calendarDate" data-timeago="{{@model.serverDate}}"> {{@Helper.calendarDate(model.serverDate)}}</span>
+              </div>
+
+            </div>
+            
+          </div>
+        }} } }}
+        {{ if (model.lastEdit) { {{
+          <div class="edit-info">
+            {{ if (model.editCount && model.editCount > 1) { {{
+              {{@Helper.i18n("plugin.chat.component.chatMessages.lastEditMulti", model.editCount)}}
+            }} } else { {{
+              {{@Helper.i18n("plugin.chat.component.chatMessages.lastEdit")}}
+            }} } }}
+            <span title="{{@Helper.dateWithHourLocal(model.lastEdit)}}" data-timeago-type="calendarDate" data-timeago="{{@model.lastEdit}}">
+              {{@Helper.calendarDate(model.lastEdit)}}
+            </span>
+          </div>
+        }} } }}
+        }} } }}
+      </div>
+    </div>
+  </div>
+</div>

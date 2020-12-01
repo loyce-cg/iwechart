@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Program",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "${workspaceFolder}/electron/node_modules/.bin/electron",
+            "args" : ["${workspaceFolder}/app/out/app/electron/start", "--allow-multiple-instances", "--no-autostart"],
+            "outputCapture": "std",
+            "outFiles": [
+                "${workspaceFolder}/app/out/**/*.js"
+            ]
+        }
+    ]
+}

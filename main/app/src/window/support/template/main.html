@@ -1,0 +1,23 @@
+@import {Model} from "../SupportWindowController";
+@model Model
+
+<div class="window-support-main">
+  <div class="inner-view">
+    <iframe id="server-iframe" src="{{@model.url}}"></iframe>
+  </div>
+  <div class="inner-static-view hide">
+    <div class="message window-center">
+      {{
+        let link = '<a class="link" href="#" trigger-action="openSupportPage">'+ Helper.i18n("window.support.link") +'</a>';
+        console.log("linkbtn", link);
+      }}
+        {{#Helper.i18n("window.support.staticMessage", [link])}}    
+    </div>
+    <div class="buttons">
+      <button class="btn btn-default" trigger-action="close">
+        <i class="fa fa-times"></i>
+        {{@Helper.i18n("core.button.close.label")}}
+      </button>
+    </div>    
+  </div>
+</div>

@@ -1,0 +1,61 @@
+@import {Model} from "../NavBarController";
+@import {func as userTemplate} from "./user.html";
+@model Model
+<header id="header">
+  <h1 class="logo {{@model.activeLogo ? 'clickable' : ''}}" data-trigger="activate-logo">
+    <div class="logo-87x22-container{{@model.activeApp == 'apps' ? ' wh' : ''}}">
+      <img src="{{#Helper.getAssetByName('CUSTOM_LOGO_87X22'+ (model.activeApp == 'apps' ? '_WH' : '') )}}" alt="" />
+    </div>
+  </h1>
+  
+  <ul class="action-panel">
+    {{ model.appWindows.forEach(x => { {{
+    <li>
+      <span class="{{@x.icon.indexOf('ico') == 0 ? x.icon : ''}} action-link {{@model.activeApp == x.id ? 'active' : ''}}" data-trigger="{{@x.action || 'launch-app-window'}}" data-app-window="{{@x.id}}">
+        {{ if (x.icon.indexOf('fa') == 0) { {{
+          <i class="main-icon fa {{@x.icon}}"></i>
+        {{ } else if (x.icon.indexOf('privmx-icon-') == 0) { {{
+          <i class="main-icon privmx-icon {{@x.icon}}"></i>
+        }} } }}
+        <span class="number badge {{@x.count ? 'visible' : ''}} has-basic-tooltip" data-basic-id="{{@x.id}}">{{@x.count}}</span>
+        <span class="link-label">{{@Helper.i18n('core.module.' + x.id)}}</span>
+        <i class="fa fa-circle dirty-marker {{@x.dirty ? 'visible' : ''}}"></i>
+      </span>
+    </li>
+    }} }); }}
+    {{ if (model.searchEnabled) { {{
+    <li class="search-item">
+      <span class="action-link {{@model.searchVisible ? 'active' : ''}}" data-trigger="toogle-search">
+        <i class="main-icon fa fa-search"></i>
+      </span>
+    </li>
+    }} } }}
+    <li class="trial-status-item"></li>
+
+  </ul>
+  <div class="unknown-domains-indicator {{@model.unknownDomainsCount == 0 ? 'hide' : ''}}">
+    <button class="btn btn-default" data-trigger="open-mail-filter">
+      <span class="unknown-domains-indicator-badge">{{@model.unknownDomainsMessagesCount}}</span>
+      {{@Helper.i18n('component.navbar.unknownDomains')}}
+      <i class="fa fa-angle-double-right"></i>
+    </button>
+  </div>
+  
+  {{ if (model.showWindowControls) { {{
+  <p class="fullscreen fullscreen-placeholder-mode">
+  </p>
+  }} } else { {{
+  <p class="fullscreen">
+    <span class="fa {{@model.inFullscreen ? 'fa-compress' : 'fa-expand'}}" data-trigger="toggle-fullscreen" title="{{@Helper.i18n('component.navbar.fullscreen.title')}}"></span>
+  </p>
+  }} } }}
+  <div class="right-side">
+    <div class="profile-panel">
+      {{#Helper.createTemplate(userTemplate).render(model)}}
+    </div>
+    <div class="player-container">
+    </div>
+    <div class="voice-chat-controls-container"></div>
+  </div>
+  
+</header>

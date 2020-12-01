@@ -1,0 +1,6 @@
+{
+    "electronDistDest": "./electron/dist",
+    "electronDistTmpDest": "./electron/dist-tmp",
+    "electronBuildDir": "./electron-build",
+    "pluginsSrcDir": "./electron/electron-plugins"
+}

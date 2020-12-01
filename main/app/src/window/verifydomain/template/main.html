@@ -1,0 +1,25 @@
+@import {Model} from "../VerifyDomainWindowController";
+@import * as privfs from "privfs-client";
+@model Model
+<div class="verifydomain content admin-alert">
+    <div class="header">
+        {{@Helper.i18n("window.admin.verifydomain.header")}}
+    </div>
+    <div class="input-container">
+      <input type="text" name="domain" class="form-control" data-control="domain-input" placeholder="{{@Helper.i18n("window.admin.verifydomain.domain.placeholder")}}" />
+    </div>
+    <div class="info">
+        {{@Helper.i18n("window.admin.verifydomain.info")}}
+    </div>
+    <div class="buttons">
+        <button type="button" class="btn btn-success single-btn" data-action="verify">
+            <i class="fa fa-check"></i>
+            {{@Helper.i18n("window.admin.verifydomain.confirm")}}
+        </button>
+        <span class="verify-results"></span>
+        <button type="button" class="btn btn-default single-btn" data-action="close">
+            <i class="fa fa-times"></i>
+            {{@Helper.i18n("window.admin.verifydomain.close")}}
+        </button>
+    </div>
+</div>

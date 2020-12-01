@@ -1,0 +1,70 @@
+@import {Model} from "../NewNoteWindowController";
+@model Model
+<div class="window-new-note-main">
+  <div class="types">
+    {{model.actions.forEach(x => { {{
+      <div class="type" data-action-id="{{@x.id}}" data-default-name={{@x.defaultName}}>
+        <i class="{{@x.icon}}"></i>
+        <div class="label-text">{{@Helper.i18n(x.labelKey)}}</div>
+      </div>
+    }} }); }}
+  </div>
+  <div class="name">
+    <div class="label-text">
+      {{@Helper.i18n("plugin.notes2.window.newNote.fileName.label")}}
+    </div>
+    <div class="input">
+      <input class="form-control" type="text" value="new-file"/>
+    </div>
+  </div>
+  <div class="destinations-entry">
+    <div class="label-text">
+      {{@Helper.i18n("plugin.notes2.window.newNote.destination.label")}}
+    </div>
+    <div class="destinations">
+      <div class="conversation-element contact without-description" data-conversation-id="my">
+        <span>
+          <div class="image-with-data">
+            <p class="image">
+              <canvas class="not-rendered" data-tooltip-trigger="{{@model.hashmail}}" data-hashmail-image="{{@model.hashmail}}" data-width="30" data-height="30" data-auto-size="true" data-auto-refresh="true"></canvas>
+            </p>
+            <div class="text-col">
+              <p class="name">
+                {{@Helper.i18n("plugin.notes2.window.newNote.filter.my")}}
+              </p>
+            </div>
+          </div>
+        </span>
+      </div>
+      <div class="wi-element channel-entry" data-conversation-id="local">
+        <div class="wi-element-inner">
+          <div class="wi-element-icon bckg-icon ">
+            <i class="fa fa-desktop"></i>
+          </div>
+          <div class="wi-element-name">
+              {{@Helper.i18n("plugin.notes2.window.newNote.filter.local")}}
+          </div>
+        </div>
+      </div>
+      <div class="channels">
+      </div>
+      <ul class="conversations">
+      </ul>
+    </div>
+    </ul>
+  </div>
+  <div class="buttons">
+    <div class="input checkbox">
+      <label>
+        <input type="checkbox" name="newnote.open-after-create" data-action="check" checked="checked"/>
+        {{@Helper.i18n("plugin.notes2.window.newNote.checkbox.openAfterCreate")}}
+      </label>
+    </div>
+    <button class="btn btn-success" data-action="create">
+        {{@Helper.i18n("plugin.notes2.window.newNote.button.create.label")}}
+    </button>
+    <button class="btn btn-default" data-action="cancel">
+        {{@Helper.i18n("plugin.notes2.window.newNote.button.cancel.label")}}
+    </button>
+  </div>
+</div>

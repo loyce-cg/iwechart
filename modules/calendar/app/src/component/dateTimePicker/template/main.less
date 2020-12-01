@@ -1,0 +1,226 @@
+@import "../../../window/main/template/common.less";
+
+.date-time-picker-component {
+  width: auto;
+  height: 200px;
+  
+  .month-container,
+  .year-container,
+  .time-container {
+    .custom-select-button {
+      height: 30px;
+    }
+    .component-custom-select-main {
+      height: 30px;
+      .custom-select-button {
+        background: var(--preview-panel-bg);
+      }
+      &.open .custom-select-button {
+        background: var(--main-panel-bg);
+      }
+    }
+  }
+  .month-container,
+  .year-container,
+  .time-container {
+    display: inline-block;
+  }
+  .year-container,
+  .time-container {
+    width: 80px;
+  }
+  .month-container {
+    width: 120px;
+  }
+  
+  .time,
+  .time .time-container,
+  .time .time-container .component-custom-select-main {
+    height: 100%;
+  }
+  .time {
+    position: relative;
+    height: calc(100% - 31px);
+    margin-top: 31px;
+  }
+  .time .time-container .component-custom-select-main {
+    .context-menu-content {
+      li.item {
+        >span {
+          padding: 2px;
+        }
+      }
+    }
+  }
+  
+  .prev-btn,
+  .next-btn {
+    display: inline-block;
+    padding: 0 8px;
+    border: 0;
+    box-shadow: none;
+    line-height: 30px;
+    height: 30px;
+    margin-top: -2px;
+  }
+  
+  .popup-buttons {
+    display: inline-block;
+    margin-top: 5px;
+  }
+  
+  .popup-buttons {
+    margin-left: 5px;
+    text-align: center;
+    display: block;
+  }
+  
+  &.duration-picker {
+    .date {
+      display: inline-block;
+    }
+    .time,
+    .popup-buttons {
+      margin-top: 0;
+    }
+  }
+  
+  &.popup {
+    display: none;
+    position: fixed;
+    z-index: 99999;
+    background: var(--main-panel-bg);
+    box-shadow: var(--preview-panel-input-shadow) 0px 0 4px;
+    border-radius: 5px;
+    padding: 5px;
+    
+    &.popup-visible {
+      display: block;
+    }
+    
+    &.whole-days {
+      width: auto;
+      .right {
+        display: none;
+      }
+    }
+    
+    .year-container {
+      width: 60px;
+    }
+    .time-container {
+      width: 120px;
+    }
+    .month-container {
+      width: 120px;
+    }
+  }
+  .month-container,
+  .year-container,
+  .time-container {
+    .component-custom-select-main,
+    .custom-select-button,
+    & {
+      height: 24px;
+    }
+  
+    .dropdown-up .custom-select-dropdown {
+      bottom: 24px;
+    }
+  }
+  
+  .next-btn,
+  .prev-btn {
+    height: 24px;
+    line-height: 24px;
+  }
+  
+  .popup-buttons {
+    button {
+      height: 24px;
+      line-height: 0;
+    }
+  }
+  
+  .day-container {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-top: 5px;
+    border-right: 1px solid var(--main-panel-tasks-separator-bg);
+    border-bottom: 1px solid var(--main-panel-tasks-separator-bg);
+    
+    .component-task-panel-main & {
+      width: 100%;
+    }
+    
+    div {
+      text-align: center;
+      font-size: var(--font-size);
+      cursor: pointer;
+      border-left: 1px solid var(--main-panel-tasks-separator-bg);
+      border-top: 1px solid var(--main-panel-tasks-separator-bg);
+      
+      &:hover {
+        background: #fff;
+      }
+      
+      &.today {
+        box-shadow: inset 2px 2px 0 @dayBorder_today, inset -2px -2px 0 @dayBorder_today;
+      }
+      
+      &.selected {
+        box-shadow: inset 2px 2px 0 @dayBorder_selected, inset -2px -2px 0 @dayBorder_selected;
+      }
+      
+      &.prev-month,
+      &.next-month {
+        color: var(--body-extra-info-fg);
+      
+        &:nth-child(7n + 6),
+        &:nth-child(7n + 7) {
+          color: @weekendFg;
+          opacity: 0.5;
+        }
+      }
+      
+      &:nth-child(7n + 6),
+      &:nth-child(7n + 7) {
+        color: @weekendFg;
+      }
+    }
+  }
+  
+  .time-container {
+    .pf-content {
+      margin-right: 20px;
+      border: 1px solid var(--main-panel-tasks-separator-bg);
+    }
+    .item {
+      font-size: var(--font-size);
+      cursor: pointer;
+      padding: 0px 5px;
+      border-bottom: 1px solid var(--main-panel-tasks-separator-bg);
+      
+      &:hover {
+        background: #fff;
+      }
+      
+      &.selected {
+        box-shadow: inset 2px 2px 0 @dayBorder_selected, inset -2px -2px 0 @dayBorder_selected;
+      }
+      
+      &:last-child {
+        border-bottom: 0;
+      }
+    }
+  }
+  
+  .flex-container {
+    display: flex;
+    
+    .right {
+      margin-left: 5px;
+    }
+  }
+  
+}

@@ -1,0 +1,201 @@
+@import "../../base/BaseWindow";
+@import "../../../component/template/bckg-icon.less";
+@import "../../../component/template/wi-element.less";
+
+body {
+  font-size: var(--font-size);
+  min-height: 0;
+  height: 100%;
+}
+
+div:focus {
+  outline: none;
+}
+
+.hide {
+  display: none !important;
+}
+
+.window-sections-main {
+  height: 100%;
+  
+  .sections-list-lock-overlay {
+      z-index: 9999;
+      display: none;
+      background: transparent;
+      position: absolute;
+      top: 0;
+      left: 0;
+      top: 53px;
+      bottom: 0;
+      right: 560px;
+      overflow-y: auto;
+      cursor: not-allowed;
+  }
+  
+  .sections-list {
+    position: absolute;
+    top: 0;
+    left: 0;
+    top: 53px;
+    bottom: 0;
+    right: 560px;
+    overflow-y: auto;
+    background: var(--main-panel-bg);
+    
+    .section-root {
+      display: none;
+      .wi-element-name {
+        margin: 0;
+        font-weight: bold;
+      }
+    }
+    .wi-element.section-name:not(.active):hover {
+      background: var(--sidebar-item-hover-bg);
+    }
+    .wi-element.section-name.active:hover {
+      .bckg-icon.bckg-icon-border img {
+        filter: none;
+      }
+    }
+    .active>.wi-element {
+      background: var(--sidebar-item-active-bg) !important;
+    }
+    .section-name > .wi-element-inner > .wi-element-module-icon {
+      position: absolute;
+      top: 0;
+      right: 0;
+      .module-icon {
+        float: right;
+        padding-top: 4px;
+        text-align: center;
+        line-height: 28px;
+        width: 24px;
+        height: 24px;
+        i {
+          color: inherit;
+          margin-top: -5px;
+          font-size: var(--font-size-xl);
+          
+          &.fa-calendar {
+            position: relative;
+            top: -1px;
+          }
+        }
+        .privmx-icon {
+          font-size: var(--font-size-xl);
+        }
+      }
+      .dimmed {
+        opacity: 0.3;
+      }
+      .bckg-icon {
+        float: right;
+        padding-top: 4px;
+        margin-left: 5px;
+        i {
+          color: inherit;
+          margin-top: -5px;
+          font-size: var(--font-size-xl);
+        }
+      }
+    }
+    .wi-element-parent:not(.active)>.wi-element.section-name.hidden-section>.wi-element-inner>.wi-element-name {
+      color: hsla(var(--sidebar-bg-h), var(--sidebar-bg-s), calc(var(--sidebar-bg-l) + var(--sidebar-bg-as-text-delta)), 0.7);
+    }
+    .disabled-badge,
+    .hidden-badge {
+      font-size: var(--font-size-xxxs);
+      line-height: calc(var(--font-size-xxxs) + 2px);
+      margin-left: 5px;
+      color: #fff;
+      background-color: #666;
+      padding: 2px 5px;
+      display: inline-block;
+      border-radius: 5px;
+    }
+    .section-name:hover .bckg-icon {
+       background-color: var(--section-color-icon);
+       
+       &.bckg-icon-border {
+         background-color: transparent;
+         border-color: var(--section-color-icon);
+         
+         img {
+           filter: brightness(60%);
+         }
+       }
+    }
+    .section-entry.active > .section-name .bckg-icon {
+       background-color: rgba(255,255,255,.37);
+       
+       &.bckg-icon-border {
+         background-color: transparent;
+         border-color: rgba(255,255,255,.37);
+         
+         img {
+           filter: none;
+         }
+       }
+    }
+    .tree-children {
+
+    }
+  }
+  .edit-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 560px;
+    
+    iframe {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border: none;
+    }
+  }
+  
+  .buttons-container {
+    position: absolute;
+    background: var(--main-panel-bg);
+    top: 0;
+    left: 0;
+    text-align: center;
+    padding: 10px 0;
+    right: 560px;
+    border-bottom: 1px solid var(--main-panel-chats-separator-bg);
+    .sections-title {
+      position: absolute;
+      left: 15px;
+      font-weight: bold;
+      line-height: 28px;
+    }
+    .buttons {
+      float: right;
+      button {
+        margin-right: 8px;
+        i {
+        }
+        &:focus {
+          outline: #aaa dotted 1px;
+        }
+      }
+
+      span.refresh {
+        color: #aaa;
+      }
+    }
+
+  }
+
+  .section-entry .section-name .wi-element-inner .wi-element-name span.section-breadcrumb {
+    color: hsla(var(--wi-element-breadcrumb-fg-h), var(--wi-element-breadcrumb-fg-s), calc(var(--wi-element-breadcrumb-fg-l) - 20%), var(--wi-element-breadcrumb-fg-a));
+  }
+
+  .wi-element-name.with-breadcrumb {
+    white-space: normal;
+  }
+}
+

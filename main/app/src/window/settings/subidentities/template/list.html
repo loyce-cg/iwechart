@@ -1,0 +1,45 @@
+@import {SubidentitiesPriv2} from "../../../../common/service/IUserService";
+@model SubidentitiesPriv2
+<div class="list">
+  <table>
+    <thead>
+      <tr>
+        <th class="date">{{@Helper.i18n("window.settings.section.subidentities.header.createDate")}}</th>
+        <th class="date">{{@Helper.i18n("window.settings.section.subidentities.header.lastLoginDate")}}</th>
+        <th class="device">{{@Helper.i18n("window.settings.section.subidentities.header.device")}}</th>
+        <th class="section">{{@Helper.i18n("window.settings.section.subidentities.header.section")}}</th>
+        <th class="action"></th>
+    </thead>
+    {{ let empty = true; }}
+    {{ for (let pub in model) {
+      empty = false;
+      let entry = model[pub];
+      {{
+      <tbody class="entry" data-sub-id="{{@pub}}">
+        <tr>
+          <td class="date" title="{{@Helper.dateWithHourLocal(entry.createDate)}}">
+            {{@Helper.calendarDate(entry.createDate)}}
+          </td>
+          <td class="date" title="{{@entry.lastLoginDate ? Helper.dateWithHourLocal(entry.lastLoginDate) : ''}}">
+            {{@entry.lastLoginDate ? Helper.calendarDate(entry.lastLoginDate) : Helper.i18n("window.settings.section.subidentities.neverLogin")}}
+          </td>
+          <td class="device" title="{{@entry.deviceId ? entry.deviceName + ' (' + entry.deviceId + ') (' + Helper.dateWithHourLocal(entry.deviceAssigmentDate) + ')' : ''}}">
+            {{@entry.deviceId ? entry.deviceName : ''}}
+          </td>
+          <td class="section" title="{{@entry.sectionName}} ({{@entry.sectionId}})">{{@entry.sectionName || entry.sectionId}}</td>
+          <td class="action">
+            <button class="btn btn-xs btn-default gray icon-only" data-action="mnemonic" title="{{@Helper.i18n('window.settings.section.subidentities.showMnemonic')}}">
+              <i class="fa fa-info-circle"></i>
+            </button>
+            <button class="btn btn-xs btn-warning icon-only" data-action="remove">
+              <i class="fa fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    }} } }}
+  </table>
+  <div class="empty-info {{@empty ? '' : 'hide'}}">
+    {{@Helper.i18n("window.settings.section.subidentities.empty")}}
+  </div>
+</div>

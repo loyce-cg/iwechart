@@ -1,0 +1,732 @@
+@import { CustomizationParsingResult } from "../../../app/common/customization/CssParser";
+@import { CustomizationEditorView } from "../CustomizationEditorView";
+@model { data: CustomizationParsingResult, advancedMode: boolean, logoHeader: string, logoHeaderWh: string, logoLoginScreen: string, title: string }
+{{
+  let addPrefix = (name: string): string => {
+    return "--" + CustomizationEditorView.EDITOR_STYLE_PREFIX + "-" + name.substr(2);
+  };
+  let getPxVal = (name: string): string => {
+    let val = model.data.cssVars[name];
+    return val.substr(0, val.length - 2);
+  };
+  let getPercVal = (name: string): string => {
+    let val = model.data.cssVars[name];
+    return val.substr(0, val.length - 1);
+  };
+  let getVal = (name: string): string => {
+    let val = model.data.cssVars[name];
+    return val;
+  };
+  let modeCls = model.advancedMode ? "advanced-mode" : "simple-mode";
+}}
+<div class="component-customization-editor {{@modeCls}}">
+  <button class="btn btn-default btn-sm" data-action="restore">{{@Helper.i18n("component.customizationEditor.restore")}}</button>
+  <div class="editors">
+    <div class="customization-section show-in-advanced-mode show-in-simple-mode">
+      <h4>{{@Helper.i18n("component.customizationEditor.title")}}</h4>
+      <div class="editors-with-preview">
+        <input type="text" data-editor="title" value="{{@model.title}}" />
+      </div>
+    </div>
+    <div class="customization-section show-in-advanced-mode show-in-simple-mode">
+      <h4>{{@Helper.i18n("component.customizationEditor.logos")}}</h4>
+      <div class="editors-with-preview">
+        <div class="editors">
+          <div class="editor file">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.logos.header")}}:</span>
+            <span class="hint">{{@Helper.i18n("component.customizationEditor.logos.header-hint")}}</span>
+            <label for="file-logo-header" class="link">{{@Helper.i18n("component.customizationEditor.logos.set")}}</label> <i class="file-input-cancel fa fa-trash"></i>
+            <input type="file" id="file-logo-header" data-file-id="logo-header" />
+          </div>
+          <div class="editor file">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.logos.header-wh")}}:</span>
+            <span class="hint">{{@Helper.i18n("component.customizationEditor.logos.header-wh-hint")}}</span>
+            <label for="file-logo-header-wh" class="link">{{@Helper.i18n("component.customizationEditor.logos.set")}}</label> <i class="file-input-cancel fa fa-trash"></i>
+            <input type="file" id="file-logo-header-wh" data-file-id="logo-header-wh" />
+          </div>
+          <div class="editor file">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.logos.login-screen")}}:</span>
+            <span class="hint">{{@Helper.i18n("component.customizationEditor.logos.login-screen-hint")}}</span>
+            <label for="file-logo-login-screen" class="link">{{@Helper.i18n("component.customizationEditor.logos.set")}}</label> <i class="file-input-cancel fa fa-trash"></i>
+            <input type="file" id="file-logo-login-screen" data-file-id="logo-login-screen" />
+          </div>
+        </div>
+        <div class="preview logos">
+          <div>
+              <span class="title">{{@Helper.i18n("component.customizationEditor.logos.header")}}:</span>
+              <img data-prev-src="{{@Helper.getAssetByName('CUSTOM_LOGO_87X22_ORIG')}}" src="{{@model.logoHeader ? model.logoHeader : Helper.getAssetByName('CUSTOM_LOGO_87X22')}}" class="preview-logo-header" />
+              <span class="title">{{@Helper.i18n("component.customizationEditor.logos.header-wh")}}:</span>
+              <img data-prev-src="{{@Helper.getAssetByName('CUSTOM_LOGO_87X22_WH_ORIG')}}" src="{{@model.logoHeaderWh ? model.logoHeaderWh : Helper.getAssetByName('CUSTOM_LOGO_87X22_WH')}}" class="preview-logo-header-wh" />
+          </div>
+          <div>
+            <span class="title">{{@Helper.i18n("component.customizationEditor.logos.login-screen")}}:</span>
+            <img data-prev-src="{{@Helper.getAssetByName('CUSTOM_LOGO_127X112_ORIG')}}" src="{{@model.logoLoginScreen ? model.logoLoginScreen : Helper.getAssetByName('CUSTOM_LOGO_127X112')}}" class="preview-logo-login-screen" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="customization-section show-in-advanced-mode">
+      <h4>{{@Helper.i18n("component.customizationEditor.fonts")}}</h4>
+      <div class="editors-with-preview">
+        <div class="editors">
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.fonts.font-size")}}:</span>
+            <input type="number" min="10" max="18" step="1" value="{{@getPxVal('--font-size')}}" data-customization-variable="--font-size" />
+          </div>
+        </div>
+        <div class="preview">
+          <div style="font-size:var({{@addPrefix('--font-size')}});font-family:var({{@addPrefix('--ff-default')}});line-height:25px;">{{@Helper.i18n("component.customizationEditor.fonts.font-size")}}, <span style="font-family:var({{@addPrefix('--ff-monospace')}});">{{@Helper.i18n("component.customizationEditor.fonts.monospace")}}</span></div>
+          <div style="font-size:var({{@addPrefix('--font-size-s')}});font-family:var({{@addPrefix('--ff-default')}});line-height:20px;">{{@Helper.i18n("component.customizationEditor.fonts.font-size-s")}}, <span style="font-family:var({{@addPrefix('--ff-monospace')}});">{{@Helper.i18n("component.customizationEditor.fonts.monospace")}}</span></div>
+          <div style="font-size:var({{@addPrefix('--font-size-xs')}});font-family:var({{@addPrefix('--ff-default')}});line-height:20px;">{{@Helper.i18n("component.customizationEditor.fonts.font-size-s")}}, <span style="font-family:var({{@addPrefix('--ff-monospace')}});">{{@Helper.i18n("component.customizationEditor.fonts.monospace")}}</span></div>
+          <div style="font-size:var({{@addPrefix('--font-size-xxs')}});font-family:var({{@addPrefix('--ff-default')}});line-height:20px;">{{@Helper.i18n("component.customizationEditor.fonts.font-size-s")}}, <span style="font-family:var({{@addPrefix('--ff-monospace')}});">{{@Helper.i18n("component.customizationEditor.fonts.monospace")}}</span></div>
+          <div style="font-size:var({{@addPrefix('--font-size-xxxs')}});font-family:var({{@addPrefix('--ff-default')}});line-height:20px;">{{@Helper.i18n("component.customizationEditor.fonts.font-size-s")}}, <span style="font-family:var({{@addPrefix('--ff-monospace')}});">{{@Helper.i18n("component.customizationEditor.fonts.monospace")}}</span></div>
+          <div style="font-size:var({{@addPrefix('--font-size-xxxxs')}});font-family:var({{@addPrefix('--ff-default')}});line-height:20px;">{{@Helper.i18n("component.customizationEditor.fonts.font-size-s")}}, <span style="font-family:var({{@addPrefix('--ff-monospace')}});">{{@Helper.i18n("component.customizationEditor.fonts.monospace")}}</span></div>
+          <div style="font-size:var({{@addPrefix('--font-size-l')}});font-family:var({{@addPrefix('--ff-default')}});line-height:30px;">{{@Helper.i18n("component.customizationEditor.fonts.font-size-l")}}, <span style="font-family:var({{@addPrefix('--ff-monospace')}});">{{@Helper.i18n("component.customizationEditor.fonts.monospace")}}</span></div>
+          <div style="font-size:var({{@addPrefix('--font-size-xl')}});font-family:var({{@addPrefix('--ff-default')}});line-height:30px;">{{@Helper.i18n("component.customizationEditor.fonts.font-size-l")}}, <span style="font-family:var({{@addPrefix('--ff-monospace')}});">{{@Helper.i18n("component.customizationEditor.fonts.monospace")}}</span></div>
+          <div style="font-size:var({{@addPrefix('--font-size-xxl')}});font-family:var({{@addPrefix('--ff-default')}});line-height:30px;">{{@Helper.i18n("component.customizationEditor.fonts.font-size-l")}}, <span style="font-family:var({{@addPrefix('--ff-monospace')}});">{{@Helper.i18n("component.customizationEditor.fonts.monospace")}}</span></div>
+          <div style="font-size:var({{@addPrefix('--font-size-xxxl')}});font-family:var({{@addPrefix('--ff-default')}});line-height:30px;">{{@Helper.i18n("component.customizationEditor.fonts.font-size-l")}}, <span style="font-family:var({{@addPrefix('--ff-monospace')}});">{{@Helper.i18n("component.customizationEditor.fonts.monospace")}}</span></div>
+          <div style="font-size:var({{@addPrefix('--font-size-xxxxl')}});font-family:var({{@addPrefix('--ff-default')}});line-height:40px;">{{@Helper.i18n("component.customizationEditor.fonts.font-size-l")}}, <span style="font-family:var({{@addPrefix('--ff-monospace')}});">{{@Helper.i18n("component.customizationEditor.fonts.monospace")}}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="customization-section show-in-advanced-mode">
+      <h4>{{@Helper.i18n("component.customizationEditor.basic-colors")}}</h4>
+      <div class="editors-with-preview">
+        <div class="editors">
+          {{
+            let vars = [
+              "main-panel-bg",
+              "preview-panel-bg",
+              "body-fg",
+              "sidebar-bg",
+              "sidebar-item-hover-bg",
+              "sidebar-item-active-bg",
+              "body-secondary-fg",
+              "header-footer-bg",
+              "large-empty-info-fg",
+              "notification-bg",
+              "notification-fg",
+              "search-bg",
+              "search-fg",
+              "taskbar-item-bg",
+              "taskbar-item-fg",
+              "scrollbar-bg",
+              "scrollbar-inner-bg",
+              "screen-cover-bg",
+            ];
+            for (let v of vars) {
+          }}
+          <div class="color-input-wrapper">
+            <span class="color-input-alpha-bg">
+              <span class="color-input" data-customization-variable="--{{@v}}" style="background-color:var({{@addPrefix('--' + v)}});">{{@Helper.i18n("component.customizationEditor.basic-colors." + v)}}</span>
+            </span>
+            <i class="color-input-cancel fa fa-trash"></i>
+          </div>
+          {{ } }}
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.basic-colors.color-mix-darken")}}:</span>
+            <input type="number" min="0" max="1" step="0.01" value="{{@getVal('--color-mix-darken')}}" data-customization-variable="--color-mix-darken" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-bg-as-text")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--sidebar-bg-as-text-delta')}}" data-customization-variable="--sidebar-bg-as-text-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.basic-colors.taskbar-item-hover-bg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--taskbar-item-hover-bg-delta')}}" data-customization-variable="--taskbar-item-hover-bg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-splitter-color")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--sidebar-splitter-color-delta')}}" data-customization-variable="--sidebar-splitter-color-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.basic-colors.body-extra-info-fg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--body-extra-info-fg-delta')}}" data-customization-variable="--body-extra-info-fg-delta" />
+          </div>
+          <div class="editor-action-button">
+            <button class="btn btn-default btn-sm small" data-action="toggle-screen-cover">{{@Helper.i18n("component.customizationEditor.basic-colors.toggle-overlay")}}</button>
+          </div>
+        </div>
+        <div class="preview no-padding basic-colors">
+          <div class="preview-privmx-header">
+            <span class="ico-comment action-link">
+              <span class="number badge visible">2</span>
+            </span>
+            <span class="ico-search action-link">
+              {{@Helper.i18n("component.customizationEditor.basic-colors.search")}}
+            </span>
+          </div>
+          <div class="preview-privmx">
+            <div class="preview-sidebar" style="background-color:var({{@addPrefix('--sidebar-bg')}});padding:0;">
+              <span class="sidebar-text" style="margin:5px">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-text")}}</span>
+              <span class="splitter"></span>
+              <span class="sidebar-item">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-item")}}</span>
+              <span class="sidebar-item active">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-item-active")}}</span>
+              <span class="sidebar-item hover">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-item-hover")}}</span>
+              <span class="sidebar-item">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-item")}}</span>
+              <span class="sidebar-item">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-item")}}</span>
+              <span class="sidebar-item">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-item")}}</span>
+            </div>
+            <div class="preview-main" style="position:relative;background-color:var({{@addPrefix('--main-panel-bg')}});">
+              <span style="color:var({{@addPrefix('--body-fg')}});">{{@Helper.i18n('component.customizationEditor.basic-colors.body-fg')}} <span class="extra-info">{{@Helper.i18n("component.customizationEditor.basic-colors.extra-info")}}</span></span>
+              <br />
+              <span class="notif">{{@Helper.i18n("component.customizationEditor.basic-colors.notification")}}</span>
+              <div class="preview-scrollbar"><div class="inner"></div></div>
+            </div>
+            <div class="preview-preview" style="position:relative;background-color:var({{@addPrefix('--preview-panel-bg')}});">
+              <span style="color:var({{@addPrefix('--body-fg')}});">{{@Helper.i18n('component.customizationEditor.basic-colors.body-fg')}} <span class="extra-info">{{@Helper.i18n("component.customizationEditor.basic-colors.extra-info")}}</span></span>
+              <span class="empty-info">{{@Helper.i18n("component.customizationEditor.basic-colors.empty-info")}}</span>
+            </div>
+          </div>
+          <div class="preview-privmx-footer">
+            <div class="preview-taskbar-item">
+              <i class="fa fa-tasks"></i> {{@Helper.i18n("component.customizationEditor.basic-colors.taskbar-item")}}
+            </div>
+          </div>
+          <div class="screen-overlay">
+          </div>
+          <div class="screen-cover">
+            {{@Helper.i18n("component.customizationEditor.basic-colors.screen-cover-text")}}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="customization-section show-in-advanced-mode">
+      <h4>{{@Helper.i18n("component.customizationEditor.windows")}}</h4>
+      <div class="editors-with-preview">
+        <div class="editors">
+          {{
+            vars = [
+              "window-shadow",
+              "window-border",
+              "window-header-bg",
+              "window-header-fg",
+            ];
+            for (let v of vars) {
+          }}
+          <div class="color-input-wrapper">
+            <span class="color-input-alpha-bg">
+              <span class="color-input" data-customization-variable="--{{@v}}" style="background-color:var({{@addPrefix('--' + v)}});">{{@Helper.i18n("component.customizationEditor.windows." + v)}}</span>
+            </span>
+            <i class="color-input-cancel fa fa-trash"></i>
+          </div>
+          {{ } }}
+        </div>
+        <div class="preview no-padding basic-colors window-container">
+          <div class="preview-privmx">
+            <div class="preview-sidebar" style="background-color:var({{@addPrefix('--sidebar-bg')}});">
+            </div>
+            <div class="preview-main" style="background-color:var({{@addPrefix('--main-panel-bg')}});">
+            </div>
+            <div class="preview-preview" style="position:relative;background-color:var({{@addPrefix('--preview-panel-bg')}});">
+            </div>
+          </div>
+          <div class="window">
+            <header>{{@Helper.i18n("component.customizationEditor.windows.header")}}</header>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="customization-section show-in-advanced-mode">
+      <h4>{{@Helper.i18n("component.customizationEditor.context-menu")}}</h4>
+      <div class="editors-with-preview">
+        <div class="editors">
+          {{
+            vars = [
+              "context-menu-bg",
+              "context-menu-fg",
+              "context-menu-border-color",
+              "context-menu-shadow-color",
+              "context-menu-divider-color",
+            ];
+            for (let v of vars) {
+          }}
+          <div class="color-input-wrapper">
+            <span class="color-input-alpha-bg">
+              <span class="color-input" data-customization-variable="--{{@v}}" style="background-color:var({{@addPrefix('--' + v)}});">{{@Helper.i18n("component.customizationEditor.context-menu." + v)}}</span>
+            </span>
+            <i class="color-input-cancel fa fa-trash"></i>
+          </div>
+          {{ } }}
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.context-menu.context-menu-hover-bg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--context-menu-hover-bg-delta')}}" data-customization-variable="--context-menu-hover-bg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.context-menu.context-menu-hover-fg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--context-menu-hover-fg-delta')}}" data-customization-variable="--context-menu-hover-fg-delta" />
+          </div>
+        </div>
+        <div class="preview no-padding basic-colors">
+          <div class="preview-privmx">
+            <div class="preview-main" style="background-color:var({{@addPrefix('--main-panel-bg')}});flex-basis:100%;">
+              <div class="preview-context-menu">
+                <div class="item">{{@Helper.i18n("component.customizationEditor.context-menu.item")}}</div>
+                <div class="item">{{@Helper.i18n("component.customizationEditor.context-menu.item")}}</div>
+                <div class="item">{{@Helper.i18n("component.customizationEditor.context-menu.item")}}</div>
+                <div class="divider"></div>
+                <div class="item">{{@Helper.i18n("component.customizationEditor.context-menu.item")}}</div>
+                <div class="item">{{@Helper.i18n("component.customizationEditor.context-menu.item")}}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="customization-section show-in-advanced-mode">
+      <h4>{{@Helper.i18n("component.customizationEditor.inputs")}}</h4>
+      <div class="editors-with-preview">
+        <div class="editors">
+          {{
+            vars = [
+              "preview-panel-input-active-bg",
+              "preview-panel-input-active-fg",
+            ];
+            for (let v of vars) {
+          }}
+          <div class="color-input-wrapper">
+            <span class="color-input-alpha-bg">
+              <span class="color-input" data-customization-variable="--{{@v}}" style="background-color:var({{@addPrefix('--' + v)}});">{{@Helper.i18n("component.customizationEditor.inputs." + v)}}</span>
+            </span>
+            <i class="color-input-cancel fa fa-trash"></i>
+          </div>
+          {{ } }}
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.inputs.preview-panel-input-bg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--preview-panel-input-bg-delta')}}" data-customization-variable="--preview-panel-input-bg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.inputs.preview-panel-input-disabled-bg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--preview-panel-input-disabled-bg-delta')}}" data-customization-variable="--preview-panel-input-disabled-bg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.inputs.preview-panel-input-fg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--preview-panel-input-fg-delta')}}" data-customization-variable="--preview-panel-input-fg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.inputs.preview-panel-input-disabled-fg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--preview-panel-input-disabled-fg-delta')}}" data-customization-variable="--preview-panel-input-disabled-fg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.inputs.preview-panel-input-placeholder-fg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--preview-panel-input-placeholder-fg-delta')}}" data-customization-variable="--preview-panel-input-placeholder-fg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.inputs.preview-panel-input-shadow")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--preview-panel-input-shadow-delta')}}" data-customization-variable="--preview-panel-input-shadow-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.inputs.login-input-bg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--login-input-bg-delta')}}" data-customization-variable="--login-input-bg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.inputs.login-input-disabled-bg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--login-input-disabled-bg-delta')}}" data-customization-variable="--login-input-disabled-bg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.inputs.login-input-fg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--login-input-fg-delta')}}" data-customization-variable="--login-input-fg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.inputs.login-input-disabled-fg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--login-input-disabled-fg-delta')}}" data-customization-variable="--login-input-disabled-fg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.inputs.login-input-shadow")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--login-input-shadow-delta')}}" data-customization-variable="--login-input-shadow-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.inputs.login-button-bg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--login-button-bg-delta')}}" data-customization-variable="--login-button-bg-delta" />
+          </div>
+        </div>
+        <div class="preview no-padding basic-colors">
+          <div class="preview-privmx">
+            <div class="preview-main" style="background-color:var({{@addPrefix('--main-panel-bg')}});flex-basis:50%;">
+              <input type="text" class="preview-input" value="{{@Helper.i18n('component.customizationEditor.inputs.text')}}" />
+              <input type="text" class="preview-input" disabled value="{{@Helper.i18n('component.customizationEditor.inputs.text')}}" />
+              <input type="text" class="preview-input" placeholder="{{@Helper.i18n('component.customizationEditor.inputs.text')}}" />
+              <div class="custom-select">
+                <span class="item">{{@Helper.i18n('component.customizationEditor.inputs.item')}}</span>
+                <span class="item active">{{@Helper.i18n('component.customizationEditor.inputs.item')}}</span>
+                <span class="item">{{@Helper.i18n('component.customizationEditor.inputs.item')}}</span>
+                <span class="item">{{@Helper.i18n('component.customizationEditor.inputs.item')}}</span>
+                <span class="item">{{@Helper.i18n('component.customizationEditor.inputs.item')}}</span>
+              </div>
+            </div>
+            <div class="preview-preview" style="position:relative;background-color:var({{@addPrefix('--preview-panel-bg')}});flex-basis:50%;">
+              <input type="text" class="preview-login-input" value="{{@Helper.i18n('component.customizationEditor.inputs.text')}}" />
+              <input type="text" class="preview-login-input" disabled value="{{@Helper.i18n('component.customizationEditor.inputs.text')}}" />
+              <button class="preview-login-button">{{@Helper.i18n('component.customizationEditor.inputs.button')}}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="customization-section show-in-advanced-mode">
+      <h4>{{@Helper.i18n("component.customizationEditor.wi-element")}}</h4>
+      <div class="editors-with-preview">
+        <div class="editors">
+          {{
+            vars = [
+              "section-color-icon",
+              "wi-element-fg",
+              "wi-element-breadcrumb-fg",
+            ];
+            for (let v of vars) {
+          }}
+          <div class="color-input-wrapper">
+            <span class="color-input-alpha-bg">
+              <span class="color-input" data-customization-variable="--{{@v}}" style="background-color:var({{@addPrefix('--' + v)}});">{{@Helper.i18n("component.customizationEditor.wi-element." + v)}}</span>
+            </span>
+            <i class="color-input-cancel fa fa-trash"></i>
+          </div>
+          {{ } }}
+        </div>
+        <div class="preview no-padding basic-colors">
+          <div class="preview-privmx">
+            <div class="preview-sidebar" style="background-color:var({{@addPrefix('--sidebar-bg')}});flex-basis:40%;">
+              <div class="preview-wi-element">
+                <span class="icon"><img src='{{@Helper.getAssetByName("DEFAULT_PRIVMX_ICON")}}' /></span>
+                <span class="breadcrumb">{{@Helper.i18n("component.customizationEditor.wi-element.breadcrumb")}} / </span>
+                <span class="section">{{@Helper.i18n("component.customizationEditor.wi-element.section")}}</span>
+              </div>
+              <div class="preview-wi-element preview-wi-element-t">
+                <span class="icon"><img src='{{@Helper.getAssetByName("DEFAULT_PRIVMX_ICON")}}' /></span>
+                <span class="breadcrumb">{{@Helper.i18n("component.customizationEditor.wi-element.breadcrumb")}} / </span>
+                <span class="section">{{@Helper.i18n("component.customizationEditor.wi-element.section")}}</span>
+              </div>
+            </div>
+            <div class="preview-main" style="background-color:var({{@addPrefix('--main-panel-bg')}});flex-basis:40%;">
+              <div class="preview-wi-element">
+                <span class="icon"><img src='{{@Helper.getAssetByName("DEFAULT_PRIVMX_ICON")}}' /></span>
+                <span class="section">{{@Helper.i18n("component.customizationEditor.wi-element.section")}}</span>
+              </div>
+              <div class="preview-wi-element preview-wi-element-t">
+                <span class="icon"><img src='{{@Helper.getAssetByName("DEFAULT_PRIVMX_ICON")}}' /></span>
+                <span class="section">{{@Helper.i18n("component.customizationEditor.wi-element.section")}}</span>
+              </div>
+            </div>
+            <div class="preview-preview" style="position:relative;background-color:var({{@addPrefix('--preview-panel-bg')}});flex-basis:20%;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="customization-section show-in-advanced-mode">
+      <h4>{{@Helper.i18n("component.customizationEditor.status-colors")}}</h4>
+      <div class="editors-with-preview">
+        <div class="editors">
+          {{
+            vars = [
+              "color-success",
+              "color-warning",
+              "color-error",
+              "unread-color",
+              "task-status-todo",
+              "task-status-inprogress",
+              "task-status-done",
+              "task-status-fg",
+            ];
+            for (let v of vars) {
+          }}
+          <div class="color-input-wrapper">
+            <span class="color-input-alpha-bg">
+              <span class="color-input" data-customization-variable="--{{@v}}" style="background-color:var({{@addPrefix('--' + v)}});">{{@Helper.i18n("component.customizationEditor.basic-colors." + v)}}</span>
+            </span>
+            <i class="color-input-cancel fa fa-trash"></i>
+          </div>
+          {{ } }}
+        </div>
+        <div class="preview no-padding basic-colors">
+          <div class="inner">
+            <div class="preview-privmx-header">
+              <span class="ico-comment action-link">
+                <span class="number badge visible">2</span>
+              </span>
+            </div>
+            <div class="margin-box">
+              <button type="button" class="btn btn-success"><i class="fa fa-save"></i> {{@Helper.i18n("component.customizationEditor.basic-colors.color-success")}}</button>
+              <button type="button" class="btn btn-warning"><i class="fa fa-trash"></i> {{@Helper.i18n("component.customizationEditor.basic-colors.color-warning")}}</button>
+            </div>
+            <div class="margin-box">
+              <span style="color:var({{@addPrefix('--color-error')}});">{{@Helper.i18n("component.customizationEditor.basic-colors.error-text")}}</span>
+            </div>
+            <div class="margin-box">
+              <span class="task-label" style="background:transparent;border:1px solid var({{@addPrefix('--task-status-todo')}});color:var({{@addPrefix('--task-status-todo')}});">#042</span>
+              <span class="task-label" style="background:var({{@addPrefix('--task-status-todo')}});color:var({{@addPrefix('--task-status-fg')}});">#042</span>
+              <span class="task-label" style="background:var({{@addPrefix('--task-status-inprogress')}});color:var({{@addPrefix('--task-status-fg')}});">#042</span>
+              <span class="task-label" style="background:var({{@addPrefix('--task-status-done')}});color:var({{@addPrefix('--task-status-fg')}});">#042</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="customization-section show-in-advanced-mode">
+      <h4>{{@Helper.i18n("component.customizationEditor.buttons")}}</h4>
+      <div class="editors-with-preview">
+        <div class="editors">
+            {{
+              vars = [
+                "button-default-bg",
+                "button-default-hover-bg",
+                "button-default-disabled-bg",
+                "button-default-fg",
+                "button-default-hover-fg",
+                "button-default-disabled-fg",
+                "button-gray-bg",
+                "button-gray-hover-bg",
+                "button-gray-disabled-bg",
+                "button-gray-fg",
+                "button-gray-hover-fg",
+                "button-gray-disabled-fg",
+                "color-success",
+                "button-success-fg",
+                "color-warning",
+                "button-warning-fg",
+                "switch-bg",
+                "switch-bg2",
+              ];
+              for (let v of vars) {
+            }}
+            <div class="color-input-wrapper">
+              <span class="color-input-alpha-bg">
+                <span class="color-input" data-customization-variable="--{{@v}}" style="background-color:var({{@addPrefix('--' + v)}});">{{@Helper.i18n("component.customizationEditor.buttons." + v)}}</span>
+              </span>
+              <i class="color-input-cancel fa fa-trash"></i>
+            </div>
+            {{ } }}
+        </div>
+        <div class="preview" style="padding:0">
+          <div class="inner">
+            <div class="margin-box padding-box" style="position:sticky;top:0;background:var(--customization-editor-preview-main-panel-bg);">
+              <button type="button" class="btn btn-default btn-default-preview">{{@Helper.i18n("component.customizationEditor.buttons.button")}}</button>
+              <button type="button" class="btn btn-default btn-default-preview" disabled>{{@Helper.i18n("component.customizationEditor.buttons.button")}}</button>
+            </div>
+            <div class="margin-box padding-box" style="position:sticky;top:47px;background:var(--customization-editor-preview-preview-panel-bg);">
+              <button type="button" class="btn btn-gray btn-gray-preview">{{@Helper.i18n("component.customizationEditor.buttons.button")}}</button>
+              <button type="button" class="btn btn-gray btn-gray-preview" disabled>{{@Helper.i18n("component.customizationEditor.buttons.button")}}</button>
+            </div>
+            <div class="margin-box padding-box" style="position:sticky;top:94px;background:var(--customization-editor-preview-preview-panel-bg);">
+              <button type="button" class="btn btn-success btn-success-preview">{{@Helper.i18n("component.customizationEditor.buttons.button")}}</button>
+              <button type="button" class="btn btn-success btn-success-preview" disabled>{{@Helper.i18n("component.customizationEditor.buttons.button")}}</button>
+            </div>
+            <div class="margin-box padding-box" style="position:sticky;top:141px;background:var(--customization-editor-preview-preview-panel-bg);">
+              <button type="button" class="btn btn-warning btn-warning-preview">{{@Helper.i18n("component.customizationEditor.buttons.button")}}</button>
+              <button type="button" class="btn btn-warning btn-warning-preview" disabled>{{@Helper.i18n("component.customizationEditor.buttons.button")}}</button>
+            </div>
+            <div class="margin-box padding-box" style="position:sticky;top:188px;background:var(--customization-editor-preview-preview-panel-bg);">
+              <span class="switch active"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="customization-section show-in-advanced-mode">
+      <h4>{{@Helper.i18n("component.customizationEditor.tables-with-controls")}}</h4>
+      <div class="editors-with-preview">
+        <div class="editors">
+          {{
+            vars = [
+              "file-icon-fg",
+            ];
+            for (let v of vars) {
+          }}
+          <div class="color-input-wrapper">
+            <span class="color-input-alpha-bg">
+              <span class="color-input" data-customization-variable="--{{@v}}" style="background-color:var({{@addPrefix('--' + v)}});">{{@Helper.i18n("component.customizationEditor.tables-with-controls." + v)}}</span>
+            </span>
+            <i class="color-input-cancel fa fa-trash"></i>
+          </div>
+          {{ } }}
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.tables-with-controls.main-panel-header-separator-bg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--main-panel-header-separator-bg-delta')}}" data-customization-variable="--main-panel-header-separator-bg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.tables-with-controls.main-panel-transparent-button-color")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--main-panel-transparent-button-color-delta')}}" data-customization-variable="--main-panel-transparent-button-color-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.tables-with-controls.main-panel-taskgroup-fg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--main-panel-taskgroup-fg-delta')}}" data-customization-variable="--main-panel-taskgroup-fg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.tables-with-controls.main-panel-transparent-floating-button-color")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--main-panel-transparent-floating-button-color-delta')}}" data-customization-variable="--main-panel-transparent-floating-button-color-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.tables-with-controls.main-panel-taskgroups-separator-bg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--main-panel-taskgroups-separator-bg-delta')}}" data-customization-variable="--main-panel-taskgroups-separator-bg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.tables-with-controls.main-panel-tasks-separator-bg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--main-panel-tasks-separator-bg-delta')}}" data-customization-variable="--main-panel-tasks-separator-bg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.tables-with-controls.main-panel-task-fg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--main-panel-task-fg-delta')}}" data-customization-variable="--main-panel-task-fg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.tables-with-controls.main-panel-task-hover-bg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--main-panel-task-hover-bg-delta')}}" data-customization-variable="--main-panel-task-hover-bg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.tables-with-controls.main-panel-task-active-bg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--main-panel-task-active-bg-delta')}}" data-customization-variable="--main-panel-task-active-bg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.tables-with-controls.main-panel-task-hover-alt-bg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--main-panel-task-hover-alt-bg-delta')}}" data-customization-variable="--main-panel-task-hover-alt-bg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.tables-with-controls.main-panel-chats-separator-bg")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--main-panel-chats-separator-bg-delta')}}" data-customization-variable="--main-panel-chats-separator-bg-delta" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.tables-with-controls.main-panel-lower-buttons-border")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--main-panel-lower-buttons-border-delta')}}" data-customization-variable="--main-panel-lower-buttons-border-delta" />
+          </div>
+        </div>
+        <div class="preview no-padding basic-colors tasks">
+          <div class="preview-privmx" style="flex-direction:column;">
+            <div class="preview-main" style="background-color:var({{@addPrefix('--main-panel-bg')}});flex-basis:80%;">
+              <div style="margin:20px 0 20px 0;background:var(--customization-editor-preview-main-panel-header-separator-bg);height:1px;">
+                <i class="fa fa-gear btn-tr"></i>
+              </div>
+              <div class="taskgroup">{{@Helper.i18n("component.customizationEditor.tables-with-controls.taskgroup")}} <i class="fa fa-thumb-tack btn-f"></i></div>
+              <div class="taskgroup">{{@Helper.i18n("component.customizationEditor.tables-with-controls.taskgroup")}} <i class="fa fa-thumb-tack btn-f"></i></div>
+              <div class="preview-tasks">
+                <div class="task-row">{{@Helper.i18n("component.customizationEditor.tables-with-controls.task")}}</div>
+                <div class="task-row">{{@Helper.i18n("component.customizationEditor.tables-with-controls.task")}}</div>
+                <div class="task-row active">{{@Helper.i18n("component.customizationEditor.tables-with-controls.task")}}</div>
+                <div class="task-row">{{@Helper.i18n("component.customizationEditor.tables-with-controls.task")}}</div>
+              </div>
+              <div class="incoming-chat-message"></div>
+              <div class="chat-separator"></div>
+              <div class="incoming-chat-message"></div>
+            </div>
+            <div class="preview-preview preview-tasks-preview" style="position:relative;background-color:var({{@addPrefix('--preview-panel-bg')}});flex-basis:20%;">
+              <div class="buttons"></div>
+              <span class="fa fa-file-text-o preview-file-icon"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="customization-section">
+      <h4>{{@Helper.i18n("component.customizationEditor.sounds")}}</h4>
+      <div class="editors-with-preview">
+        <div class="editors">
+        </div>
+        <div class="preview">
+        </div>
+      </div>
+    </div>
+    <div class="customization-section show-in-simple-mode">
+      <h4>{{@Helper.i18n("component.customizationEditor.colors")}}</h4>
+      <div class="editors-with-preview">
+        <div class="editors">
+          {{
+            vars = [
+              "color-success",
+              "button-success-fg",
+              "color-warning",
+              "button-warning-fg",
+              "unread-color",
+              "task-status-todo",
+              "task-status-inprogress",
+              "task-status-done",
+              "task-status-fg",
+            ];
+            for (let v of vars) {
+          }}
+          <div class="color-input-wrapper">
+            <span class="color-input-alpha-bg">
+              <span class="color-input" data-customization-variable="--{{@v}}" style="background-color:var({{@addPrefix('--' + v)}});">{{@Helper.i18n("component.customizationEditor.basic-colors." + v)}}</span>
+            </span>
+            <i class="color-input-cancel fa fa-trash"></i>
+          </div>
+          {{ } }}
+        </div>
+        <div class="preview no-padding basic-colors">
+          <div class="inner">
+            <div class="preview-privmx-header">
+              <span class="ico-comment action-link">
+                <span class="number badge visible">2</span>
+              </span>
+            </div>
+            <div class="margin-box">
+              <button type="button" class="btn btn-success"><i class="fa fa-save"></i> {{@Helper.i18n("component.customizationEditor.basic-colors.color-success")}}</button>
+              <button type="button" class="btn btn-warning"><i class="fa fa-trash"></i> {{@Helper.i18n("component.customizationEditor.basic-colors.color-warning")}}</button>
+            </div>
+            <div class="margin-box">
+              <span class="task-label" style="background:transparent;border:1px solid var({{@addPrefix('--task-status-todo')}});color:var({{@addPrefix('--task-status-todo')}});">#042</span>
+              <span class="task-label" style="background:var({{@addPrefix('--task-status-todo')}});color:var({{@addPrefix('--task-status-fg')}});">#042</span>
+              <span class="task-label" style="background:var({{@addPrefix('--task-status-inprogress')}});color:var({{@addPrefix('--task-status-fg')}});">#042</span>
+              <span class="task-label" style="background:var({{@addPrefix('--task-status-done')}});color:var({{@addPrefix('--task-status-fg')}});">#042</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="customization-section show-in-simple-mode">
+      <h4>{{@Helper.i18n("component.customizationEditor.gradient")}} <span class="link" data-action="toggle-advanced-gradient" data-mode="simple"><span class="simple-text">{{@Helper.i18n("component.customizationEditor.gradient.advanced-mode")}}</span><span class="advanced-text hidden">{{@Helper.i18n("component.customizationEditor.gradient.simple-mode")}}</span></span></h4>
+      <div class="editors-with-preview">
+        <div class="editors">
+          {{
+            vars = [
+              "body-secondary-fg",
+              "gradient-color1",
+              "gradient-color2",
+              "gradient-color3",
+              "gradient-color4",
+              "sidebar-bg",
+              "sidebar-item-hover-bg",
+              "sidebar-item-active-bg",
+            ];
+            for (let v of vars) {
+          }}
+          <div class="color-input-wrapper">
+            <span class="color-input-alpha-bg">
+              <span class="color-input" data-customization-variable="--{{@v}}" style="background-color:var({{@addPrefix('--' + v)}});">{{@Helper.i18n("component.customizationEditor.basic-colors." + v)}}</span>
+            </span>
+            <i class="color-input-cancel fa fa-trash"></i>
+          </div>
+          {{ } }}
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.basic-colors.color-mix-darken")}}:</span>
+            <input type="number" min="0" max="1" step="0.01" value="{{@getVal('--color-mix-darken')}}" data-customization-variable="--color-mix-darken" />
+          </div>
+          <div class="editor">
+            <span class="title">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-splitter-color")}}:</span>
+            <input type="number" min="-100" max="100" step="1" value="{{@getPercVal('--sidebar-splitter-color-delta')}}" data-customization-variable="--sidebar-splitter-color-delta" />
+          </div>
+        </div>
+        <div class="preview no-padding basic-colors">
+          <div class="preview-privmx">
+            <div class="preview-sidebar" style="background-color:var({{@addPrefix('--sidebar-bg')}});padding:0;">
+              <span class="splitter" style="margin-top:30px"></span>
+              <span class="sidebar-item">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-item")}}</span>
+              <span class="sidebar-item active">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-item-active")}}</span>
+              <span class="sidebar-item hover">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-item-hover")}}</span>
+              <span class="sidebar-item">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-item")}}</span>
+              <span class="sidebar-item">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-item")}}</span>
+              <span class="sidebar-item">{{@Helper.i18n("component.customizationEditor.basic-colors.sidebar-item")}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="form-buttons">
+    <button type="button" class="btn btn-success" data-action="save"><i class="fa fa-save"></i> {{@Helper.i18n("core.button.save.label")}}</button>
+    <button type="button" class="btn btn-default" data-action="export"><i class="fa fa-download"></i> {{@Helper.i18n("core.button.export.label")}}</button>
+    <button type="button" class="btn btn-default" data-action="import"><i class="fa fa-upload"></i> {{@Helper.i18n("core.button.import.label")}}</button>
+    <button type="button" class="btn btn-default" data-action="cancel">{{@Helper.i18n("core.button.cancel.label")}}</button>
+  </div>
+  <button class="floating-circular-button" title="{{@Helper.i18n('component.customizationEditor.real-preview')}}" data-action="show-full-preview"><i class="fa fa-eye"></i></button>
+  <div class="colorpicker-container" acp-show-alpha></div>
+  <div class="slider-fraction-container"></div>
+  <div class="slider-percent-container"></div>
+</div>

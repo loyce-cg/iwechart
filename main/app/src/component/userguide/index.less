@@ -1,0 +1,79 @@
+.component-user-guide {
+  .text {
+    font-size: var(--font-size-l);
+    color: white;
+  }
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 11;
+  }
+
+  .info {
+    display: block;
+    position: absolute;
+    z-index: 12; 
+    .text {
+      display: inline-block;
+      margin-top: 50px;
+      text-align: center;
+    }
+    button {
+      margin: 10px auto;
+      display: block;
+    }
+    .hole {
+      box-shadow: 0 0 0 99999px rgba(0, 0, 0, .8);
+      cursor: pointer;
+      margin: 0 auto;
+    }
+    .rotation {
+      position: absolute;
+      .fa {
+        font-size: var(--font-size-xxxxl);
+        color: white;
+      }
+    }
+  
+  }
+
+  .rotate-45 {
+      -webkit-transform: rotate(45deg);
+      transform: rotate(45deg);
+  }
+
+  .rotate-90 {
+    -webkit-transform: rotate(90deg);
+    transform: rotate(90deg);
+  }
+
+  .rotate-180 {
+    -webkit-transform: rotate(180deg);
+    transform: rotate(180deg);
+  }
+
+  .rotate-135 {
+    -webkit-transform: rotate(135deg);
+    transform: rotate(135deg);
+  }
+
+  .rotate-225 {
+    -webkit-transform: rotate(225deg);
+    transform: rotate(225deg);
+  }
+
+  .rotate-270 {
+    -webkit-transform: rotate(270deg);
+    transform: rotate(270deg);
+  }
+
+  .rotate-315 {
+    -webkit-transform: rotate(315deg);
+    transform: rotate(315deg);
+  }
+
+}
+

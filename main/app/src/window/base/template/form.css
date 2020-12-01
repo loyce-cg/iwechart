@@ -1,0 +1,87 @@
+.base-form .fields {
+  margin: 10px;
+}
+
+.base-form .fields .field {
+  margin: 10px 0;
+  clear: both;
+}
+
+.base-form .fields .field .info {
+  float: left;
+  text-align: right;
+  width: 120px;
+  line-height: 18px;
+  font-size: 14px;
+  padding: 5px 0 0 0;
+}
+
+.base-form .fields .field .input {
+  margin: 0 10px 0 130px;
+}
+
+.base-form .fields .field .input input[type=text],
+.base-form .fields .field .input input[type=password],
+.base-form .fields .field .input textarea,
+.base-form .fields .field .input label {
+  width: 100%;
+  line-height: 18px;
+  font-size: 14px;
+  padding: 5px 10px;
+  display: block;
+}
+
+.base-form .fields .field .input input[type=text],
+.base-form .fields .field .input input[type=password],
+.base-form .fields .field .input textarea {
+  border: 1px solid #A9A9A9;
+}
+
+.base-form .fields .field .input label input {
+  margin-left: 0;
+}
+
+.base-form .fields .field .input label {
+  padding-left: 0;
+}
+
+.base-form .fields .field .input label + label {
+  padding-top: 0;
+}
+
+.base-form .fields .field .input textarea {
+  height: 100px;
+}
+
+.base-form .fields .field .input label .hint {
+  color: #7E7E7E;
+  font-size: 12px;
+  margin-left: 15px;
+}
+
+.base-form .fields .field.buttons {
+  margin-bottom: 20px;
+}
+
+.base-form .fields .field.buttons button {
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.base-form .image-field .input > div {
+  float: left;
+}
+
+.base-form .image-field a {
+  margin: 8px 0;
+  text-decoration: none;
+  display: block;
+  font-size: 12px;
+}
+
+.base-form .image-field img {
+  max-width: 80px;
+  max-height: 80px;
+  float: left;
+  margin-right: 10px;
+}

@@ -1,0 +1,16 @@
+@import {Model} from "../../notes2/Notes2WindowController";
+@model Model
+<div class="window-filechooser">
+  <div class="content modules-container">
+  </div>
+  <div class="buttons">
+    <button class="btn btn-success" data-action="select">
+      <i class="fa fa-check"></i>
+      {{@Helper.i18n("plugin.notes2.window.filechooser.select")}}
+    </button>
+    <button class="btn btn-default gray" data-action="close">
+      <i class=""></i>
+      {{@Helper.i18n("plugin.notes2.window.filechooser.button.close.label")}}
+    </button>
+  </div>
+</div>

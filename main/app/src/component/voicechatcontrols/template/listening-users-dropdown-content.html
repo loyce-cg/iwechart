@@ -1,0 +1,10 @@
+@import {Model} from "../VoiceChatControlsController";
+@import {func as personTemplate} from "./person.html";
+@model Model
+<div>
+  <ul>
+    {{ for (let user of model.listeningUsers) { }}
+      <li>{{#Helper.createTemplate(personTemplate).render(user)}}</li>
+    {{ } }}
+  </ul>
+</div>

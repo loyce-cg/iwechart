@@ -1,0 +1,58 @@
+@import {Model} from "../PaymentsController";
+@model Model
+<div class="panel-header">
+  <i class="fa fa-usd"></i>
+  {{@Helper.i18n("window.admin.payments.menu")}}
+</div>
+
+{{
+  var field = function(label: string, value: string): void { {{
+    <div class="field">
+      <div class="info">
+        {{@label}}:
+      </div>
+      <div class="input text-only">
+        {{@value}}
+      </div>
+    </div>
+  }} };
+}}
+
+<table>
+  <tbody>
+    <tr>
+      <td class="logo-column">
+        <div><img src="{{@Helper.getAssetByName('SYSINFO_LOGO')}}" alt=""></div>
+        <div class="host-info">{{@model.config.hosts.join(", ")}}</div>
+      </td>
+      <td class="values-column">
+        <div class="base-form">
+          <div class="fields">
+            {{
+              field(Helper.i18n("window.admin.payments.trial"), model.trial ? Helper.i18n("window.admin.payments.trialOn") : Helper.i18n("window.admin.payments.trialOff"));
+              field(Helper.i18n("window.admin.payments.startDate"), Helper.standardDateWithoutTime(model.startDate));
+              field(Helper.i18n("window.admin.payments.endDate"), Helper.standardDateWithoutTime(model.endDate));
+              field(Helper.i18n("window.admin.payments.maxUsers"), model.maxUsers.toString());
+              field(Helper.i18n("window.admin.payments.totalStorage"), model.totalStorage);             
+            }}
+            <div class="field">
+              <div class="info">{{@Helper.i18n("window.admin.payments.orderDetails")}}:</div>
+              <div class="input link" data-action="open-cc" data-order-id="currentOrder">{{@Helper.i18n("window.admin.payments.orderDetailsLink")}}</div>
+            </div>
+            {{
+              if (model.hasExtendOrder) {
+                {{
+                  <div class="field">
+                    <div class="info">{{@Helper.i18n("window.admin.payments.extendOrderDetails")}}:</div>
+                    <div class="input link" data-action="open-cc" data-order-id="{{@model.orderId}}">{{@Helper.i18n("window.admin.payments.orderDetailsLink")}}</div>
+                  </div>
+                }}
+              }
+            }}
+          </div>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+

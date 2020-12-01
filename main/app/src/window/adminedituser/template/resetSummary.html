@@ -1,0 +1,121 @@
+@model {username: string, hashmail: string, password: string, createMode: boolean, isExternalUser: boolean}
+<div>
+  <style>
+    .main-info {
+      margin: 10px 0 0 0;
+      font-weight: bold;
+    }
+    .main-info-sub {
+      margin: 0 0 20px 0;
+    }
+    .main-info.custom {
+      margin-bottom: 15px;
+    }
+    .entry {
+      margin-bottom: 10px;
+    }
+    .entry-label {
+      width: 200px;
+      display: inline-block;
+    }
+    .entry-value {
+      display: inline-block;
+    }
+    .entry-value.custom {
+      position: relative;
+      width: 100%;
+    }
+    .entry-value.custom textarea {
+      width: 440px;
+      padding: 15px;
+    }
+    .entry-value.custom .btn {
+      display: inline-block;
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 80px;
+      height: 72px;
+    }
+
+    .password-show, .password-hide, .copy-link, .send-link {
+      color: #54cbe3;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    .password-show:hover, .password-hide:hover, .copy-link:hover, .send-link:hover {
+      text-decoration: underline;
+    }
+    .password-hide {
+      display: none;
+    }
+    [data-show=true] .password-hide {
+      display: inline;
+    }
+    [data-show=true] .password-show {
+      display: none;
+    }
+    .form-control {
+      display: inline-block;
+      width: 310px;
+    }
+    #password.form-control {
+      width: 150px;
+    }
+  </style>
+  <script type="text/javascript">
+    function switchPassword(show) {
+      document.getElementById("password").setAttribute("type", show ? "text" : "password");
+      document.getElementById("password-entry").setAttribute("data-show", show);
+    }
+  </script>
+  <div class="main-info custom">
+    {{$Helper.i18n((model.createMode ? "window.adminEditUser.users.details.resetSummary.infoAccount" : "window.adminEditUser.users.details.resetSummary.info") + (model.isExternalUser ? ".externalUser" : ""))}}
+  </div>
+  <!-- <div class="main-info-sub">
+    {{@Helper.i18n("window.adminEditUser.users.details.resetSummary.subInfo" + (model.isExternalUser ? ".externalUser" : ""))}}
+  </div> -->
+  <div class="entry">
+    <!-- <div class="entry-label">
+      {{@Helper.i18n("window.adminEditUser.users.details.resetSummary.username" + (model.isExternalUser ? ".externalUser" : ""))}}
+    </div> -->
+    {{
+      let text = Helper.i18n("window.adminEditUser.users.details.resetSummary.username" + (model.isExternalUser ? ".externalUser" : ""), model.hashmail);
+      text += "\n" + Helper.i18n("window.adminEditUser.users.details.resetSummary.password", model.password);
+    }}
+
+    <div class="entry-value custom">
+      <textarea id="user-info-area" class="form-control" type="text" rows="2" readonly>{{@text.trim()}}</textarea>
+      <button class="btn btn-default" data-copy-textarea-id="user-info-area">          
+        <i class="fa fa-copy"></i>
+        <span class="txt">{{@Helper.i18n("core.copy")}}</span>
+      </button>
+    </div>
+  </div>
+  <!-- <div class="entry">
+    <div class="entry-label">
+      {{@Helper.i18n("window.adminEditUser.users.details.resetSummary.password")}}
+    </div>
+    <div class="entry-value" id="password-entry">
+      <input id="password" class="form-control" type="password" value="{{@model.password}}" readonly/>
+      <span class="password-show" onclick="switchPassword(true)">{{@Helper.i18n("window.adminEditUser.users.details.generatedPassword.show")}}</span>
+      <span class="password-hide" onclick="switchPassword(false)">{{@Helper.i18n("window.adminEditUser.users.details.generatedPassword.hide")}}</span>
+      <span class="copy-link" data-copy="{{@model.password}}">
+        <span>
+          <i class="fa fa-copy"></i>
+          <span class="txt">{{@Helper.i18n("core.copy")}}</span>
+        </span>
+      </span>
+    </div>
+  </div> -->
+  <div class="entry">
+    <div class="entry-value" id="password-entry">
+      <span class="send-link" data-trigger="send-link">
+        <span>
+          <i class="fa fa-envelope"></i>
+          <span class="txt">{{@Helper.i18n("window.adminEditUser.users.details.resetSummary.infoAccount.sendLink")}}</span>
+        </span>
+      </span>
+    </div>
+  </div>
+</div>

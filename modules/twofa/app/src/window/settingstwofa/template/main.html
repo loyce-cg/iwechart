@@ -1,0 +1,94 @@
+@import {Model} from "../SettingsTwofaWindowController";
+@model Model
+<div class="section twofa-section">
+  <div class="section-header">
+    <i class="fa fa-lock"></i>
+    {{@Helper.i18n("plugin.twofa.window.settingstwofa.header")}}
+  </div>
+  <div class="section-info">
+    {{#Helper.i18n("plugin.twofa.window.settingstwofa.info", "<b>", "</b>")}}
+  </div>
+  <div class="switcher-row" vf-visible="{true}">
+    <input type="checkbox" class="twofa-enabled" vf-click="toggleEnabled()" {{ if (model.enabled) { }}checked{{ } }} />
+    <span class="switch-label" vf-click="toggleEnabled()">
+      {{@Helper.i18n("plugin.twofa.window.settingstwofa.enable")}}
+    </span>
+  </div>
+  
+  <div class="base-form" vf-visible="enabled">
+    <div class="fields">
+      
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("plugin.twofa.window.settingstwofa.type.label")}}
+        </div>
+        <div class="input radio">
+          {{ if (model.methods.indexOf("googleAuthenticator") != -1) { {{
+            <label>
+              <input type="radio" value="googleAuthenticator" vf-model="type" />
+              {{@Helper.i18n("plugin.twofa.window.settingstwofa.type.value.googleAuthenticator")}}
+            </label>
+          }} } }}
+          {{ if (model.methods.indexOf("email") != -1) { {{
+            <label>
+              <input type="radio" value="email" vf-model="type" />
+              {{@Helper.i18n("plugin.twofa.window.settingstwofa.type.value.email")}}
+            </label>
+          }} } }}
+          {{ if (model.methods.indexOf("sms") != -1) { {{
+            <label>
+              <input type="radio" value="sms" vf-model="type" />
+              {{@Helper.i18n("plugin.twofa.window.settingstwofa.type.value.sms")}}
+            </label>
+          }} } }}
+        </div>
+      </div>
+      
+      <div class="field" vf-visible="type == 'googleAuthenticator'">
+        <div class="info">
+          {{@Helper.i18n("plugin.twofa.window.settingstwofa.googleAuthenticatorKey.label")}}
+        </div>
+        <div class="input">
+          <input type="text" placeholder="" vf-model="googleAuthenticatorKey" readonly="readonly" />
+          <div class="canvas-placeholder">
+          </div>
+        </div>
+      </div>
+      
+      <div class="field" vf-visible="type == 'email'">
+        <div class="info">
+          {{@Helper.i18n("plugin.twofa.window.settingstwofa.email.label")}}
+        </div>
+        <div class="input">
+          <input type="text" placeholder="" vf-model="email" />
+        </div>
+      </div>
+      
+      <div class="field" vf-visible="type == 'sms'">
+        <div class="info">
+          {{@Helper.i18n("plugin.twofa.window.settingstwofa.sms.label")}}
+        </div>
+        <div class="input">
+          <input type="text" placeholder="" vf-model="mobile" />
+        </div>
+      </div>
+      
+      <div class="field buttons" vf-class="{noMargin: this.type == 'googleAuthenticator'}"">
+        <div class="info">
+        </div>
+        <div class="input">
+          <button class="btn btn-success save-button progress-button" vf-click="save()" vf-disabled="saving">
+            <i class="fa fa-save"></i>
+            <span vf-visible="{!this.saving}">{{@Helper.i18n("plugin.twofa.window.settingstwofa.button.save.text")}}</span>
+            <span vf-visible="saving">{{@Helper.i18n("plugin.twofa.window.settingstwofa.button.saving")}}</span>
+          </button>
+          <button class="btn btn-default gray" vf-click="generateKey()" vf-visible="type == 'googleAuthenticator'">
+            <i class="fa fa-magic"></i>
+            {{@Helper.i18n("plugin.twofa.window.settingstwofa.button.generateKey.text")}}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+</div>

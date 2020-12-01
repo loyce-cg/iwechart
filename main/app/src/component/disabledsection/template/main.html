@@ -1,0 +1,38 @@
+@import { Model } from "../DisabledSectionController";
+@model Model
+<div class="disabled-section-component">
+  <div class="container">
+    <div class="center-vertically">
+      <div class="text">
+        {{ if (model.editable) { }}
+            <div class="row">{{@Helper.i18n("component.disabledsection.withrights.text", [Helper.i18n("core.module." + model.moduleName)])}}</div>
+        {{ } else { }}
+            <div class="row">{{@Helper.i18n("component.disabledsection.withrights.text", [Helper.i18n("core.module." + model.moduleName)])}}</div>
+            <div class="row">{{@Helper.i18n("component.disabledsection.norights.text")}}</div>
+        {{ } }}
+        <div class="buttons row">
+        {{ if (model.editable) { }}
+          <button class="btn" data-action="activate">{{@Helper.i18n("component.disabledsection.button.activate1")}} <span class="bold">{{@Helper.i18n("core.module." + model.moduleName)}}</span> {{@Helper.i18n("component.disabledsection.button.activate2")}}</button>
+        {{ } }}
+        </div>
+      </div>
+      <div class="footer row">
+        <div class="fields">
+          <div class="field">
+            <div class="info"></div>
+            <div class="field-value">
+              <div class="checkbox">
+                <label>
+                  <input class="hideAllSections" type="checkbox" name="hideAllSections"/>
+                  {{@Helper.i18n("component.disabledsection.hidesectionsinsidebar")}}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+        
+    </div>
+  </div>
+</div>
+

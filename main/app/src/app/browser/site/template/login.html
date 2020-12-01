@@ -1,0 +1,41 @@
+@import {IndexViewHelper} from "../../../../web-utils/IndexViewHelper";
+@helper IndexViewHelper
+@model {username: string, password: string}
+<div class="login-modal inner-page-window ">
+  <div class="inner-page-window-backdrop"></div>
+  <div class="window-wrapper">
+    <div class="window-header">
+      <div class="window-header-title">
+        PrivMX
+      </div>
+      <div class="window-header-buttons">
+        <a class="window-header-button window-header-button-close ico-x"></a>
+      </div>
+    </div>
+    <div class="inner-page-window-container">
+      <div class="main-info">
+          <div class="first-line">{{@Helper.i18n("window.relogin.info")}}</div>
+          <div>{{@Helper.i18n("window.relogin.info2")}}</div>
+      </div>
+      <div class="error hide">
+      </div>
+      <div class="form-group">
+        <label>{{@Helper.i18n("window.relogin.username")}}</label>
+        <input class="form-control" type="text" readonly="readonly" value="{{@model.username}}" />
+      </div>
+      <div class="form-group">
+        <label>{{@Helper.i18n("window.relogin.password")}}</label>
+        <input class="password form-control" type="password" value="{{@model.password}}" />
+      </div>
+      <div class="btn-holder">
+        <button class="login btn btn-success">
+          <span class="icon-holder"></span>
+          {{@Helper.i18n("window.relogin.login")}}
+        </button>
+        <button class="cancel btn">
+          {{@Helper.i18n("core.button.cancel.label")}}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

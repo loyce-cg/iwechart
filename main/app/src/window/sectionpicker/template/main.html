@@ -1,0 +1,17 @@
+@import {Model} from "../../sections/SectionsWindowController";
+@model Model
+<div class="window-sectionpicker-main">
+  <div class="sections-list"></div>
+  <div class="buttons-container">
+    <div class="buttons">
+      <button class="btn btn-success" data-action="select" tabindex="1" {{#model.state.canAdd ? '' : 'disabled="disabled"'}}>
+        <i class="fa fa-plus"></i>
+        {{@Helper.i18n("window.sectionPicker.actions.move")}}
+      </button>
+      <button class="btn btn-default" data-action="close" tabindex="2">
+        <i class="fa fa-times"></i>
+        {{@Helper.i18n("core.button.close.label")}}
+      </button>
+    </div>
+  </div>
+</div>

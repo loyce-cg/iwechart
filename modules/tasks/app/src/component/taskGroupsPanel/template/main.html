@@ -1,0 +1,329 @@
+@import { Model } from "../TaskGroupsPanelController";
+@import { DefaultColWidths } from "../../../main/Types";
+@model Model
+@context {render(model: any, context?: any):string}
+{{
+  let cls: string = "";
+  if (model.isTrash) {
+    cls += "trash";
+  } 
+  if (model.isActive) {
+    cls += "active";
+  }
+  let checked = "";
+}}
+<div class="panel panel-taskgroups no-task-selected no-task-in-clipboard {{@cls}}" tabindex="-1">
+  <div class="notifications-container-wrapper"></div>
+  <div class="dropzone-higlights-container"></div>
+  <div class="top">
+    <div class="left">
+      {{ if (model.isInSummaryWindow) { }}
+      <div class="wi-element active">
+        <div class="wi-element-inner">
+          <div class="wi-element-icon bckg-icon tasks-icon-as-project-icon">
+            <i class="fa fa-tasks"></i>
+          </div>
+          <div class="wi-element-name">
+            {{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.summaryWindow.title")}}
+          </div>
+        </div>
+      </div>
+      {{ } else if (model.isConv2Section) { }}
+        {{#context.render(model.conv2Model, {})}}
+      {{ } else if (model.isPrivateSection || model.isTasksAssignedToMe || model.isTasksCreatedByMe) { }}
+        <li class="conversation-element contact without-description" data-conversation-id="{{@model.myHashmail}}">
+          <span>
+            <div class="image-with-data">
+              <p class="image">
+                <canvas class="not-rendered" data-tooltip-trigger="{{@model.myHashmail}}" data-hashmail-image="{{@model.myHashmail}}" data-width="30" data-height="30" data-auto-size="true" data-auto-refresh="true" width="60" height="60" style="width: 30px; height: 30px;"></canvas>
+              </p>
+              <div class="text-col">
+                <p class="name">
+                  {{ if (model.isPrivateSection) { }}
+                    {{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.privateTasks")}}
+                  {{ } if (model.isTasksAssignedToMe) { }}
+                    {{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.tasksAssignedToMe")}}
+                  {{ } if (model.isTasksCreatedByMe) { }}
+                    {{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.tasksCreatedByMe")}}
+                  {{ } }}
+                </p>
+              </div>
+            </div>
+          </span>
+        </li>
+      {{ } else { }}
+      <div class="wi-element active">
+        <div class="wi-element-inner">
+          <div class="wi-element-icon bckg-icon {{@!model.isPublic && model.isRegularSection && !model.isPrivateSection ? 'bckg-icon-border' : ''}} {{@model.isPrivateSection ? '' : 'has-section-tooltip'}}" data-section-id="{{@model.projectId}}">
+            <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" class="{{@model.isTrash || model.isAllTasks ? 'hidden': ''}}" />
+            <i class="fa fa-tasks proj-fa-icon {{@!model.isAllTasks ? 'hidden' : ''}}"></i>
+            <i class="fa ico-bin proj-fa-icon {{@!model.isTrash ? 'hidden' : ''}}"></i>
+          </div>
+          <div class="wi-element-name">
+            {{@model.projectName}}
+          </div>
+        </div>
+      </div>
+      {{ } }}
+      <div class="buttons-go-to">
+        <span class="btn btn-sm go-to-chat" data-action="open-chat" data-window-opener="true">
+          <i class="ico-comment"></i>
+        </span>
+        <span class="btn btn-sm go-to-notes" data-action="open-notes" data-window-opener="true">
+          <i class="ico-note"></i>
+        </span>
+        <span class="btn btn-sm go-to-calendar" data-action="open-calendar" data-window-opener="true">
+          <i class="fa fa-calendar"></i>
+        </span>
+      </div>
+      <div class="filter-container"></div>
+    </div>
+    <div class="button-container">
+      <button id="toggle-all-collapsed-{{@model.safeProjectId}}" class="btn btn-sm btn-default small collapse-all tasks-collapse-all-button" data-action="taskgroup-toggle-collapsed-all">
+        <span class="act-text-collapse">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.toggleCollapsedAllCollapse")}}</span>
+        <span class="act-text-expand">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.toggleCollapsedAllExpand")}}</span>
+      </button>
+      <span class="hide-done">
+        <input id="tasks-settings-hide-done-{{@model.safeProjectId}}" type="checkbox" data-setting="hide-done" />
+        <label for="tasks-settings-hide-done-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.hideDone")}} <span class="done-tasks-count"></span></label>
+      </span>
+      <button id="tasks-settings-kanban-mode-{{@model.safeProjectId}}" class="btn btn-xs btn-default kanban-mode" data-setting="kanban-mode" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.kanbanMode")}}">
+        K
+      </button>
+      <button id="tasks-settings-show-recently-modified-{{@model.safeProjectId}}" class="btn btn-xs btn-default show-recently-modified" data-setting="show-recently-modified" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.viewModeMultipleLists")}}">
+        <span class="fa fa-th-list"></span>
+      </button>
+      <button class="btn btn-xs btn-default refresh" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.refresh")}}">
+        <span class="fa fa-refresh"></span>
+      </button>
+      <button class="btn btn-xs btn-default settings" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.moduleMenu")}}">
+        <span class="ico-settings"></span>
+      </button>
+      <button class="btn btn-success btn-sm btn-default small in-summary-as-icon" data-action="task-new" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.taskGroup.newTaskTooltip")}}" data-payload="__orphans__" data-taskgroup-project-id="{{@model.isConv2Section?'conv2':(model.projectId?model.projectId:model.privateSectionId)}}">
+        <i class="fa fa-plus"></i>
+        <span>{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.taskGroup.newTask")}}</span>
+      </button>
+	</div>
+	<div class="context-menu-settings context-menu">
+	  <div class="context-menu-backdrop2"></div>
+	  <ul class="context-menu-content">
+      <li data-action="mark-all-as-read" class="with-icon">
+        <span>
+          <i class="fa fa-check"></i><span>{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.moduleMenu.markAllAsRead")}}</span>
+        </span>
+      </li>
+      <li data-action="taskgroup-new" data-payload="{{@model.projectId}}" class="with-icon">
+        <span>
+          <i class="fa fa-plus"></i><span>{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.taskGroup.newTaskGroup")}}</span>
+        </span>
+      </li>
+      <li class="context-menu-group-header">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.moduleMenu.headers.viewSettings")}}</li>
+      <li>
+        <span class="hide-in-summary">
+          {{ checked = model.settings["show-task-panel"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-show-task-panel-{{@model.safeProjectId}}" data-setting="show-task-panel" {{@checked}} />
+          <label for="tasks-settings-show-task-panel-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showTaskPanel")}}</label>
+        </span>
+      </li>
+      <li class="subitem">
+        <span class="hide-in-summary">
+          {{ checked = model.settings["horizontal-task-window-layout"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-horizontal-task-window-layout-{{@model.safeProjectId}}" data-setting="horizontal-task-window-layout" {{@checked}} />
+          <label for="tasks-settings-horizontal-task-window-layout-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.horizontalTaskWindowLayout")}}</label>
+        </span>
+      </li>
+      <li>
+        <span>
+          {{ checked = model.settings["show-orphans"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-show-orphans-{{@model.safeProjectId}}" data-setting="show-orphans" {{@checked}} />
+          <label for="tasks-settings-show-orphans-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showOrphans")}}</label>
+        </span>
+      </li>
+      <li>
+        <span>
+          {{ checked = model.settings["show-header-per-list"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-show-header-per-list-{{@model.safeProjectId}}" data-setting="show-header-per-list" {{@checked}} />
+          <label for="tasks-settings-show-header-per-list-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showHeaderPerList")}}</label>
+        </span>
+      </li>
+      <li>
+        <span>
+          {{ checked = model.settings["show-list-progress"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-show-list-progress-{{@model.safeProjectId}}" data-setting="show-list-progress" {{@checked}} />
+          <label for="tasks-settings-show-list-progress-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showListProgress")}}</label>
+        </span>
+      </li>
+      <li>
+        <span>
+          {{ checked = model.settings["texts-with-status-color"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-texts-with-status-color-{{@model.safeProjectId}}" data-setting="texts-with-status-color" {{@checked}} />
+          <label for="tasks-settings-texts-with-status-color-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.textsWithStatusColor")}}</label>
+        </span>
+      </li>
+      <li>
+        <span>
+          {{ checked = model.settings["narrow-issue-rows"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-narrow-issue-rows-{{@model.safeProjectId}}" data-setting="narrow-issue-rows" {{@checked}} />
+          <label for="tasks-settings-narrow-issue-rows-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.narrowIssueRows")}}</label>
+        </span>
+      </li>
+      <li class="context-menu-group-header">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.moduleMenu.headers.columns")}}</li>
+      <li class="setting-show-hash-id-column">
+        <span>
+          {{ checked = model.settings["show-hash-id-column"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-show-hash-id-column-{{@model.safeProjectId}}" data-setting="show-hash-id-column" {{@checked}} />
+          <label for="tasks-settings-show-hash-id-column-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showHashIdColumn")}}</label>
+        </span>
+      </li>
+      <li class="subitem">
+        <span>
+          {{ checked = model.settings["show-task-numbers"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-show-task-numbers-{{@model.safeProjectId}}" data-setting="show-task-numbers" {{@checked}} />
+          <label for="tasks-settings-show-task-numbers-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showTaskNumbers")}}</label>
+        </span>
+      </li>
+      <li class="setting-show-task-column">
+        <span>
+          {{ checked = model.settings["show-task-column"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-show-task-column-{{@model.safeProjectId}}" data-setting="show-task-column" {{@checked}} />
+          <label for="tasks-settings-show-task-column-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showTaskColumn")}}</label>
+        </span>
+      </li>
+      <li class="subitem">
+        <span>
+          {{ checked = model.settings["show-all-other-list-names"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-show-all-other-list-names-{{@model.safeProjectId}}" data-setting="show-all-other-list-names" {{@checked}} />
+          <label for="tasks-settings-show-all-other-list-names-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showAllOtherListNames")}}</label>
+        </span>
+      </li>
+      <li class="subitem">
+        <span>
+          {{ checked = model.settings["show-full-task-descriptions"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-show-full-task-descriptions-{{@model.safeProjectId}}" data-setting="show-full-task-descriptions" {{@checked}} />
+          <label for="tasks-settings-show-full-task-descriptions-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showFullTaskDescriptions")}}</label>
+        </span>
+      </li>
+      <li class="setting-show-status-column">
+        <span>
+          {{ checked = model.settings["show-status-column"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-show-status-column-{{@model.safeProjectId}}" data-setting="show-status-column" {{@checked}} />
+          <label for="tasks-settings-show-status-column-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showStatusColumn")}}</label>
+        </span>
+      </li>
+      <li class="setting-show-assigned-to-column">
+        <span>
+          {{ checked = model.settings["show-assigned-to-column"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-show-assigned-to-column-{{@model.safeProjectId}}" data-setting="show-assigned-to-column" {{@checked}} />
+          <label for="tasks-settings-show-assigned-to-column-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showAssignedToColumn")}}</label>
+        </span>
+      </li>
+      <li class="setting-show-attachments-column">
+        <span>
+          {{ checked = model.settings["show-attachments-column"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-show-attachments-column-{{@model.safeProjectId}}" data-setting="show-attachments-column" {{@checked}} />
+          <label for="tasks-settings-show-attachments-column-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showAttachmentsColumn")}}</label>
+        </span>
+      </li>
+      <li class="setting-show-created-column">
+        <span>
+          {{ checked = model.settings["show-created-column"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-show-created-column-{{@model.safeProjectId}}" data-setting="show-created-column" {{@checked}} />
+          <label for="tasks-settings-show-created-column-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showCreatedColumn")}}</label>
+        </span>
+      </li>
+      <li class="setting-show-modified-column">
+        <span>
+          {{ checked = model.settings["show-modified-column"] ? " checked" : ""; }}
+          <input type="checkbox" id="tasks-settings-show-modified-column-{{@model.safeProjectId}}" data-setting="show-modified-column" {{@checked}} />
+          <label for="tasks-settings-show-modified-column-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showModifiedColumn")}}</label>
+        </span>
+      </li>
+	  </ul>
+	</div>
+  </div>
+  {{ for (let x of ["dflt", "rm"]) { }}
+  <table class="floating-single-header sort-all for-mode-{{@x}}">
+    <colgroup>
+      <col style="width:6px;min-width:6px;max-width:6px;" />
+      <col data-col="hash-id" style="width:{{@DefaultColWidths.HASH_ID}}px;" data-default-width="{{@DefaultColWidths.HASH_ID}}" />
+      <col data-col="task" style="min-width:50%;" />
+      <col data-col="status" style="width:{{@DefaultColWidths.STATUS}}px;" data-default-width="{{@DefaultColWidths.STATUS}}" />
+      <col data-col="assigned-to" style="width:{{@DefaultColWidths.ASSIGNED_TO}}px;" data-default-width="{{@DefaultColWidths.ASSIGNED_TO}}" />
+      <col data-col="attachments" style="width:{{@DefaultColWidths.ATTACHMENTS}}px;" data-default-width="{{@DefaultColWidths.ATTACHMENTS}}" />
+      <col data-col="created" style="width:{{@DefaultColWidths.CREATED}}px;" data-default-width="{{@DefaultColWidths.CREATED}}" />
+      <col data-col="modified" style="width:{{@DefaultColWidths.MODIFIED}}px;" data-default-width="{{@DefaultColWidths.MODIFIED}}" />
+    </colgroup>
+    <thead>
+      <tr>
+        {{
+          let clsSorted = (key: string) => {
+            let sortedBy = x == "dflt" ? "hash-id" : "modified";
+            let sortedDir = "desc";
+            if (key == sortedBy) {
+              return "class=\"sorted-" + (sortedDir == "asc" ? "asc" : "desc") + "\"";
+            }
+            return "";
+          };
+        }}
+        <th></th>
+        <th data-col="hash-id" data-sort-by="hash-id" {{#clsSorted('hash-id')}}>{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.header.hashId")}}</th>
+        <th data-col="task" data-sort-by="task" {{#clsSorted('task')}}>{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.header.task")}}<span class="col-resizer"></span></th>
+        <th data-col="status" data-sort-by="status" {{#clsSorted('status')}}>{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.header.status")}}<span class="col-resizer"></span></th>
+        <th data-col="assigned-to" data-sort-by="assigned-to" {{#clsSorted('assigned-to')}}>{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.header.assignedTo")}}<span class="col-resizer"></span></th>
+        <th data-col="attachments" data-sort-by="attachments" {{#clsSorted('attachments')}}>{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.header.attachments")}}<span class="col-resizer"></span></th>
+        <th data-col="created" data-sort-by="created" {{#clsSorted('created')}}>{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.header.created")}}<span class="col-resizer"></span></th>
+        <th data-col="modified" data-sort-by="modified" {{#clsSorted('modified')}}>{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.table.header.modified")}}<span class="col-resizer"></span></th>
+        <th class="for-kanban-header for-kanban-header-idea">{{@Helper.i18n("plugin.tasks.status-idea")}}</th>
+        <th class="for-kanban-header for-kanban-header-todo">{{@Helper.i18n("plugin.tasks.status-todo")}}</th>
+        <th class="for-kanban-header for-kanban-header-inprogress">{{@Helper.i18n("plugin.tasks.status-inprogress")}}</th>
+        <th class="for-kanban-header for-kanban-header-done">{{@Helper.i18n("plugin.tasks.status-done")}}</th>
+      </tr>
+    </thead>
+  </table>
+  {{ } }}
+  <div class="fl-container">
+    <table class="fl-padding-container">
+      <colgroup>
+        <col style="width:6px;min-width:6px;max-width:6px;" />
+        <col data-col="hash-id" style="width:{{@DefaultColWidths.HASH_ID}}px;" data-default-width="{{@DefaultColWidths.HASH_ID}}" />
+        <col data-col="task" style="min-width:50%;" />
+        <col data-col="status" style="width:{{@DefaultColWidths.STATUS}}px;" data-default-width="{{@DefaultColWidths.STATUS}}" />
+        <col data-col="assigned-to" style="width:{{@DefaultColWidths.ASSIGNED_TO}}px;" data-default-width="{{@DefaultColWidths.ASSIGNED_TO}}" />
+        <col data-col="attachments" style="width:{{@DefaultColWidths.ATTACHMENTS}}px;" data-default-width="{{@DefaultColWidths.ATTACHMENTS}}" />
+        <col data-col="created" style="width:{{@DefaultColWidths.CREATED}}px;" data-default-width="{{@DefaultColWidths.CREATED}}" />
+        <col data-col="modified" style="width:{{@DefaultColWidths.MODIFIED}}px;" data-default-width="{{@DefaultColWidths.MODIFIED}}" />
+      </colgroup>
+      <tbody class="fl-entries-container"></tbody>
+    </table>
+  </div>
+  <div class="lower-buttons">
+    <button class="btn btn-default btn-sm small gray requires-task-selected" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.lowerButtons.cutTaskTooltip")}}" data-action="task-cut-selected">
+      <i class="fa fa-cut"></i>
+      {{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.lowerButtons.cutTask")}}
+    </button>
+    <button class="btn btn-default btn-sm small gray requires-task-selected" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.lowerButtons.copyTaskTooltip")}}" data-action="task-copy-selected">
+      <i class="fa fa-copy"></i>
+      {{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.lowerButtons.copyTask")}}
+    </button>
+    <button class="btn btn-default btn-sm small gray requires-task-in-clipboard" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.lowerButtons.pasteTaskTooltip")}}" data-action="task-paste-selected">
+      <i class="fa fa-paste"></i>
+      {{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.lowerButtons.pasteTask")}}
+    </button>
+    <button class="btn btn-default btn-sm small gray requires-task-selected requires-taskgroups" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.lowerButtons.moveTaskTooltip")}}" data-action="task-move-selected">
+      <i class="fa fa-paste"></i>
+      {{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.lowerButtons.moveTask")}}
+    </button>
+    <button class="btn btn-default btn-sm small gray requires-task-selected if-not-trash" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.lowerButtons.moveToTrashTooltip")}}" data-action="task-delete-selected" style="margin-left:auto;">
+      <i class="ico-bin"></i>
+      {{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.lowerButtons.moveToTrash")}}
+    </button>
+    <button class="btn btn-default btn-sm small gray requires-task-selected if-trash" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.lowerButtons.restoreFromTrashTooltip")}}" data-action="task-restore-selected" style="margin-left:auto;">
+      <i class="fa fa-reply"></i>
+      {{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.lowerButtons.restoreFromTrash")}}
+    </button>
+    <button class="btn btn-default btn-sm small gray requires-task-selected if-trash" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.lowerButtons.deleteTaskTooltip")}}" data-action="task-delete-selected" style="margin-left:2px;">
+      <i class="ico-bin"></i>
+      {{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.lowerButtons.deleteTask")}}
+    </button>
+  </div>
+</div>

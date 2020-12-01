@@ -1,0 +1,26 @@
+.audioconfig-section {
+  select[data-sound-category] {
+    min-width: 100px;
+  }
+  span[data-play] {
+    position: relative;
+    top: 2px;
+    cursor: pointer;
+    color: var(--body-fg);
+    margin-left: 5px;
+    opacity: 0.75;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+  .switch.disabled {
+    filter: grayscale(1);
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

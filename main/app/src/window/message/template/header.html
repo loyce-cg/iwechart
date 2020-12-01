@@ -1,0 +1,122 @@
+@import {PreviewModel} from "../MessageWindowView";
+@import {func as senderStateTemplate} from "./senderState.html";
+@model PreviewModel
+{{ if(model != null && model.indexEntry) {
+var indexEntry = model.indexEntry;
+var message = indexEntry.getMessage();
+var sender = model.sender;
+var sinkType = indexEntry.getOriginalSinkType();
+var contactFormMsg = indexEntry.isContactFormMessage();
+var emailable = contactFormMsg || sinkType == "form";
+var json = emailable ? indexEntry.getContentAsJson() : null;
+var validMsgWithEmail = emailable && json && json.email;
+var validContactFormMsg = contactFormMsg && validMsgWithEmail;
+var lowUser = model.senderIsLowUser;
+var lowReceiver = model.lowReceiver;
+{{
+<header data-container="header" class="{{#sinkType == 'form' ? 'form' : 'standard'}}">
+  <div class="clearfix">
+    <div class="buttons-line">
+      {{ if(message.hasNotSent()) { {{
+        <span class="btn btn-default btn-sm small gray" data-action="resend" tabindex="-1">
+          <span class="left ico-letter"></span>
+          {{@Helper.i18n("window.message.header.button.resend.label")}}
+        </span>
+      }} } }}
+      {{ if (validMsgWithEmail || sinkType != "form") { }}
+        <span class="btn btn-default btn-sm small gray" data-action="reply" data-window-opener="true" tabindex="-1">
+          <span class="left ico-reply"></span>
+          {{@Helper.i18n("window.message.header.button.reply.label")}}
+        </span>
+        {{ if(message.receivers.length > 1) { }}
+          <span class="btn btn-default btn-sm small gray" data-action="reply-to-all" data-window-opener="true" tabindex="-1">
+            <span class="left ico-replyall"></span>
+            {{@Helper.i18n("window.message.header.button.replyAll.label")}}
+          </span>
+        {{ } }}
+      {{ } }}
+      <span class="btn btn-default btn-sm small gray" data-action="forward" data-window-opener="true" tabindex="-1">
+        <span class="left ico-forward"></span>
+        {{@Helper.i18n("window.message.header.button.forward.label")}}
+      </span>
+      <span class="move-btn">
+        <span class="btn btn-default btn-sm small gray" data-action="move" tabindex="-1">
+          <i class="fa fa-clipboard"></i>
+          {{@Helper.i18n("window.message.header.button.move.label")}}
+        </span>
+      </span>
+      <span class="btn btn-default btn-sm small gray" data-action="delete" tabindex="-1">
+        <span class="left ico-bin"></span>
+        {{@Helper.i18n("window.message.header.button.delete.label")}}
+      </span>
+      <span class="btn btn-default btn-sm small gray" data-action="show-source" data-window-opener="true" tabindex="-1">
+        <span class="left ico-source"></span>
+        {{@Helper.i18n("window.message.header.button.source.label")}}
+      </span>
+      {{ model.customButtons.forEach(x => { if (!x.visible || x.visible(indexEntry, sinkType)) { {{
+        <span class="btn btn-default btn-sm small gray" data-action="custom-action" data-action-type="{{@x.action}}" tabindex="-1">
+          {{if (x.icon.indexOf("fa") == 0) { {{ <i class="{{@x.icon}}"></i>}} } else { {{ <span class="left {{@x.icon}}"></span> }} } }}
+          {{@Helper.i18n(x.labelKey)}}
+        </span>
+      }} } }); }}
+    </div>
+    <div class="sender-line">
+      <div class="image">
+        {{ if (sinkType == "form") { {{
+          <i class="fa fa-list-alt"></i>
+        }} } else if (lowUser || validContactFormMsg) { {{
+          <img src="{{@Helper.getAssetByName('DEFAULT_EMAIL_AVATAR')}}" alt="">
+        }} } else { {{
+          <img src="{{#Helper.getPersonAvatar(sender)}}" alt="">
+        }} } }}
+      </div>
+      <div class="from">
+        {{@Helper.i18n("window.message.header.from.label")}}
+        {{ if (sinkType == "form" && sender.isAnonymous()) { {{
+          <span class="link">
+            {{@Helper.getSecureFormName(indexEntry)}}
+          </span>
+        }} } else if (validContactFormMsg) { {{
+          <span class="link" tabindex="-1" data-send-message="sender">
+            {{@json.email}}
+          </span>
+        }} } else { {{
+          <span class="link" tabindex="-1" data-send-message="sender">
+            {{@lowUser ? sender.getName() : sender.getNameWithHashmailA()}}
+          </span>
+        }} } }}
+        {{ if (validMsgWithEmail || lowUser || lowReceiver) { {{
+          <span class="email-msg" data-action="info" title="{{@Helper.i18n('window.message.header.button.info.label')}}">
+            <i class="fa fa-question-circle"></i>
+          </span>
+        }} } else if (!((sinkType == "form" && sender.isAnonymous()) || validContactFormMsg || lowUser)) { {{
+        <div class="sender-state">
+          {{#Helper.createTemplate(senderStateTemplate).render(indexEntry)}}
+        </div>
+        }} } }}
+      </div>
+    </div>
+  </div>
+  <div class="title-line">
+    <div class="topic"><strong>{{@message.title}}</strong></div>
+    <div class="date">{{@Helper.dateWithHourLocal(message.serverDate)}}</div>
+  </div>
+  <div class="receivers-line">
+    {{ if (sinkType != "form") { {{
+    <div class="to">
+      {{@Helper.i18n("window.message.header.to.label")}}
+      {{(validContactFormMsg ? [model.myPerson] : model.receiversPersons).forEach(function(x) { let person = x.person, receiver = x.receiver; {{
+        <span
+          class="link {{@receiver.sent === false ? 'not-sent' : 'sent'}}"
+          data-send-message="receiver"
+          data-hashmail="{{@receiver.user.hashmail}}"
+          data-sid="{{@receiver.sink.id}}"
+          title="{{@receiver.sent === false ? Helper.i18n('window.message.header.receiver.notSent') : ''}}">
+          {{@lowReceiver ? person.getName() : person.getNameWithHashmailA()}}
+        </span>
+      }} }); }}
+    </div>
+    }} } }}
+  </div>
+</header>
+}} } }}

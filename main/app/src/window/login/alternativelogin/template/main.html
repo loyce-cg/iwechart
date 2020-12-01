@@ -1,0 +1,38 @@
+@import {Model} from "../AlternativeLoginController";
+@model Model
+<div class="window-login-alternative-login page">
+  <div class="inner with-bottom-link">
+    <header>
+      <h1><div class="logo-127x112-container"><img src="{{#Helper.getAssetByName('CUSTOM_LOGO_127X112')}}" /></div></h1>
+      <div class="header-info">{{@Helper.i18n("window.login.alternativeLogin.header")}}</div>
+    </header>
+    <div class="error"></div>
+    
+    <form name="register" method="post" onsubmit="return false;">
+      <section>
+          
+          <div class="row">
+            <div class="col-xs-12">
+              <div style="font-family: source_sans_pro,arial,sans-serif; font-size: 13px; width: 100%; text-align: left; padding-bottom: 4px;">
+                {{@Helper.i18n("window.login.form.alternativeLogin.words.label")}}
+              </div>
+              <div class="form-group with-icon">
+                <div class="holder">
+                  <textarea class="form-control words" name="words"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <button type="submit" class="btn btn-primary btn-block btn-lg">
+            {{@Helper.i18n("window.login.form.alternativeLogin.button.submit.label")}}
+          </button>
+          <div class="bottom-link">
+            <a data-action="open-login" href="javascript:void(0)">
+              {{@Helper.i18n("window.login.form.login.link")}}
+            </a>
+          </div>
+      </section>
+    </form>
+  </div>
+</div>

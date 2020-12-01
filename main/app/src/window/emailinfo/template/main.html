@@ -1,0 +1,6 @@
+@import {EmailInfoModel} from "../EmailInfoWindowController";
+@import {func as contentTemplate} from "./content.html";
+@model EmailInfoModel
+<div class="window-email-info-main">
+  {{#Helper.createTemplate(contentTemplate).render(model)}}
+</div>

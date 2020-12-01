@@ -1,0 +1,454 @@
+@import "../template/wi-element.less";
+@import "../template/conversation.less";
+
+.component-voice-chat-controls {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  visibility: collapse;
+  
+  &.narrow {
+    margin-left: 5px;
+    margin-right: 5px;
+    >* {
+      margin: 0 2px;
+    }
+    .talking-section--section-container .wi-element-name,
+    .talking-section--conversation-container .avatars-names,
+    .talking-section--conversation-container .text-col {
+      //display: none;
+      max-width: 50px !important;
+    }
+    .wi-element-inner {
+      //width: 22.5px;
+      height: 30px;
+    }
+    .multi-elem {
+      //width: 35px;
+      height: 30px;
+    }
+  }
+  
+  .window-apps-main & {
+    color: #000;
+  }
+  
+  >* {
+    margin:  0 5px;
+  }
+  
+  .talking-section--section-container {
+    .wi-element {
+      padding: 0 5px 0 0;
+      background: transparent !important;
+      cursor: default;
+      .wi-element-inner {
+        display: flex;
+        .wi-element-icon {
+          // transform: scale(0.75);
+          display: none;
+          .window-apps-main & {
+            border-color: #fff;
+          }
+        }
+        .wi-element-name {
+          margin: 0 0 0 0px;
+          color: #fff;
+          .window-apps-main & {
+            color: #000;
+          }
+        }
+        .number,
+        .pin-button,
+        .settings-button {
+          display: none !important;
+        }
+      }
+    }
+  }
+  
+  .talking-section--conversation-container {
+    position: relative;
+    left: -3px;
+    .image-with-data .image {
+      display: none;
+    }
+    .present {
+      > span {
+       .image-with-data {
+          border-color: transparent;
+       }
+     }
+    }
+    .presence-1, .presence-2, .presence-3 {
+      >span .multi-elem {
+        border-color: transparent;
+      }
+    }
+  
+
+    .visible-avatars-list {
+      left: 5px !important;
+    }
+    .multi-users {
+      background: transparent !important;
+      cursor: default;
+      padding: 0;
+      .avatars-wall {
+        // transform: scale(0.75);
+        display:none;
+      }
+      .avatars-names {
+        margin-left: 0;
+        .window-apps-main & {
+          color: #000;
+        }
+      }
+    }
+    .contact {
+      background: transparent !important;
+      cursor: default;
+      >span {
+        padding: 0;
+        background: transparent !important;
+        cursor: default;
+        .image {
+          margin-top: 5px;
+          // transform: scale(0.75);
+        }
+        .text-col {
+          margin-left: 33px;
+          margin-right: 0;
+          .window-apps-main & {
+            color: #000;
+          }
+        }
+      }
+    }
+    .number,
+    .pin-button,
+    .settings-button,
+    .elements-count {
+      display: none !important;
+    }
+  }
+  
+  .talking-section--section-container,
+  .talking-section--conversation-container {
+    position: relative;
+    >* {
+      min-width: 148px;
+      .narrow& {
+        min-width: unset;
+      }
+    }
+  }
+  
+  .talking-section--section-container .wi-element .wi-element-inner .wi-element-name {
+    margin-left: 0 !important;
+  }
+  .talking-section--section-container {
+    .visible-avatars-list {
+      left: 0;
+    }
+  }
+  
+  .talking-section--section-container .wi-element .wi-element-inner .wi-element-icon,
+  .talking-section--conversation-container .multi-users .avatars-wall,
+  .talking-section--conversation-container .contact>span .image {
+  }
+  .talking-section--section-container {
+    .narrow&{
+    }
+  }
+  
+  .talking-section--section-container .wi-element .wi-element-inner .wi-element-name,
+  .talking-section--conversation-container .multi-users .avatars-names,
+  .talking-section--conversation-container .contact>span .text-col {
+    max-width: 100px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    opacity: 1;
+    position: relative;
+    top: -10px;
+    margin-left: 38px;
+    .names {
+      white-space: nowrap;
+      display: inline-flex;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: calc(100%);
+      .name {
+        flex: 0 0 auto;
+      }
+    }
+    &,
+    .name {
+      color: #fff;
+      font-size: var(--font-size-xs);
+      line-height: 30px;
+    }
+  }
+  .talking-section--conversation-container .multi-users .avatars-names {
+    margin-left: 0;
+  }
+  .talking-section--conversation-container .contact>span .text-col {
+    top: -12px;
+    margin-left: 0;
+  }
+  .talking-section--conversation-container .contact+.visible-avatars-list {
+    top: 19px;
+    left: 40px;
+  }
+  .talking-section--conversation-container .conversation-element.conversation+.visible-avatars-list {
+    left: 41px;
+  }
+  
+  button[data-action="leave-voice-chat"],
+  button[data-action="ring-the-bell"] {
+    position: relative;
+    z-index: 9;
+    span.fa:before {
+      padding-right: 0;
+    }
+  }
+  
+  button[data-action="ring-the-bell"].ringing span.fa:before {
+    animation: ringingTheBellAnimation 0.2s cubic-bezier(0, 0.75, 1, 0.25) infinite;
+    padding-right: 0;
+    margin-right: 5px;
+  }
+  
+  i.fa.fa-microphone {
+    cursor: pointer;
+    color: #eee;
+    opacity: 0.8;
+    position: relative;
+      
+    .window-apps-main & {
+      color: #000;
+    }
+    
+    &:after {
+      position: absolute;
+      content: "|";
+      font-weight: 700;
+      font-size: 1.2em;
+      left: 5px;
+      top: -4px;
+      text-shadow: #000 -1px -1px 0px, #000 1px 1px 0px;
+      transform: rotate(45deg);
+      
+      .window-apps-main & {
+        text-shadow: #fff -1px -1px 0px, #fff 1px 1px 0px;
+      }
+    }
+  }
+  
+  button[data-action="leave-voice-chat"] .fa.fa-phone {
+    position: relative;
+    &:after {
+      position: absolute;
+      content: "|";
+      font-weight: 700;
+      font-size: 1.2em;
+      left: 4px;
+      top: -3px;
+      text-shadow: #fff -1px -1px 0px, #fff 1px 1px 0px;
+      transform: rotate(45deg);
+    }
+  }
+  
+  button[data-action="toggle-listening-users-dropdown"] {
+    display: block;
+    .listening-users-count {
+      margin: 0 3px;
+    }
+    i.dropdown-icon {
+      font-size: var(--font-size-xxxxs);
+      position: relative;
+      top: -1px;
+    }
+    &.open {
+      background: #fff;
+      color: #000;
+    }
+  }
+  
+  .visible-avatars-list {
+    position: absolute;
+    left: 38px;
+    top: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 100%;
+    display: inline-flex;
+    align-items: center;
+    &[data-action="toggle-listening-users-dropdown"] {
+      cursor: pointer;
+    }
+    canvas {
+      margin-right: 1px;
+      border-radius: 2px;
+    }
+  }
+  
+  &.is-in-voice-chat {
+    visibility: visible;
+    
+    &.is-talking {
+      i.fa.fa-microphone {
+        animation: microphoneBlinkAnimation 1.5s steps(2, start) infinite;
+        color: #aa3333;
+        opacity: 1;
+        &:after {
+          display: none;
+        }
+      }
+    }
+  }
+  
+  .listening-users-dropdown-container {
+    position: absolute;
+    .pf-scrollable .pf-scroll-panel .pf-scroll {
+      background-color: rgba(255, 255, 255, 0.1);
+      .pf-mover {
+        background-color: rgba(0, 0, 0, 0.5);
+        &:hover {
+          //background-color: rgba(255, 255, 255, 0.3);
+        }
+      }
+    }
+    .listening-users-dropdown {
+      display: none;
+      position: fixed;
+      left: 0;
+      top: 0;
+      background: var(--context-menu-bg);
+      color: var(--context-menu-fg);
+      box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
+      border-radius: 0 0 5px 5px;
+      margin-top: 0px;
+      max-height: 300px;
+      z-index: 9999;
+      &.open {
+        display: block;
+        .pf-scrollable {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 0;
+          bottom: 0;
+        }
+      }
+      ul {
+        padding: 5px 0;
+        list-style-type: none;
+        .person {
+          display: flex;
+          flex-direction: row;
+          padding: 2px 16px 2px 6px;
+          canvas {
+            margin: 5px;
+            width: 15px;
+            height: 15px;
+          }
+          .username {
+            font-size: var(--font-size);
+            line-height: 25px;
+            flex: 1 1 auto;
+          }
+          .network-info {
+            float: right;
+            font-size: var(--font-size-xs);
+            flex: 0 0 30px;
+            white-space: nowrap;
+            opacity: 0.7;
+            .network-info-ping {
+              width: 40px;
+              display: inline-block;
+              text-align: right;
+            }
+            .network-info-icon {
+              display: inline-flex;
+              align-items: flex-end;
+              margin-left: 5px;
+              .network-info-icon-bar {
+                width: 3px;
+                margin-right: 1px;
+                background: #fff;
+                display: inline-block;
+                opacity: 0.25;
+              }
+              .network-info-icon-bar-1 {
+                height: 5px;
+              }
+              .network-info-icon-bar-2 {
+                height: 10px;
+              }
+              .network-info-icon-bar-3 {
+                height: 15px;
+              }
+              &[data-network-info-num-bars="1"] .network-info-icon-bar-1,
+              &[data-network-info-num-bars="2"] .network-info-icon-bar-1,
+              &[data-network-info-num-bars="2"] .network-info-icon-bar-2,
+              &[data-network-info-num-bars="3"] .network-info-icon-bar-1,
+              &[data-network-info-num-bars="3"] .network-info-icon-bar-2,
+              &[data-network-info-num-bars="3"] .network-info-icon-bar-3 {
+                opacity: 0.9;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .listening-users-dropdown-backdrop {
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999;
+    display: none;
+    &.visible {
+      display: block;
+    }
+  }
+  
+}
+
+.avatar-placeholder {
+  z-index: 99999999 !important;
+}
+
+@keyframes microphoneBlinkAnimation {
+  0% {
+    color: #aa3333;
+  }
+  50% {
+    // opacity: 0;
+    color: #e27c7c;
+  }
+}
+
+@keyframes ringingTheBellAnimation {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(30deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+  75% {
+    transform: rotate(-30deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}

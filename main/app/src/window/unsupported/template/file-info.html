@@ -1,0 +1,37 @@
+@import {Model} from "../UnsupportedWindowController";
+@model Model
+<div class="file-info">
+  <div class="name">
+    <i class="fa fa-file"></i>
+    <div class="text"><span class="text-inner{{@model.previewMode ? '' : ' with-ellipsis'}}">{{@model.name}}</span></div>
+  </div>
+  <div class="file-info-inner">
+    <div class="entry">{{@Helper.i18n("window.unsupported.fileInfo.type", [model.mimeType])}}</div>
+    <div class="entry">{{@Helper.i18n("window.unsupported.fileInfo.size", [model.size ? Helper.bytesSize(model.size) : "unknown"])}}</div>
+    <div class="entry file-lock hide"><i class="fa fa-lock"></i><span>{{@Helper.i18n("window.unsupported.locked.label")}}</span></div>
+  </div>
+  <div class="file-buttons">
+    <button class="btn btn-default gray hide" data-action="releaseLock">
+      <i class="fa fa-unlock"></i>
+        {{@Helper.i18n("window.unsupported.button.unlock.label")}}
+    </button>
+    <button class="btn btn-default gray{{@model.showOpenButton ? '' : ' hidden'}}" data-action="open">
+      <i class="fa fa-folder-open-o"></i>
+      {{ if (model.systemLabel && !model.localFile) { {{
+        {{@Helper.i18n("window.unsupported.button.download.label.osSpecific", model.systemLabel)}}
+      }} } else { {{
+        {{@Helper.i18n("window.unsupported.button.download.label")}}
+      }} } }}
+    </button>
+    {{ if (!model.localFile) { {{
+    <button class="btn btn-default gray" data-action="save">
+      <i class="fa fa-download"></i>
+      {{ if (model.systemLabel) { {{
+        {{@Helper.i18n("window.unsupported.button.export.label.osSpecific", model.systemLabel)}}
+      }} } else { {{
+        {{@Helper.i18n("window.unsupported.button.export.label")}}
+      }} } }}
+    </button>
+    }} } }}
+  </div>
+</div>

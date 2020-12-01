@@ -1,0 +1,7 @@
+dist/
+dist-electron/
+node_modules/
+out/
+releases/
+*.properties.ts
+*.html.ts

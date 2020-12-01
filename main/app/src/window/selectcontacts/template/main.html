@@ -1,0 +1,39 @@
+@import {Model} from "../SelectContactsWindowController";
+@model Model
+<div class="window-select-contacts-main">
+  <div class="header">
+    {{@model.message}}
+  </div>
+  <div class="filter">
+    <input type="text" placeholder="{{@Helper.i18n('window.selectContacts.input.placeholder')}}" tabindex="1" />
+    <i class="fa fa-search"></i>
+  </div>
+  <div class="lists-container">
+    <div class="chooser">
+      <div class="any hide">{{@Helper.i18n("window.selectContacts.noContacts.label")}}</div>
+      <div class="list" tabindex="-1">
+      </div>
+    </div>
+    <div class="choosen">
+      <div class="any">{{@Helper.i18n("window.selectContacts.chooseContacts.label")}}</div>
+      <div class="list hide" tabindex="-1">
+      </div>
+    </div>
+  </div>
+  
+  <div class="buttons-container">
+    <div class="buttons">
+      <button class="btn btn-success" data-action="confirm" tabindex="2">
+        <i class="fa fa-check"></i>
+        {{@Helper.i18n("core.button.ok.label")}}
+      </button>
+      <button class="btn btn-default" data-action="cancel" tabindex="3">
+        <i class="fa fa-ban"></i>
+        {{@Helper.i18n("core.button.cancel.label")}}
+      </button>
+    </div>
+  </div>
+  <div class="status-bar"></div>
+  <div class="tab-index-guard" tabindex="999"></div>
+  <div class="notifications-container-wrapper"></div>
+</div>

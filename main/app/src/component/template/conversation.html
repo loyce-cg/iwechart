@@ -1,0 +1,115 @@
+@import * as Types from "../../Types";
+@import {Context} from "../extlist/ExtListView";
+@model Types.webUtils.ConversationModel
+@context Context<Types.webUtils.ConversationModel>
+  {{
+    let isVoiceChatActive = model.activeVoiceChatInfo && model.activeVoiceChatInfo.active;
+    let voiceChatUsers = model.activeVoiceChatInfo && model.activeVoiceChatInfo.users;
+  }}
+{{ if (model.isSingleContact) { let shortDescription = Helper.shortDescription(model.person.description); {{
+<li class="conversation-element contact {{@model.withPin ? 'with-pin': ''}} {{@model.person.present ? 'present': ''}} {{@context && context.isActive ? 'active' : ''}} {{@model.person.isBasic ? 'external' : ''}} {{@model.person.deleted ? 'deleted' : ''}} {{@model.unmutedUnread == 0 ? 'no-unmuted-unread' : ''}} {{@model.searchCount > 0 || !model.allSearched ? 'with-search-count' : ''}}  {{@model.person.starred ? 'starred' : ''}} {{@model.unread ? 'unread' : ''}} {{@model.elementsCount === 0 ? 'empty' : ''}} {{@model.person.description ? 'with-description' : 'without-description'}} {{@model.isBellRinging ? 'with-ringing-bell' : ''}} {{@isVoiceChatActive ? 'with-voice-chat-active' : ''}}" data-conversation-id="{{@model.id}}" data-person-hashmail="{{@model.person.hashmail}}">
+  {{ if (model.withPin) { }}
+    <div class="pin-button {{@model.isPinned?'pinned':'not-pinned'}}">
+      <i class="fa fa-thumb-tack"></i>
+    </div>
+  {{ } }}
+  <span>
+    <div class="image-with-data">
+      <p class="image">
+        <canvas class="not-rendered" data-tooltip-trigger="{{@model.person.hashmail}}" data-hashmail-image="{{@model.person.hashmail}}" data-width="30" data-height="30" data-auto-size="true" data-auto-refresh="true"></canvas>
+      </p>
+      <div class="text-col">
+          <span class="name {{@model.person.deleted ? 'deleted' : ''}}">
+
+              {{ if (model.person.starred) { {{
+                <span class="fa fa-star star"></span>
+              }} } }}
+              <span class="assigned-to-prefix">{{@Helper.i18n("component.common.assignedToPrefix")}}</span>
+              <div class="name-wrapper conv">
+                {{ if (model.customName) { }}{{@model.customName}}{{ } else { }}{{@model.person.name}}{{ } }}
+                <div class="voice-chat-tooltip has-userslist-tooltip" data-userslist-id="{{@model.id}}"></div>
+              </div>
+
+            </span>  
+        {{ if (shortDescription) { {{
+          <p class="desc">{{@shortDescription}}</p>
+        }} } }}
+        <div class="settings-button">
+          <i class="fa fa-pencil"></i>
+        </div>
+        {{ if (model.unread ) { {{
+          <span class="unread-count number{{@model.withSpinner ? ' with-spinner' : ''}} has-basic-tooltip" data-basic-id="{{@model.id}}">{{@model.unread}}{{@model.elementsCount ? " / " + model.elementsCount : ""}}</span>
+        }} } }}
+        {{ if (model.elementsCount != null) { {{
+          <span class="elements-count">{{@model.elementsCount}}</span>
+        }} } }}
+        {{ if (model.searchCount > 0 || !model.allSearched) { {{
+          <span class="wi-element-search-count number">
+            {{@model.searchCount}}{{@model.allSearched?"":"+"}}<i class="fa fa-search"></i>
+            {{ if (!model.allSearched) { }}
+              <div class="infotooltip not-rendered" data-tooltip-theme="light" data-tooltip-message='{{@Helper.i18n("component.common.moreElementsMayMatch")}}'></div>
+            {{ } }}
+          </span>
+        }} } }}
+      </div>
+    </div>
+  </span>
+</li>
+}} } else { {{
+<li class="conversation-element conversation presence-{{@model.personsPresence}} {{@model.withPin ? 'with-pin': ''}} {{@context && context.isActive ? 'active' : ''}} {{@model.unmutedUnread == 0 ? 'no-unmuted-unread' : ''}} {{@model.unread ? 'unread' : ''}} {{@model.elementsCount === 0 ? 'empty' : ''}} {{@model.searchCount > 0 || !model.allSearched ? 'with-search-count' : ''}}  {{@isVoiceChatActive ? 'with-voice-chat-active' : ''}}" data-conversation-id="{{@model.id}}">
+  {{ if (model.withPin) { }}
+    <div class="pin-button {{@model.isPinned?'pinned':'not-pinned'}}">
+      <i class="fa fa-thumb-tack"></i>
+    </div>
+  {{ } }}
+  <span class="multi-users">
+    <div class="multi-elem">
+      <div class="avatars-wall">
+        <div class="av avatar-2" data-tooltip-trigger="{{@model.persons.map(x => x.hashmail).join(',')}}">
+        {{model.persons.forEach(person => { {{
+          <div><canvas class="not-rendered" data-hashmail-image="{{@person.hashmail}}" data-width="15" data-height="15" data-auto-size="true" data-auto-refresh="true"></canvas></div>
+        }} }); }}
+        </div>
+      </div>
+      <div class="flex-container">
+        <div class="avatars-names">
+            <div class="names">
+              
+                {{ if (model.customName) { }}
+                <span class="name"><div class="name-wrapper conv">
+                  {{@model.customName}}
+                  <div class="voice-chat-tooltip has-userslist-tooltip" data-userslist-id="{{@model.id}}"></div>
+                </div></span>
+              {{ } else { }}
+              <div class="name-wrapper conv">
+              {{model.persons.forEach((person, i) => { {{
+                <span class="name {{@person.isBasic ? 'external' : ''}} {{@person.deleted ? 'deleted' : ''}}">{{@person.name}}{{#i == model.persons.length - 1 ? "" : ",&nbsp;"}}</span>
+              }} }); }}
+              <div class="voice-chat-tooltip has-userslist-tooltip" data-userslist-id="{{@model.id}}"></div>
+            </div>
+              {{ } }}
+
+            </div>  
+        </div>
+        <div class="settings-button">
+          <i class="fa fa-pencil"></i>
+        </div>
+        {{ if (model.unread) { {{
+          <span class="unread-count number{{@model.withSpinner ? ' with-spinner' : ''}} has-basic-tooltip" data-basic-id="{{@model.id}}">{{@model.unread}}{{@model.elementsCount ? " / " + model.elementsCount : ""}}</span>
+        }} } }}
+        {{ if (model.elementsCount != null) { {{
+          <span class="elements-count">{{@model.elementsCount}}</span>
+        }} } }}
+        {{ if (model.searchCount > 0 || !model.allSearched) { {{
+          <span class="wi-element-search-count number">
+            {{@model.searchCount}}{{@model.allSearched?"":"+"}}<i class="fa fa-search"></i>
+            {{ if (!model.allSearched) { }}
+              <div class="infotooltip not-rendered" data-tooltip-theme="light" data-tooltip-message='{{@Helper.i18n("component.common.moreElementsMayMatch")}}'></div>
+            {{ } }}
+          </span>
+        }} } }}
+      </div>
+    </div>
+  </span>
+</li>
+}} } }}

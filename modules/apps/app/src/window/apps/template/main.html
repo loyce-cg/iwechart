@@ -1,0 +1,41 @@
+@import {ViewModel} from "../AppsWindowController";
+@model ViewModel
+{{
+  function badge(count: number, id: any): void { {{
+    <span class="number badge {{@count > 0 ? 'visible' : ''}} has-basic-tooltip" data-basic-id="{{@id}}">{{@count > 0 ? count.toString() : ''}}</span>
+  }} }
+}}
+<div class="window-apps-main unselectable">
+  <div class="app-nav-bar"></div>
+  <div class="launchers">
+    <div class="inner">
+      <div class="inner2">
+        {{ if (model.instanceName) { {{
+          <div class="instance-name">
+            {{@model.instanceName}}
+          </div>
+        }} } }}
+        <div class="loading-unread-counts"><i class="fa fa-circle-o-notch fa-spin"></i></div>
+        <div class="launchers-container">
+          {{model.appWindows.forEach(x => { {{
+            <div class="app-launcher app-launcher-app-window" data-trigger="{{@x.action || 'launch-app-window'}}" data-app-window="{{@x.id}}">
+              {{ if (x.icon.indexOf("fa") == 0) { {{
+                <i class="fa {{@x.icon}}"></i>
+              }} } else if (x.icon.indexOf("privmx-icon-") == 0) { {{
+                <i class="privmx-icon {{@x.icon}}"></i>
+              }} } else { {{
+                <span class="{{@x.icon}}"></span>
+              }} } }}
+              <h2><span>{{@x.label}}</span></h2>
+              {{badge(x.count, x.id);}}
+            </div>
+          }} }); }}
+        </div>
+        <div class="sections">
+          <div class="sections-inner"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="version-info">PrivMX Desktop version: {{@model.appVersion}}</div>
+</div>

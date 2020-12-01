@@ -1,0 +1,16 @@
+@model {name: string, url: string}
+<div class="url-info">
+  <div class="name">
+    <i class="fa fa-globe"></i>
+    <div class="text">{{@model.name}}</div>
+  </div>
+  <div class="file-info">
+    <div class="entry selectable">{{@model.url}}</div>
+  </div>
+  <div class="url-buttons">
+    <button class="btn btn-default gray download" data-action="go-to-url">
+      <i class="fa fa-folder-open-o"></i>
+      {{@Helper.i18n("window.url.openInSystemBrowser")}}
+    </button>
+  </div>
+</div>

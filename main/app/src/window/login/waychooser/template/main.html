@@ -1,0 +1,20 @@
+@import {Model} from "../WayChooserController";
+@model Model
+<div class="window-login-waychooser page {{@model.active == 'wayChooser' ? 'active' : ''}}">
+  <div class="fade">
+    <div class="inner inner-std">
+      <div class="box-header">{{@Helper.i18n("window.login.waychooser.memberszone.header")}}</div>
+      <div class="box-content">{{@Helper.i18n("window.login.waychooser.memberszone.content")}}</div>
+      <div class="box-buttons">
+        <button class="btn btn-primary" trigger-action="members-zone">{{@Helper.i18n("window.login.waychooser.memberszone.link")}}</button>
+      </div>
+    </div>
+    <div class="inner inner-std">
+      <div class="box-header">{{@Helper.i18n("window.login.waychooser.managerszone.header")}}</div>
+      <div class="box-content">{{@Helper.i18n("window.login.waychooser.managerszone.content")}}</div>
+      <div class="box-buttons">
+        <button class="btn btn-primary" trigger-action="managers-zone">{{@Helper.i18n("window.login.waychooser.managerszone.link")}}</button>
+      </div>
+    </div>
+  </div>
+</div>

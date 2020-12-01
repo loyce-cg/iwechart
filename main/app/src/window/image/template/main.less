@@ -1,0 +1,43 @@
+@import "../../editor/template/main";
+
+.window-editor-main {
+  .inner {
+    img {
+      max-width: 100%;
+      max-height: 100%;
+      padding: 10px;
+      display: none;
+      &.loaded {
+        display: inline;
+      }
+    }
+  }
+  
+  .zoom-in-out {
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    z-index: 9999999;
+    
+    .zoom-in,
+    .zoom-out {
+      background: hsla(var(--main-panel-bg-h), var(--main-panel-bg-s), calc(var(--main-panel-bg-l) - 10%), 0.8);
+      color: #999;
+      width: 20px;
+      height: 20px;
+      font-size: var(--font-size);
+      line-height: 20px;
+      display: inline-block;
+      text-align: center;
+      border-radius: 100px;
+      cursor: pointer;
+      
+      &:hover {
+        color: #555;
+      }
+    }
+    .zoom-in {
+      margin-left: 5px;
+    }
+  }
+}

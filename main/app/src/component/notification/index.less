@@ -1,0 +1,59 @@
+.table-layout {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  .inner-1 {
+    display: table;
+    height: 100%;
+    width: 100%;
+    .inner-2 {
+      display: table-cell;
+      vertical-align: middle;
+      text-align: center;
+    }
+  }
+}
+.notifications-container {
+  position: absolute;
+  z-index: 99999;
+  pointer-events: none;
+  
+  .notification-entry {
+    display: none;
+    margin: 5px 0;
+    
+    > div {
+      pointer-events: all;
+      display: inline-block;
+      color: #dedede;
+      font-size: calc(var(--font-size-xl) + 2px);
+      line-height: calc(var(--font-size-xl) + 2px);
+      border-radius: 8px;
+      background-color: rgba(0, 0, 0, 0.5);
+      min-width: 250px;
+      padding: 20px;
+      
+      i {
+        margin-right: 3px;
+      }
+      .progress-info {
+        display: inline-block;
+        width: 30px;
+        margin-left: 3px;
+      }
+    }
+  }
+  &.xs {
+    .notification-entry {
+      > div {
+        font-size: var(--font-size);
+        line-height: var(--font-size);
+        border-radius: 2px;
+        padding: 10px;
+        min-width: 0px;
+      }
+    }
+  }
+}

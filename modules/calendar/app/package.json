@@ -1,0 +1,21 @@
+{
+  "name": "privmx-desktop-client-calendar-module",
+  "version": "0.0.1",
+  "description": "Calendar module",
+  "license": "PrivMX Source Code License",
+  "private": true,
+  "scripts": {
+    "postinstall": "link-module-alias"
+  },
+  "dependencies": {
+    "privfs-mail-client-tasks-plugin": "file:../../tasks-plugin/app",
+    "resize-observer-polyfill": "^1.5.1"
+  },
+  "devDependencies": {
+    "link-module-alias": "^1.2.0"
+  },
+  "_moduleAliases": {
+    "pmc-mail": "node_modules/privfs-mail-client-tasks-plugin/node_modules/pmc-mail",
+    "pmc-web": "node_modules/privfs-mail-client-tasks-plugin/node_modules/pmc-web"
+  }
+}

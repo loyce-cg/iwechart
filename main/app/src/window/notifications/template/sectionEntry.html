@@ -1,0 +1,45 @@
+@import {SectionEntry} from "../NotificationsWindowController";
+@model SectionEntry
+{{
+  if (!model.isRoot) { {{
+
+  <div class="section-entry wi-element-parent{{@context ? ' active' : ''}}" data-name="{{@model.name}}" data-tree-id="{{@model.id}}">
+    <div class="section-name wi-element {{@model.isRoot ? 'section-root' : ''}} {{@!model.visible ? 'hidden-section' : ''}} {{@model.showInTheList?'':'hidden'}}">
+      <div class="wi-element-inner">
+        {{ if (!model.isRoot) { {{
+          <div class="wi-element-icon bckg-icon bckg-icon-inverse2 {{@model.scope == 'private' ? 'bckg-icon-border' : ''}}" data-section-id="{{@model.id}}">
+            <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+          </div>
+        }} } }}
+        <div class="wi-element-name">
+          {{ if (model.breadcrumb.length > 0) { {{
+            <span class="section-breadcrumb">{{#model.breadcrumb}}</span>
+          }} } }}
+          {{@model.name}}
+          {{ if (!model.enabled) { {{
+              <span class="disabled-badge">{{@Helper.i18n("window.notifications.sections.disabled")}}</span>
+          }} } }}
+          {{ if (!model.visible) { {{
+              <span class="hidden-badge">{{@Helper.i18n("window.notifications.sections.hidden")}}</span>
+          }} } }}
+        </div>
+        {{ if(model.id != "virtual:root") { {{
+          <div class="wi-element-module-icon">
+            <div class="module-icon{{@model.enabledModules.indexOf('kvdb') > -1 ? '' : ' disabled'}}{{@model.notificationSettings['tasks'] ? ' dimmed' : ''}}" data-action="change-muted" data-section-id="{{@model.id}}" data-module="tasks">
+              <i class="fa privmx-icon privmx-icon-tasks"></i>
+            </div>
+            <div class="module-icon{{@model.enabledModules.indexOf('file') > -1 ? '' : ' disabled'}}{{@model.notificationSettings['notes2'] ? ' dimmed' : ''}}" data-action="change-muted" data-section-id="{{@model.id}}" data-module="notes2">
+              <span class="privmx-icon privmx-icon-notes2"></span>
+            </div>
+            <div class="module-icon{{@model.enabledModules.indexOf('chat') > -1 ? '' : ' disabled'}}{{@model.notificationSettings['chat'] ? ' dimmed' : ''}}" data-action="change-muted" data-section-id="{{@model.id}}" data-module="chat">
+              <span class="privmx-icon privmx-icon-chat"></span>
+            </div>
+          </div>
+        }} } }}
+      </div>
+    </div>
+    <div class="tree-children"></div>
+  </div>
+  
+}} }
+}}

@@ -1,0 +1,6 @@
+@import {StyleSwitcherTemplateModel} from "../MindmapEditorController";
+@import {func as styleSwitcherTemplate} from "./style-switcher.html";
+@import {func as fontSizeSwitcherTemplate} from "./font-size-switcher.html";
+@model StyleSwitcherTemplateModel
+{{#Helper.createTemplate(styleSwitcherTemplate).render(model)}}
+{{/*#Helper.createTemplate(fontSizeSwitcherTemplate).render(model)*/}}

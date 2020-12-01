@@ -1,0 +1,10 @@
+{
+  "name": "privmx-desktop-client-chat-module-builder",
+  "version": "1.0.0",
+  "description": "Chat module builder",
+  "license": "PrivMX Source Code License",
+  "private": true,
+  "dependencies": {
+    "privmx-builder": "1.4.1"
+  }
+}

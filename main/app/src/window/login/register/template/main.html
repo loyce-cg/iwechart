@@ -1,0 +1,148 @@
+@import {Model} from "../RegisterController";
+@model Model
+<div class="window-login-register page {{@model.active == 'register' ? 'active' : ''}} {{@model.noInfoBox ? 'no-info-box' : ''}}">
+  <div class="boxes">
+    
+    <div class="inner">
+      <header>
+        <h1><div class="logo-127x112-container"><img src="{{#Helper.getAssetByName('CUSTOM_LOGO_127X112')}}" /></div></h1>
+        <div class="header-info">
+        {{ if(model.adminRegistration) { }}
+          {{@Helper.i18n("window.login.form.register.headerForAdmin", model.domain)}}
+        {{ } else { }}
+          {{@Helper.i18n("window.login.form.register.header")}}
+        {{ } }}
+        </div>
+      </header>
+      <div class="error"></div>
+      <form name="register" method="post" onsubmit="return false;">
+        
+        <input type="hidden" name="key" value="{{@model.registerKey || ''}}">
+        
+        <section>
+            <div class="row hashmail">
+              <div class="col-xs-12">
+                <div style="font-family: source_sans_pro,arial,sans-serif; font-size: 13px; width: 100%; text-align: left; padding-bottom: 4px;">
+                  {{@Helper.i18n("window.login.form.register.hashmail.label")}}
+                </div>
+                <div class="form-group with-icon">
+                  <div class="holder">
+                    <!--
+                    <span class="ico-hash"></span>
+                    -->
+                    <input type="text" class="form-control" placeholder="{{@Helper.i18n("window.login.form.register.hashmail.placeholder")}}" name="hashmail" value="{{@model.predefinedUsername}}" {{#model.predefinedUsername ? 'disabled="disabled"' : ''}}>
+                    <div class="hash">#</div>
+                    <div class="addition">{{#model.domain.replace(/\./g, '.<wbr>')}}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-xs-12">
+                <div style="font-family: source_sans_pro,arial,sans-serif; font-size: 13px; width: 100%; text-align: left; padding-bottom: 4px;">
+                  {{@Helper.i18n("window.login.form.register.password.label")}}
+                </div>
+                <div class="password-meter">
+                  <div class="score-text">{{$Helper.i18n("passwordStrengthMeter.info")}}</div>
+                </div>
+                <div class="form-group with-icon password-field">
+                  <div class="holder">
+                    <!-- <span class="ico-lock"></span> -->
+                    <input type="password" class="form-control" placeholder="{{@Helper.i18n("window.login.form.register.password.placeholder")}}" name="password">
+                  </div>
+                  <div class="holder" style="margin-top: 8px;">
+                    <!-- <span class="ico-lock"></span> -->
+                    <input type="password" class="form-control" placeholder="{{@Helper.i18n("window.login.form.register.password2.placeholder")}}" name="password2">
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row" style="display: none;">
+              <div class="col-xs-12">
+                <div style="font-family: source_sans_pro,arial,sans-serif; font-size: 13px; width: 100%; text-align: left; padding-bottom: 4px;">
+                  {{@Helper.i18n("window.login.form.register.email.label")}}
+                </div>
+                <div class="form-group with-icon">
+                  <div class="holder">
+                    <span class="ico-letter"></span>
+                    <input type="text" class="form-control" placeholder="{{@Helper.i18n("window.login.form.register.email.placeholder")}}" name="email">
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row" style="display: none;">
+              <div class="col-xs-12">
+                <div class="form-group">
+                  <label class="pac-checkbox-label"><input type="checkbox" data-action="toggle-pac-input" /> {{@Helper.i18n("window.login.form.register.pin.label")}}</label>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row pac-input" style="display: none;">
+              <div class="col-xs-12">
+                <div class="form-group with-icon">
+                  <div class="holder">
+                    <span class="ico-lock"></span>
+                    <input type="password" class="form-control" placeholder="{{@Helper.i18n("window.login.form.register.pin.placeholder")}}" name="pin" value="">
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {{ if(!model.noTerms) { }}
+            <div class="row terms-input">
+              <div class="col-xs-12">
+                <label><input type="checkbox" name="terms" />
+                  {{
+                    var terms = '<span class="link" data-url="' + model.termsUrl + '">' + Helper.i18n("window.login.acceptTermsAndPivacy.regulation.text") + '</span>';
+                    var privacy = '<span class="link" data-url="' + model.privacyPolicyUrl + '">' + Helper.i18n("window.login.acceptTermsAndPivacy.privacy.text") + '</span>';
+                    var label = Helper.i18n("window.login.acceptTermsAndPivacy.text2", [terms, privacy]);
+                  }}
+                  {{# label}}
+                </label>
+              </div>
+            </div>
+            {{ } }}
+            
+            <input type="hidden" name="token" value="{{@model.token}}" />
+            
+            <button type="submit" class="btn btn-primary btn-block btn-lg">
+              <span class="icon-holder"></span>
+              {{ if(model.adminRegistration) { }}
+                {{@Helper.i18n("window.login.form.register.button.submit.label.admin")}}
+              {{ } else { }}
+                {{@Helper.i18n("window.login.form.register.button.submit.label")}}
+              {{ } }}
+            </button>
+            <!--
+            <p class="link center"><a href="javascript:void(0)" data-action="show-login-form">{{@Helper.i18n("window.login.form.register.button.cancel.label")}}</a></p>
+            -->
+        </section>
+      </form>
+    </div>
+    {{ if(!model.noInfoBox) { }}
+    <div class="info-box">
+      {{@Helper.i18n("window.login.registerInfo.welcome.text")}}
+      <div class="app-icons">
+        <span class="ico-letter"></span>
+        <span class="ico-comment"></span>
+        <span class="ico-note"></span>
+        <span class="ico-profile"></span>
+      </div>
+      {{#Helper.nl2br(Helper.i18n("window.login.registerInfo.long.text"))}}
+    </div>
+    {{ } }}
+    
+  </div>
+  {{ if (model.adminRegistration && model.originalUrl) { {{
+  <div class="pre-info-box">
+    <div class="selectable">
+      {{@Helper.i18n("window.login.form.register.preInfo2")}}<br/>
+      <a href="{{@model.originalUrl}}">{{@model.originalUrl}}</a>
+    </div>
+  </div>
+  }} } }}
+</div>

@@ -1,0 +1,11 @@
+@import {NotificationEntryOptions} from "../Notes2WindowController";
+@model {id: number, label: string, options: NotificationEntryOptions}
+<div class="notification-entry" data-notification-id="{{@model.id}}">
+  <div>
+    {{ if (model.options && model.options.progress) { {{
+      <i class="fa fa-circle-o-notch fa-spin"></i>
+    }} } }}
+    {{@model.label}}
+    <span class="progress-info hide"></span>
+  </div>
+</div>

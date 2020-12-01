@@ -1,0 +1,372 @@
+@import (reference) "../../../themes/default/less/mixins";
+@import (reference) "../../../themes/default/less/vars";
+
+#main.without-windows-bar {
+  #windows-container {
+    bottom: 0;
+  }
+  #opened-windows-bar {
+    display: none;
+  }
+}
+
+.window-loading-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  .loading-indicator {
+    background: var(--main-panel-bg);
+    color: var(--body-fg);
+  }
+}
+
+.window-loading-screen.init,
+.window-wrapper.app-window .window-loading-screen {
+  .loading-indicator {
+    .gradient-background();
+    color: var(--screen-cover-fg);
+  }
+}
+
+#windows-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 35px;
+  &.distraction-free-mode {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 99999;
+  }
+}
+
+#windows-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--screen-overlay-bg);
+  opacity: 0.05;
+}
+
+#windows-overlay.hidden {
+  display: none;
+}
+
+.window-wrapper {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: var(--preview-panel-bg);
+  box-sizing: content-box;
+  display: inline-block;
+  position: absolute;
+  
+  border: 1px solid var(--window-border);
+  
+  &.focused {
+    -webkit-box-shadow: 0 0 30px var(--window-shadow);
+    -moz-box-shadow: 0 0 30px var(--window-shadow);
+    box-shadow: 0 0 30px var(--window-shadow);
+    .window-header {
+      background-color: var(--window-header-bg);
+      color: var(--window-header-fg);
+    }
+  }
+  
+  &.dirty {
+    .window-dirty-marker {
+      display: inline;
+    }
+  }
+  
+  &.fullscreen,
+  &.maximized {
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    border: none;
+  }
+  
+  > .iframe-container {
+    position: absolute;
+    top: 23px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    iframe {
+      margin: 0;
+      padding: 0;
+      border: none;
+      width: 100%;
+      height: 100%;
+    }
+  }
+  
+  .window-dirty-marker {
+    display: none;
+    margin-right: 5px;
+    font-size: var(--font-size-xxxxs);
+    color: @dirtyMarkerColor;
+  }
+  
+  .window-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 23px;
+    cursor: default;
+    background-color: var(--window-header-bg);
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  &.ui-draggable.ui-draggable-dragging {}
+  &.ui-draggable.ui-draggable-dragging .window-header {
+    cursor: move;
+  }
+  
+  &.no-decoration > .iframe-container,
+  &.fullscreen > .iframe-container {
+    top: 0
+  }
+  
+  &.fullscreen {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  
+}
+
+.window-header-title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  text-align: center;
+  width: 100%;
+  height: 23px;
+  line-height: 23px;
+  overflow: hidden;
+  font-size: var(--font-size-xs);
+  color: var(--window-header-fg);
+  .fa {
+      margin-right: 5px;
+  }
+  .icon {
+      margin-right: 5px;
+      &[class*='ico-']:before {
+          vertical-align: middle;
+          min-width: 15px;
+          min-height: 15px;
+      }
+  }
+}
+
+.window-header-buttons {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  bottom: 0;
+  text-align: right;
+  display: inline-block;
+}
+
+.window-header-button {
+  display: inline-block;
+  width: var(--font-size-xxxs);
+  height: 16px;
+  float: right;
+  text-align: center;
+  font-size: var(--font-size-xxxs);
+  cursor: pointer;
+  margin-left: 6px;
+  margin-right: 6px;
+  color: #aaa;
+  &:before {
+     display: inline-block;
+     vertical-align: middle;
+  }
+  &.ico-minimize:before {
+      position: relative;
+      bottom: -4px;
+  }
+  &:hover {
+      color: @colorIconsOnDark_l_20;
+  }
+}
+
+#windows-container.header-buttons-to-left {
+  .window-header-buttons {
+    text-align: left;
+    right: auto;
+    left: 6px;
+  }
+  .window-header-button-close {
+    float: left;
+  }
+  .window-header-button-maximize {
+    float: right;
+  }
+  .window-header-button-minimize {
+    float: left;
+  }
+}
+
+#opened-windows-bar {
+  background-color: @colorDark;
+  padding-left: 10px;
+  padding-right: 10px;
+  height: 35px;
+  font-size: var(--font-size-xs);
+  line-height: var(--font-size-xs);
+  color: @colorMain_l_10;
+  overflow: hidden;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: default;
+  
+  > .inner {
+    display: table;
+    margin: 0 200px;
+    > .cell {
+      display: table-cell;
+      width: 200px;
+      min-width: 50px;
+      height: 35px;
+      position: relative;
+      padding: 0;
+      border: 1px solid #222;
+      color: var(--taskbar-item-fg);
+      background-color: var(--taskbar-item-bg);
+      > div {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        cursor: default;
+        .title {
+          position: absolute;
+          top: 0;
+          left: 10px;
+          right: 30px;
+          bottom: 0;
+          height: 35px;
+          line-height: 35px;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          span {
+            padding-left: 5px;
+          }
+        }
+        .closer {
+          position: absolute;
+          top: 11px;
+          right: 10px;
+          cursor: pointer;
+        }
+      }
+      &.active > div,
+      &:hover > div {
+        background-color: var(--taskbar-item-hover-bg);
+      }
+      &.dirty {
+        .dirty-marker {
+          display: inline;
+        }
+      }
+    }
+    > .fake {
+      padding: 0;
+    }
+  }
+  
+  .windows-counter,
+  .current-tasks-info {
+    line-height: 35px;
+    margin-left: 10px;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .current-tasks-info {
+    background: @colorDark;
+    color: @colorMain_l_50;
+    min-width: 190px;
+    display: none;
+    .info {
+      margin-left: 10px;
+    }
+  }
+  
+  .windows-counter .count {
+    display: inline-block;
+    vertical-align: middle;
+    color: var(--taskbar-item-fg);
+    height: 19px;
+    line-height: 19px;
+    padding: 0 10px;
+    background-color: var(--taskbar-item-bg);
+    border-radius: 1000px;
+    margin-left: 10px;
+  }
+  
+  .version {
+    position: absolute;
+    top: 12px;
+    right: 10px;
+    text-align: right;
+    a {
+        &:before {
+            color: @colorIconsOnDark;
+            margin-left: 5px;
+            font-size: var(--font-size-xl);
+            display: inline-block;
+            vertical-align: middle;
+            margin-top: -2px;
+        }
+        &:hover:before {
+            color: @colorIconsOnDark_l_20;
+        }
+    }
+  }
+  
+  .dirty-marker {
+    display: none;
+    margin-right: 5px;
+    font-size: var(--font-size-xxxxs);
+    color: @dirtyMarkerColor;
+  }
+  
+  .icon {
+      margin-right: 5px;
+      &[class*='ico-']:before {
+          vertical-align: middle;
+          min-width: 15px;
+          min-height: 15px;
+      }
+  }
+  
+}

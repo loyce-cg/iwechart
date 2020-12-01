@@ -1,0 +1,45 @@
+.panel.externalusers {
+  
+  [data-action=refresh-users] {
+    font-size: var(--font-size-l);
+    margin-left: 5px;
+    font-weight: normal;
+    background: transparent;
+    color: #eee;
+    .fa {
+      margin-right: 0;
+    }
+    > span {
+      margin-left: 3px;
+    }
+    .fa-refresh + span {
+      display: none;
+    }
+  }
+  
+  table button + button {
+    margin-left: 10px;
+  }
+  
+  table .image-col {
+    text-align: center;
+    
+    img {
+      max-height: 26px;
+      max-width: 26px;
+      vertical-align: middle;
+      
+      &:not([src^="data:"]) {
+        filter: var(--external-user-avatar-filter);
+      }
+    }
+  }
+  .label {
+    display: inline-block;
+    font-style: italic;
+  }
+
+  .block-unblock, .disable-2fa > i {
+    cursor: pointer;
+  }
+}

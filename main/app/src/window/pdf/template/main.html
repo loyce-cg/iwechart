@@ -1,0 +1,10 @@
+@import {Model} from "../../editor/EditorWindowController";
+@model Model
+<div class="window-editor-main screen-center window-pdf {{@model.docked ? 'docked' : '' }} {{@model.previewMode ? 'preview-mode' : ''}}">
+  <div class="inner screen-center-inner">
+    {{ if (!model.printMode) { {{
+      <div class="notifications"></div>
+    }} } }}
+    <div class="pdf-container">
+  </div>
+</div>

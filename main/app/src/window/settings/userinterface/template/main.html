@@ -1,0 +1,241 @@
+@import {Model} from "../UserInterfaceController";
+@import {func as sectionInterfaceIconsPreviewTemplate} from "./section-interface-icons-preview.html";
+@model Model
+<div class="section interface-section">
+  <div class="section-header">
+    <i class="fa fa-laptop"></i>
+    {{ if (model.systemLabel) { {{
+      {{@Helper.i18n("window.settings.section.interface.header.osSpecific", model.systemLabel)}}
+    }} } else { {{
+      {{@Helper.i18n("window.settings.section.interface.header")}}
+    }} } }}
+  </div>
+  
+  <div class="base-form">
+    <div class="fields">
+      
+      <div class="field">
+        <div class="info">
+            {{@Helper.i18n("window.settings.section.interface.lang.label")}}
+        </div>
+        <div class="input">
+          <select name="ui.lang">
+            {{
+              let availableLanguages = Helper.getAvailableLangs();
+              for (let lang of availableLanguages) {
+            }}
+              <option value="{{@lang}}" {{if(model.ui && model.ui.lang == lang) { }}selected{{ } }}>{{@Helper.i18n("core.langs." + lang)}}</option>
+            {{ } }}
+          </select>
+          <br/>
+          <small>{{@Helper.i18n("window.settings.section.interface.lang.info.text")}}</small>
+        </div>
+      </div>
+      
+      <div class="field">
+        <div class="info">
+            {{@Helper.i18n("window.settings.section.interface.context_switch.label")}}
+        </div>
+        <div class="input checkbox">
+          <label>
+            <input type="checkbox" name="ui.contextSwitchWithoutShift" {{if(model.ui && model.ui.contextSwitchWithoutShift) { }}checked="checked"{{ } }}>
+            {{@Helper.i18n("window.settings.section.interface.context_switch.checkbox.label")}}
+          </label>
+        </div>
+      </div>
+      
+      <div class="field">
+        <div class="info">
+            {{@Helper.i18n("window.settings.section.interface.show_all_sections.label")}}
+        </div>
+        <div class="input checkbox">
+          <label>
+            <input type="checkbox" name="ui.showAllSections" {{if(model.ui && model.ui.showAllSections) { }}checked="checked"{{ } }}>
+            {{@Helper.i18n("window.settings.section.interface.show_all_sections.checkbox.label")}}
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="info">
+            {{@Helper.i18n("window.settings.section.interface.inactivityOverlay.label")}}
+        </div>
+        <div class="input checkbox">
+          <label>
+            <input type="checkbox" name="ui.inactivityOverlay" {{if(model.ui && (model.ui.inactivityOverlay)) { }}checked="checked"{{ } }}>
+            {{@Helper.i18n("window.settings.section.interface.inactivityOverlay.checkbox.label")}}
+          </label>
+        </div>
+      </div>
+      
+
+      <div class="field">
+        <div class="info">
+            {{@Helper.i18n("window.settings.section.interface.markAsRead.label")}}
+        </div>
+        <div class="input checkbox">
+          <label>
+            <input type="checkbox" name="ui.autoMarkAsRead" {{if(model.ui && model.ui.autoMarkAsRead) { }}checked="checked"{{ } }}>
+            {{@Helper.i18n("window.settings.section.interface.markAsRead.checkbox.label")}}
+          </label>
+        </div>
+      </div>
+      
+      <div class="field">
+        <div class="info">
+        </div>
+        <div class="input checkbox">
+          <label>
+            <input type="checkbox" name="ui.unreadBadgeUseDoubleClick" {{if(model.ui && model.ui.unreadBadgeUseDoubleClick) { }}checked="checked"{{ } }}>
+            {{@Helper.i18n("window.settings.section.interface.useDoubleClickToMarkAsRead.checkbox.label")}}
+          </label>
+        </div>
+      </div>
+      
+      <div class="field">
+        <div class="info">
+        </div>
+        <div class="input checkbox">
+          <label>
+            <input type="checkbox" name="ui.playBubblePopSound" {{if(model.ui && model.ui.playBubblePopSound) { }}checked="checked"{{ } }}>
+            {{@Helper.i18n("window.settings.section.interface.playBubblePopSound.checkbox.label")}}
+          </label>
+        </div>
+      </div>
+      
+      <div class="field">
+        <div class="info">
+            {{@Helper.i18n("window.settings.section.interface.unreadBadgeClickAction.label")}}
+        </div>
+        <div class="input">
+          <select name="ui.unreadBadgeClickAction">
+            {{ { }}
+              {{
+                let availableActions = model.availableUnreadBadgeClickActions;
+                let selectedAction = model.ui && model.ui.unreadBadgeClickAction ? model.ui.unreadBadgeClickAction : "ask";
+                for (let action of availableActions) {
+              }}
+                <option value="{{@action}}" {{if (selectedAction == action) { }}selected{{ } }}>{{@Helper.i18n("window.settings.section.interface.unreadBadgeClickAction." + action)}}</option>
+              {{ } }}
+            {{ } }}
+          </select>
+          <br/>
+        </div>
+      </div>
+      
+      <div class="field">
+        <div class="info">
+            {{@Helper.i18n("window.settings.section.interface.systemClipboardIntegration.label")}}
+        </div>
+        <div class="input checkbox">
+          {{ { }}
+          {{
+            let selectedAction = model.ui && model.ui.systemClipboardIntegration ? model.ui.systemClipboardIntegration : "ask";
+          }}
+          <label>
+            <input type="checkbox" data-value-converter="systemClipboardIntegrationConverter" data-orig-value="{{@selectedAction}}" name="ui.systemClipboardIntegration" {{if(selectedAction == "enabled") { }}checked="checked"{{ } }}>
+            {{@Helper.i18n("window.settings.section.interface.systemClipboardIntegration.label2")}}
+          </label>
+          {{ } }}
+        </div>
+        <!-- <div class="input">
+          <select name="ui.systemClipboardIntegration">
+            {{ { }}
+              {{
+                let availableActions = model.availableSystemClipboardIntegrations;
+                let selectedAction = model.ui && model.ui.systemClipboardIntegration ? model.ui.systemClipboardIntegration : "ask";
+                for (let action of availableActions) {
+              }}
+                <option value="{{@action}}" {{if (selectedAction == action) { }}selected{{ } }}>{{@Helper.i18n("window.settings.section.interface.systemClipboardIntegration." + action)}}</option>
+              {{ } }}
+            {{ } }}
+          </select>
+          <br/>
+        </div> -->
+      </div>
+      
+      <div class="field">
+        <div class="info">
+            {{@Helper.i18n("window.settings.section.interface.pasteAsFileAction.label" + model.osSuffix)}}
+        </div>
+        <div class="input">
+          <select name="ui.pasteAsFileAction">
+            {{ { }}
+              {{
+                let availableActions = model.availablePasteAsFileActions;
+                let selectedAction = model.ui && model.ui.pasteAsFileAction ? model.ui.pasteAsFileAction : "ask";
+                for (let action of availableActions) {
+              }}
+                <option value="{{@action}}" {{if (selectedAction == action) { }}selected{{ } }}>{{@Helper.i18n("window.settings.section.interface.pasteAsFileAction." + action)}}</option>
+              {{ } }}
+            {{ } }}
+          </select>
+          <br/>
+        </div>
+      </div>
+      
+      {{ if (model.systemLabel != "MacOS") { {{
+      <div class="field" style="display:none">
+        <div class="info">
+            {{#Helper.i18n("window.settings.section.interface.titleBarButtonsPosition.label", [
+                Helper.createTemplate(sectionInterfaceIconsPreviewTemplate).render()
+            ])}}
+        </div>
+        <div class="input radio">
+          <label>
+            <input type="radio" name="ui.windowTitleBarButtonsPosition" value="right" {{if(! model.ui || model.ui.windowTitleBarButtonsPosition == "right") { }}checked="checked"{{ } }}>
+            {{@Helper.i18n("window.settings.section.interface.titleBarButtonsPosition.right.label")}}
+          </label>
+          <label>
+            <input type="radio" name="ui.windowTitleBarButtonsPosition" value="left" {{if(model.ui && model.ui.windowTitleBarButtonsPosition == "left") { }}checked="checked"{{ } }}>
+            {{@Helper.i18n("window.settings.section.interface.titleBarButtonsPosition.left.label")}}
+          </label>
+        </div>
+      </div>
+      }} } }}
+      
+      <div class="field" style="display:none">
+        <div class="info">
+          {{@Helper.i18n("window.settings.section.interface.audio.label")}}
+        </div>
+        <div class="input checkbox">
+          <label>
+            <input type="checkbox" name="ui.audio" {{if(model.ui && model.ui.audio) { }}checked="checked"{{ } }}>
+            {{@Helper.i18n("window.settings.section.interface.audio.checkbox.label")}}
+          </label>
+        </div>
+      </div>
+
+      {{
+        if (model.isElectron) {
+          {{
+            <div class="field">
+              <div class="info">
+                {{@Helper.i18n("window.settings.section.interface.autostartEnabled.label")}}
+              </div>
+              <div class="input checkbox">
+                <label>
+                  <input type="checkbox" name="ui.autostartEnabled" {{if(model.ui && model.ui.autostartEnabled) { }}checked="checked"{{ } }}>
+                  {{@Helper.i18n("window.settings.section.interface.autostartEnabled.checkbox.label")}}
+                </label>
+              </div>
+            </div>
+      
+          }}
+        }
+      }}
+
+      <div class="field buttons">
+        <div class="info">
+        </div>
+        <div class="input">
+          <button class="btn btn-success save-button progress-button">
+            <i class="fa fa-save"></i>
+            <span class="button-text">{{@Helper.i18n("window.settings.section.interface.button.save.text")}}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+</div>

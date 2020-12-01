@@ -1,0 +1,15 @@
+@model string
+{{
+  let icon = model && model[0] == "{" ? JSON.parse(model) : null;
+}}
+<span class="taskgroup-icon">
+  {{ if (icon) { }}
+    {{ if (icon.type == "shape") { }}
+      <span class="taskgroup-icon--shape shape-{{@icon.shape}}" style="color:{{@icon.color}}"></span>
+    {{ } else if (icon.type == "fa") { }}
+      <span class="taskgroup-icon--fa fa fa-{{@icon.fa}}" style="color:{{@icon.color}}"></span>
+    {{ } }}
+  {{ } else { }}
+    <span class="taskgroup-icon--none">{{@Helper.i18n("plugin.tasks.window.taskGroupForm.taskGroupIcon.none")}}</span>
+  {{ } }}
+</span>

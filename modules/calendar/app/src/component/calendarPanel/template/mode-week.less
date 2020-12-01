@@ -1,0 +1,231 @@
+@modeWeek_dayHeaderHeight: 23px;
+
+.mode-week,
+.mode-singleweek,
+.mode-singleday {
+  .pf-scroll-panel {
+    display: none;
+  }
+  
+  
+  .left-hours-header {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    border-right: 1px solid var(--main-panel-tasks-separator-bg);
+    text-align: center;
+    
+    >div {
+      font-size: var(--font-size-s);
+      color: var(--body-extra-info-fg);
+      flex: 1 1 auto;
+    }
+  }
+  
+  .hours-lines {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    opacity: 0.5;
+    
+    >div {
+      border-top: 1px solid var(--main-panel-tasks-separator-bg);
+      flex: 1 1 auto;
+    }
+  }
+  
+  &.hour-separators-1_2 {
+    .left-hours-header,
+    .hours-lines {
+      >div:nth-child(2n) {
+        display: none;
+      }
+    }
+  }
+  
+  &.hour-separators-1_3 {
+    .left-hours-header,
+    .hours-lines {
+      >div:nth-child(3n),
+      >div:nth-child(3n+2) {
+        display: none;
+      }
+    }
+  }
+  
+  &.hour-separators-1_4 {
+    .left-hours-header,
+    .hours-lines {
+      >div:nth-child(4n),
+      >div:nth-child(4n+2),
+      >div:nth-child(4n+3) {
+        display: none;
+      }
+    }
+  }
+  
+  &.hour-separators-1_6 {
+    .left-hours-header,
+    .hours-lines {
+      >div {
+        display: none;
+      }
+      >div:nth-child(1),
+      >div:nth-child(7),
+      >div:nth-child(13),
+      >div:nth-child(19) {
+        display: block;
+      }
+    }
+  }
+  
+  .scrollable-contents-container {
+    position: absolute;
+    left: 40px;
+    right: 0;
+    top: 0;
+    bottom: 0;
+  }
+  
+  .fl-container {
+    transform: rotate(-90deg);
+    transform-origin: 0 0;
+    left: 0%;
+    top: 100%;
+  }
+  
+  .entry {
+    line-height: 1;
+    font-kerning: none;
+    text-rendering: optimizeSpeed;
+    font-size: var(--font-size-s);
+    position: relative;
+    border-top: 1px solid var(--main-panel-tasks-separator-bg);
+  
+    &:first-child {
+      border-top: 0;
+    }
+  }
+  
+  .entry-inner {
+    transform: rotate(90deg);
+    transform-origin: 0 0;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .entry-header {
+    background: #fff;
+    padding: 5px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    height: @modeWeek_dayHeaderHeight;
+    position: relative;
+    z-index: 9;
+  }
+  
+  .entry-tasks {
+    position: absolute;
+    left: 0;
+    top: @modeWeek_dayHeaderHeight;
+    right: 0;
+    bottom: 0;
+  }
+  
+  .task {
+    white-space: pre;
+    padding: 2px 4px;
+    border-radius: 5px;
+    position: absolute;
+    opacity: 1;
+    cursor: pointer;
+    white-space: normal;
+    line-height: 1.2;
+    overflow: hidden;
+    
+    &.narrow {
+      word-break: break-all;
+    }
+    
+    &.top-continues {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+    
+    &.bottom-continues {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    
+    .task-inner {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    &.hover {
+      opacity: 1;
+    }
+  }
+  
+  .task.selected-task {
+    background: @taskBg_selected !important;
+    color: @taskFg_selected !important;
+    opacity: 1;
+  }
+  
+  .day {
+    &.today {
+      .entry-header {
+        box-shadow: inset 2px 2px 0 @dayBorder_today, inset -2px -2px 0 @dayBorder_today;
+      }
+    }
+  }
+  
+  .hours-container {
+    position: absolute;
+    left: 0;
+    top: @modeWeek_dayHeaderHeight;
+    bottom: 0;
+    right: 0;
+    overflow-y: hidden;
+  }
+  
+  .hours-container-inner {
+    position: relative;
+  }
+  
+  .virtual-scroll-zoom-element {
+    // transition: margin-top 0.2s ease, height 0.2s ease;
+  }
+}
+
+.mode-singleweek,
+.mode-singleday {
+  .entry {
+    min-width: 0;
+  }
+}
+
+.two-calendars .mode-week .day,
+.two-calendars .mode-singleweek .day {
+  &.selected-day {
+    .entry-header {
+      box-shadow: inset 2px 2px 0 @dayBorder_selected, inset -2px -2px 0 @dayBorder_selected;
+    }
+  }
+}

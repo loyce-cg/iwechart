@@ -1,0 +1,26 @@
+@import {PersonModel} from "../../../main/Notes2Plugin";
+@model PersonModel
+@context { truncateDescription?: boolean, canvasSize?: number }
+{{
+  let shortDescription = Helper.shortDescription(model.description) || "";
+  let truncateDescription = context ? !!context.truncateDescription : false;
+  let canvasSize = context && context.canvasSize ? context.canvasSize : 30;
+  {{
+    <div class="user-profile {{@shortDescription ? 'with-description' : ''}} {{@model.present ? 'present' : ''}} {{@truncateDescription ? 'truncate-description' : ''}} {{@model.deleted ? 'deleted' : ''}}" data-hashmail-profile="{{@model.hashmail}}" data-description-indicator="true">
+      <div class="image-with-data">
+        <p class="image" data-tooltip-trigger="{{@model.hashmail}}">
+          <canvas class="not-rendered" data-hashmail-image="{{@model.hashmail}}" data-width="{{@canvasSize}}" data-height="{{@canvasSize}}" data-auto-size="true" data-auto-refresh="true"></canvas>
+        </p>
+        <div class="text-col">
+          <p class="name" data-hashmail-name="{{@model.hashmail}}" data-auto-refresh="true">
+            {{@model.name || model.username}}
+          </p>
+          <p class="desc" data-hashmail-short-description="{{@model.hashmail}}" data-max-length="{{truncateDescription ? 25 : -1}}" data-auto-refresh="true">
+            {{@shortDescription && truncateDescription ? Helper.truncate(shortDescription, 25) : shortDescription}}
+          </p>
+        </div>
+      </div>
+      <div class="remove-person-button" data-action="remove-person" data-hashmail="{{@model.hashmail}}" title="{{@Helper.i18n('plugin.notes2.component.filesList.remove-user.title')}}"><i class="fa fa-minus"></i></div>
+    </div>
+  }}
+}}

@@ -1,0 +1,75 @@
+@import {MsgBoxOptions, MsgBoxButtonOptions} from "../MsgBoxWindowController";
+@model MsgBoxOptions
+{{
+  function renderButton(options: MsgBoxOptions, name: string): void {
+    var opt = <MsgBoxButtonOptions>(<any>options)[name];
+    if (opt.visible) {
+      var tagName = opt.link ? "a" : "button";
+      {{
+        <{{@tagName}} data-trigger="{{@name}}" class="btn {{@opt.btnSize == null ? options.btnSize : opt.btnSize}} {{@opt.btnClass}}">
+          <i class="fa fa-{{@opt.faIcon}}"></i>
+          {{@opt.label}}
+        </{{@tagName}}>
+      }}
+    }
+  }
+}}
+<div class="window-alert-main">
+  <div class="processing">
+    <div class="process-label"></div>
+  </div>
+  <div class="content">
+    <div class="message selectable">
+      {{if (model.messageAsTemplateFunc) { {{
+        {{#Helper.createTemplate(model.messageAsTemplateFunc).render(model, context, Helper)}}
+      }} } else if (model.contentTemplate) { {{
+        {{#Helper.createTemplateById(model.contentTemplate.templateId).render(model.contentTemplate.model)}}
+      }} } else { {{
+        {{$model.message}}
+      }} } }}
+    </div>
+    {{ if (model.input.visible) { {{
+      {{ if (model.input.preHtml) { {{
+        {{#model.input.preHtml}}
+      }} } }}
+      <div class="input-container">
+        {{ if (model.input.multiline) { {{
+          <textarea data-input="true" class="form-control" {{#model.input.readonly ? 'readonly="readonly"' : '' }} placeholder="{{@model.input.placeholder}}" style="height: {{#model.input.height}}px; {{#model.input.continous ? 'word-break: break-all;' : ''}};">{{@model.input.value}}</textarea>
+        }} } else { {{
+          <input data-input="true" class="form-control" type="{{@model.input.type}}" {{#model.input.readonly ? 'readonly="readonly"' : '' }} placeholder="{{@model.input.placeholder}}" value="{{@model.input.value}}" />
+        }} } }}
+        <div class="input-error"></div>
+      </div>
+    }} } }}
+    {{ if (model.info && !model.infoBelowButtons) { {{
+      <div class="info">{{@model.info}}</div>
+    }} } }}
+    {{ if (model.checkbox.visible) { {{
+      <div class="checkbox-container">
+        <label>
+          <input type="checkbox" {{#model.checkbox.checked ? 'checked="checked"' : ''}} data-checkbox="true" />
+          {{@model.checkbox.label}}
+        </label>
+      </div>
+    }} } }}
+  </div>
+  <div class="buttons{{@model.info && model.infoBelowButtons ? ' with-info-below' : ''}}">
+    {{
+      let buttons = ["ok", "yes", "no", "cancel"];
+      let renderOrder = [];
+      for (let id of buttons) {
+          let opt = <MsgBoxButtonOptions>(<any>model)[id];
+          renderOrder.push({id: id, order: opt.order ? opt.order : -1});
+      }
+      renderOrder.sort((a, b) => a.order - b.order);
+      for (let item of renderOrder) {
+        renderButton(model, item.id);
+      }
+    }}
+  </div>
+  {{ if (model.info && model.infoBelowButtons) { {{
+    <div class="content content-below-buttons">
+      <div class="info">{{@model.info}}</div>
+    </div>
+  }} } }}
+</div>

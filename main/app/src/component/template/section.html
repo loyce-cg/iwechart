@@ -1,0 +1,43 @@
+@import * as Types from "../../Types";
+@import {Context} from "../extlist/ExtListView";
+@model Types.webUtils.SectionListElementModel
+@context Context<Types.webUtils.SectionListElementModel>
+  {{
+    let isVoiceChatActive = model.activeVoiceChatInfo && model.activeVoiceChatInfo.active;
+    let voiceChatUsers = model.activeVoiceChatInfo && model.activeVoiceChatInfo.users;
+  }}
+<div class="section-element wi-element {{@context.isActive ? 'active' : ''}} {{@model.muted ? 'muted' : ''}} {{@model.disabled ? 'disabled' : ''}} {{@model.primary ? 'primary' : ''}} {{@model.unread > 0 && !model.disabled ? 'with-badge' : ''}} {{@model.elementsCount != null && !model.disabled ? 'with-elements-count' : ''}} {{@model.searchCount > 0 || !model.allSearched ? 'with-search-count' : ''}} {{@model.isBellRinging ? 'with-ringing-bell' : ''}} {{@isVoiceChatActive ? 'with-voice-chat-active' : ''}}" data-section-id="{{@model.id}}">
+  <div class="wi-element-inner">
+    <div class="wi-element-icon bckg-icon {{@model.scope == 'private' ? 'bckg-icon-border' : ''}} has-section-tooltip" data-section-id="{{@model.id}}">
+      <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+    </div>
+    <div class="pin-button {{@model.pinned?'pinned':'not-pinned'}}">
+      <i class="fa fa-thumb-tack"></i>
+    </div>
+    <div class="wi-element-name {{@model.breadcrumb.length > 0 ? 'with-breadcrumb' : ''}}">
+      <div class="name-wrapper">
+        {{ if (model.breadcrumb.length > 0) { {{
+          <span class="section-breadcrumb">{{#model.breadcrumb}}</span>
+        }} } }}
+        {{@model.name}}
+        <div class="voice-chat-tooltip has-userslist-tooltip" data-userslist-id="{{@model.id}}"></div>
+  
+      </div>
+    </div>
+    <div class="settings-button">
+      <i class="ico-settings"></i>
+    </div>
+    <div class="wi-element-elements-count number">
+      {{@model.elementsCount}}
+    </div>
+    <div class="wi-element-badge number{{@model.withSpinner ? ' with-spinner' : ''}} has-basic-tooltip" data-basic-id="{{@model.id}}">
+      {{@model.unread}}{{@model.elementsCount ? " / " + model.elementsCount : ""}}
+    </div>
+    <div class="wi-element-search-count number">
+      {{@model.searchCount}}{{@model.allSearched ? "" : "+"}}<i class="fa fa-search"></i>
+      {{ if (!model.allSearched) { }}
+        <div class="infotooltip not-rendered" data-tooltip-theme="light" data-tooltip-message='{{@Helper.i18n("component.common.moreElementsMayMatch")}}'></div>
+      {{ } }}
+    </div>
+  </div>
+</div>

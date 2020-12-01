@@ -1,0 +1,51 @@
+@import * as Types from "../../Types";
+@import {Context} from "../extlist/ExtListView";
+@model Types.webUtils.CustomElementModel
+@context Context<Types.webUtils.CustomElementModel>
+<div class="custom-element wi-element {{@context.isActive ? 'active' : ''}} {{@model.unread > 0 ? 'with-badge' : ''}} {{@model.unmutedUnread == 0 ? 'no-unmuted-unread' : ''}} {{@model.elementsCount != null ? 'with-elements-count' : ''}} {{@model.searchCount > 0 || !model.allSearched ? 'with-search-count' : ''}} {{@model.withBorder ? 'custom-element-with-border' : ''}} {{@model.emphasized ? 'custom-element-emphasized' : ''}}" data-custom-element-id="{{@model.id}}">
+  <div class="wi-element-inner">
+    {{ if (model.icon.type == "hashmail") { {{
+      <div class="wi-element-icon bckg-icon">
+        <canvas class="not-rendered" data-tooltip-trigger="{{@model.icon.value}}" data-hashmail-image="{{@model.icon.value}}" data-width="30" data-height="30" data-auto-size="true" data-auto-refresh="true"></canvas>
+      </div>
+    }} } else if (model.icon.type == "fa") { {{
+      <div class="wi-element-icon bckg-icon small-icon">
+        <i class="fa {{@model.icon.value}}"></i>
+      </div>
+    }} } else if (model.icon.type == "section-private") { {{
+      <div class="wi-element-icon bckg-icon bckg-icon-border">
+        <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+      </div>
+    }} } else { {{
+      <div class="wi-element-icon bckg-icon">
+        <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+      </div>
+    }} } }}
+    <div class="wi-element-name{{@model.private ? ' with-icon' : ''}}">
+      {{ if (model.private) { {{
+        <span class="with-icon--text">{{@model.label}}</span>
+        <div class="info-lock with-icon--icon">
+          <i class="fa fa-lock"></i>
+          <div class="infotooltip not-rendered" data-tooltip-theme="light" data-tooltip-message="{{@model.label}}" data-tooltip-extra='{{@Helper.i18n("component.common.accessibleFromYourAccountOnly")}}' data-tooltip-icon="fa fa-lock"></div>
+        </div>
+      }} } else { }}
+        {{@model.label}}
+      {{ } }}
+    </div>
+    <div class="settings-button">
+      <i class="ico-settings"></i>
+    </div>
+    <div class="wi-element-elements-count number">
+      {{@model.elementsCount}}
+    </div>
+    <div class="wi-element-badge number{{@model.withSpinner ? ' with-spinner' : ''}} has-basic-tooltip" data-basic-id="{{@model.id}}">
+      {{@model.unmutedUnread > 0 ? model.unmutedUnread : model.unread}}{{@model.elementsCount ? " / " + model.elementsCount : ""}}
+    </div>
+    <div class="wi-element-search-count number">
+      {{@model.searchCount}}{{@model.allSearched?"":"+"}}<i class="fa fa-search"></i>
+      {{ if (!model.allSearched) { }}
+        <div class="infotooltip not-rendered" data-tooltip-theme="light" data-tooltip-message='{{@Helper.i18n("component.common.moreElementsMayMatch")}}'></div>
+      {{ } }}
+    </div>
+  </div>
+</div>

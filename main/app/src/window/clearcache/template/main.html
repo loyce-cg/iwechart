@@ -1,0 +1,25 @@
+@import {Model} from "../ClearCacheWindowController";
+@import * as privfs from "privfs-client";
+@model Model
+<div class="clearcache content admin-alert">
+    <div class="header">
+        {{@Helper.i18n("window.admin.clearCache.header")}}
+    </div>
+    <div class="input-container">
+      <input type="text" name="domain" class="form-control" data-control="domain-input" placeholder="{{@Helper.i18n("window.admin.clearCache.domain.placeholder")}}" />
+    </div>
+    <div class="info">
+        {{@Helper.i18n("window.admin.clearCache.info")}}
+    </div>
+    <div class="buttons">
+        <button type="button" class="btn btn-success single-btn" data-action="clear">
+            <i class="fa fa-trash"></i>
+            {{@Helper.i18n("window.admin.clearCache.confirm")}}
+        </button>
+        <span class="clear-cache-results"></span>
+        <button type="button" class="btn btn-default single-btn" data-action="close">
+            <i class="fa fa-times"></i>
+            {{@Helper.i18n("window.admin.clearCache.close")}}
+        </button>
+    </div>
+</div>

@@ -1,0 +1,15 @@
+@import {MenuModel} from "../BaseView";
+@model MenuModel
+<div class="entry" data-entry="{{@model.id}}" {{#model.hidden ? 'style="display: none;"' : ''}}>
+  {{ if (model.icon) { {{
+  <div class="icon-holder"><i class="fa fa-{{@model.icon}}"></i></div>
+  }} } }}
+  {{ if (model.altIcon) { {{
+  <div class="icon-holder"><div class="{{@model.altIcon}}"></div></div>
+  }} } }}
+  
+  <div class="entry-label">{{@model.labelKey ? Helper.i18n(model.labelKey) : model.label}}</div>
+  {{if (model.indicator) { {{
+    <i class="indicator fa {{@model.indicator.indexOf('fa') == 0 ? model.indicator : 'fa-circle'}}"></i>
+  }} } }}
+</div>

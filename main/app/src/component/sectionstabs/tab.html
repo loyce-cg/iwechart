@@ -1,0 +1,8 @@
+@import {SectionTab} from "./SectionsTabsController"
+@model SectionTab
+<div class="tab{{@model.active ? ' active' : ''}}" data-section-id="{{@model.id}}">
+  <span class="tab-label">{{@model.name}}</span>
+  {{ if (model.badge) { {{
+    <span class="tab-badge">{{@model.badge}}</span>
+  }} } }}
+</div>

@@ -1,0 +1,8 @@
+@import {LangsMenuModel} from "../InitDataEditor";
+@model LangsMenuModel
+{{ model.langs.forEach(function(lang){ }}
+  <li data-lang="{{@lang}}" data-action="switch-lang" class="{{@ lang === model.activeLang ? 'active': ''}}">
+    <i class="text-danger fa fa-times" data-action="remove-lang"></i>
+    {{@lang}}
+  </li>
+{{ }); }}

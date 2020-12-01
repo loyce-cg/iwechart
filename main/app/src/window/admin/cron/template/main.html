@@ -1,0 +1,68 @@
+@import * as privfs from "privfs-client"
+@import ConfigEx = privfs.types.core.ConfigEx;
+@model privfs.types.core.ConfigEx
+<div class="cron-inner">
+  <div class="header">
+    {{@Helper.i18n("window.admin.cron.header")}}
+  </div>
+  <div class="paragraph">
+    {{@Helper.i18n("window.admin.cron.preinfo")}}
+  </div>
+  <div class="paragraph">
+    {{@Helper.i18n("window.admin.cron.phpinfo")}}
+  </div>
+  <div class="paragraph">
+    {{@Helper.i18n("window.admin.cron.configinfo")}}
+    <ol>
+      <li>
+        {{@Helper.i18n("window.admin.cron.config.step1.part1")}}
+        <div class="command">/path/to/your/privmx/config.php</div>
+        {{@Helper.i18n("window.admin.cron.config.step1.part2")}}
+      </li>
+      <li>
+        <div>{{@Helper.i18n("window.admin.cron.config.step2.part1")}}</div>
+        <div class="command">php /path/to/your/privmx/cron.php</div>
+        <div>{{@Helper.i18n("window.admin.cron.config.step2.part2")}}</div>
+        <div class="command">*/15 * * * * www-data php /path/to/your/privmx/cron.php</div>
+      </li>
+    </ol>
+  </div>
+  <div class="header-2">
+    {{@Helper.i18n("window.admin.cron.settings.header")}}
+  </div>
+  <div class="field">
+    <div class="name">{{@Helper.i18n("window.admin.cron.settings.cronEnabled")}}</div>
+    <div class="value">{{@Helper.yesNo(model.cronEnabled)}}</div>
+  </div>
+  <div class="field">
+    <div class="name">{{@Helper.i18n("window.admin.cron.settings.gcEnabled")}}</div>
+    <div class="value">{{@Helper.yesNo(model.garbageCollectorEnabled)}}</div>
+  </div>
+  <div class="field">
+    <div class="name">{{@Helper.i18n("window.admin.cron.settings.gcInterval")}}</div>
+    <div class="value">{{@model.garbageCollectorEnabled ? Helper.lastTime(model.garbageCollectorInterval) : Helper.i18n("core.na")}}</div>
+  </div>
+  <div class="field">
+    <div class="name">{{@Helper.i18n("window.admin.cron.settings.notificationsEnabled")}}</div>
+    <div class="value">{{@Helper.yesNo(model.notifierEnabled)}}</div>
+  </div>
+  <div class="field">
+    <div class="name">{{@Helper.i18n("window.admin.cron.settings.notificationsInterval")}}</div>
+    <div class="value">{{@model.notifierEnabled ? Helper.lastTime(model.notifierInterval) : Helper.i18n("core.na")}}</div>
+  </div>
+  <div class="field">
+    <div class="name">{{@Helper.i18n("window.admin.cron.settings.notifierRenewTime")}}</div>
+    <div class="value">{{@Helper.lastTime(model.notifierRenewTime)}}</div>
+  </div>
+  <div class="field">
+    <div class="name">
+      <div>{{@Helper.i18n("window.admin.cron.settings.notifierRenewMode.label")}}</div>
+      <div class="sub">
+        <div>0 - {{@Helper.i18n("window.admin.cron.settings.notifierRenewMode.mode0")}}</div>
+        <div>1 - {{@Helper.i18n("window.admin.cron.settings.notifierRenewMode.mode1")}}</div>
+        <div>2 - {{@Helper.i18n("window.admin.cron.settings.notifierRenewMode.mode2")}}</div>
+      </div>
+    </div>
+    <div class="value">{{@model.notifierRenewMode}}</div>
+  </div>
+</div>

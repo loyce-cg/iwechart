@@ -1,0 +1,235 @@
+@import {VerifyInfoModel} from "../MessageWindowController";
+@import * as privfs from "privfs-client";
+@import CosignedVerifyStatus = privfs.pki.messages.CosignedVerifyStatus;
+@model VerifyInfoModel
+{{type Cosigner = {domain: string, status: CosignedVerifyStatus};}}
+<div class="verify-info">
+{{ if (typeof(model) == "string") { {{
+{{ if (model == "loading") { {{
+  <div class="main-info">
+    <i class="fa fa-circle-o-notch fa-spin"></i>
+    {{@Helper.i18n('window.message.header.sender.state.info.loading')}}
+  </div>
+}} } else if (model == "no-message") { {{
+  <div class="main-info">
+    {{@Helper.i18n('window.message.header.sender.state.info.noMessage')}}
+  </div>
+}} } else if (model == "fetch-error") { {{
+  <div class="main-info">
+    {{@Helper.i18n('window.message.header.sender.state.info.loadingError')}}
+  </div>
+}} } else if (model == "no-verified") { {{
+  <div class="main-info">
+    {{@Helper.i18n('window.message.header.sender.state.info.noData')}}
+  </div>
+}} } else if (model == "anonymous") { {{
+  <div class="result">
+    <div class="status-info">
+      <i class="fa fa-check text-success"></i>
+      <div class="info">
+        {{@Helper.i18n('window.message.header.sender.state.valid')}}
+      </div>
+    </div>
+    <div class="sub-info">
+      {{@Helper.i18n('window.message.header.sender.state.info.secureForms')}}
+    </div>
+  </div>
+}} } else { {{
+    <div class="main-info">
+      Unknown
+    </div>
+}} } }}
+}} } else { {{
+  {{
+    var message = model.indexEntry.getMessage();
+    var status = model.indexEntry.getVerifiedStatus();
+    var res = model.verifyInfo.result;
+    var cosigners = res ? res.cosigners || [] : [];
+    
+    /*
+    if (!("_status_" in window)) {
+      window._status_ = 0;
+    }
+    else {
+      window._status_++;
+    }
+    status = (window._status_ % 6); //Math.floor(Math.random() * 6);
+    var domains = ["lukas-pc.local", "privfs-lhost"];
+    if (status == 0) {
+        cosigners = domains.map(x => { return {domain: x, status: 0}; });
+    }
+    if (status == 1) {
+        cosigners = domains.map(x => { return {domain: x, status: 0}; });
+    }
+    if (status == 2) {
+        cosigners = domains.map(x => { return {domain: x, status: 0}; });
+    }
+    if (status == 3) {
+        cosigners = [];
+    }
+    if (status == 4) {
+        cosigners = domains.map(x => { return {domain: x, status: 1}; });
+    }
+    if (status == 5) {
+        cosigners = domains.map(x => { return {domain: x, status: 2}; });
+    }
+    */
+    
+    var validCosigners: Cosigner[] = [], invalidCosigners: Cosigner[] = [], noAnswerCosigners: Cosigner[] = [];
+    cosigners.forEach(function(cosigner) {
+      if (cosigner.status == 0) {
+        validCosigners.push(cosigner);
+      }
+      else if (cosigner.status == 1) {
+        invalidCosigners.push(cosigner);
+      }
+      else if (cosigner.status == 2) {
+        noAnswerCosigners.push(cosigner);
+      }
+    });
+    var fingerprint = model.verifyInfo.keyStoreMsg.getTree().getHash().toString("hex").substring(0, 8);
+    var timestamp = model.verifyInfo.timestamp;
+  }}
+  <div class="result">
+    {{ if (status === 0) { {{
+      <div class="status-info">
+        <i class="fa fa-check text-success"></i>
+        <div class="info">
+          {{@Helper.i18n('window.message.header.sender.state.valid')}}
+        </div>
+      </div>
+    }} } else if (status === 1) { {{
+      <div class="status-info">
+        <i class="fa fa-times text-danger"></i>
+        <div class="info">
+          {{@Helper.i18n('window.message.header.sender.state.invalid')}}
+        </div>
+      </div>
+    }} } else if (status === 2) { {{
+      <div class="status-info">
+        <i class="fa fa-times text-danger"></i>
+        <div class="info">
+          {{@Helper.i18n('window.message.header.sender.state.unknown', message.sender.user, message.sender.host)}}
+        </div>
+      </div>
+    }} } else if (status === 3) { {{
+      <div class="status-info">
+        <i class="fa fa-exclamation-triangle text-warning"></i>
+        <div class="info">
+          {{@Helper.i18n('window.message.header.sender.state.invalidSignature')}}
+        </div>
+      </div>
+      <div class="domains">
+        <i class="fa fa-certificate"></i>
+        <div class="header">
+          {{@Helper.i18n('window.message.header.sender.state.badReponse', message.sender.host)}}
+        </div>
+      </div>
+    }} } else if (status === 4) { {{
+      <div class="status-info">
+        <i class="fa fa-exclamation-triangle text-warning"></i>
+        <div class="info">
+          {{@Helper.i18n('window.message.header.sender.state.invalidState')}}
+        </div>
+      </div>
+      <div class="the-line"></div>
+      <div class="domains">
+        <i class="fa fa-certificate"></i>
+        <div class="header">
+          {{@Helper.i18n('window.message.header.sender.state.noConsensus', message.sender.host)}}
+        </div>
+      </div>
+    }} } else if (status === 5) { {{
+      <div class="status-info">
+        <i class="fa fa-exclamation-triangle text-warning"></i>
+        <div class="info">
+          {{@Helper.i18n('window.message.header.sender.state.noQuorum')}}
+        </div>
+      </div>
+      <div class="the-line"></div>
+      <div class="domains">
+        <i class="fa fa-certificate"></i>
+        <div class="header">
+          {{@Helper.i18n('window.message.header.sender.state.noConsensus', message.sender.host)}}
+        </div>
+      </div>
+    }} } else if (status === 6) { {{
+      <div class="status-info">
+        <i class="fa fa-times text-danger"></i>
+        <div class="info">
+          {{@Helper.i18n('window.message.header.sender.state.invalidServerKeystore')}}
+        </div>
+      </div>
+    }} } }}
+    {{ if (cosigners.length > 0) { {{
+    <div class="the-line"></div>
+    <div class="domains">
+      <i class="fa fa-certificate"></i>
+      {{ if (validCosigners.length > 0) { {{
+        <div class="header">
+          {{@Helper.i18n(status < 3 ? 'window.message.header.sender.state.info.validCosigners' : 'window.message.header.sender.state.info.validCosigners2')}}
+          ({{#validCosigners.length}}/{{#cosigners.length}}):
+        </div>
+        <div class="domains-list">
+          {{validCosigners.forEach(function(cosigner) { {{
+            <div class="domain">
+              {{#cosigner.domain}}
+            </div>
+          }} }); }}
+        </div>
+      }} } }}
+      {{ if (invalidCosigners.length > 0) { {{
+        <div class="header">
+          {{@Helper.i18n('window.message.header.sender.state.info.invalidCosigners')}}
+          ({{#invalidCosigners.length}}/{{#cosigners.length}}):
+        </div>
+        <div class="domains-list">
+          {{invalidCosigners.forEach(function(cosigner) { {{
+            <div class="domain">
+              {{#cosigner.domain}}
+            </div>
+          }} }); }}
+        </div>
+      }} } }}
+      {{ if (noAnswerCosigners.length > 0) { {{
+        <div class="header">
+          {{@Helper.i18n('window.message.header.sender.state.info.noAnswerCosigners')}}
+          ({{#noAnswerCosigners.length}}/{{#cosigners.length}}):
+        </div>
+        <div class="domains-list">
+          {{noAnswerCosigners.forEach(function(cosigner) { {{
+            <div class="domain">
+              {{#cosigner.domain}}
+            </div>
+          }} }); }}
+        </div>
+      }} } }}
+    </div>
+    }} } }}
+    <div class="db-info">
+      <div class="header">
+      </div>
+      <div class="db-info-entry">
+        {{@Helper.i18n('window.message.header.sender.state.info.blochain.header')}}:
+        {{@message.sender.host}}/{{@fingerprint}}
+      </div>
+      <div class="db-info-entry">
+       {{@Helper.i18n('window.message.header.sender.state.info.blochain.date')}}:
+       {{@Helper.standardDate(timestamp * 1000)}}
+      </div>
+    </div>
+  </div>
+}} } }}
+{{ if (model != "loading" && model != "no-message" && model != "no-verified" && model != "anonymous") { {{
+  <div class="vi-buttons-line">
+    <div class="the-line"></div>
+    <a class="info-link" href="https://privmx.com/faqwot" target="_blank" rel="noopener noreferrer" title="{{@Helper.i18n('window.message.header.sender.state.pki')}}">
+        <i class="fa fa-question-circle"></i>
+    </a>
+    <button class="btn btn-default btn-xs" data-action="refresh-verify-info">
+      <i class="fa fa-refresh"></i>
+      {{@Helper.i18n('window.message.header.sender.state.info.renew')}}
+    </button>
+  </div>
+}} } }}
+</div>

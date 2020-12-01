@@ -1,0 +1,10 @@
+@import {MenuModel} from "../BaseView";
+@model MenuModel
+<div class="settings-menu-item" data-section="{{@model.id}}" {{#model.hidden ? 'style="display: none;"' : ''}}>
+  <div class="icon-holder">
+    <i class="fa fa-{{@model.icon}}"></i>
+  </div>
+  <div class="item-label">
+    {{@model.labelKey ? Helper.i18n(model.labelKey) : model.label}}
+  </div>
+</div>

@@ -1,0 +1,142 @@
+@import {Model} from "../SysInfoExtController";
+@model Model
+{{
+  function formatMem(bytes: number): string {
+    let mul = 1024;
+    let units = ["B", "KiB", "MiB", "GiB", "TiB"];
+    let prec = 1;
+    
+    let unitId = Math.min(Math.floor(Math.log(bytes) / Math.log(mul)), units.length - 1);
+    let unitMul = Math.pow(mul, unitId);
+    let val = Math.round(Math.pow(10, prec) * bytes / unitMul) / Math.pow(10, prec);
+    let unit = units[unitId];
+    
+    return val + " " + unit;
+  }
+}}
+<div class="section sysinfoext-section">
+  
+  <div class="section-header">
+    <i class="fa fa-desktop"></i>
+    {{@Helper.i18n("window.settings.section.sysinfo.header")}}
+  </div>
+    
+  <div class="base-form">
+    <div class="fields">
+      
+      {{ if(model.browser) { }}
+      
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.settings.section.sysinfo.browser.label")}}
+        </div>
+        <div class="input text-only">
+          {{@model.browser.nameWithVersion}}
+        </div>
+      </div>
+      
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.settings.section.sysinfo.os.label")}}
+        </div>
+        <div class="input text-only">
+          {{@model.browser.os}}
+        </div>
+      </div>
+      
+      {{ } }}
+            
+      {{ let sys = model.electronSysInfo; }}
+      {{ if (sys) { }}
+        
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.settings.section.sysinfo.hostname.label")}}
+          </div>
+          <div class="input text-only">
+            {{@sys.hostname}}
+          </div>
+        </div>
+        
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.settings.section.sysinfo.os.label")}}
+          </div>
+          <div class="input text-only">
+              {{@sys.osType}} {{@sys.osRelease}} {{@sys.arch}}
+          </div>
+        </div>
+        
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.settings.section.sysinfo.cpus.label")}}
+          </div>
+          <div class="input text-only">
+            {{@sys.cpus.join(", ")}}
+          </div>
+        </div>
+        
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.settings.section.sysinfo.totalMem.label")}}
+          </div>
+          <div class="input text-only">
+            {{@formatMem(sys.totalMem)}}
+          </div>
+        </div>
+        
+      {{ } }}
+      
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.settings.section.sysinfo.screenResolution.label")}}
+        </div>
+        <div class="input text-only">
+          {{@model.screenResolution}}
+        </div>
+      </div>
+      
+      {{ if (sys) { }}
+        
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.settings.section.sysinfo.nodeVersion.label")}}
+          </div>
+          <div class="input text-only">
+            {{@sys.nodeVersion}}
+          </div>
+        </div>
+        
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.settings.section.sysinfo.electronVersion.label")}}
+          </div>
+          <div class="input text-only">
+            {{@sys.electronVersion}}
+          </div>
+        </div>
+        
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.settings.section.sysinfo.chromeVersion.label")}}
+          </div>
+          <div class="input text-only">
+            {{@sys.chromeVersion}}
+          </div>
+        </div>
+        
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.settings.section.sysinfo.v8Version.label")}}
+          </div>
+          <div class="input text-only">
+            {{@sys.v8Version}}
+          </div>
+        </div>
+        
+      {{ } }}
+      
+    </div>
+  </div>
+  
+</div>

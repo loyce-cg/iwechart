@@ -1,0 +1,43 @@
+@import "../../base/BaseWindow";
+
+body {
+  background: @colorBackground;
+  font-size: var(--font-size-l);
+  &.admin-alert {
+    background: #292929;
+    color: #eee;
+  }
+}
+
+.window-openexternal {
+  .content {
+    position: absolute;
+    top: 10px;
+    left: 15px;
+    right: 15px;
+    bottom: 60px;
+    overflow: auto;
+    
+    .info {
+      font-size: var(--font-size);
+      text-align: center;
+    }
+    .bold {
+      font-weight: 700;
+    }
+
+  }
+  .buttons {
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    .btn {
+      margin: 0 10px;
+    }
+    label {
+      font-size: var(--font-size);
+    }
+  }
+}

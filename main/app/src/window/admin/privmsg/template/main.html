@@ -1,0 +1,53 @@
+@import {func as usersTemplate} from "./users.html";
+@import {Model} from "../PrivMsgController"
+@model Model
+<div>
+
+  <div class="panel-header">
+    <i class="privmx-icon privmx-icon-chat"></i>
+    {{@Helper.i18n("window.admin.privmsg.menu")}}
+  </div>
+  
+  <div class="panel-info">
+    {{@Helper.i18n("window.admin.privmsg.header")}}
+  </div>
+
+  <div class="le-main">
+    <div class="le-main-sub">
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.admin.privmsg.content.label")}}
+        </div>
+        <div class="input">
+          <textarea data-content=""></textarea>
+        </div>
+      </div>
+      <div class="field">
+        <div class="info next">
+          {{@Helper.i18n("window.admin.privmsg.sendto.label")}}
+        </div>
+        <div class="input">
+          <div class="users-container">
+            {{ if (model) { {{
+              {{#Helper.createTemplate(usersTemplate).render(model.usersInfo)}}
+            }} } }}
+          </div>
+          <button class="btn btn-default btn-xs choose-users-btn" data-action="choose-users">
+            {{@Helper.i18n("window.admin.privmsg.choose")}}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="field buttons">
+    <div class="info"></div>
+    <div class="input">
+      <button class="btn btn-success" data-action="send">
+        <i class="privmx-icon privmx-icon-chat" data-org="privmx-icon privmx-icon-chat" data-proc="fa fa-spin fa-circle-o-notch"></i>
+        {{@Helper.i18n("window.admin.privmsg.send")}}
+      </button>
+      <div class="progress-info"></div>
+    </div>
+  </div>
+  
+</div>

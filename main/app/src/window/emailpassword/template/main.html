@@ -1,0 +1,87 @@
+@import {EmailPasswordModel} from "../EmailPasswordWindowController";
+@model EmailPasswordModel
+<div class="window-email-password-main">
+  <div class="content">
+    <div class="main-info">
+      {{@Helper.i18n("window.emailpassword.main")}}
+    </div>
+      
+    <div class="radio">
+      <label>
+        <input class="password-radio" type="radio" name="passwordRadio" {{#model.withPassword ? 'checked="checked"' : ''}} data-trigger="with-password">
+        <span class="radio-label">{{@Helper.i18n("window.emailpassword.withPassword")}}</span>
+      </label>
+    </div>
+     
+    <div class="inner-column">
+      <div class="info-no-padding">
+        {{@Helper.i18n("window.emailpassword.step2.info1")}}
+        <a target="_blank" tabindex="-1" href="https://privmx.com/faqstdemail">{{@Helper.i18n("window.emailpassword.step2.info2")}}</a>
+      </div>
+      <div class="step">
+        <div class="step-header">
+          1.
+          {{@Helper.i18n("window.emailpassword.step1")}} {{@model.email}}:
+        </div>
+        <div class="step-body">
+          <input class="form-control" type="password" value="{{@model.password}}" data-input="password" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');" placeholder="{{@Helper.i18n('window.emailpassword.password.placeholder')}}" />
+          <button class="btn btn-link" data-trigger="show-password" tabindex="-1">
+            {{@Helper.i18n("window.emailpassword.showPassword")}}
+          </button>
+          <button class="btn btn-link hide" data-trigger="hide-password" tabindex="-1">
+            {{@Helper.i18n("window.emailpassword.hidePassword")}}
+          </button>
+          <button class="btn btn-link" data-trigger="generate-password" tabindex="-1">
+            {{@Helper.i18n("window.emailpassword.generatePassword")}}
+          </button>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-header">
+          2.
+          {{@Helper.i18n("window.emailpassword.step2")}}:
+        </div>
+        <div class="step-body">
+          <input class="form-control" type="text" value="{{@model.hint}}" data-input="hint" autocomplete="off" placeholder="{{@Helper.i18n('window.emailpassword.hint.placeholder')}}" />
+        </div>
+      </div>
+    </div>
+      
+    <div class="radio">
+      <label>
+        <input class="password-radio" type="radio" name="passwordRadio" {{#model.withPassword ? '' : 'checked="checked"'}} data-trigger="without-password">
+        <span class="radio-label">{{@Helper.i18n("window.emailpassword.withoutPassword")}}</span>
+      </label>
+    </div>
+    <div class="info-no-padding">
+      <div class="inner-column">
+       {{@Helper.i18n("window.emailpassword.withoutPasswordDescription")}}
+      </div>
+    </div>
+    
+    <div class="step">
+      <div class="step-header">
+        <span class="input-label">{{@Helper.i18n("window.emailpassword.step3")}}:</span>
+        <select data-input="lang">
+            {{
+              let availableLanguages = Helper.getAvailableLangs();
+              for (let lang of availableLanguages) {
+            }}
+              <option value="{{@lang}}" {{#model.lang == lang ? 'selected="selected"' : ''}}>{{@Helper.i18n("core.langs." + lang)}}</option>
+            {{ } }}
+        </select>
+      </div>
+    </div>
+  </div>
+    
+  <div class="buttons">
+    <button class="btn btn-success" data-trigger="ok">
+      <i class="fa fa-check"></i>
+      {{@Helper.i18n("core.button.ok.label")}}
+    </button>
+    <button class="btn btn-default" data-trigger="cancel">
+      <i class="fa fa-ban"></i>
+      {{@Helper.i18n("core.button.cancel.label")}}
+    </button>
+  </div>
+</div>

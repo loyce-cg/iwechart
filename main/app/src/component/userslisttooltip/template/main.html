@@ -1,0 +1,29 @@
+@import { UsersListModel } from "../UsersListTooltipController";
+@model UsersListModel
+<div class='userslist-tooltip'>
+  <div class="avatars">
+    {{
+      model.persons.forEach(person => {
+        let shortDescription = Helper.shortDescription(person.description) || "";
+        let truncateDescription = !!context;
+        {{
+          <div class="avatar-item {{@shortDescription ? 'with-description' : ''}} {{@person.present ? 'present' : ''}} {{@truncateDescription ? 'truncate-description' : ''}}" data-hashmail-profile="{{@person.hashmail}}" data-description-indicator="true">
+            <div class="image-with-data" style="padding: 10px 10px 10px 0">
+              <p class="image">
+                <canvas class="not-rendered" data-hashmail-image="{{@person.hashmail}}" data-width="30" data-height="30" data-auto-size="true" data-auto-refresh="true"></canvas>
+              </p>
+              <div class="text-col">
+                <p class="name" data-hashmail-name="{{@person.hashmail}}" data-auto-refresh="true" style="padding-top:0; margin-bottom: 0; line-height: 26px;">
+                  {{@person.name || person.hashmail}}
+                </p>
+                <p class="desc" data-hashmail-short-description="{{@person.hashmail}}" data-max-length="{{truncateDescription ? 25 : -1}}" data-auto-refresh="true">
+                  {{@shortDescription && truncateDescription ? Helper.truncate(shortDescription, 25) : shortDescription}}
+                </p>
+              </div>
+            </div>
+          </div>
+        }}
+      })
+    }}
+    </div>
+</div>

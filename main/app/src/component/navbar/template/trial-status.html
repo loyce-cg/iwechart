@@ -1,0 +1,16 @@
+@import {TrialModel} from "../NavBarView"
+@model TrialModel
+{{
+    if (model.trial && model.endDate > -1) {
+        {{ 
+            <span data-trigger="open-trial-dropdown" class="action-link">
+                <span></span>
+                <span class="link-label">
+                    {{@Helper.i18n("component.navbar.trialMenu.label")}}
+                </span>
+                <span class="ico-arrow-down"></span>
+            </span>
+            <div class="trial-dropdown"></div>
+        }}
+    }
+}}

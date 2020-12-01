@@ -1,0 +1,42 @@
+@import {component} from "pmc-web";
+@import {FileEntry} from "../FilesListController";
+@context component.extlist.Context<FileEntry>
+@model FileEntry
+
+<tr class="file-entry {{@context.isActive ? 'active' : ''}} {{@model.unread ? 'unread' : ''}} {{@model.locked ? 'locked' : ''}}" data-type="{{@model.type}}" data-deletable="{{@model.deletable}}" data-renamable="{{@model.renamable}}" data-hashistory="{{@model.hasHistory}}" data-printable="{{@model.printable}}" data-cansaveaspdf="{{@model.canSaveAsPdf}}" data-id="{{@model.id}}" data-isparentdir="{{@model.isParentDir}}">
+  <td class="unread-marker"></td>
+  <td class="file-name">
+    <i class="fa {{@model.icon}}"></i>
+    {{ let bindedTasks: { taskId: string, labelClass: string }[] = model.bindedTasksStr ? JSON.parse(model.bindedTasksStr) : []; }}
+    {{ let bindedTask = bindedTasks[0]; }}
+    {{ if (bindedTask) {
+      let taskLabelClass = bindedTask.labelClass || "task-status-unknown";
+      let tId = bindedTask.taskId;
+      let taskLabel = "#" + (tId.indexOf(",") < 0 ? tId.substr(0, 5) : "...");
+      {{
+        <span class="task-id task-label has-task-tooltip {{@taskLabelClass}}" data-task-id="{{@bindedTask.taskId}}">{{@taskLabel}}</span>
+      }}
+    } }}
+    <span class="locked-indicator">
+      <i class="fa fa-lock has-userslist-tooltip" data-userslist-id="{{@model.id}}"></i>
+    </span>
+    <span class="file-name-text">
+      {{@model.name}}
+    </span>
+  </td>
+  <td class="file-size">
+    {{ if (model.type == "file") { {{
+      {{@Helper.bytesSize(model.size)}}
+    }} } }}
+  </td>
+  <td class="file-mod-date {{@model.type == 'file' && model.modifier ? '' : 'no-modifier'}}">
+    {{ if (model.type == "file" && model.modifier) { {{
+      <canvas class="not-rendered" data-tooltip-trigger="{{@model.modifier}}" data-hashmail-image="{{@model.modifier}}" data-width="16" data-height="16" data-auto-size="true" data-auto-refresh="true" width="10" height="10"></canvas>
+    }} } }}
+    {{ if (model.modificationDate) { {{
+      <div class="file-date" title="{{@Helper.dateWithHourLocal(model.modificationDate)}}" data-timeago-type="calendarDate" data-timeago="{{@model.modificationDate}}">
+        {{@Helper.calendarDate(model.modificationDate)}}
+      </div>
+    }} } }}
+  </td>
+</tr>

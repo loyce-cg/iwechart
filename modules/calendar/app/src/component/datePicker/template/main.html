@@ -1,0 +1,46 @@
+@import { Model } from "../DatePickerController";
+@model Model
+{{
+  let cls = "";
+  if (model.options.day === false) {
+    cls += " no-day";
+  }
+  if (model.options.month === false) {
+    cls += " no-month";
+  }
+  if (model.options.year === false) {
+    cls += " no-year";
+  }
+  if (model.options.prev === false) {
+    cls += " no-prev";
+  }
+  if (model.options.next === false) {
+    cls += " no-next";
+  }
+  if (model.options.today === true) {
+    cls += " with-today";
+  }
+  if (model.options.popup === true) {
+    cls += " popup";
+  }
+  if (model.options.buttons === false) {
+    cls += " no-buttons";
+  }
+  if (model.options.duration === true) {
+    cls += " duration-picker";
+  }
+}}
+<div class="date-picker-component{{@cls}}">
+  <div class="date">
+    <div class="prev-btn btn btn-default"><i class="fa fa-chevron-left"></i></div>
+    <div class="day-container"></div>
+    <div class="month-container"></div>
+    <div class="year-container"></div>
+    <div class="next-btn btn btn-default"><i class="fa fa-chevron-right"></i></div>
+    <button class="today-btn btn btn-default">{{@Helper.i18n("plugin.calendar.component.datePicker.today")}}</button>
+  </div>
+  <div class="popup-buttons">
+    <button class="btn btn-success ok-btn">{{@Helper.i18n("plugin.calendar.component.datePicker.buttons.ok")}}</button>
+    <button class="btn btn-default cancel-btn">{{@Helper.i18n("plugin.calendar.component.datePicker.buttons.cancel")}}</button>
+  </div>
+</div>

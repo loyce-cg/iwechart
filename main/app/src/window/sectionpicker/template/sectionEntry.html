@@ -1,0 +1,27 @@
+@import {SectionEntry} from "../../sections/SectionsWindowController";
+@import {Context} from "../../../component/extlist/ExtListView";
+@context Context<SectionEntry>
+@model SectionEntry
+
+@import {component} from "pmc-web";
+@import {FileEntry} from "../FilesListController";
+
+@model FileEntry
+    <div class="section-entry wi-element-parent {{@context.isActive ? 'active' : ''}}" data-name="{{@model.name}}" data-tree-id="{{@model.id}}">
+      <div class="section-name wi-element {{@model.isRoot ? 'section-root' : ''}}">
+        <div class="wi-element-inner">
+            <div class="wi-element-icon bckg-icon bckg-icon-inverse2 {{@model.scope == 'private' ? 'bckg-icon-border' : ''}}">
+              <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+            </div>
+          <div class="wi-element-name">
+            {{ if (model.breadcrumb.length > 0) { {{
+              <span class="section-breadcrumb">{{#model.breadcrumb}}</span>
+            }} } }}
+            {{@model.name}}
+          </div>
+        </div>
+      </div>
+      <div class="tree-children"></div>
+    </div>
+
+

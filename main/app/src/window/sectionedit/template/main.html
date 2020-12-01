@@ -1,0 +1,201 @@
+@import {Model} from "../SectionEditWindowController";
+@model Model
+<div class="window-section-edit hide">
+  <div class="empty hide">
+    {{@Helper.i18n("window.sectionEdit.state.empty")}}
+  </div>
+  <div class="with-data">
+    <div class="base-form">
+      <div class="fields">
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.sectionEdit.state.label")}}
+          </div>
+          <div class="field-value">
+            <div class="checkbox">
+              <label>
+                <input class="module-checked" type="checkbox" vf-model="enabled" vf-disabled="editable == false || this.loading" />
+                {{@Helper.i18n("window.sectionEdit.state.enabled")}}
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="info parent-name">
+            {{@Helper.i18n("window.sectionEdit.parentchange.label")}}
+          </div>
+          <div class="field-value">
+            <div class="wi-element">
+              <div class="wi-element-inner">
+                <div class="wi-element-icon bckg-icon bckg-icon-inverse2" vf-class="{'bckg-icon-border':this.parentScope == 'private'}">
+                  <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+                </div>
+                <span class="parent-name" vf-model="parentName"></span>
+                <button class="btn btn-link edit-btn" vf-visible="editable" vf-click="move()" vf-disabled="loading">
+                  {{@Helper.i18n("core.button.change.label")}}
+                </button>
+
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="info input-info">
+            {{@Helper.i18n("window.sectionEdit.section_name.label")}}
+          </div>
+          <div class="input">
+            <input type="text" class="name-input" vf-model="name" maxlength="100" placeholder="{{@Helper.i18n('window.sectionEdit.section_name.placeholder')}}" vf-readonly="editable == false" vf-disabled="loading">
+          </div>
+        </div>
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.sectionEdit.active_modules")}}
+          </div>
+          <div class="field-value sorted-modules">
+            {{ model.modules.forEach((module, i) => { {{
+            <div class="checkbox sorted-module-{{@module}}">
+              <label>
+                <input class="module-checked" data-id="{{@module}}" type="checkbox" vf-model="modules[{{@i}}].selected" vf-disabled="editable == false || this.loading" />
+                <div class="module-icon">
+                    {{ if (module == "calendar") { {{ <i class="privmx-icon privmx-icon-calendar"></i> }} } }}
+                    {{ if (module == "kvdb") { {{ <i class="privmx-icon privmx-icon-tasks"></i> }} } }}
+                    {{ if (module == "chat") { {{ <i class="privmx-icon privmx-icon-chat"></i> }} } }}
+                    {{ if (module == "file") { {{ <i class="privmx-icon privmx-icon-notes2"></i> }} } }}
+                </div>
+                <span class="module-text">{{@Helper.i18n("window.sectionEdit.module." + module)}}</span>
+              </label>
+              {{ if (module != "calendar") { }}
+                <label>
+                  <input class="module-notifications-checked" data-id="{{@module}}" type="checkbox" vf-model="modules[{{@i}}].notifications" vf-disabled="false || this.loading || !this.modules[{{@i}}].selected" />
+                  <span class="notify-text"><canvas class="not-rendered" data-width="15" data-height="15" data-auto-size="true" data-hashmail-image="{{@model.hashmail}}" data-auto-refresh="true" width="15" height="15" style="width: 15px; height: 15px;"></canvas><span>{{@Helper.i18n("window.sectionEdit.notify")}}</span></span>
+                </label>
+              {{ } }}
+            </div>
+            }} }); }}
+          </div>
+        </div>
+        <div class="divider"></div>
+
+        <div class="manage-info">
+          <i class="fa fa-info-circle"></i>
+          <span vf-visible="acl.manage.isPrivate == false">{{@Helper.i18n("window.sectionEdit.managed")}}</span>
+          <span vf-visible="acl.manage.isPrivate == true">{{@Helper.i18n("window.sectionEdit.notmanaged")}}</span>
+        </div>
+        
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.sectionEdit.access.label")}}
+          </div>
+          <div class="field-value" data-acl="group">
+            <div class="preview" vf-visible="group.editMode == false">
+              <span vf-model="group.getLabel()"></span>
+              <button class="btn btn-link" vf-click="chooseUsers('group')" vf-disabled="loading" vf-visible="editable">
+                              {{@Helper.i18n("core.button.change.label")}}
+              </button>
+            </div>
+          </div>
+        </div>
+        {{function aclInfo(type: string) { {{
+          <div class="field-value">
+            <div class="preview" vf-visible="acl.{{@type}}.editMode == false">
+              <span vf-model="acl.{{@type}}.getLabel()"></span>
+              <button class="btn btn-link" vf-click="chooseUsers('{{@type}}')" vf-disabled="loading"  vf-visible="editable">
+                {{@Helper.i18n("core.button.change.label")}}
+              </button>
+            </div>
+          </div>
+        }} }; }}
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.sectionEdit.manage.label")}}
+          </div>
+            {{aclInfo("manage");}}
+        </div>
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.sectionEdit.subsection.label")}}
+          </div>
+            {{aclInfo("createSubsections");}}
+        </div>
+        <div class="divider"></div>
+        <div class="field">
+          <div class="info">
+            
+          </div>
+          <div class="field-value">
+            <div class="checkbox">
+              <label>
+                <input class="module-checked" type="checkbox" vf-model="userSettings.visible" vf-disabled="loading || !this.userSettingsEditable" />
+                {{@Helper.i18n("window.sectionEdit.userSettings.visible")}}
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="field" vf-visible="primaryEditable || this.isPrimaryEditable()">
+          <div class="info">
+            
+          </div>
+          <div class="field-value">
+            <div class="checkbox">
+              <label>
+                <input class="module-checked" type="checkbox" vf-model="primary" vf-disabled="loading" />
+                {{@Helper.i18n("window.sectionEdit.primarySection")}}
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="buttons-container">
+      <div class="buttons">
+        <button class="btn btn-success save" vf-click="confirm()" vf-disabled="loading || this.isDirty() == false" tabindex="1">
+          <i class="fa" vf-class="{'fa-plus': this.mode == 'create' && !this.saving, 'fa-floppy-o': this.mode == 'update' && !this.saving, 'fa-circle-o-notch': this.saving, 'fa-spin': this.saving}"></i>
+          <span vf-visible="mode == 'create'">
+            <span vf-visible="saving == false">
+              {{@Helper.i18n("core.button.add.label")}}
+            </span>
+            <span vf-visible="saving">
+              {{@Helper.i18n("core.button.adding.label")}}
+            </span>
+          </span>
+          <span vf-visible="mode == 'update'">
+            <span vf-visible="saving == false">
+              {{@Helper.i18n("core.button.save.label")}}
+            </span>
+            <span vf-visible="saving">
+              {{@Helper.i18n("core.button.saving.label")}}
+            </span>
+          </span>
+        </button>
+        <button class="btn btn-success" vf-click="addSection()" vf-visible="canCreateSubsection" vf-visible="saving == false" tabindex="5">
+          <i class="fa fa-plus"></i>
+          {{@Helper.i18n("window.sectionEdit.actions.addSub")}}
+        </button>
+
+        <button class="btn btn-warning btn-sm small delete" vf-visible="editable" vf-click="remove()" vf-disabled="loading" tabindex="3">
+          
+          <span vf-visible="removing == false">
+            <i class="fa" vf-class="{'fa-trash': !this.removing, 'fa-circle-o-notch': this.removing, 'fa-spin': this.removing}"></i>{{@Helper.i18n("core.button.remove.label")}}
+          </span>
+          <span vf-visible="removing">
+            {{@Helper.i18n("core.button.removing.label")}}
+          </span>
+        </button>
+        {{ if (!model.docked) { {{
+          <button class="btn btn-default" vf-click="close()" vf-disabled="loading" tabindex="4">
+            {{@Helper.i18n("core.button.close.label")}}
+          </button>
+        }} } }}
+        <button class="btn btn-default gray invisible" vf-visible="mode == 'update'" vf-click="share()" vf-disabled="loading" tabindex="5" title="{{@Helper.i18n('window.sectionEdit.share')}}">
+          <i class="fa fa-share"></i>
+        </button>
+
+        <span class="saved-indicator text-success hide">
+          <i class="fa fa-check"></i>
+          {{@Helper.i18n("core.button.saved.label")}}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

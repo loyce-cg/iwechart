@@ -1,0 +1,54 @@
+@import {component} from "pmc-web";
+@import {EntryViewModel} from "../RecentFilesWindowController";
+@context component.extlist.Context<EntryViewModel, any>
+@model EntryViewModel
+<tr class="recentfiles-file {{@context.isActive ? 'active' : ''}}" data-file-id="{{@model.fileId}}" data-file-did="{{@model.did}}">
+  <td class="name">
+    <i class="{{@model.icon}}"></i>
+    {{@model.fileName}}
+  </td>
+  <td class="date">
+    <div title="{{@Helper.dateWithHourLocal(model.modified)}}" data-timeago-type="calendarDate" data-timeago="{{@model.modified}}">
+      {{@Helper.calendarDate(model.modified)}}
+    </div>
+  </td>
+  <td class="source">
+    {{ if (model.id == "channel") { {{
+      {{ if (model.channelName == "<my>") { {{
+        <li class="conversation-element contact without-description" data-conversation-id="{{@model.hashmail}}">
+          <span>
+            <div class="image-with-data">
+              <p class="image">
+                <canvas class="not-rendered" data-tooltip-trigger="{{@model.hashmail}}" data-hashmail-image="{{@model.hashmail}}" data-width="16" data-height="16" data-auto-size="true" data-auto-refresh="true" width="16" height="16"></canvas>
+              </p>
+              <div class="text-col">
+                <p class="name">
+                  {{@Helper.i18n("plugin.notes2.window.recentfiles.filter.my")}}
+                </p>
+              </div>
+            </div>
+          </span>
+        </li>
+      {{ } else { }}
+        <div class="wi-element">
+          <div class="wi-element-inner">
+            <div class="wi-element-icon bckg-icon bckg-icon-small bckg-icon-inverse2 {{@model.channelScope == 'private' ? 'bckg-icon-border' : ''}}">
+              <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+            </div>
+            <div class="wi-element-name">
+              {{@model.channelName}}
+            </div>
+          </div>
+        </div>
+      {{ } }}
+    }} } }}
+    {{ if (model.id == "local") { {{
+      <div class="local-files-info">
+        <i class="fa fa-desktop"></i> {{@Helper.i18n("plugin.notes2.window.recentfiles.filter.local", model.systemLabel)}}
+      </div>
+    }} } }}
+    {{ if (model.id == "conversation") { {{
+      {{#context.listView.extra.render(model.convModel, {})}}
+    }} } }}
+  </td>
+</tr>

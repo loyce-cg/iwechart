@@ -1,0 +1,90 @@
+@import {Model} from "../AdminAddExternalUserWindowController"
+@model Model
+<div>
+  <h3>
+    {{@Helper.i18n("window.admin.userExternalAdd.title")}}
+  </h3>
+  <form class="base-form" action="javascript:void(0)">
+    <div class="fields">
+      <!-- <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.admin.userExternalAdd.addUserBy")}}
+        </div>
+        <div class="radiobox">
+          <label>
+            <input type="radio" class="usertype-privmx" vf-model="usertype" name="usertype" value="privmx" />
+            <strong>{{@Helper.i18n("window.admin.userExternalAdd.addUserByPrivmAddres")}}</strong>
+          </label>
+        </div>
+        <div class="radiobox">
+          <label>
+            <input type="radio" class="usertype-email" vf-model="usertype" name="usertype" value="email" />
+            <strong>{{@Helper.i18n("window.admin.userExternalAdd.addUserByEmailAddress")}}</strong>
+          </label>
+        </div>
+      </div> -->
+            
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.admin.userExternalAdd.privmx.label")}}
+        </div>
+        <div class="input">
+          <input type="text" vf-model="privmxaddress" vf-disabled="adding" placeholder="{{@Helper.i18n('window.admin.userExternalAdd.privmx.placeholder')}}" style="width: 340px;"/>
+        </div>
+        <div class="info-ex">
+          {{@Helper.i18n("window.admin.userExternalAdd.privmx.info")}}
+        </div>
+      </div>
+      <!-- <div class="field" vf-visible="usertype == 'email'">
+        <div class="info">
+          {{@Helper.i18n("window.admin.userExternalAdd.username.label")}}
+        </div>
+        <div class="input">
+          <input type="text" vf-model="login" vf-disabled="adding" placeholder="{{@Helper.i18n('window.admin.userExternalAdd.username.placeholder')}}" />
+        </div>
+      </div> -->
+
+
+      <!-- <div class="radiobox">
+        <label>
+          <input type="radio" disabled checked="checked" value="managable" />
+          <strong>{{@Helper.i18n("window.admin.userExternalAdd.type.managable")}}</strong> - {{@Helper.i18n("window.admin.userExternalAdd.type.managable.description")}}
+        </label>
+      </div> -->
+      <!-- <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.admin.userExternalAdd.description.label")}}
+        </div>
+        <div class="input">
+          <textarea vf-model="description" vf-disabled="adding" placeholder="{{@Helper.i18n('window.admin.userExternalAdd.description.placeholder')}}">
+          </textarea>
+        </div>
+        <div class="info-ex">
+          {{@Helper.i18n("window.admin.userExternalAdd.description.info")}}
+        </div>
+      </div> -->
+      <!-- <div class="field" style="margin-top: 10px;">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" vf-model="privateSectionAllowed" vf-disabled="adding" checked="checked" />
+            {{@Helper.i18n("window.admin.userExternalAdd.withPrivateSection")}}
+          </label>
+        </div>
+      </div> -->
+      <div class="field buttons" style="position: absolute; margin-bottom: 10px;">
+        <div class="info">
+        </div>
+        <div class="input">
+          <button class="btn btn-success add-button" vf-click="addUser()" vf-disabled="adding">
+            <i class="fa" vf-class="{'fa-plus': !this.adding, 'fa-spin': this.adding, 'fa-circle-o-notch': this.adding}"></i>
+            <span class="if-managable" vf-model="{this.adding ? '{{@Helper.i18n('window.admin.userExternalAdd.form.button.adding2')}}' : '{{@Helper.i18n('window.admin.userExternalAdd.form.button.add2')}}'}"></span>
+            <span class="if-not-managable" vf-model="{this.adding ? '{{@Helper.i18n('window.admin.userExternalAdd.form.button.adding')}}' : (this.sendActivationLink ? '{{@Helper.i18n('window.admin.userExternalAdd.form.button.addAndSend')}}' : '{{@Helper.i18n('window.admin.userExternalAdd.form.button.add')}}')}"></span>
+          </button>
+          <button class="btn btn-default" vf-click="close()" vf-disabled="adding">
+            {{@Helper.i18n("core.button.cancel.label")}}
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

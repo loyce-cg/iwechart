@@ -1,0 +1,47 @@
+.update-notification-container {
+  position: absolute;
+  bottom: 5px;
+  width: 100%;
+  z-index: 99999;
+
+    .notification-entry {
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+      display: none;
+      height: 36px;
+      background-color: #333;
+      // width: 300px;
+      position: absolute;
+      bottom: 10px;
+      right: calc(50% - calc(300px / 2));
+      border-radius: 5px;
+      color: #aaa;
+      font-size: var(--font-size-s);
+      
+      .update-msg {
+        display: inline-block;
+        text-align: center;
+        line-height: 36px;
+        padding-left: 10px;
+        padding-right: 10px;
+        i.fa-circle-o-notch {
+          margin-right: 5px;
+        }
+
+      }
+      .update-btn {
+        /* position: relative; */
+        display: inline-block;
+        float: right;
+        /* padding-right: 10px; */
+        /* top: 0; */
+        line-height: 36px;
+        /* position: absolute; */
+        right: 10px;
+        margin: 0;
+        padding: 0 10px;
+        padding-left: 10px;
+        border-left: 1px solid #555;
+        border-radius: 0;
+      }
+    }
+}

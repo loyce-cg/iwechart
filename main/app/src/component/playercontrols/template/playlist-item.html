@@ -1,0 +1,7 @@
+@import {Context} from "../../extlist/ExtListView";
+@import {PlaylistSimpleItem} from "../../../app/common/musicPlayer/PlayerManager";
+@model PlaylistSimpleItem
+@context Context<PlaylistSimpleItem>
+<li class="{{@context.isActive ? ' active' : ''}}" data-id="{{@model.id}}">
+  <span>{{@model.title}}</span><i class="fa fa-times" data-action="delete-from-playlist"></i>
+</li>

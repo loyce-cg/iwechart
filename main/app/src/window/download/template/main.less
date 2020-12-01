@@ -1,0 +1,122 @@
+@import "../../base/BaseWindow";
+
+body {
+  // background-color: #D6D6D6;
+  background-color: var(--preview-panel-bg);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.window-download-main {
+  padding: 10px 15px;
+  position: relative;
+  width: 100%;
+  height: 100%;
+
+  .content {
+    .inner {
+      .inner2 {;
+        text-align: center;
+        
+        .name {
+          margin-top: 18px;
+          .text {
+            font-size: calc(var(--font-size-xxl) + 2px);
+            display: block;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            position: relative;
+            line-height: 24px;
+            vertical-align: middle;
+            .fa {
+              color: #AAA;
+              font-size: calc(var(--font-size-xxl) + 2px);
+              margin-right: 7px;
+              display: inline-block;
+            }
+            .text-inner {
+              display: inline;
+            }
+          }
+        }
+        .file-info {
+          margin: 10px 20px 20px 20px;
+        }
+        .buttons {
+          display: block;
+          // margin: 20px 0 0 0;
+          text-align: center;
+          margin-top: -10px;
+          .button-container {
+            margin-top: 10px;
+            margin-right: 5px;
+            display: inline-block;
+          }
+        }
+      }
+    }
+    .close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+  }
+  
+  .starting-info {
+    font-size: var(--font-size);
+  }
+  
+  .file-name {
+    margin: 4px 0 0 0;
+    font-weight: bold;
+    font-size: calc(var(--font-size) + 1px);
+    
+    i {
+      margin: 0 3px 0 8px;
+      font-size: var(--font-size-l);
+    }
+  }
+  
+  .file-info {
+    margin: 0px 0 10px 28px;
+    
+    .entry {
+      margin: 1px 0;
+      font-size: var(--font-size);
+    }
+  }
+  
+  .after-info {
+    margin: 10px 0;
+    font-weight: bold;
+    font-size: calc(var(--font-size) + 1px);
+  }
+  
+  .options {
+    margin: 16px 0 42px 30px;
+    
+    .option {
+      margin: 10px 0;
+      font-size: var(--font-size);
+      
+      input {
+        position: absolute;
+        margin: 0;
+        width: 16px;
+        height: 16px;
+      }
+      label {
+        margin: 0 0 0 25px;
+        font-weight: normal;
+      }
+    }
+  }
+  
+  .status-bar {
+    width: auto;
+  }
+}

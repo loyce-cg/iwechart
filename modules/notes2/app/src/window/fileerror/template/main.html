@@ -1,0 +1,68 @@
+@import {Model} from "../FileErrorWindowController";
+@import {OperationType} from "../../../main/Common";
+@model Model
+<div class="window-file-error-main" tabindex="-1">
+    <div class="header">
+        {{ if (model.operationType == OperationType.MOVE) { {{
+            {{@Helper.i18n("plugin.notes2.window.fileerror.moveError")}}
+        }} } else if (model.operationType == OperationType.COPY) { {{
+            {{@Helper.i18n("plugin.notes2.window.fileerror.copyError")}}
+        }} } else if (model.operationType == OperationType.REMOVE) { {{
+            {{@Helper.i18n("plugin.notes2.window.fileerror.removeError")}}
+        }} } }}
+    </div>
+    <div class="info">
+        {{ if (model.dirNotEmptyError) { {{
+            {{@Helper.i18n("plugin.notes2.window.fileerror.emptyDir")}}
+        }} } else { {{
+            {{@Helper.i18n("plugin.notes2.window.fileerror.info", model.error.toString(16).toUpperCase())}}
+        }} } }}
+    </div>
+    {{ if (model.destination) { {{
+    <div class="file-info">
+        <div class="file-icon">
+            <i class="fa fa-file-o"></i>
+        </div>
+        <div class="file-data">
+            <div class="file-origin">
+                {{@Helper.i18n("plugin.notes2.window.fileerror.destination")}}
+            </div>
+            <div class="file-name">
+                {{@model.destination.name}}
+            </div>
+            <div class="file-path">
+                {{@model.destination.path}}
+            </div>
+        </div>
+    </div>
+    }} } }}
+    <div class="file-info">
+        <div class="file-icon">
+            <i class="fa fa-file-o"></i>
+        </div>
+        <div class="file-data">
+            <div class="file-origin">
+                {{@Helper.i18n(model.operationType == OperationType.REMOVE ? "plugin.notes2.window.fileerror.removeDestination" : "plugin.notes2.window.fileerror.source")}}
+            </div>
+            <div class="file-name">
+                {{@model.source.name}}
+            </div>
+            <div class="file-path">
+                {{@model.source.path}}
+            </div>
+        </div>
+    </div>
+    <div class="buttons">
+        <div class="buttons-cnt">
+            <button class="btn btn-default" data-action="cancel">
+                {{@Helper.i18n("plugin.notes2.window.fileerror.button.cancel.label")}}
+            </button>
+            <button class="btn btn-default" data-action="omit">
+                {{@Helper.i18n("plugin.notes2.window.fileerror.buttons.omit")}}
+            </button>
+            <button class="btn btn-default" data-action="retry">
+                {{@Helper.i18n("plugin.notes2.window.fileerror.buttons.retry")}}
+            </button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,14 @@
+@import {component} from "pmc-web";
+@import {ChannelModel} from "../NewNoteWindowController";
+@context component.extlist.Context<ChannelModel>
+@model ChannelModel
+<div class="wi-element channel-entry" data-conversation-id="{{@model.id}}">
+  <div class="wi-element-inner">
+    <div class="wi-element-icon bckg-icon {{@model.scope == 'private' ? 'bckg-icon-border' : ''}}">
+      <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+    </div>
+    <div class="wi-element-name">
+      {{@model.name}}
+    </div>
+  </div>
+</div>

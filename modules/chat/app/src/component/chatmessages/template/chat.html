@@ -1,0 +1,76 @@
+@import {ChatType} from "../../../main/Types";
+@import {func as msgCountTemplate} from "./msg-count.html";
+@model {chatType: ChatType, messagesCount: number, hasNotes2: boolean, hasTasks: boolean, guiSettings: any, sectionId: string, viewSettings:{[key:string]:any}}
+  <div class="chat">
+    <div class="header">
+      {{#Helper.createTemplate(msgCountTemplate).render(model.messagesCount)}}
+      <div class="right-side-buttons">
+        <span class="btn btn-xs btn-default settings" data-action="open-settings" title="{{@Helper.i18n('plugin.chat.component.chatMessages.buttonSettingsTooltip')}}">
+          <i class="ico-settings"></i>
+        </span>
+      </div>
+      <div class="profiles" data-container="chat-header-profiles-contact"></div>
+    </div>
+    <div class="chat-inner" tabindex="-1">
+      <div class="search-info hidden">
+        <button class="btn btn-default" data-action="search-historical-data">
+          <i class="fa fa-search"></i>
+          <span>{{@Helper.i18n("plugin.chat.component.chatMessages.searchAll")}}</span>
+        </button>
+        <div class="search-no-results">{{@Helper.i18n("plugin.chat.component.chatMessages.noResults")}}</div>
+      </div>
+      <div class="{{@model.chatType == ChatType.CONVERSATION ? 'chat-messages' : 'channel-messages'}} messages-container" data-container="chat-messages"></div>
+    </div>
+    <div class="emoji-picker"></div>
+    <div class="chat-notifications-container"></div>
+    <div class="context-menu-settings">
+      <div class="context-menu-backdrop2"></div>
+      <ul class="context-menu-settings-content">
+        <li class="ptr"></li>
+        <li class="context-menu-group-header">{{@Helper.i18n("plugin.chat.component.chatMessages.settings.header.viewOptions")}}</li>
+        <li>
+          <span>
+            <input type="checkbox" id="chat-settings-invert-message-backgrounds-{{@model.sectionId}}" data-view-setting="invert-message-backgrounds" {{@model.viewSettings["invert-message-backgrounds"] ? 'checked' : ''}} />
+            <label for="chat-settings-invert-message-backgrounds-{{@model.sectionId}}">{{@Helper.i18n("plugin.chat.component.chatMessages.settings.invertmessagebackgrounds")}}</label>
+          </span>
+        </li>
+        <li>
+          <span>
+            <input type="checkbox" id="chat-settings-hide-usernames-{{@model.sectionId}}" data-view-setting="hide-usernames" {{@model.viewSettings["hide-usernames"] ? 'checked' : ''}} />
+            <label for="chat-settings-hide-usernames-{{@model.sectionId}}">{{@Helper.i18n("plugin.chat.component.chatMessages.settings.hideusernames")}}</label>
+          </span>
+        </li>
+        <li>
+          <span>
+            <input type="checkbox" id="chat-settings-show-search-contexts-{{@model.sectionId}}" data-view-setting="show-search-contexts" {{@model.viewSettings["show-search-contexts"] ? 'checked' : ''}} />
+            <label for="chat-settings-show-search-contexts-{{@model.sectionId}}">{{@Helper.i18n("plugin.chat.component.chatMessages.settings.showsearchcontexts")}}</label>
+          </span>
+        </li>
+        <li class="context-menu-group-header">{{@Helper.i18n("plugin.chat.component.chatMessages.settings.header.issuesAndFiles")}}</li>
+        <li>
+          <span>
+            <input type="checkbox" id="chat-settings-show-tasks-changes-{{@model.sectionId}}" data-setting="modify-task" {{@model.guiSettings["modify-task"] ? 'checked' : ''}} />
+            <label for="chat-settings-show-tasks-changes-{{@model.sectionId}}">{{@Helper.i18n("plugin.chat.component.chatMessages.settings.showtaskschanges")}}</label>
+          </span>
+        </li>
+        <li>
+          <span>
+            <input type="checkbox" id="chat-settings-show-new-tasks-{{@model.sectionId}}" data-setting="create-task" {{@model.guiSettings["create-task"] ? 'checked' : ''}} />
+            <label for="chat-settings-show-new-tasks-{{@model.sectionId}}">{{@Helper.i18n("plugin.chat.component.chatMessages.settings.shownewtasks")}}</label>
+          </span>
+        </li>
+        <li>
+          <span>
+            <input type="checkbox" id="chat-settings-show-tasks-comments-{{@model.sectionId}}" data-setting="task-comment" {{@model.guiSettings["task-comment"] ? 'checked' : ''}} />
+            <label for="chat-settings-show-tasks-comments-{{@model.sectionId}}">{{@Helper.i18n("plugin.chat.component.chatMessages.settings.showtaskscomments")}}</label>
+          </span>
+        </li>
+        <li>
+          <span>
+            <input type="checkbox" id="chat-settings-show-new-files-{{@model.sectionId}}" data-setting="create-file" {{@model.guiSettings["create-file"] ? 'checked' : ''}} />
+            <label for="chat-settings-show-new-files-{{@model.sectionId}}">{{@Helper.i18n("plugin.chat.component.chatMessages.settings.shownewfiles")}}</label>
+          </span>
+        </li>
+      </ul>
+    </div>
+  </div>

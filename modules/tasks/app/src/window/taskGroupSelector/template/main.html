@@ -1,0 +1,11 @@
+@import { Model } from "../TaskGroupSelectorWindowController";
+@model Model
+<div class="window-taskgroup-selector tasks-plugin-window">
+  <div class="scrollable-content">
+    <div class="extlist-container"></div>
+  </div>
+  <div class="buttons-container">
+    <button class="btn btn-success" data-action="save">{{@Helper.i18n("plugin.tasks.window.taskGroupSelector.save")}}</button>
+    <button class="btn btn-default edit-cancel" data-action="cancel">{{@Helper.i18n("plugin.tasks.window.taskGroupSelector.cancel")}}</button>
+  </div>
+</div>

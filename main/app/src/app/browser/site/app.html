@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="cache-control" content="public, no-cache" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="app/browser/site/index.css" media="all" rel="stylesheet" />
+    <style type="text/css"></style>
+    <link rel="shortcut icon" href="favicon.ico" />
+    <title>PrivMX</title>
+    <script type="text/javascript">
+      document.title = location.hostname;
+      window.MAIN_SCRIPT = '<script type="text/javascript" src="build/privmx-core.js">';
+      window.PRIVMX_WORKER_PATH = "../server/secure-form/assets.php?f=privmx-client";
+      window.PRIVFS_VERSION = "";
+      window.options = {
+        assets: {
+          CUSTOM_LOGO_127X112: "",
+          CUSTOM_LOGO_127X112_WH: "",
+          CUSTOM_LOGO_87X22: "",
+          CUSTOM_LOGO_87X22_WH: "",
+          CUSTOM_LOGO_CUSTOM_FORM: ""
+        },
+        features: {
+          demo: false,
+          search: true,
+          secureForms: true
+        },
+        customMenuItems: [],
+        loginDomains: [location.hostname],
+        initApp: "",
+        logoApp: "",
+        apps: [],
+        plugins: [],
+        customizedCss: "",
+        customizedTheme: {css:""},
+      };
+    </script>
+    <script type="text/javascript" src="build/privmx-init.js"></script>
+  </head>
+  <body>
+  </body>
+</html>

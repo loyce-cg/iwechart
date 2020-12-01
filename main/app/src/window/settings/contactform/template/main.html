@@ -1,0 +1,49 @@
+@import {Model} from "../ContactFormController";
+@model Model
+<div class="section contact-form-section">
+  <div class="section-header">
+    <i class="fa fa-list-alt"></i>
+    {{@Helper.i18n("window.settings.section.contactForm.header")}}
+  </div>
+  <div class="section-info">
+    {{#Helper.i18n("window.settings.section.contactForm.info", "<b>", "</b>")}}
+  </div>
+  <div class="switcher-row">
+    <span class="switch {{@model.activated ? 'active' : ''}}" data-action="switch-activate-contact-form"></span>
+    <span class="switch-label">
+      {{@Helper.i18n("window.settings.section.contactForm.active")}}
+    </span>
+  </div>
+  <div class="sub-options {{@model.activated ? 'activated' : ''}}">
+    <div class="contact-link-info">
+      <b>{{@Helper.i18n("window.settings.section.contactForm.formLink")}}</b><br />
+      <div>
+        <a href="{{@model.userContactFormUrl}}" target="_blank">{{@model.userContactFormUrl}}</a>
+        <button class="btn btn-xs btn-copy" data-copy="{{@model.userContactFormUrl}}">
+          <span>
+            <i class="fa fa-copy"></i>
+            <span class="txt">{{@Helper.i18n("core.copy")}}</span>
+          </span>
+        </button>
+      </div>
+    </div>
+    <div class="switcher-row">
+      <span class="switch {{@model.verifyEmail ? 'active' : ''}}" data-action="switch-verify-email-contact-form"></span>
+      <span class="switch-label">
+        {{@Helper.i18n("window.settings.section.contactForm.verifyEmail")}}
+      </span>
+      <div class="switch-info">
+        {{@Helper.i18n("window.settings.section.contactForm.verifyEmail.info")}}
+      </div>
+    </div>
+    <div class="switcher-row">
+      <span class="switch {{@model.requirePass ? 'active' : ''}}" data-action="switch-require-pass-contact-form"></span>
+      <span class="switch-label">
+        {{@Helper.i18n("window.settings.section.contactForm.requirePass")}}
+      </span>
+      <div class="switch-info">
+        {{@Helper.i18n("window.settings.section.contactForm.requirePass.info")}}
+      </div>
+    </div>
+  </div>
+</div>

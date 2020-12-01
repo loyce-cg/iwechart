@@ -1,0 +1,12 @@
+@import { Model } from "../DetachTaskGroupWindowController";
+@model Model
+<div class="window-detach-taskgroup tasks-plugin-window">
+  <div class="detach">
+    <h4>{{@Helper.i18n("plugin.tasks.window.detachTaskGroup.detachTitle")}}</h4>
+    <p>{{#Helper.i18n("plugin.tasks.window.detachTaskGroup.detachInfo")}}</p>
+  </div>
+  <div class="buttons-container">
+    <button class="btn btn-success" data-action="yes">{{@Helper.i18n("plugin.tasks.window.detachTaskGroup.yes")}}</button>
+    <button class="btn btn-default edit-cancel" data-action="no">{{@Helper.i18n("plugin.tasks.window.detachTaskGroup.no")}}</button>
+  </div>
+</div>

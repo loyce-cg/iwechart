@@ -1,0 +1,170 @@
+.wi-element-parent.active > .wi-element,
+.wi-element-parent.active > .wi-element:hover {
+  color: #fff;
+  background-color: var(--sidebar-bg);
+}
+.wi-element {
+  &.pre-activate {
+    background-color: var(--sidebar-item-active-bg) !important;  
+    
+  }
+
+  padding: 6px 15px;
+  cursor: pointer;
+  line-height: 30px;
+  font-size: var(--font-size);
+  color: var(--sidebar-bg-as-text);
+  
+  &:not(.with-badge-hover):hover,
+  body[data-unread-badge-click-action="ignore"] &:hover {
+    color: var(--sidebar-bg-as-text);
+    background-color: var(--sidebar-item-hover-bg);
+  }
+  &.active,
+  &:not(.with-badge-hover).active,
+  body[data-unread-badge-click-action="ignore"] &.active {
+    &.pre-deactivate {
+      background-color: transparent !important;
+    }
+    &:not(.pre-deactivate) {
+      color: var(--sidebar-bg-as-text);
+      background-color: var(--sidebar-item-active-bg);  
+    }
+  }
+  &.teamserver {
+    .wi-element-inner .wi-element-name {
+      margin-left: 10px;
+    }
+    .wi-element-inner {
+      padding-left: 18px;
+      i.left-side {
+        position: absolute;
+        left: 0;
+        /* display: inline-block; */
+        font-size: var(--font-size-l);
+        line-height: 32px;
+        color: rgba(255, 255, 255, 0.37);
+
+        &.fa-link {
+          transform: rotate(-45deg);
+          font-size: var(--font-size-xs);
+        }
+  
+      }
+
+      .bckg-icon {
+        max-width: 11px;
+      }
+    }
+    
+    .bckg-icon {
+      filter: brightness(100);
+      background-color: transparent;
+    } 
+  }
+  .wi-element-inner {
+    position: relative;
+    
+    .wi-element-icon {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    .wi-element-name {
+      margin: 0 30px 0 40px;
+      line-height: 30px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .wi-element-badge,
+    .wi-element-elements-count,
+    .wi-element-search-count {
+      position: absolute;
+      display: none;
+      top: 50%;
+      right: 0;
+      margin-top: -10px;
+      font-size: var(--font-size-xs);
+      line-height: 19px;
+      padding: 0 9px;
+      color: white;
+      background-color: var(--unread-color);
+      border-radius: 1000px;
+    }
+    .settings-button {
+      display: none;
+    }
+    .wi-element-badge.number {
+      body[data-unread-badge-click-action="ask"] .sidebar &:hover,
+      body[data-unread-badge-click-action="mark-as-read"] .sidebar &:hover {
+        filter: brightness(1.15);
+      }
+      &.with-spinner {
+        font-size: 0 !important;
+        height: 19px !important;
+        text-align: center;
+        &:after {
+          font-size: var(--font-size);
+          line-height: var(--font-size);
+          position: relative;
+          top: 2px;
+          content: "\f1ce";
+          font-family: "FontAwesome";
+          animation: fa-spin 0.5s infinite steps(3);
+          display: inline-block;
+        }
+      }
+    }
+    .wi-element-search-count {
+      background-color: transparent;
+      padding: 0;
+      font-weight: 600;
+      font-size: var(--font-size-s);
+      i {
+        font-size: var(--font-size-xs);
+        margin-left: 6px;
+        opacity: 0.5;
+      }
+    }
+    .wi-element-elements-count {
+      background-color: transparent;
+      padding: 0;
+      color: #dcdcdc;
+    }
+  }
+  &.with-badge .wi-element-inner .wi-element-name {
+    margin-right: 40px;
+  }
+  &.primary {
+    font-weight: bold;
+  }
+  &.with-badge .wi-element-badge,
+  &.with-elements-count .wi-element-elements-count,
+  &.with-search-count .wi-element-search-count {
+    display: block;
+  }
+  &.with-badge .wi-element-elements-count {
+    display: none;
+  }
+  &.with-search-count .info-lock {
+    display: none;
+  }
+  &.muted.with-badge .wi-element-badge.number,
+  &.no-unmuted-unread .wi-element-inner .wi-element-badge.number {
+    background: transparent;
+    padding: 0;
+    color: #dcdcdc;
+  }
+}
+.search-on {
+  .wi-element:not(.with-search-count) {
+    opacity: 0.2;
+  }
+  .wi-element .wi-element-badge {
+    display: none;
+  }
+  .wi-element .wi-element-elements-count {
+    display: none;
+  }
+}

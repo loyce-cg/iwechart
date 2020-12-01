@@ -1,0 +1,30 @@
+@import {Model} from "../HotkeysController";
+@model Model
+<div class="section hotkeys-section">
+  <div class="section-header">
+    <i class="fa fa-keyboard-o"></i>
+    {{@Helper.i18n("window.settings.section.hotkeys.header")}}
+  </div>
+  <table class="hotkeys">
+    <tbody>
+      {{
+        for (let shortcut of model.shortcuts) {
+          if (shortcut.accelerator == "") {
+            continue;
+          }
+      }}
+        <tr>
+          <td>
+            {{
+              let keys = shortcut.accelerator.split("+");
+              for (let key of keys) {
+            }}
+            <kbd>{{ if (key == "Win") { }}<i class="fa fa-windows"></i>{{ } else if (key == "⌘") { }}<span>⌘</span>{{ } else { }}{{@key}}{{ } }}</kbd>
+            {{ } }}
+          </td>
+          <td>{{@Helper.i18n("window.settings.section.hotkeys.list." + shortcut.actionName)}}</td>
+        </tr>
+      {{ } }}
+    </tbody>
+  </table>
+</div>

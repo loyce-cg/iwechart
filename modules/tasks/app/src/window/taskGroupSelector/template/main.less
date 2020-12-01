@@ -1,0 +1,59 @@
+@import "../../../../node_modules/pmc-web/src/themes/default/less/form.less";
+@import "../../../../node_modules/pmc-web/src/component/template/wi-element.less";
+@import "../../main/template/common.less";
+
+.window-taskgroup-selector {
+  display: flex;
+  flex-direction: column;
+  
+  .scrollable-content {
+    flex: 1 1 auto;
+  }
+  
+  .buttons-container {
+    flex: 0 0 auto;
+    text-align: center;
+  }
+  
+  button {
+    margin: 10px;
+  }
+  
+  .extlist-container {
+    padding: 5px;
+  }
+  
+  .taskgroup {
+    padding: 3px;
+    opacity: 0.5;
+    cursor: pointer;
+    display: inline-block;
+    
+    &:hover {
+      opacity: 1;
+    }
+
+    &.selected {
+      opacity: 1;
+      
+      >.taskgroup-label {
+        border-color: var(--sidebar-item-active-bg);
+        background: var(--sidebar-item-active-bg);
+        color: var(--wi-element-fg);
+      }
+    }
+  }
+  .taskgroup-label {
+    display: block;
+    max-width: unset;
+    padding: 4px 6px;
+        
+    &, *:not(.fa):not(.privmx-icon) {
+      font-family: var(--ff-default-user);
+    }
+    
+    .taskgroup-icon--none {
+      display: none;
+    }
+  }
+}

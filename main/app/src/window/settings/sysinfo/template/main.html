@@ -1,0 +1,150 @@
+@import {Model} from "../SysInfoController";
+@model Model
+{{
+  function formatMem(bytes: number): string {
+    let mul = 1024;
+    let units = ["B", "KiB", "MiB", "GiB", "TiB"];
+    let prec = 1;
+    
+    let unitId = Math.min(Math.floor(Math.log(bytes) / Math.log(mul)), units.length - 1);
+    let unitMul = Math.pow(mul, unitId);
+    let val = Math.round(Math.pow(10, prec) * bytes / unitMul) / Math.pow(10, prec);
+    let unit = units[unitId];
+    
+    return val + " " + unit;
+  }
+}}
+<div class="section sysinfo-section">
+  
+  <div class="section-header">
+    <i class="fa fa-hdd-o"></i>
+    {{@Helper.i18n("window.settings.section.sysinfo.data.header")}}
+  </div>
+  <div class="section-info">
+    {{@Helper.i18n("window.settings.section.sysinfo.data.info")}}
+  </div>
+  
+  <div class="base-form">
+    <div class="fields">
+      
+      <div class="row">
+        <div class="row-label">
+          {{@Helper.i18n("window.settings.section.sysinfo.messagesCount.label")}}
+        </div>
+        <div class="row-data">
+          {{@model.messagesCount}}
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="row-label">
+          {{@Helper.i18n("window.settings.section.sysinfo.storageUsage.label")}}
+        </div>
+        <div class="row-data">
+          {{@model.storageType}}, {{@Helper.bytesSize(model.storageUsage)}}
+          <button class="btn btn-warning btn-sm small clear-cache-button delete" data-action="clear-cache">
+            <span>
+              <i class="fa fa-trash"></i>{{@Helper.i18n("window.settings.section.sysinfo.button.clearData.label")}}
+            </span>
+          </button>
+
+        </div>
+      </div>
+
+      {{ let tempFiles = model.tempFilesInfo; }}
+      {{ if (tempFiles) { }}
+      <div class="row">
+        <div class="row-label">
+          {{@Helper.i18n("window.settings.section.sysinfo.tempFilesUsage.label")}}
+        </div>
+        <div class="row-data">
+          {{ if (tempFiles.count) { }}
+            {{@tempFiles.count}}, <span class="files-size">{{@tempFiles.size > 0 ? Helper.bytesSize(tempFiles.size) : "0 KB"}}</span>
+            <button class="btn btn-warning btn-sm small clear-tmp-button delete" data-action="clear-tmp">
+              <span>
+                <i class="fa fa-trash"></i>{{@Helper.i18n("window.settings.section.sysinfo.button.clearTmp.label")}}
+              </span>
+            </button>
+
+          {{ } else { }}
+            {{@Helper.i18n("window.settings.section.sysinfo.no-temp-files")}}
+          {{ } }}
+          <div class="info-icon">
+            <span>
+              <i class="fa fa-question-circle"></i>
+              <div class="infotooltip not-rendered" data-tooltip-theme="light" data-tooltip-message='{{@Helper.i18n("window.settings.section.sysinfo.tempFilesInfo")}}'></div>
+            </span>
+          </div>
+        </div>
+      </div>
+      {{ } }}
+      <div class="subsection-header" style="display: none">{{@Helper.i18n("window.settings.section.sysinfo.computerInformation")}}</div>
+      {{ let sys = model.electronSysInfo; }}
+      {{ if (sys) { }}
+        
+        <div class="row">
+          <div class="row-label">
+            {{@Helper.i18n("window.settings.section.sysinfo.deviceId.label")}}
+          </div>
+          <div class="row-data selectable">
+            {{@sys.deviceId}}
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="row-label">
+            {{@Helper.i18n("window.settings.section.sysinfo.hostname.label")}}
+          </div>
+          <div class="row-data selectable">
+            {{@sys.hostname}}
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="row-label">
+            {{@Helper.i18n("window.settings.section.sysinfo.os.label")}}
+          </div>
+          <div class="row-data selectable">
+              {{@sys.osType}} {{@sys.osRelease}} {{@sys.arch}}
+          </div>
+        </div>
+        
+        <div class="row" style="display: none">
+          <div class="row-label">
+            {{@Helper.i18n("window.settings.section.sysinfo.cpus.label")}}
+          </div>
+          <div class="row-data selectable">
+            {{@sys.cpus.join(", ")}}
+          </div>
+        </div>
+        
+        <div class="row" style="display: none">
+          <div class="row-label">
+            {{@Helper.i18n("window.settings.section.sysinfo.totalMem.label")}}
+          </div>
+          <div class="row-data selectable">
+            {{@formatMem(sys.totalMem)}}
+          </div>
+        </div>
+        
+      {{ } }}
+      
+      <div class="row" style="display: none">
+        <div class="row-label">
+          {{@Helper.i18n("window.settings.section.sysinfo.screenResolution.label")}}
+        </div>
+        <div class="row-data selectable">
+          {{@model.screenResolution}}
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="buttons-container">
+    <div class="buttons">
+            
+      {{ if(tempFiles && tempFiles.count) { }}
+      {{ } }}
+    </div>
+  </div>
+</div>

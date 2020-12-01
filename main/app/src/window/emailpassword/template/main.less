@@ -1,0 +1,78 @@
+@import "../../base/BaseWindow";
+
+body {
+  background: @colorBackground;
+  font-size: var(--font-size-l);
+}
+
+.window-email-password-main {
+  .content {
+    position: absolute;
+    top: 10px;
+    left: 25px;
+    right: 25px;
+    bottom: 60px;
+    overflow: auto;
+    
+    .main-info {
+      font-weight: bold;
+      padding-top: 10px;
+    }
+    .step {
+      padding: 10px 10px 10px 0;
+      
+      .step-body {
+        padding: 10px 0 0 15px;
+      }
+    }
+    input {
+      width: 200px;
+      display: inline-block;
+    }
+    .btn-link {
+      color: var(--unread-color)
+    }
+    .additional-info {
+      color: var(--body-extra-info-fg);
+      padding: 10px 0;
+    }
+    .info-no-padding {
+        color: var(--body-extra-info-fg);
+        font-size:0.9em;
+    }
+    .input-label {
+        margin-right: 10px;
+    }
+    select:focus {
+      box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, 0.6);
+    }
+  }
+  .buttons {
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    
+    .btn {
+      margin: 0 10px;
+    }
+    .btn.btn-success:focus {
+      background-color: #95e11b;
+    }
+  }
+  
+  input.password-radio {
+      width: auto;
+  }
+
+  .inner-column {
+      padding-right: 10px;
+      padding-left: 30px;
+  }
+
+  .radio-label {
+      margin-left: 10px;
+  }
+  
+}

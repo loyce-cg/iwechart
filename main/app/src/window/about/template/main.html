@@ -1,0 +1,76 @@
+@import {Model} from "../AboutWindowController";
+@model Model
+<div class="window-about-main">
+  <div>
+    <img src="{{@Helper.getAssetByName('ABOUT_LOGO')}}" width="127" height="110" alt="">
+    {{
+        var customLogo = Helper.getAssetByName('CUSTOM_LOGO_127X112_WH');
+        if (customLogo.length) { {{
+            <div class="logo-127x112-container pull-right">
+            <img src="{{#Helper.getAssetByName('CUSTOM_LOGO_127X112_WH')}}" />
+            </div>
+        }} }
+    }}
+    <div class="info">
+      <div class="privmx-info">
+        {{#Helper.nl2br(Helper.i18n("window.about.privmxInfo", "<b>", "</b>")).replace('https://privmx.com', '<a href="https://privmx.com" target="_blank" rel="noopener noreferrer">https://privmx.com</a>')}}
+      </div>
+      <div class="version">
+        {{@Helper.i18n("window.about.version")}}: {{@model.version}} {{@model.updateAvailable ? "" : Helper.i18n("window.about.version.current")}}
+        <!-- <br/>
+        {{@Helper.i18n("window.about.licence")}}
+        <a href="https://privmx.com/web-freeware-license" target="_blank" rel="noopener noreferrer">
+            {{@Helper.i18n("window.about.licenceLink")}}
+        </a> -->
+      </div>
+      {{ if (model.updateAvailable) { {{
+          <div class="updates">
+            <span class="text available test{{@model.updateReadyToInstall ? 'hide' : ''}}">{{@Helper.i18n("core.updater.updatesAvailable")}} ({{@Helper.i18n("core.updater.newVersion", model.updateVersion)}})</span>
+            <span class="link available {{@model.updateReadyToInstall ? 'hide' : ''}}" data-action-id="download-updates">{{@Helper.i18n("core.updater.downloadUpdates")}}</span>
+            <span class="text readyToInstall {{@model.updateReadyToInstall ? '' : 'hide'}}">{{@Helper.i18n("core.updater.updatesReadyToInstall")}}</span>
+            <span class="link readyToInstall {{@model.updateReadyToInstall ? '' : 'hide'}}" data-action-id="install-updates">{{@Helper.i18n("core.updater.installUpdates")}}</span>
+          </div>
+          <div class="updates-in-progress hide">
+            <span class="text checking hide"><i class="fa fa-circle-o-notch fa-spin"></i>{{@Helper.i18n("core.updater.checkingUpdates")}}</span>
+            <span class="text downloading hide"><i class="fa fa-circle-o-notch fa-spin"></i>{{@Helper.i18n("core.updater.downloadingUpdates")}} </span><span class="text downloading download-progress hide"></span>
+            <span class="text extracting hide"><i class="fa fa-circle-o-notch fa-spin"></i>{{@Helper.i18n("core.updater.extractingUpdates")}}</span>
+            <span class="text error hide">{{@Helper.i18n("core.updater.updatesError")}}</span>
+          </div>
+      }} } else if (model.isElectron) { }}
+        <div class="check-for-update">
+            <span class="link check-for-update" data-action-id="check-for-update">{{@Helper.i18n("core.updater.checkForUpdate")}}</span>
+        </div>
+        <div class="checking-for-update hidden">
+            <span class="link checking-for-update" data-action-id="checking-for-update"><i class="fa fa-circle-o-notch fa-spin"></i>{{@Helper.i18n("core.updater.checkingUpdates")}}</span>
+        </div>
+      {{ } }}
+      {{ if (model.config.contactData) { {{
+          <div class="entry">
+              <div class="entry-label">
+                  {{@Helper.i18n("window.about.contact")}}
+              </div>
+              <div class="entry-value selectable">
+                  {{@model.config.contactData}}
+              </div>
+          </div>
+      }} } }}
+      {{ if (model.config.desktopDownloadUrl && !model.isElectron) { {{
+          <div class="entry">
+              <div class="entry-label">
+                  {{@Helper.i18n("window.about.downloadDekstop")}}
+              </div>
+              <div class="entry-value">
+                  <button class="btn btn-link" data-action="download-desktop">{{@model.config.desktopDownloadUrl}}</button>
+              </div>
+          </div>
+      }} } }}
+      <div class="buttons">
+        <button class="btn btn-default" data-action="close">
+            {{@Helper.i18n("core.button.ok.label")}}
+        </button>
+        <span class="link licenses" data-action="show-licence">{{@Helper.i18n("window.about.licenses")}}</span>
+
+      </div>
+    </div>
+  </div>
+</div>

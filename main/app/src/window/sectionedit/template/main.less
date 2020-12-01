@@ -1,0 +1,230 @@
+@import "../../base/BaseWindow";
+@import "../../../themes/default/less/form";
+@import "../../../component/template/wi-element";
+@import "../../../component/template/bckg-icon";
+body {
+  font-size: var(--font-size);
+  min-height: 0;
+  height: auto;
+  background: var(--preview-panel-bg);
+}
+body,html {
+  overflow: auto;
+}
+div:focus {
+  outline: none;
+}
+.hide {
+  display: none !important;
+}
+
+.window-section-edit {
+  padding-right: 10px;
+  
+  .wi-element {
+    margin: 0;
+    padding: 0;
+    cursor: inherit;
+  }
+  .wi-element:hover {
+    background-color: transparent;
+  }
+  span.parent-name {
+    margin-left: 40px;
+  }
+
+  .base-form .fields .field div.info.parent-name {
+      line-height: var(--font-size-xxxxl);
+  }
+  
+  .empty {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    margin-top: -25px;
+    font-size: var(--font-size-xxxxl);
+    color: var(--large-empty-info-fg);
+    text-align: center;
+  }
+  .manage-info {
+    margin: 10px 0;
+    font-weight: bold;
+    padding-left: 170px;
+  }
+  .user {
+    display: inline-block;
+    i.fa-group {
+      color: #ccc;
+    }
+  }
+  .space:after {
+    content: " ";
+    letter-spacing: 4px;
+  }
+  .user:first-child {
+    margin-left: 0px;
+  }
+  canvas {
+    max-width: 16px;
+    max-height: 16px;
+    border-radius: 4px;
+    vertical-align: middle;
+  }
+  .base-form {
+    margin-bottom: 60px;
+    .fields {
+      .field {
+        line-height: 18px;
+        
+        .info {
+          width: 160px;
+          
+          &.input-info {
+            padding-top: 11px;
+          }
+        }
+        .input, .field-value {
+          margin-left: 170px;
+          padding: 5px 0 0 0;
+        }
+        .checkbox, .radio {
+          margin: 0 0 5px 0;
+        }
+        input[type=checkbox], input[type=radio] {
+          margin-top: 3px;
+        }
+        .text {
+          line-height: 18px;
+          padding-top: 5px;
+        }
+        .preview {
+          line-height: 18px;
+          margin-right: 10px;
+        }
+        .field-value {
+          position: relative;
+          
+          .edit-btn {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            z-index: 1;
+          }
+          .btn-link:not(.edit-btn) {
+            float: right;
+          }
+          
+          .checkbox > label > .module-icon {
+            position: absolute;
+            i {
+              position: absolute;
+              top: 1px;
+            }
+            span {
+              position: absolute;
+              top: 2px;
+            }
+          }
+          
+          .checkbox > label > .module-text {
+            margin-left: 18px;
+          }
+          
+          &.sorted-modules {
+            display: flex;
+            flex-direction: column;
+            
+            .sorted-module-chat { order: 1; }
+            .sorted-module-file { order: 2; }
+            .sorted-module-kvdb { order: 3; }
+            .sorted-module-calendar { order: 4; }
+            
+            .notify-text>canvas {
+              margin-right: 5px;
+            }
+            
+            div.checkbox {
+              label:first-child {
+                width: 150px;
+              }
+              label:last-child {
+                input:disabled+span {
+                  opacity: 0.5;
+                  cursor: not-allowed;
+                }
+              }
+            }
+          }
+        }
+        .btn-link {
+          padding: 0;
+          margin-left: 5px;
+          line-height: 18px;
+          vertical-align: baseline;
+        }
+        .users {
+          margin-left: 20px;
+        }
+      }
+    }
+  }
+  .buttons-container {
+    text-align: center;
+    padding: 10px 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--preview-panel-bg);
+    z-index: 1;
+    
+    button {
+      margin: 0 8px;
+      i {
+        margin-right: 3px;
+      }
+      &:focus {
+        outline: #aaa dotted 1px;
+      }
+    }
+    
+    .btn.delete {
+      background: none;
+      box-shadow: none;
+      border: 0;
+      color: var(--color-warning);
+      font-weight: normal;
+      text-decoration: none;
+      line-height: 26px;
+      margin-top: 1px;
+      margin-right: 0;
+    }
+    
+    .btn.delete:hover>span {
+          border-bottom: 1px solid var(--color-warning);
+    }
+    
+    .btn.save[disabled] {
+      opacity: 0.35;
+    }
+  }
+  .divider {
+    margin: 0;
+    height: 1px;
+    background-color: var(--main-panel-chats-separator-bg);
+    border: none;
+  }
+  
+  .invisible {
+    display: none;
+  }
+  
+  .saved-indicator {
+    position: absolute;
+    right: 35px;
+    line-height: 24px;
+    z-index: 1000;
+  }
+}

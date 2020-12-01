@@ -1,0 +1,27 @@
+@import { SectionModel } from "../SectionTooltipController";
+@import { func as UserEntriesListTemplate } from "./user-entries-list.html";
+@model SectionModel
+<div class='section-tooltip-section'>
+  <div class='section-element wi-element'>
+    <div class='wi-element-inner'>
+      <div class='wi-element-icon bckg-icon {{@model.scope == "private" ? "bckg-icon-border" : ""}}'>
+        <img src='{{@Helper.getAssetByName("DEFAULT_PRIVMX_ICON")}}'>
+      </div>
+      <div class='wi-element-name '><span class="parent-section">{{@(model.parentName ? (model.parentName + " / ") : "")}}</span>{{@model.name}}</div>
+    </div>
+  </div>
+  <div class='section-tooltip-modules'>
+    <span class='privmx-icon privmx-icon-chat module-chat {{@model.modules["chat"] ? "enabled" : "disabled"}}'></span>
+    <span class='privmx-icon privmx-icon-notes2 module-notes2 {{@model.modules["notes2"] ? "enabled" : "disabled"}}'></span>
+    <span class='privmx-icon privmx-icon-tasks module-tasks {{@model.modules["tasks"] ? "enabled" : "disabled"}}'></span>
+    <span class='privmx-icon privmx-icon-calendar module-calendar {{@model.modules["calendar"] ? "enabled" : "disabled"}}'></span>
+  </div>
+  <div class="access-info">
+    <div class='row-left'>{{@Helper.i18n("component.sectionTooltip.access.label")}}:</div>
+    <div class='row-right'>{{#Helper.createTemplate(UserEntriesListTemplate).render({ host: model.host, data: model.groupListModel, usernames: model.usernames })}}</div>
+    <div class='row-left'>{{@Helper.i18n("component.sectionTooltip.manage.label")}}:</div>
+    <div class='row-right'>{{#Helper.createTemplate(UserEntriesListTemplate).render({ host: model.host, data: model.acl.manage, usernames: model.usernames })}}</div>
+    <div class='row-left'>{{@Helper.i18n("component.sectionTooltip.subsection.label")}}:</div>
+    <div class='row-right'>{{#Helper.createTemplate(UserEntriesListTemplate).render({ host: model.host, data: model.acl.createSubsections, usernames: model.usernames })}}</div>
+  </div>
+</div>

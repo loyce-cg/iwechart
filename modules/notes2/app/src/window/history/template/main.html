@@ -1,0 +1,29 @@
+@import {Model} from "../HistoryWindowController";
+@model Model
+<div class="window-history-main" tabindex="-1">
+  <div class="header">
+    <i class="fa {{@model.icon}}"></i>
+    {{@model.name}}
+  </div>
+  <div class="table-container">
+    <table>
+      <tbody class="versions">
+      </tbody>
+    </table>
+  </div>
+  <div class="buttons">
+    <button class="btn btn-success" data-action="open">
+      <i class="fa fa-folder-open-o"></i>
+      {{@Helper.i18n("plugin.notes2.window.history.open")}}
+    </button>
+    <button class="btn btn-default" data-action="copy">
+      <i class="fa fa-copy"></i>
+      {{@Helper.i18n("plugin.notes2.window.history.copy")}}
+    </button>
+    <button class="btn btn-default" data-action="close">
+      <i class=""></i>
+      {{@Helper.i18n("plugin.notes2.window.history.button.close.label")}}
+    </button>
+  </div>
+  <div class="notifications"></div>
+</div>

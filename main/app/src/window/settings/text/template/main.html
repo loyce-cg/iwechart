@@ -1,0 +1,125 @@
+@import {Model} from "../TextController";
+@model Model
+<div class="section text-section">
+  <div class="section-header">
+    <i class="fa fa-align-justify"></i>
+    {{@Helper.i18n("window.settings.section.text.header")}}
+  </div>
+  <div class="base-form">
+    <div class="fields">
+      {{ if (model.isElectron) { }}
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.settings.section.interface.spellchecker.label")}}
+        </div>
+        <div class="input checkbox">
+          <label>
+            <input type="checkbox" name="ui.spellchecker2" {{if(model.ui && model.ui.spellchecker2) { }}checked="checked"{{ } }}>
+            {{@Helper.i18n("window.settings.section.interface.spellchecker.checkbox.label")}}
+          </label>
+        </div>
+      </div>
+      {{ } }}
+      {{ if (model.isEncryptionEffectFeatureEnabled) { }}
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.settings.section.interface.encrypted_text.label")}}
+          </div>
+          <div class="input checkbox">
+            <label>
+              <input type="checkbox" name="ui.showEncryptedText" {{if(model.ui && model.ui.showEncryptedText !== false) { }}checked="checked"{{ } }}>
+              {{@Helper.i18n("window.settings.section.interface.encrypted_text.checkbox.label")}}
+            </label>
+          </div>
+        </div>
+      {{ } }}
+      <div class="field" style="display: none">
+        <div class="info">
+            {{@Helper.i18n("window.settings.section.interface.pasteAsFileAction.label" + model.osSuffix)}}
+        </div>
+        <div class="input">
+          <select name="ui.pasteAsFileAction">
+            {{ { }}
+              {{
+                let availableActions = model.availablePasteAsFileActions;
+                let selectedAction = model.ui && model.ui.pasteAsFileAction ? model.ui.pasteAsFileAction : "ask";
+                for (let action of availableActions) {
+              }}
+                <option value="{{@action}}" {{if (selectedAction == action) { }}selected{{ } }}>{{@Helper.i18n("window.settings.section.interface.pasteAsFileAction." + action)}}</option>
+              {{ } }}
+            {{ } }}
+          </select>
+          <br/>
+        </div>
+      </div>
+      
+      {{ /* }}
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.settings.section.text.autoPickers.task.label")}}
+        </div>
+        <div class="input checkbox">
+          <label class="with-info-tooltip">
+            <input type="checkbox" name="contentEditableEditor.isAutoTaskPickerEnabled" {{if(model.ui && model.contentEditableEditor.isAutoTaskPickerEnabled) { }}checked="checked"{{ } }}>
+            {{@Helper.i18n("window.settings.section.text.autoPickers.task.checkbox.label")}}
+          </label>
+          <div class="info-icon">
+            <span>
+              <i class="fa fa-question-circle"></i>
+              <div class="infotooltip not-rendered" data-tooltip-theme="light" data-tooltip-message='{{@Helper.i18n("window.settings.section.text.autoPickers.info")}}'></div>
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.settings.section.text.autoPickers.file.label")}}
+        </div>
+        <div class="input checkbox">
+          <label class="with-info-tooltip">
+            <input type="checkbox" name="contentEditableEditor.isAutoFilePickerEnabled" {{if(model.ui && model.contentEditableEditor.isAutoFilePickerEnabled) { }}checked="checked"{{ } }}>
+            {{@Helper.i18n("window.settings.section.text.autoPickers.file.checkbox.label")}}
+          </label>
+          <div class="info-icon">
+            <span>
+              <i class="fa fa-question-circle"></i>
+              <div class="infotooltip not-rendered" data-tooltip-theme="light" data-tooltip-message='{{@Helper.i18n("window.settings.section.text.autoPickers.info")}}'></div>
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      {{ */ }}
+      
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.settings.section.text.notesStyle.label")}}
+        </div>
+        {{
+          var styleName = (model.notes && model.notes.style) || 'default';
+          var styles = model.availableNotesStyles;
+        }}
+        <div class="input radio">
+          {{ for(var name in styles) { }}
+            <label class="preview-label">
+              <input type="radio" name="notes.style" value="{{@name}}" {{if(styleName == name) { }}checked="checked"{{ } }}>
+              {{@styles[name]}}
+              <span class="preview editor-theme-preview" data-style-name="{{@name}}">ABC</span>
+            </label>
+          {{ } }}
+        </div>
+      </div>
+      <div class="field buttons">
+        <div class="info">
+        </div>
+        <div class="input">
+          <button class="btn btn-success save-button progress-button">
+            <i class="fa fa-save"></i>
+            <span class="button-text">{{@Helper.i18n("window.settings.section.text.button.save.text")}}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

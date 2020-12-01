@@ -1,0 +1,29 @@
+<div>
+  
+  <div class="panel-header">
+    <i class="fa fa-hand-stop-o"></i>
+    {{@Helper.i18n("window.admin.blacklist.header")}}
+    <button class="btn btn-success pull-right" data-action="add-domain">
+      <i class="fa fa-plus"></i>
+      {{@Helper.i18n("window.admin.blacklist.addRule.button")}}
+    </button>
+  </div>
+  
+  <div class="panel-info">
+    {{@Helper.i18n("window.admin.blacklist.info")}}
+  </div>
+  
+  <table class="table small">
+    <thead>
+      <tr>
+        <th>{{@Helper.i18n("window.admin.blacklist.table.domain")}}</th>
+        <th>{{@Helper.i18n("window.admin.blacklist.table.reportedBy")}}</th>
+        <th class="action-col">{{@Helper.i18n("window.admin.blacklist.table.action")}}</th>
+        <th class="del-col"></th>
+      </tr>
+    </thead>
+    <tbody class="list-container">
+    </tbody>
+  </table>
+  
+</div>

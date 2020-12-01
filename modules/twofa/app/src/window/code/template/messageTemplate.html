@@ -1,0 +1,5 @@
+@model {type: string, message: string}
+<div class="message-{{@model.type}}">
+    <i class="fa {{@model.type == 'success' ? 'fa-check-circle' : (model.type == 'info' ? 'fa-info-circle' : 'fa-exclamation-circle')}}"></i>
+    {{@model.message}}
+</div>

@@ -1,0 +1,21 @@
+@import "../../../themes/default/less/customization/variables-admin.less";
+
+html {
+  .btn.btn-success,
+  .btn.btn-success[disabled] {
+    background: var(--admin-color-button-bg);
+    color: var(--admin-color-button-fg);
+    
+    &:not([disabled]):hover,
+    &:not([disabled]):active {
+      background: var(--admin-color-button-hover-bg);
+    }
+  }
+  .menu .entry {
+    color: var(--admin-color-button-bg);
+  }
+  .menu .entry.active {
+    background: var(--admin-color-sidebar-active-item-bg);
+    color: var(--admin-color-button-bg);
+  }
+}

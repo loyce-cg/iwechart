@@ -1,0 +1,8 @@
+@import {Model} from "../MessageWindowController";
+@model Model
+<div class="window-message-main {{@model.showStatusBar ? 'with-status-bar' : ''}}">
+  <div class="preview"></div>
+  {{ if (model.showStatusBar) { {{
+    <div class="status-bar"></div>
+  }} } }}
+</div>

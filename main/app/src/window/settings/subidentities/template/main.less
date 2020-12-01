@@ -1,0 +1,34 @@
+.subidentties-section {
+  font-size: var(--font-size);
+  
+  table {
+    table-layout: fixed;
+    width: 100%;
+    
+    td, th {
+      border: 1px solid #ddd;
+      padding: 2px 5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .id {
+      width: 105px;
+    }
+    .date {
+      width: 80px;
+    }
+    .device {
+      width: 120px;
+    }
+    .action {
+      border: none;
+      width: 60px;
+    }
+  }
+  .empty-info {
+    color: var(--body-extra-info-fg);
+    text-align: center;
+    margin: 20px 0;
+  }
+}

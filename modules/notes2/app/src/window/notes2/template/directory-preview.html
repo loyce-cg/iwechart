@@ -1,0 +1,22 @@
+@import {DirectoryPreviewModel} from "../Notes2WindowController"
+@model DirectoryPreviewModel
+<div class="directory-preview table-layout">
+  <div class="inner-1">
+    <div class="inner-2">
+      <div class="name">
+        <i class="fa fa-folder"></i>
+        <div class="text">{{@model.name}}</div>
+      </div>
+      <div class="file-info">
+        <div class="entry">
+          {{@Helper.i18n("plugin.notes2.window.notes2.directoryPreview.elements")}}:
+          {{@model.fileCount}}
+        </div>
+        <div class="entry">
+          {{@Helper.i18n("plugin.notes2.window.notes2.directoryPreview.size")}}:
+          {{@model.size == 0 ? "0 KB" : Helper.bytesSize(model.size)}}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

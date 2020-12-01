@@ -1,0 +1,17 @@
+<div class="window-login-langs langs-menu">
+  <div class="dropdown">
+    <button class="btn btn-default dropdown-toggle lang-chooser" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+      <img src="{{@Helper.getAsset('icons/flags/' + Helper.localeService.getFlagCode(Helper.currentLang()) + '.svg')}}" alt="" /> {{@Helper.i18n("core.langs." + Helper.currentLang() )}} <span class="ico-arrow-down"></span>
+    </button>
+    <div class="context-menu-nav-bar">
+      <div class="context-menu-backdrop"></div>
+      <ul class="context-menu-content">
+        {{ for (let lang of Helper.getAvailableLangs()) { }}
+        <li>
+          <span data-action="change-lang" data-lang="{{@lang}}" tabindex="-1"><img src="{{@Helper.getAsset('icons/flags/' + Helper.localeService.getFlagCode(lang) + '.svg')}}" alt="" /> {{@Helper.i18n("core.langs." + lang)}}</span>
+        </li>
+        {{ } }}
+      </ul>
+    </div>
+  </div>
+</div>

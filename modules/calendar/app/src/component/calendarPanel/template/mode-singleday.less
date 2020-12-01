@@ -1,0 +1,47 @@
+@import "../../../window/main/template/vars.less";
+
+.mode-singleday {
+  max-width: 800px;
+  margin: 0 auto;
+  
+  .fixed-tasks-container {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  .entries-container {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  
+  .pf-scroll-panel {
+    display: block;
+  }
+  
+  .entry.day {
+    &[data-day-of-week=saturday] .entry-header {
+      color: @saturdayFg;
+    }
+    &[data-day-of-week=sunday] .entry-header {
+      color: @sundayFg;
+    }
+  }
+}
+.calendarpanel-container.with-mode-singleday {
+  .modes {
+    background: var(--preview-panel-bg);
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 40px;
+    bottom: 0;
+    .mode-singleday {
+      top: 0;
+      background: var(--main-panel-bg);
+      border-left: 1px solid var(--main-panel-tasks-separator-bg);
+      border-right: 1px solid var(--main-panel-tasks-separator-bg);
+    }
+  }
+}
+.panel-calendar2 .calendarpanel-container.with-mode-singleday {
+  .modes {
+    top: 0;
+  }
+}

@@ -1,0 +1,72 @@
+.window-file-error-main {
+    padding: 15px;
+    font-size: var(--font-size-l);
+    outline: none;
+    
+    .header {
+        font-weight: bold;
+    }
+    .info {
+        margin: 10px 0 20px 0;
+    }
+    .file-info {
+        margin: 20px 0;
+        
+        .file-icon {
+            float: left;
+            font-size: 50px;
+            margin-top: 4px;
+            
+            i {
+                vertical-align: top;
+            }
+        }
+        .file-data {
+            margin-left: 70px;
+            
+            .file-origin {
+                font-weight: bold;
+            }
+            .file-name {
+                
+            }
+            .file-path {
+                color: var(--body-extra-info-fg);
+                font-style: italic;
+                font-size: var(--font-size-xs);
+                line-height: 22px;
+            }
+        }
+    }
+    .buttons {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 15px;
+        
+        .for-all {
+            margin-top: 3px;
+            float: left;
+            label {
+                margin: 0;
+                font-weight: normal;
+                font-size: var(--font-size);
+                position: relative;
+                padding-left: 20px;
+                input {
+                    margin: 0;
+                    position: absolute;
+                    left: 0;
+                    top: 3px;
+                }
+            }
+        }
+        .buttons-cnt {
+            text-align: right;
+            button {
+                margin-left: 10px;
+            }
+        }
+    }
+}

@@ -1,0 +1,50 @@
+.pf-switcher {
+  border-radius: 4px;
+  background-color: #ddd;
+  display: inline-block;
+  cursor: pointer;
+  color: var(--body-extra-info-fg);
+  font-size: 0px;
+  
+  .option {
+    display: inline-block;
+    padding: 4px 8px;
+    border: 1px solid transparent;
+    font-size: var(--font-size-xs);
+  }
+  .option-1 {
+    border-radius: 4px 0 0 4px;
+    border-right-color: #aaa;
+    
+    &.active {
+      background-color: #84d501;
+      border-color: #84d501;
+      color: #000;
+    }
+  }
+  .option-2 {
+    border-radius: 0 4px 4px 0;
+    
+    &.active {
+      background-color: #ef7001;
+      border-color: #ef7001;
+      color: #fff;
+    }
+  }
+  
+  &.small {
+    border-radius: 3px;
+    
+    .option {
+      font-size: var(--font-size-xs);
+    }
+    .option-1 {
+      padding: 1px 7px 1px 5px;
+      border-radius: 3px 0 0 3px;
+    }
+    .option-2 {
+      padding: 1px 5px 1px 7px;
+      border-radius: 0 3px 3px 0;
+    }
+  }
+}

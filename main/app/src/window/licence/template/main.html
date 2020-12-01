@@ -1,0 +1,34 @@
+@import {Model} from "../LicenceWindowController";
+@model Model
+<div class="window-editor-main screen-center window-licence {{@model.docked ? 'docked': ''}}">
+  <div class="inner screen-center-inner">
+    <div class="pdf-container"></div>
+    <div class="html-container"></div>
+    <div class="buttons">
+      {{ if (!model.onStartup) { {{
+        <button trigger-action="ok" class="btn btn-success grey">{{@Helper.i18n('core.button.ok.label')}}</button>
+      }} } else { {{
+        <div class="fields">
+          <div class="field">
+            <div class="info">
+
+            </div>
+            <div class="field-value">
+              <div class="checkbox">
+                <label>
+                  <input class="licence-checked" type="checkbox"/>
+                  {{@Helper.i18n("window.licence.checkbox")}}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button trigger-action="decline" class="btn cancel-btn">{{@Helper.i18n('window.licence.decline')}}</button>
+        <button trigger-action="accept" class="btn ok-btn">{{@Helper.i18n('window.licence.accept')}}</button>
+      }} } }}
+      {{ if (model.isElectronApp && !model.docked) { {{
+        <span class="link licenses" trigger-action="licenses">{{@Helper.i18n("window.licence.licenses")}}</span>
+      }} } }}
+    </div>
+  </div>
+</div>

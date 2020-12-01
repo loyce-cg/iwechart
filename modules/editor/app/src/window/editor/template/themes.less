@@ -1,0 +1,202 @@
+@defaultFont: var(--ff-editors-default);
+@monospaceFont: var(--ff-monospace);
+
+.editorStyle(@color, @background, @toolbarColor, @toolbarBackground, @marginsBackground, @fontFamily: @defaultFont) {
+  .toolbar .style-switcher .preview&,
+  .toolbar .font-size-switcher .preview&,
+  .editor-theme-preview&,
+  body& {
+    color: @color;
+    background-color: @background;
+  }
+  .main-content .toolbar-container,
+  .main-content .status-bar {
+    color: @toolbarColor;
+    background-color: @toolbarBackground;
+  }
+  .main-content .editor {
+    *:not(.fa):not(.privmx-icon) {
+      font-family: @fontFamily !important;
+    }
+  }
+  .toolbar button {
+    color: @toolbarColor !important;
+  }
+  .status-bar {
+      display: none;
+  }
+  .toolbar button:not([disabled]):hover {
+    background-color: darken(@toolbarBackground, 10%) !important;
+    color: @toolbarColor !important;
+  }
+  body& .mindmap {
+    .label {
+      color: @color;
+      &.style1 {
+        font-weight: bold;
+      }
+      &.style2 {
+        font-weight: bold;
+        color: #008000;
+      }
+      &.style3 {
+        font-weight: bold;
+        color: #aa0114;
+      }
+      &.style4 {
+        font-weight: bold;
+        color: #0007d5;
+      }
+    }
+  }
+  .left-margin-overlay,
+  .right-margin-overlay {
+    background: @marginsBackground;
+  }
+}
+
+.mindmapStyleExt(@pathColor, @labelBorderColor, @linkColor, @selectedLabelBackground) {
+  body& .mindmap {
+    path {
+      stroke: @pathColor;
+    }
+    div.node {
+      & > div.label {
+        border-color: @labelBorderColor;
+      }
+    }
+    div.selected {
+      & > .label {
+        background: @selectedLabelBackground;
+      }
+    }
+    .link {
+      color: @linkColor;
+    }
+  }
+}
+
+.scrollbarStyle(@scrollColor, @moverColor, @moverHoverColor) {
+  .pf-scrollable .pf-scroll-panel .pf-scroll {
+    background-color: @scrollColor;
+    .pf-mover {
+      background-color: @moverColor;
+      &:hover {
+        background-color: @moverHoverColor;
+      }
+    }
+  }
+}
+
+.defaultStyle() {
+  .editorStyle(#555, #fff, #333, #f0f0f0, darken(#fff, 7%));
+  .mindmapStyleExt(#ccc, #fff, #2222dd, darken(#f0f0f0, 10%));
+  .scrollbarStyle(#E4E4E4, #909090, #444);
+}
+
+[data-style-name=default] {
+  .defaultStyle();
+}
+
+[data-style-name=terminal] {
+  .editorStyle(#5BF75B, #111, #ccc, #2f2f2f, lighten(#111, 7%), @monospaceFont);
+  .mindmapStyleExt(#1C651A, #111, #7272FF, lighten(#2f2f2f, 10%));
+  .scrollbarStyle(#313131, #666, #777);
+}
+
+[data-style-name=black-on-white] {
+  .editorStyle(#000, #fff, #333, #f0f0f0, darken(#fff, 7%));
+  .mindmapStyleExt(#000, #fff, #2222dd, darken(#f0f0f0, 10%));
+  .scrollbarStyle(#E4E4E4, #909090, #444);
+}
+
+[data-style-name=white-on-black] {
+  .editorStyle(#fff, #000, #ccc, #2f2f2f, lighten(#000, 10%));
+  .mindmapStyleExt(#fff, #000, #7272FF, lighten(#2f2f2f, 10%));
+  .scrollbarStyle(#313131, #666, #777);
+}
+
+[data-style-name=papyrus] {
+  .editorStyle(#692D00, #EAE39F, #692D00, #DAD288, desaturate(#EAE39F, 25%));
+  .mindmapStyleExt(#D2A47E, #EAE39F, #2222dd, darken(#DAD288, 10%));
+  .scrollbarStyle(#bbab6a, #84722d, #79692a);
+}
+
+[data-style-name=terminal],
+[data-style-name=white-on-black] {
+  body& {
+    [contenteditable],
+    [contenteditable] * {
+      &::selection {
+        background: #628340;
+        color: #fff;
+      }
+      &::-moz-selection {
+        background: #628340;
+        color: #fff;
+      }
+    }
+    .screen-buttons .inner {
+      background: hsla(var(--main-panel-bg-h), var(--main-panel-bg-s), calc(var(--main-panel-bg-l) - 10%), 0.4);
+    }
+  }
+}
+
+.print-styles() {
+  .defaultStyle();
+  body[data-style-name=terminal] {
+    *:not(.fa):not(.privmx-icon) {
+      font-family: @monospaceFont !important;
+    }
+  }
+}
+
+@media print {
+  .print-styles();
+}
+
+.print-mode {
+  .print-styles();
+}
+
+
+.left-margin-overlay,
+.right-margin-overlay {
+  display: none;
+}
+
+.editorMarginStyle(@margin) {
+  body& {
+    .window-editor-main .main-content {
+      margin-left: @margin;
+      margin-right: @margin;
+      width: calc(100% - @margin - @margin);
+      &:not(.preview-mode) .editor {
+        left: calc(14px + @margin);
+        right: calc(14px + @margin);
+      }
+    }
+    .left-margin-overlay,
+    .right-margin-overlay {
+      position: fixed;
+      width: @margin;
+      top: 0;
+      bottom: 0;
+      pointer-events: none;
+      display: block;
+    }
+    .left-margin-overlay {
+      left: 0;
+    }
+    .right-margin-overlay {
+      right: 0;
+    }
+  }
+}
+
+[data-editor-margin="10%"] {
+  .editorMarginStyle(10%);
+}
+[data-editor-margin="20%"] {
+  .editorMarginStyle(20%);
+}

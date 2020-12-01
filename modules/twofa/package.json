@@ -1,0 +1,10 @@
+{
+  "name": "privmx-desktop-client-twofa-module-builder",
+  "version": "1.0.0",
+  "description": "2FA module builder",
+  "license": "PrivMX Source Code License",
+  "private": true,
+  "dependencies": {
+    "privmx-builder": "1.4.1"
+  }
+}

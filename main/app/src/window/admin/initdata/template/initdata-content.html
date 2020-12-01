@@ -1,0 +1,59 @@
+@import {LangModel} from "../InitDataEditor";
+@model LangModel
+<form class="lang-form" action="javascript:;" method="post">
+  <div class="lang-name-section">
+    <div>{{@Helper.i18n("window.admin.initData.form.langName.label")}}</div>
+    <div>
+      <input type="text" name="code" value="{{@model.lang.name}}" />
+    </div>
+  </div>
+  
+  <div class="lang-defaults-section">
+    <div>{{@Helper.i18n("window.admin.initData.form.defaultLang.label")}}</div>
+    <div>
+      <label class="default-lang-toggle" data-action="make-default">
+        <input type="checkbox" name="isdefault" {{@ model.isDefaultLang ? 'checked' : ''}} />
+        <span class="toggle-on">
+          <i class="fa fa-toggle-on text-success"></i> {{@Helper.i18n("window.admin.initData.form.defaultLang.yes")}}
+        </span>
+        <span class="toggle-off">
+          <i class="fa fa-toggle-on fa-flip-horizontal text-danger"></i> {{@Helper.i18n("window.admin.initData.form.defaultLang.no")}}
+        </span>
+      </label>
+    </div>
+  </div>
+
+  <div class="contacts-section">
+    <div>{{@Helper.i18n("window.admin.initData.form.contacts.header")}}</div>
+    <div>
+      <div class="items"></div>
+      <a href="javascript:;" class="small" data-action="add-contact">{{@Helper.i18n("window.admin.initData.form.contacts.add")}}</a>
+    </div>
+  </div>
+
+  <div class="files-section">
+    <div>{{@Helper.i18n("window.admin.initData.form.files.header")}}</div>
+    <div>
+      <div class="items"></div>
+      <a href="javascript:;" class="small" data-action="add-file">{{@Helper.i18n("window.admin.initData.form.files.add")}}</a>
+    </div>
+  </div>
+
+  <div class="mails-section">
+    <div>{{@Helper.i18n("window.admin.initData.form.mails.header")}}</div>
+    <div class="checkbox">
+      <label>
+          <input type="checkbox" name="mailsEnabled" {{#model.mailsEnabled ? 'checked="checked"' : ''}} />
+          {{@Helper.i18n("window.admin.initData.form.mails.newUser")}}
+      </label>
+    </div>
+    <div>
+      <div class="items"></div>
+      <a href="javascript:;" class="small" data-action="add-mail">{{@Helper.i18n("window.admin.initData.form.mails.add")}}</a>
+    </div>
+  </div>
+
+  <div class="form-buttons">
+    <button type="button" class="btn btn-success" data-action="save"><i class="fa fa-save"></i> {{@Helper.i18n("window.admin.initData.form.save")}}</button>
+  </div>
+</form>

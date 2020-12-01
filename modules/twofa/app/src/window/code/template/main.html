@@ -1,0 +1,51 @@
+@import {Model} from "../CodeWindowController";
+@model Model
+<div class="window-main window-code">
+  <div class="header">
+    {{@Helper.i18n("plugin.twofa.window.code.header")}}
+  </div>
+
+  <div class="info">
+  {{ if (model.data.type == "sms") { {{
+    {{@Helper.i18n("plugin.twofa.window.code.info.sms", model.data.mobile)}}
+  }} } else if (model.data.type == "email") { {{
+    {{@Helper.i18n("plugin.twofa.window.code.info.email", model.data.email)}}
+  }} } else if (model.data.type == "googleAuthenticator") { {{
+    {{@Helper.i18n("plugin.twofa.window.code.info.googleAuthenticator")}}
+  }} } }}
+  </div>
+  <div class="message"></div>
+  <div class="input-container type-{{@model.data.type}}">
+    {{ if (model.data.type == "googleAuthenticator") { {{
+      <input class="form-control code-input" type="text" />
+      <input class="form-control code-input" type="text" />
+    }} } else if (model.data.type == "email" || model.data.type == "sms") { {{
+      <input class="form-control code-input" type="text" />
+      <input class="form-control code-input" type="text" />
+      <input class="form-control code-input" type="text" />
+      <input class="form-control code-input" type="text" />
+    }} } }}
+  </div>
+  <div class="remember-cnt">
+    <label>
+      <input type="checkbox" class="remember-device-id" />
+      {{@Helper.i18n("plugin.twofa.window.code.remember")}}
+    </label>
+  </div>
+  <div class="button-container">
+    <button class="btn btn-primary btn-block btn-lg submit-code">
+      {{@Helper.i18n("plugin.twofa.window.code.submit")}}
+    </button>
+    {{ if (model.data.type == "email" || model.data.type == "sms") { {{
+      <div class="or"><div>lub</div></div>
+      <button class="btn btn-default btn-block btn-lg resend-code">
+        {{@Helper.i18n("plugin.twofa.window.code.resend")}}
+      </button>
+    }} } }}
+    {{ if (model.cancellable) { }}
+      <button class="btn btn-block btn-lg cancel">
+        {{@Helper.i18n("plugin.twofa.window.code.cancel")}}
+      </button>
+    {{ } }}
+  </div>
+</div>

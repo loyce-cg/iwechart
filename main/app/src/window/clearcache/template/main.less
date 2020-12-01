@@ -1,0 +1,53 @@
+@import "../../base/BaseWindow";
+@import "../../../themes/default/less/form";
+
+@foregroundColor: #eee;
+@backgroundColor: #292929;
+@menuFrgColor: @foregroundColor;
+@menuBkgColor: #1b1d1e;
+
+html, body {
+  margin: 0;
+  background: @backgroundColor;
+  color: @foregroundColor;
+  font-size: var(--font-size);
+}
+
+body {
+    padding: 10px 15px 15px 15px;
+    min-height: 0;
+    height: auto;
+}
+.clearcache {
+  .header {
+    font-size: var(--font-size-l);
+  }
+  .input-container {
+    padding: 10px 0;
+  }
+  .buttons {
+    text-align: center;
+    padding-top: 20px;
+    
+    .single-btn {
+        margin: 0 10px;
+    }
+  }
+  .clear-cache-info {
+    text-align: center;
+    font-size: var(--font-size);
+    color: #fff;
+    padding: 0 5px 0 5px;
+    
+    .main-info {
+      text-align: center;
+      margin: 20px 0;
+    }
+    i {
+      font-size: var(--font-size);
+      margin-top: 3px;
+      width: 16px;
+      text-align: center;
+    }
+  }
+}

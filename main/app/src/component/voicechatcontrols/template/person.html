@@ -1,0 +1,18 @@
+@import {PersonModel} from "../VoiceChatControlsController";
+@import {VoiceChatControlsView} from "../VoiceChatControlsView";
+@model PersonModel
+{{
+  let numBars: number = VoiceChatControlsView.getSignalQualityBarsCount(model.networkInfo);
+}}
+<div class="person">
+  <canvas class="not-rendered" data-tooltip-trigger="{{@model.hashmail}}" data-hashmail-image="{{@model.hashmail}}" data-width="15" data-height="15" data-auto-size="true" data-auto-refresh="true"></canvas>
+  <span class="username">{{@model.name}}</span>
+  <span class="network-info">
+    <span class="network-info-icon" data-network-info-num-bars="{{@numBars}}">
+      <span class="network-info-icon-bar network-info-icon-bar-1"></span>
+      <span class="network-info-icon-bar network-info-icon-bar-2"></span>
+      <span class="network-info-icon-bar network-info-icon-bar-3"></span>
+    </span>
+    <span class="network-info-ping" data-ping-for="{{@model.hashmail}}">{{@model.networkInfo.ping}} ms</span>
+  </span>
+</div>

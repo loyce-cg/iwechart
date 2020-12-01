@@ -1,0 +1,156 @@
+@import "../../base/BaseWindow";
+
+body {
+  background: @colorBackground;
+  font-size: var(--font-size-l);
+  &.admin-alert {
+    background: #292929;
+    color: #eee;
+  }
+}
+
+.window-sectionsummary {
+  height: 100%;
+  
+  .component-splitter-panel-left {
+        border-right: 1px solid #ddd;
+  }
+  .content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* overflow: auto; */
+    
+    .info {
+      font-size: var(--font-size);
+      text-align: center;
+    }
+    .bold {
+      font-weight: 700;
+    }
+
+  }
+  
+  button[data-action=new-note] {
+    span {
+      display: none;
+    }
+  }
+  .files-list .files-header .button-container .btn > i.fa-plus {
+      margin-right: 0;
+  }
+
+  &:not(.single-mode) .files-list .files-header .current-root .inner .wi-element .wi-element-inner{
+      display: none;
+  }
+  
+  &:not(.single-mode) .files-list .files-header .current-root .inner .wi-element.compact-summary-view .wi-element-inner {
+      display: block;
+      span.ico-note {
+        font-size: var(--font-size-xl);
+        line-height: 36px;
+        color: var(--body-extra-info-fg);
+      }
+      .wi-element-name {
+        margin: 0 30px 0 30px;
+      }
+  }
+  
+  &.single-mode .files-list .files-header .compact-summary-view {
+    display: none;
+  }
+  
+  .files-list .files-header .current-root {
+    [data-action=add-person],
+    [data-action=remove-person] {
+      display: none;
+    }
+  }
+
+  &:not(.single-mode) .chat-messages-component .chat .header .profiles {
+    .single-contact.compact-summary-view {
+      display: block;
+      span.ico-comment {
+        font-size: var(--font-size-xl);
+        line-height: 36px;
+        color: var(--body-extra-info-fg);
+      }
+      p.name {
+        font-weight: normal;
+      }
+      .text-col {
+        margin-left: 35px;
+      }
+    }
+    .single-contact:not(.compact-summary-view) {
+      display: none;
+    }
+  }
+  
+  .chat-messages-component .chat .header .profiles {
+    [data-action=add-person],
+    [data-action=remove-person] {
+      display: none;
+    }
+  }
+  
+  .chat-messages-component .chat .messages-container .chat-message .message {
+    &.created {
+      width: 100%;
+    }
+    .task-label {
+      color: var(--body-fg);
+    }
+    .text {
+      margin-right: 0;
+    }
+    .emoji-btn {
+      margin-left: 10px;
+      +.delete-message-btn {
+        margin-right: 0;
+      }
+    }
+    .delete-message-btn {
+      margin-left: 10px;
+    }
+    .emoji-btn,
+    .delete-message-btn {
+      display: inline-block;
+      opacity: 0;
+    }
+    &:hover {
+      .emoji-btn,
+      .delete-message-btn {
+        opacity: 1;
+      }
+    }
+  }
+    
+  .go-to-tasks, .go-to-notes2, .go-to-chat {
+    display: none;
+  }
+  
+  .context-menu-settings .context-menu-content {
+    min-width: 235px;
+    top: 20px;
+    right:-42px;
+  }
+  
+  .bckg-icon {
+    background-color: transparent;
+  }
+  
+  .component-splitter-handle.reply-handle {
+    background: transparent;
+  }
+  .handle-dot-horizontal {
+    margin-top: 5px;
+  }
+  
+  .handle-dot-horizontal,
+  .handle-dot-vertical {
+    background: rgba(0, 0, 0, 0.1);
+  }
+}

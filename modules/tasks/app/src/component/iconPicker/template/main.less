@@ -1,0 +1,44 @@
+@import "../../../window/main/template/common.less";
+
+.component-icon-picker-main {
+  padding: 5px;
+  background: var(--main-panel-bg);
+  
+  h4 {
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    color: var(--body-extra-info-fg);
+    font-weight: 600;
+    margin-top: 10px;
+    margin-bottom: 3px;
+    
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+  
+  .icons-container,
+  .colors-container {
+    >div {
+      display: inline-block;
+      
+      >.taskgroup-icon>span,
+      >div>i.fa.fa-tint {
+        padding: 5px;
+        cursor: pointer;
+      }
+      &.selected,
+      &:hover {
+        >.taskgroup-icon>span,
+        >div>i.fa.fa-tint {
+          background: var(--preview-panel-bg);
+          border-radius: 3px;
+        }
+      }
+    }
+  }
+  
+  .colors-container {
+    padding: 5px;
+  }
+}

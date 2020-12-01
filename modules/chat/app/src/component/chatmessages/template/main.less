@@ -1,0 +1,59 @@
+// @import "../../base/BaseAppWindow";
+
+@import "../../../../node_modules/pmc-web/src/component/template/conversation.less";
+@import "../../../../node_modules/pmc-web/src/component/template/wi-element.less";
+@import "../../../../node_modules/pmc-web/src/component/template/bckg-icon.less";
+@import "../../../../node_modules/pmc-web/src/component/persontooltip/template/main.less";
+@import "../../../../node_modules/pmc-web/src/component/dragdrop/index.less";
+@import "../../../../node_modules/pmc-web/src/component/sectionstabs/index.less";
+@import "../../../../node_modules/pmc-web/src/component/splitter/index.less";
+@import "../../../../node_modules/pmc-web/src/component/emojipicker/index.less";
+@import "../../../../node_modules/pmc-web/src/component/emojiviewbar/index.less";
+@import "../../../../node_modules/pmc-web/src/component/infotooltip/index.less";
+@import "../../../../node_modules/pmc-web/src/component/loading/index.less";
+
+.focus-hightlight {
+  z-index: 8000;
+  border: 5px solid var(--unread-color);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+.section-chats {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  
+  &.with-tabs {
+      margin-top: 21px;
+  }
+}
+
+div.emoji-btn {
+  visibility: hidden;
+  cursor: pointer;
+  float: right;
+  width: 10px;
+  height: 20px;
+  line-height: 24px;
+  padding-top: 4px;
+  .inner {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background-color: var(--body-extra-info-fg);
+    box-shadow: 0px 6px 0px var(--body-extra-info-fg), 0px 12px 0px var(--body-extra-info-fg);
+  }
+}
+
+.component-loading {
+  top: 42px;
+}
+
+@import "chat";
+@import "chat-reply";
+@import "context-menu-settings";

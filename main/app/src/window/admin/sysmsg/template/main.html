@@ -1,0 +1,43 @@
+<div>
+
+  <div class="panel-header">
+    <i class="fa fa-send-o"></i>
+    {{@Helper.i18n("window.admin.sysmsg.menu")}}
+  </div>
+  
+  <div class="panel-info">
+    {{@Helper.i18n("window.admin.sysmsg.header")}}
+  </div>
+
+  <div class="le-main">
+    <div class="le-main-sub">
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.admin.sysmsg.title.label")}}
+        </div>
+        <div class="input">
+          <input type="text" vf-model="title" />
+        </div>
+      </div>
+      <div class="field">
+        <div class="info next">
+          {{@Helper.i18n("window.admin.sysmsg.content.label")}}
+        </div>
+        <div class="input">
+          <textarea vf-model="text"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="field buttons">
+    <div class="info"></div>
+    <div class="input">
+      <button class="btn btn-success" vf-click="send(event)">
+        <i class="fa fa-envelope" data-org="fa fa-envelope" data-proc="fa fa-spin fa-circle-o-notch"></i>
+        {{@Helper.i18n("window.admin.sysmsg.send")}}
+      </button>
+      <div class="progress-info"></div>
+    </div>
+  </div>
+  
+</div>

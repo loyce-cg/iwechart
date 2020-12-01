@@ -1,0 +1,15 @@
+@import {AutoTaskModel} from "./StatusBarController";
+@import {StatusBarView} from "./StatusBarView";
+@model AutoTaskModel
+@context StatusBarView
+<div class="component-status-bar">
+  {{ if (model != null) { {{
+    <div class="status">
+      <i class="fa fa-circle-o-notch fa-spin"></i>
+      {{@Helper.getTaskName(model.name)}}
+      <span data-display="progress">
+        {{@context.formatProgress(model.progress)}}
+      </span>
+    </div>
+  }} } }}
+</div>

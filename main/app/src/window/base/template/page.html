@@ -1,0 +1,71 @@
+@import {Formatter} from "../../../utils/Formatter";
+@import {app} from "../../../Types";
+@helper Formatter
+@model app.WindowLoadOptionsRender
+<!DOCTYPE html>
+<html lang="{{@model.lang || 'en'}}">
+  <head>
+    <meta charset="utf-8">
+    <title>{{@model.title || ''}}</title>
+    {{ (model.styles || []).forEach(style => { {{
+    <link href="{{@style}}" media="all" rel="stylesheet" />
+    }} }); }}
+    <style type="text/css"></style>
+  </head>
+  {{
+    // console.log("page.html model", model);
+    let extraBodyAttributesStr = "";
+    if (model.extraBodyAttributes) {
+      for (let k in model.extraBodyAttributes) {
+        extraBodyAttributesStr += Helper.escapeHtml(k) + '="' + Helper.escapeHtml(model.extraBodyAttributes[k]) + '"';
+      }
+    }
+  }}
+  <body class="{{@model.bodyClass || ''}} {{@('isElectron' in model && model.isElectron)?'electron':'not-electron'}}" {{#extraBodyAttributesStr}}>
+    {{ (model.dynamicScripts || []).forEach(script => { 
+      // console.log("------------ load dynamic script..")
+      {{
+      <script type="text/javascript">{{#script}}</script>
+      }} }); }}
+
+    {{ (model.scripts || []).forEach(script => { {{
+    <script type="text/javascript" src="{{@script}}"></script>
+    }} }); }}
+    {{ if (model.viewName) { {{
+    <script type="text/javascript">
+      privmxViewRequire("Starter").Starter.init("{{@model.viewName}}", null, {{@(model.fonts || []).length}});
+    </script>
+    {{ if (typeof(window) == "undefined") { }}
+      <div id="screen-cover" tabindex="-1">
+        <div class="inner">
+          <div class="inner-2">
+            <div class="cover-panel">
+              <div class="logo-127x112-container"><img src="" /></div>
+              <div class="text"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="no-connection-screen-cover" tabindex="-1">
+        <div class="inner">
+          <div class="inner-2">
+            <div class="no-connection-cover-panel">
+              <div class="logo-127x112-container"><img src="" /></div>
+              <div class="text"><span class="text-inner"></span> <i class="fa fa-spin fa-circle-o-notch"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {{ } }}
+    <div id="font-loader" style="opacity: 0;">
+      {{ (model.fonts || []).forEach(font => {
+        let style = "";
+        for (let key in font) {
+          style += "font-" + key + ":" + (<any>font)[key] + ";";
+        }
+        {{<span style="{{#style}}">a</span>}}
+      }); }}
+    </div>
+    }} } }}
+  </body>
+</html>

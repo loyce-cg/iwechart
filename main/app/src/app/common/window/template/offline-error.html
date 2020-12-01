@@ -1,0 +1,38 @@
+@model {assetsManager: {getAsset(path: string): string}, message1: string, message2: string}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      @import "{{#model.assetsManager.getAsset('themes/default/css/fonts.css')}}";
+      body {
+        font-family: source_sans_pro, arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        font-size: 18px;
+        color: #333;
+        padding: 20px;
+        text-align: center;
+      }
+      small {
+        display: block;
+        margin-top: 30px;
+        margin-bottom: 30px;
+      }
+      button {
+        padding: 5px 10px;
+        cursor: pointer;
+        background-color: #84d501;
+        color: #1b1d1e;
+        border: 1px solid transparent;
+        border-bottom: 1px solid #457000;
+        font-size: 14px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    {{# model.message1 }}
+    <small>{{# model.message2 }}</small>
+    <button id="close-button">OK</button>
+  </body>
+</html>

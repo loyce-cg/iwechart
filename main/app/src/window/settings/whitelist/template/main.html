@@ -1,0 +1,22 @@
+@import {Model} from "../WhitelistController";
+@model Model
+<div class="section whitelist-section">
+  <div class="section-header">
+    <i class="fa fa-filter"></i>
+    {{@Helper.i18n("window.settings.section.whitelist.header")}}
+  </div>
+  <div class="section-info">
+    {{@Helper.i18n("window.settings.section.whitelist.info")}}
+  </div>
+  <table class="table small">
+    <thead>
+      <tr>
+        <th class="domain-col">{{@Helper.i18n("window.settings.section.whitelist.table.domain")}}</th>
+        <th class="domain-col">{{@Helper.i18n("window.settings.section.whitelist.table.lastMessage")}}</th>
+        <th class="switch-col">{{@Helper.i18n("window.settings.section.whitelist.table.switch")}}</th>
+        <th class="report-col"></th>
+        <th class="del-col"></th>
+      </tr>
+    </thead>
+  </table>
+</div>

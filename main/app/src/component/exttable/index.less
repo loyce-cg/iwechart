@@ -1,0 +1,93 @@
+.component-ext-table {
+    width: 100%;
+    border: 1px solid #DDD;
+    position: relative;
+    height: 200px;
+    overflow: auto;
+    padding-top: 30px;
+}
+
+.component-ext-table .table-head,
+.component-ext-table .table-body,
+.component-ext-table .table-row,
+.component-ext-table .table-cell {
+    box-sizing: border-box;
+}
+
+.component-ext-table .table-row {
+    clear: both;
+    border-bottom: 1px solid #DDD;
+    overflow: auto;
+}
+
+.component-ext-table .table-body .table-row:last-of-type {
+    border-bottom: none;
+}
+
+.component-ext-table .table-head {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #EEE;
+    z-index: 1;
+}
+
+.component-ext-table .table-body-cnt {
+    position: absolute;
+    top: 36px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.component-ext-table .table-cell {
+    height: 30px;
+    line-height: 30px;
+    border-right: 1px solid #DDD;
+    padding: 0 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 50%;
+    float: left;
+    position: relative;
+}
+
+.component-ext-table .table-row .table-cell:last-of-type {
+    border-right: none;
+}
+
+/* resizer */
+
+.component-ext-table-column-resizer-handle {
+  content: " ";
+  position: absolute;
+  width: 5px;
+  height: 100%;
+  left: -2px;
+  top: 0;
+  cursor: col-resize;
+}
+
+.component-ext-table-column-resizer-unselectable {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.component-ext-table-column-resizer-backdrop {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: fixed;
+  cursor: col-resize;
+  z-index: 2;
+}

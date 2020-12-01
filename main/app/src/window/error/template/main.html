@@ -1,0 +1,47 @@
+@import {Model} from "../ErrorWindowController";
+@model Model
+<div class="window-error-main {{@model.error.helpCenterCode?'with-help-center-link':'no-help-center-link'}} {{@model.error.askToReport?'with-ask-to-report':'no-ask-to-report'}}">
+  <div class="explanation">
+    <h3><i class="fa fa-exclamation-triangle"></i> {{@Helper.i18n("window.error.explanation.header")}}</h3>
+    <p>
+      {{ if (model.helpCenterUrl) { }}
+        <span class="help-center-link">{{#Helper.i18n("window.error.explanation.text.helpCenterLink", model.helpCenterUrl)}}</span>
+      {{ } }}
+      {{ if (model.error.askToReport) { }}
+        <span class="ask-to-report-text">{{@Helper.i18n("window.error.explanation.text.report")}}</span>
+      {{ } }}
+    </p>
+  </div>
+  {{ if (model.error.askToReport) { }}
+    <div class="report-options">
+      <ul>
+        <li data-report-option="include-error-log">
+          <span class="switch active" data-action="toggle-report-option"></span>
+          <label data-action="toggle-report-option">{{@Helper.i18n("window.error.reportOption.includeErrorLog.label")}}</label>
+          <span class="link" data-action="show-error-log">{{@Helper.i18n("window.error.reportOption.includeErrorLog.showInformation")}}</span>
+        </li>
+        <li data-report-option="include-system-information">
+          <span class="switch active" data-action="toggle-report-option"></span>
+          <label data-action="toggle-report-option">{{@Helper.i18n("window.error.reportOption.includeSystemInformation.label")}}</label>
+          <span class="link" data-action="show-system-information">{{@Helper.i18n("window.error.reportOption.includeSystemInformation.showInformation")}}</span>
+        </li>
+      </ul>
+    </div>
+    <div class="buttons">
+      <button class="btn btn-success save" data-action="send">
+        <i class="fa fa-send"></i>
+        {{@Helper.i18n("window.error.askToReport.button.send.label")}}
+      </button>
+      <button class="btn btn-default cancel" data-action="dontSend">
+        {{@Helper.i18n("window.error.askToReport.button.dontSend.label")}}
+      </button>
+    </div>
+  {{ } else { }}
+    <div class="buttons">
+      <button class="btn btn-success save" data-action="close">
+        {{@Helper.i18n("window.error.close.button.close.label")}}
+      </button>
+    </div>
+  {{ } }}
+  <div class="notifications-container"></div>
+</div>

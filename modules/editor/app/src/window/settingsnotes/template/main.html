@@ -1,0 +1,42 @@
+@import {Model} from "../SettingsNotesController";
+@model Model
+{{
+  var styleName = (model.notes && model.notes.style) || 'default';
+  var styles = Helper.getAvailableNotesStyles();
+}}
+<div class="section notes-section">
+  <div class="section-header">
+    <i class="fa fa-file-o fa-flip-vertical"></i>
+    {{@Helper.i18n("plugin.editor.window.settings.section.editor.header")}}
+  </div>
+  
+  <div class="base-form">
+    <div class="fields">
+      <div class="field">
+        <div class="info">
+            {{@Helper.i18n("plugin.editor.window.settings.section.editor.style.label")}}
+        </div>
+        <div class="input radio">
+          {{ for(var name in styles) { }}
+            <label class="preview-label">
+              <input type="radio" name="notes.style" value="{{@name}}" {{if(styleName == name) { }}checked="checked"{{ } }}>
+              {{@styles[name]}}
+              <span class="preview editor-theme-preview" data-style-name="{{@name}}">ABC</span>
+            </label>
+          {{ } }}
+        </div>
+      </div>
+      <div class="field buttons">
+        <div class="info">
+        </div>
+        <div class="input">
+          <button class="btn btn-success save-button progress-button">
+            <i class="fa fa-save"></i>
+            <span class="button-text">{{@Helper.i18n("plugin.editor.window.settings.section.editor.button.save.text")}}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+</div>

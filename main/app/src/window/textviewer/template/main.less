@@ -1,0 +1,30 @@
+@import "../../base/BaseWindow";
+@import "../../../themes/default/less/PfScroll.less";
+
+.window-textviewer-main {
+  padding: 10px;
+  font-size: var(--font-size);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  
+  .text {
+    flex: 1 1 auto;
+    white-space: pre-wrap;
+    
+    .pf-content {
+      right: 20px;
+    }
+  }
+  
+  .buttons {
+    flex: 0 0 40px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+  }
+  
+  .pf-scrollable .pf-scroll-panel .pf-scroll {
+    background-color: var(--scrollbar-bg);
+  }
+}

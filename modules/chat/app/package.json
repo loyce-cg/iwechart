@@ -1,0 +1,11 @@
+{
+  "name": "privmx-desktop-client-chat-module",
+  "version": "1.19.0",
+  "description": "Chat module",
+  "license": "PrivMX Source Code License",
+  "private": true,
+  "dependencies": {
+    "pmc-mail": "^2.25.0-20201116153854717",
+    "pmc-web": "^2.25.0-20201116153854717"
+  }
+}

@@ -1,0 +1,4 @@
+foolproof build
+tasks: npm ci / cd app / npm ci
+calendar: npm install / cd app / npm install
+tasks: npm ci / cd app / npm ci

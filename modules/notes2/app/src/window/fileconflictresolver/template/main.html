@@ -1,0 +1,78 @@
+@import {Model} from "../FileConflictResolverWindowController";
+@import {ConflictType, OperationType} from "../../../main/Common";
+@model Model
+<div class="window-file-conflict-resolver-main" tabindex="-1">
+    <div class="header">
+        {{ if (model.operationType == OperationType.MOVE) { {{
+            {{@Helper.i18n("plugin.notes2.window.fileconflictresolver.moveConflict")}}
+        }} } else if (model.operationType == OperationType.COPY) { {{
+            {{@Helper.i18n("plugin.notes2.window.fileconflictresolver.copyConflict")}}
+        }} } }}
+    </div>
+    <div class="info">
+        {{ if (model.conflictType == ConflictType.FILE_OVERWRITE) { {{
+            {{@Helper.i18n("plugin.notes2.window.fileconflictresolver.fileOverwrite")}}
+        }} } else if (model.conflictType == ConflictType.DIRECTORIES_MERGE) { {{
+            {{@Helper.i18n("plugin.notes2.window.fileconflictresolver.directoriesMerge")}}
+        }} } else if (model.conflictType == ConflictType.DIRECTORY_OVERWRITE_BY_FILE) { {{
+            {{@Helper.i18n("plugin.notes2.window.fileconflictresolver.directoryOverwriteByFile")}}
+        }} } else if (model.conflictType == ConflictType.FILE_OVERWRITE_BY_DIRECTORY) { {{
+            {{@Helper.i18n("plugin.notes2.window.fileconflictresolver.fileOverwriteByDirectory")}}
+        }} } }}
+    </div>
+    <div class="file-info">
+        <div class="file-icon">
+            <i class="{{@model.destination.icon}}"></i>
+        </div>
+        <div class="file-data">
+            <div class="file-origin">
+                {{@Helper.i18n("plugin.notes2.window.fileconflictresolver.destination")}}
+            </div>
+            <div class="file-name">
+                {{@model.destination.name}}
+            </div>
+            <div class="file-path">
+                {{@model.destination.path}}
+            </div>
+        </div>
+    </div>
+    <div class="file-info">
+        <div class="file-icon">
+            <i class="{{@model.source.icon}}"></i>
+        </div>
+        <div class="file-data">
+            <div class="file-origin">
+                {{@Helper.i18n("plugin.notes2.window.fileconflictresolver.source")}}
+            </div>
+            <div class="file-name">
+                {{@model.source.name}}
+            </div>
+            <div class="file-path">
+                {{@model.source.path}}
+            </div>
+        </div>
+    </div>
+    <div class="buttons">
+        <div class="for-all">
+            <label class="checkbox">
+                <input type="checkbox" data-name="forall" />
+                {{@Helper.i18n("plugin.notes2.window.fileconflictresolver.forAll")}}
+            </label>
+        </div>
+        <div class="buttons-cnt">
+            <button class="btn btn-default" data-action="cancel">
+                {{@Helper.i18n("plugin.notes2.window.fileconflictresolver.button.cancel.label")}}
+            </button>
+            <button class="btn btn-default" data-action="omit">
+                {{@Helper.i18n("plugin.notes2.window.fileconflictresolver.buttons.omit")}}
+            </button>
+            <button class="btn btn-default" data-action="overwrite">
+                {{ if (model.conflictType == ConflictType.DIRECTORIES_MERGE) { {{
+                    {{@Helper.i18n("plugin.notes2.window.fileconflictresolver.buttons.merge")}}
+                }} } else { {{
+                    {{@Helper.i18n("plugin.notes2.window.fileconflictresolver.buttons.overwrite")}}
+                }} } }}
+            </button>
+        </div>
+    </div>
+</div>

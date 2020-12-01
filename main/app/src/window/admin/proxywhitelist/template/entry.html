@@ -1,0 +1,55 @@
+@import {Entry} from "../ProxyWhitelistController";
+@import {Context} from "../../../../component/extlist/ExtListView";
+@import {BaseCollection} from "../../../../utils/collection/BaseCollection";
+@model Entry
+@context Context<Entry>
+<tr class="domain-entry" data-host="{{@model.data.host}}" data-id="{{@model.id}}">
+  <td class="domain-col">
+    {{@model.data.host}}
+  </td>
+  <td>
+    {{ var date = new Date(Number(model.data.createDate)); }}
+    <span title="{{@Helper.standardDate(date)}}">({{@Helper.timeAgo(date)}})</span>
+  </td>
+  <td>
+      <div class="pf-switcher small">
+        <div class="option option-1 {{#model.data.enabled ? 'active' : ''}}"  data-action="enabled" data-value="true">
+          {{@Helper.i18n("window.admin.proxywhitelist.table.on")}}
+        </div>
+        <div class="option option-2 {{#model.data.enabled ? '' : 'active'}}"  data-action="enabled" data-value="false">
+          {{@Helper.i18n("window.admin.proxywhitelist.table.off")}}
+        </div>
+      </div>
+  </td>
+  <!-- <td>
+      <div class="pf-switcher small">
+        <div class="option option-1 {{#model.data.inEnabled ? 'active' : ''}}" data-action="in-enabled" data-value="true">
+          {{@Helper.i18n("window.admin.proxywhitelist.table.on")}}
+        </div>
+        <div class="option option-2 {{#model.data.inEnabled ? '' : 'active'}}"  data-action="in-enabled" data-value="false">
+          {{@Helper.i18n("window.admin.proxywhitelist.table.off")}}
+        </div>
+      </div>
+  </td>
+  <td>
+    <div class="pf-switcher small">
+      <div class="option option-1 {{#model.data.outEnabled ? 'active' : ''}}"  data-action="out-enabled" data-value="true">
+        {{@Helper.i18n("window.admin.proxywhitelist.table.on")}}
+      </div>
+      <div class="option option-2 {{#model.data.outEnabled ? '' : 'active'}}"  data-action="out-enabled" data-value="false">
+        {{@Helper.i18n("window.admin.proxywhitelist.table.off")}}
+      </div>
+    </div>
+  </td>
+
+  <td class="action-col">
+    <button class="btn btn-link" data-action="change-acl" title="{{@Helper.i18n('window.admin.proxywhitelist.table.acl.change')}}">
+      {{@Helper.i18n('window.admin.proxywhitelist.table.acl.change')}}
+    </button>
+  </td> -->
+  <td class="del-col">
+    <button class="btn btn-warning btn-xs icon-only" data-action="delete-domain" title="{{@Helper.i18n('window.admin.proxywhitelist.table.delete')}}">
+      <i class="fa fa-trash" data-org="fa fa-trash" data-proc="fa fa-spin fa-circle-o-notch"></i>
+    </button>
+  </td>
+</tr>

@@ -1,0 +1,51 @@
+.window-select-contacts-section {
+  padding: 3px 10px;
+  overflow: hidden;
+  &.active {
+    color: white;
+    background-color: @colorAsideHeading;
+  }
+  .image {
+    float: left;
+    width: 16px;
+    height: 16px;
+    margin: 2px 6px 2px 0;
+    text-align: center;
+    border-radius: 2px;
+    background: var(--section-color-icon);
+    border-color: var(--section-color-icon);
+    
+    img {
+      max-width: 12px;
+      max-height: 12px;
+      margin-top: -7px;
+      border-radius: 2px;
+      vertical-align: middle;
+    }
+    
+    &.border-icon {
+      background: none;
+      border: 1px solid var(--section-color-icon);
+      img {
+        filter: brightness(70%);
+      }
+    }
+  }
+  .name {
+    float: left;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    width: 220px;
+  }
+  .star {
+    float: left;
+    margin: 3px 5px 0 0;
+    font-size: var(--font-size);
+  }
+  button {
+    float: right;
+    font-size: calc(var(--font-size-xl) + 2px);
+    line-height: 14px;
+  }
+}

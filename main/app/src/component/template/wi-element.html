@@ -1,0 +1,17 @@
+@import * as Types from "../../Types";
+@import {Context} from "../extlist/ExtListView";
+@model Types.webUtils.WiElementModel
+@context Context<Types.webUtils.WiElementModel>
+<div class="wi-element {{@context.isActive ? 'active' : ''}} {{@model.badge > 0 ? 'with-badge' : ''}}" data-wi-element-id="{{@model.id}}">
+  <div class="wi-element-inner">
+    <div class="wi-element-icon bckg-icon">
+      <i class="fa {{@model.icon}}"></i>
+    </div>
+    <div class="wi-element-name">
+      {{@model.name}}
+    </div>
+    <div class="wi-element-badge number">
+      {{@model.badge}}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,83 @@
+plugin.calendar.window.main.title=Calendar
+
+plugin.calendar.buttons.ok=Ok
+plugin.calendar.buttons.cancel=Cancel
+
+plugin.calendar.settings.headers.view-settings=View options
+plugin.calendar.settings.enable-day-preview-panel=Enable day preview
+plugin.calendar.settings.show-task-preview-panel=Show issue preview panel
+plugin.calendar.settings.horizontal-task-preview-window-layout=Horizontal issue preview panel
+plugin.calendar.settings.show-task-tooltip=Show issue tooltip
+
+plugin.calendar.mode.month=Month
+plugin.calendar.mode.week=Days
+plugin.calendar.mode.singleweek=Week
+plugin.calendar.mode.singleday=Day
+
+plugin.calendar.month.0=January
+plugin.calendar.month.1=February
+plugin.calendar.month.2=March
+plugin.calendar.month.3=April
+plugin.calendar.month.4=May
+plugin.calendar.month.5=June
+plugin.calendar.month.6=July
+plugin.calendar.month.7=August
+plugin.calendar.month.8=September
+plugin.calendar.month.9=October
+plugin.calendar.month.10=November
+plugin.calendar.month.11=December
+
+plugin.calendar.month.short.0=Jan
+plugin.calendar.month.short.1=Feb
+plugin.calendar.month.short.2=Mar
+plugin.calendar.month.short.3=Apr
+plugin.calendar.month.short.4=May
+plugin.calendar.month.short.5=Jun
+plugin.calendar.month.short.6=Jul
+plugin.calendar.month.short.7=Aug
+plugin.calendar.month.short.8=Sep
+plugin.calendar.month.short.9=Oct
+plugin.calendar.month.short.10=Nov
+plugin.calendar.month.short.11=Dec
+
+plugin.calendar.daysOfWeek.0=Monday
+plugin.calendar.daysOfWeek.1=Tuesday
+plugin.calendar.daysOfWeek.2=Wednesday
+plugin.calendar.daysOfWeek.3=Thursday
+plugin.calendar.daysOfWeek.4=Friday
+plugin.calendar.daysOfWeek.5=Saturday
+plugin.calendar.daysOfWeek.6=Sunday
+
+plugin.calendar.daysOfWeek.short.0=Mon
+plugin.calendar.daysOfWeek.short.1=Tue
+plugin.calendar.daysOfWeek.short.2=Wed
+plugin.calendar.daysOfWeek.short.3=Thu
+plugin.calendar.daysOfWeek.short.4=Fri
+plugin.calendar.daysOfWeek.short.5=Sat
+plugin.calendar.daysOfWeek.short.6=Sun
+
+plugin.calendar.sidebar.private=My private calendar
+plugin.calendar.sidebar.all=All calendars
+plugin.calendar.sidebar.created-by-me=Created by me
+plugin.calendar.sidebar.assigned-to-me=Assigned to me
+plugin.calendar.sidebar.trash=Trash
+
+plugin.calendar.component.calendarPanel.view-refresh-tooltip=Refresh view
+plugin.calendar.component.calendarPanel.view-options-tooltip=View options
+plugin.calendar.component.calendarPanel.new-task-tooltip=Create new issue
+plugin.calendar.component.calendarPanel.new-task=New issue
+plugin.calendar.component.calendarPanel.more-tasks-info=More issues: {0}
+
+plugin.calendar.component.dateTimePicker.today=Today
+plugin.calendar.component.dateTimePicker.whole-day=Whole day
+
+plugin.calendar.notifications.refreshing=Refreshing...
+
+plugin.calendar.filter.show-all-tasks=all issues
+plugin.calendar.filter.show-only-idea=<span class="task-label task-status-idea">idea</span>
+plugin.calendar.filter.show-only-todo=<span class="task-label task-status-todo">todo</span>
+plugin.calendar.filter.show-only-in-progress=<span class="task-label task-status-inprogress">in progress</span>
+plugin.calendar.filter.show-only-done=<span class="task-label task-status-done">done</span>
+plugin.calendar.filter.show-only-not-done=<strong>not done</strong>
+
+plugin.calendar.sidebar.newsection=New section

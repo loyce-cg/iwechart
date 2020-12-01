@@ -1,0 +1,21 @@
+@import {Model} from "../SectionsWindowController";
+@model Model
+<div class="window-sections-main">
+  <div class="sections-list"></div>
+  <div class="sections-list-lock-overlay"></div>
+  <div class="edit-container"></div>
+  <div class="buttons-container">
+    <span class="sections-title">{{@Helper.i18n("window.sections.rootName", model.server)}}</span>
+    <div class="buttons">
+      <span class="btn btn-sm refresh" data-action="refresh" tabindex="2">
+        <i class="fa fa-refresh"></i>
+      </span>
+      {{ if (model.state.canAdd ) { }}
+      <button class="btn btn-success btn-sm small" data-action="add" tabindex="1" {{@model.state.sectionsLimitReached ? "disabled": ""}}>
+        <i class="fa fa-plus"></i>
+        {{@Helper.i18n("window.sections.actions.add")}}
+      </button>
+      {{ } }}
+    </div>
+  </div>
+</div>

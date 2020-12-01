@@ -1,0 +1,13 @@
+{
+  "name": "privmx-desktop-client-tasks-module",
+  "version": "0.0.1",
+  "description": "Tasks module",
+  "license": "PrivMX Source Code License",
+  "private": true,
+  "dependencies": {
+    "pmc-mail": "^2.25.0-20201116090101719",
+    "pmc-web": "^2.25.0-20201116090101719",
+    "resize-observer-polyfill": "^1.5.1",
+    "striptags": "^3.1.1"
+  }
+}

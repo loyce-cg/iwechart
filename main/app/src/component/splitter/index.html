@@ -1,0 +1,6 @@
+@model {type: string}
+<div class="component-splitter component-splitter-{{@model.type}}">
+  <div class="component-splitter-panel component-splitter-panel-{{@model.type == 'vertical' ? 'left' : 'top'}}"></div>
+  <div class="component-splitter-panel component-splitter-panel-{{@model.type == 'vertical' ? 'right' : 'bottom'}}"></div>
+  <div class="component-splitter-handle"></div>
+</div>

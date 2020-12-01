@@ -1,0 +1,10 @@
+@import {Options} from "./Dropdown";
+@type <T>
+@model T
+@context Options<T>
+<div class="component-dropdown">
+  <span class="close" data-action="close">&times;</span>
+  <div class="inner">
+    {{#context.template.render(model)}}
+  </div>
+</div>

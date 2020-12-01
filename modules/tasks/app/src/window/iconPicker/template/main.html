@@ -1,0 +1,18 @@
+@import { Model } from "../IconPickerWindowController";
+@model Model
+<div class="window-icon-picker tasks-plugin-window">
+  <div class="scrollable-content">
+    <h4>{{@Helper.i18n("plugin.tasks.window.iconPicker.iconHeader")}}</h4>
+    <div class="icons-container">
+      <div class="icons-extlist-container"></div>
+    </div>
+    <h4>{{@Helper.i18n("plugin.tasks.window.iconPicker.colorHeader")}}</h4>
+    <div class="colors-container">
+      <div class="colors-extlist-container"></div>
+    </div>
+  </div>
+  <div class="buttons-container">
+    <button class="btn btn-success" data-action="save">{{@Helper.i18n("plugin.tasks.window.iconPicker.save")}}</button>
+    <button class="btn btn-default edit-cancel" data-action="cancel">{{@Helper.i18n("plugin.tasks.window.iconPicker.cancel")}}</button>
+  </div>
+</div>

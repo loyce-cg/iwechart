@@ -1,0 +1,4 @@
+@import {StyleSwitcherTemplateModel} from "../editors/StyledEditor";
+@import {func as styleSwitcherTemplate} from "./style-switcher.html";
+@model StyleSwitcherTemplateModel
+{{#Helper.createTemplate(styleSwitcherTemplate).render(model)}}

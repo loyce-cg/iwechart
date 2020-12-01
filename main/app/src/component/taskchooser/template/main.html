@@ -1,0 +1,29 @@
+@import { Model } from "../TaskChooserController";
+@model Model
+<div class="task-chooser-component{{@model.popup ? ' popup' : ''}}" tabindex="-1">
+  <div class="flex-container">
+    <div class="fixed-content top">
+      <input type="text" class="filter-input" value="{{@model.searchText}}" />
+      <span class="results-count"><span>{{@Helper.i18n("component.taskChooser.tasksFound")}}</span><span data-content="results-count"></span></span>
+    </div>
+    <div class="scrollable-content">
+    </div>
+    <div class="fixed-content">
+      <div class="buttons-container">
+        <button class="btn btn-success save{{@model.popup ? '  btn-sm small' : ''}}" data-action="choose">
+          <i class="fa fa-check"></i>
+          {{@Helper.i18n("component.taskChooser.choose")}}
+        </button>
+        <button class="btn btn-default cancel{{@model.popup ? '  gray btn-sm small' : ''}}" data-action="cancel">
+          {{@Helper.i18n("component.taskChooser.cancel")}}
+        </button>
+        {{ if (model.createTaskButton) { }}
+          <button class="btn btn-sm small btn-success new-task" data-action="new-task">
+            <i class="fa fa-plus"></i>
+            {{@Helper.i18n("component.taskChooser.newTask")}}
+          </button>
+        {{ } }}
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,47 @@
+@import "../../base/BaseWindow";
+
+body {
+  background: @colorBackground;
+  font-size: var(--font-size-l);
+}
+
+.window-email-info-main {
+  .content {
+    position: absolute;
+    top: 10px;
+    left: 15px;
+    right: 15px;
+    bottom: 60px;
+    overflow: auto;
+    
+    .main-info {
+      font-weight: bold;
+      padding: 10px 0;
+    }
+    .section {
+      padding: 10px;
+    }
+    .btn-link {
+      color: var(--unread-color);
+      padding: 0;
+      margin-left: 10px;
+    }
+    .field-label {
+      margin-right: 5px;
+    }
+  }
+  .buttons {
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    
+    .btn {
+      margin: 0 10px;
+    }
+  }
+  .span-icon-gap {
+      margin-right: 10px;
+  }
+}

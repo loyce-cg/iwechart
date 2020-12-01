@@ -1,0 +1,47 @@
+.present-switch-form {
+  float: left;
+  padding-top: 18px;
+  margin-right: 40px;
+  height: 55px;
+  font-size: 12px;
+  color: #999999;
+}
+.present-switch-form .checkbox {
+  margin: 0;
+}
+.present-switch-form .checkbox label {
+  cursor: default;
+}
+.present-switch-form .checkbox .switch {
+  margin-left: 10px;
+  display: inline-block;
+  vertical-align: middle;
+  width: 27px;
+  height: 10px;
+  background-color: #666666;
+  border-radius: 5px;
+  position: relative;
+  cursor: pointer;
+}
+.present-switch-form .checkbox .switch::before {
+  content: " ";
+  position: absolute;
+  top: -3px;
+  left: 0;
+  right: auto;
+  width: 16px;
+  height: 16px;
+  background-color: #e5e5e5;
+  border-radius: 1000px;
+}
+.present-switch-form .checkbox input {
+  position: absolute;
+  left: -100000px;
+}
+.present-switch-form .checkbox input:checked + .switch {
+  background-color: #84d501;
+}
+.present-switch-form .checkbox input:checked + .switch:before {
+  left: auto;
+  right: 0;
+}

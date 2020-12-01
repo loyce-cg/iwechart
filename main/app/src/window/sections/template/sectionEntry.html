@@ -1,0 +1,48 @@
+@import {SectionEntry} from "../SectionsWindowController";
+@model SectionEntry
+{{
+  if (!model.isRoot) { {{
+
+  <div class="section-entry wi-element-parent {{@context ? 'active' : ''}}" data-name="{{@model.name}}" data-tree-id="{{@model.id}}">
+    <div class="section-name wi-element {{@model.isRoot ? 'section-root' : ''}} {{@!model.visible ? 'hidden-section' : ''}}">
+      <div class="wi-element-inner">
+        {{ if (!model.isRoot) { {{
+          <div class="wi-element-icon bckg-icon bckg-icon-inverse2 {{@model.scope == 'private' ? 'bckg-icon-border' : ''}}">
+            <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+          </div>
+        }} } }}
+        <div class="wi-element-name">
+          {{ if (model.breadcrumb.length > 0) { {{
+            <span class="section-breadcrumb">{{#model.breadcrumb}}</span>
+          }} } }}
+          {{@model.name}}
+          {{ if (!model.enabled) { {{
+              <span class="disabled-badge">{{@Helper.i18n("window.sections.disabled")}}</span>
+          }} } }}
+          {{ if (!model.visible) { {{
+              <span class="hidden-badge">{{@Helper.i18n("window.sections.hidden")}}</span>
+          }} } }}
+        </div>
+        {{ if(model.id != "virtual:root") { {{
+          <div class="wi-element-module-icon">
+            <div class="module-icon{{@model.enabledModules.indexOf("calendar") > -1 ? '' : ' dimmed'}}">
+              <span class="privmx-icon privmx-icon-calendar"></span>
+            </div>
+            <div class="module-icon{{@model.enabledModules.indexOf("kvdb") > -1 ? '' : ' dimmed'}}">
+              <span class="privmx-icon privmx-icon-tasks"></span>
+            </div>
+            <div class="module-icon{{@model.enabledModules.indexOf("file") > -1 ? '' : ' dimmed'}}">
+              <span class="privmx-icon privmx-icon-notes2"></span>
+            </div>
+            <div class="module-icon{{@model.enabledModules.indexOf("chat") > -1 ? '' : ' dimmed'}}">
+              <span class="privmx-icon privmx-icon-chat"></span>
+            </div>
+          </div>
+        }} } }}
+      </div>
+    </div>
+    <div class="tree-children"></div>
+  </div>
+
+}} }
+}}

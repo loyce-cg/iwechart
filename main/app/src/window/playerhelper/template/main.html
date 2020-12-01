@@ -1,0 +1,14 @@
+<div class="main">
+    <h1>Player Helper Window</h1>
+    <audio id="main-audio-player"></audio>
+    <button data-action="hide-window">Hide window</button>
+    <button data-action="toggle-dev-tools">Toggle dev tools</button>
+    <div class="info">To get window handler, type in console:</div>
+    <div class="code-snippet selectable">win = privmxViewRequire("Starter").Starter.viewInstance;</div>
+    <div class="info">Toogle debug log level:</div>
+    <div class="code-snippet selectable">win.voiceChatModule.toogleDebugLogLevel();</div>
+    <div class="info">Create 2s ping drop</div>
+    <div class="code-snippet selectable">win.voiceChatModule.currentServerApi.sendingQueue.delay(2000);</div>
+    <div class="info">Set speed up ratio</div>
+    <div class="code-snippet selectable">win.voiceChatModule.currentServerApi.recorder.speedUp = 1.2;</div>
+</div>

@@ -1,0 +1,17 @@
+@import {app} from "../../../Types";
+@model app.AutoUpdateStatusData
+<span class="auto-update-status">
+  {{
+    if (model.status === 'checking-for-update') {
+      {{ <i class="fa fa-circle-o-notch fa-spin" title="Checking for update..."></i> }}
+    } else if (model.status === 'update-not-available') {
+      {{ <i class="fa fa-check" title="Your app is up to date"></i> }}
+    } else if (model.status === 'update-available') {
+      {{ <i class="fa fa-download faa-flash animated" title="Downloading update..."></i> }}
+    } else if (model.status === 'update-downloaded') {
+      {{ <i class="fa fa-refresh" title="Update is ready to install"></i> }}
+    } else if (model.status === 'error') {
+      {{ <i class="fa fa-warning" title="Auto-update error"></i> }}
+    }
+  }}
+</span>

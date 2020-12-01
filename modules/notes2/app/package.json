@@ -1,0 +1,15 @@
+{
+  "name": "privmx-desktop-client-notes2-module",
+  "version": "1.18.0",
+  "description": "Notes2 module",
+  "license": "PrivMX Source Code License",
+  "private": true,
+  "dependencies": {
+    "@types/ncp": "^2.0.1",
+    "drivelist": "^8.0.6",
+    "ncp": "^2.0.0",
+    "pmc-mail": "^2.25.0-20201116090101719",
+    "pmc-web": "^2.25.0-20201116090101719",
+    "trash": "^5.2.0"
+  }
+}

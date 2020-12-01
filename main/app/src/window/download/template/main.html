@@ -1,0 +1,50 @@
+@import {Model} from "../DownloadWindowController";
+@model Model
+<div class="window-download-main">
+  <div class="content">
+    <div class="inner">
+      <div class="inner2">
+        <input id="file-saver" type="file" nwsaveas="{{@model.name}}" style="display: none;"/>
+        <div class="name">
+          <div class="text">
+            <i class="fa fa-file"></i>
+            <span class="text-inner">{{@model.name}}</span>
+          </div>
+        </div>
+        <div class="file-info">
+              <div class="entry">{{@Helper.i18n("window.download.fileInfo.type", [model.mimeType])}}</div>
+              <div class="entry">{{@Helper.i18n("window.download.fileInfo.size", [model.size ? Helper.bytesSize(model.size) : "unknown"])}}</div>
+        </div>
+        <div class="buttons">
+          <div class="button-container">
+            <button class="btn btn-default gray" data-action="open">
+              <i class="fa fa-folder-open-o"></i>
+              {{ if (model.osLabel) { {{
+                {{@Helper.i18n("window.download.options.open.label.osSpecific", model.osLabel)}}
+              }} } else { {{
+                {{@Helper.i18n("window.download.options.open.label")}}
+              }} } }}
+            </button>
+          </div>
+          <div class="button-container">
+            <button class="btn btn-default gray" data-action="save">
+              <i class="fa fa-download"></i>
+              {{ if (model.osLabel) { {{
+                {{@Helper.i18n("window.download.options.save.label.osSpecific", model.osLabel)}}
+              }} } else { {{
+                {{@Helper.i18n("window.download.options.save.label", model.osLabel)}}
+              }} } }}
+            </button>
+          </div>
+          <div class="button-container cancel">
+            <button class="btn btn-default gray" data-action="cancel">
+              <i class="fa fa-times"></i>
+              {{@Helper.i18n("core.button.cancel.label")}}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="status-bar"></div>
+</div>

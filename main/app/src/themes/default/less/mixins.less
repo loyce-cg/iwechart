@@ -1,0 +1,922 @@
+//STYLE OGÓLNE
+//////////////
+
+	.font(@font:arial) { font-family:@font, tahoma, sans-serif; }
+
+	//rozszerza element na boki
+	.expand(@size) { margin-left:-@size; margin-right:-@size; padding-left:@size; padding-right:@size; }
+
+	.stick() { display:inline-block; vertical-align:middle; width:100%; }
+	
+	.rotate(@deg) { transform:rotate(@deg); -webkit-transform:rotate(@deg); -moz-transform:rotate(@deg); -o-transform:rotate(@deg);  }
+	
+	.circle(){ border-radius:1000px; }
+	.circle(@size) when (@size > 0){ border-radius:1000px; width:@size; height:@size; }
+	.circle(@size; @lineHeight) when (@size > 0) and (@lineHeight > 0){ border-radius:1000px; width:@size; height:@size; line-height:@lineHeight; }
+	
+	.ellipsis(@width) { width:@width; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+	
+	.radius(@radius:5px, @dir:string) {
+		.setBorderRadiusDefault(@radius) when (@dir = string) { border-radius:@radius; }
+		.setBorderRadiusDir(@dir) when (@dir = bottom) { border-radius:0 0 @radius @radius; }
+		.setBorderRadiusDir(@dir) when (@dir = left) { border-radius:@radius 0 0 @radius; }
+		.setBorderRadiusDir(@dir) when (@dir = top) { border-radius:@radius @radius 0 0; }
+		.setBorderRadiusDir(@dir) when (@dir = right) { border-radius:0 @radius @radius 0; }
+		
+		.setBorderRadiusDefault(@radius);
+		.setBorderRadiusDir(@dir);
+	}
+	
+	.f(@fontSize; @lineHeight:@fontSize; @color:0) {
+		.tmpFont(@lineHeight) when (@lineHeight = @fontSize) { font-size:@fontSize; line-height:@fontSize; }
+		.tmpFont(@lineHeight) when not (@lineHeight = @fontSize) { font-size:@fontSize; line-height:@lineHeight; }
+		.tmpFont(@lineHeight);
+		.tmpColor(@color) when not (@color = 0) { color:@color; }
+		.tmpColor(@color);
+	}
+	
+	//hover underline
+	.uhover() {
+		a {
+			&:hover { text-decoration:underline; }
+		}
+	}
+	
+	.gradient(@startColor:rgba(0,0,0,0.75), @endColor:rgba(0,0,0,0.25), @direction:vertical) {
+		.setGradientVars(@direction) when (@direction = vertical){
+	    @direct: top;
+	    @directW3: to bottom;
+	    @webkitDirectFrom: left top;
+	    @webkitDirectTo: left bottom;
+	    @ieGradientType: 0;
+		}
+		.setGradientVars(@direction) when (@direction = horizontal){
+	    @direct: left;
+	    @directW3: to right;
+	    @webkitDirectFrom: left top;
+	    @webkitDirectTo: right top;
+	    @ieGradientType: 1;
+		}
+		.setGradientVars(@direction);
+		@ieStartColor: argb(@startColor);
+		@ieEndColor: argb(@endColor);
+		background-color: @startColor;
+		background: -moz-linear-gradient(@direct, @startColor 0%, @endColor 100%);
+		background: -webkit-linear-gradient(@direct, @startColor 0%, @endColor  100%);
+		background: -webkit-gradient(linear, @webkitDirectFrom, @webkitDirectTo, color-stop(0%, @startColor), color-stop(100%, @endColor));
+		background: -ms-linear-gradient(@direct, @startColor 0%, @endColor  100%);
+		background: -o-linear-gradient(@direct, @startColor 0%, @endColor  100%);
+		background: -linear-gradient(@direct, @startColor 0%, @endColor  100%);
+		background: linear-gradient(@directW3, @startColor 0%, @endColor 100%);
+		filter: e(%("progid:DXImageTransform.Microsoft.gradient(startColorstr='%d', endColorstr='%d', GradientType=%d)", @ieStartColor, @ieEndColor, @ieGradientType));
+	}
+
+	.placeholder(@color) {
+		&::-webkit-input-placeholder { color: @color; opacity: 1; }
+		&:-moz-placeholder { color: @color; opacity: 1; }
+		&::-moz-placeholder { color: @color; opacity: 1; }
+		&:-ms-input-placeholder { color: @color; opacity: 1; }
+		&::placeholder { color: @color; opacity: 1; }
+		&::input-placeholder { color: @color; opacity: 1; }
+	}
+	
+	.popupBg(@url:black) { z-index:101; position:fixed; top:0; left:0; width:100%; height:100%; background:@url 0 0; display:none; opacity:0; }
+	.popup(@width, @height:auto, @bg:white) { z-index:102; position:absolute; width:@width; height:@height; top:0px; left:50%; margin-left:-(@width / 2); background:@bg; display:none; opacity:0; }
+	
+	.listIconBefore(@width; @height; @marginBottom; @class1:0; @url1:0; @class2:0; @url2:0; @class3:0; @url3:0; @class4:0; @url4:0; @class5:0; @url5:0; ) {
+		> * {
+			&:before { content:" "; display:block; margin:0 auto @marginBottom; width:66px; height:66px; border:2px solid white; border-radius:10000px; background-repeat:no-repeat; background-position:center; }
+			&::before { content:" "; display:block; margin:0 auto @marginBottom; width:66px; height:66px; border:2px solid white; border-radius:10000px; background-repeat:no-repeat; background-position:center; }
+			
+			.url1(@url1) when (isurl(@url1)) {
+				&.@{class1} {
+					&:before { background-image:@url1; }
+					&::before { background-image:@url1; }
+				}
+			}
+			.url1(@url1);
+			
+			
+			.url2(@url2) when (isurl(@url2)) {
+				&.@{class2} {
+					&:before { background-image:@url2; }
+					&::before { background-image:@url2; }
+				}
+			}
+			.url2(@url2);
+			
+			
+			.url3(@url3) when (isurl(@url3)) {
+				&.@{class3} {
+					&:before { background-image:@url3; }
+					&::before { background-image:@url3; }
+				}
+			}
+			.url3(@url3);
+			
+			
+			.url4(@url4) when (isurl(@url4)) {
+				&.@{class4} {
+					&:before { background-image:@url4; }
+					&::before { background-image:@url4; }
+				}
+			}
+			.url4(@url4);
+			
+			
+			.url5(@url5) when (isurl(@url5)) {
+				&.@{class5} {
+					&:before { background-image:@url5; }
+					&::before { background-image:@url5; }
+				}
+			}
+			.url5(@url5);
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+		
+		
+		
+		
+		
+	.burger(@totalWidth; @totalHeight; @totalBackground:none;   @width; @height; @spaceBetween; @top:0; @left:0; @radius:2px; @background:white) { width:@totalWidth; height:@totalHeight;
+		.totalBackground(@totalBackground) when not (@totalBackground = none) { background-color:@totalBackground; }
+		.totalBackground(@totalBackground);
+		> a { position:relative; display:block; height:@totalHeight; text-indent:-10000px;
+			&::before { content:" "; position:absolute; width:@width; height:@height; top:@top; left:@left; border-radius:@radius; background-color:@background; }
+			&::after { content:" "; position:absolute; width:@width; height:@height; top:@top + @spaceBetween + @height; left:@left; border-radius:@radius; background-color:@background; }
+			span { position:absolute; width:@width; height:@height; top:@top + @spaceBetween + @height + @spaceBetween + @height; left:@left; border-radius:@radius; background-color:@background; }
+		}
+	}
+
+	.burgerMenu(@menuWidth:260px; @menuPadding:40px 20px; @menuBackground:#f3f3f3; @menuShadow:5px 0 20px rgba(0, 0, 0, 0.2) inset;    @fontSize:24px; @lineHeight:28px; @marginLiBottom:15px) {
+		#all { position:relative; left:0; transition:left 1s ease 0s; -webkit-transition:left 1s ease 0s;
+			&.showmenu { left:-@menuWidth; }
+		}
+		#main-menu { background-color:#f3f3f3; bottom:auto; box-shadow:@menuShadow; display:block; height:auto; left:auto; padding:@menuPadding; position:absolute; right:-@menuWidth; top:0; width:@menuWidth; z-index:1000;
+			> ul { margin:0; padding:0;
+				> li { list-style:none; font-size:@fontSize; line-height:@lineHeight; margin-bottom:@marginLiBottom; }
+			}
+		}
+	}
+		
+		
+ 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	//&::before { content:" "; position:absolute; width:12px; height:39px; top:50%; margin-top:-20px; left:-12px; background:url(../images/file-triangle.png) no-repeat 0 0; }
+	.triangle(@beforeOrAfter:before; @top:string; @left:string; @right:string; @url) { position:relative;
+		
+		.beforeOrAfter(@beforeOrAfter) when (@beforeOrAfter = before) {
+			&::before { content:" "; position:absolute; width:12px; height:39px; background:url(@url) no-repeat 0 0;
+				.position(@top) when (isnumber(@top)) { top:@top; }
+				.position(@top) when (@top = center) { top:50%; margin-top:-(image-height("@{url}")/2); }
+				.position(@top);
+				
+				.positionLeft(@left) when (isnumber(@left)) { left:@left; }
+				.positionLeft(@left) when (@left = center) { left:50%; margin-left:-(image-width("@{url}")/2); }
+				.positionLeft(@left);
+				
+				.positionRight(@right) when (isnumber(@right)) { right:@right; }
+				.positionRight(@right);
+			}
+		}
+		
+		.beforeOrAfter(@beforeOrAfter) when (@beforeOrAfter = after) {
+			&::after { content:" "; position:absolute; width:12px; height:39px; background:url(@url) no-repeat 0 0;
+				.position(@top) when (isnumber(@top)) { top:@top; }
+				.position(@top) when (@top = center) { top:50%; margin-top:-(image-height("@{url}")/2); }
+				.position(@top);
+				
+				.positionLeft(@left) when (isnumber(@left)) { left:@left; }
+				.positionLeft(@left) when (@left = center) { left:50%; margin-left:-(image-width("@{url}")/2); }
+				.positionLeft(@left);
+				
+				.positionRight(@right) when (isnumber(@right)) { right:@right; }
+				.positionRight(@right);
+			}
+		}
+		.beforeOrAfter(@beforeOrAfter);
+		
+	}
+	
+	
+	
+//////////////
+//////////////
+
+
+
+
+
+//mixin zdjecie z text col wyswietlane jako table
+//Parametry:
+//@imgWidth - szerokosc obrazka
+//@imgHeight - wysokość obrazka
+//@paddingRight - padding z prawej strony od obrazka
+//@imgToTop - jesli 1 to obrazek bedzie do góry v-align:top, domyslnie centrowany
+//@rightSideToTop - jesli 1 to kolumna bedzie do góry v-align:top, domyslnie centrowany
+.imgTable(@imgWidth; @imgHeight; @paddingRight; @imgToTop:0; @rightSideToTop:0; @backgroundColor:none; @urlPlaceholder:none; @placeholderPosition:bottom) { display:table; width:100%;
+	> .image { display:table-cell; width:@imgWidth; height:@imgHeight;
+			.photoToTop(@imgToTop) when (@imgToTop = 0) { vertical-align:middle; }
+			.photoToTop(@imgToTop) when not (@imgToTop = 0) { vertical-align:top; }
+			.photoToTop(@imgToTop);
+			
+			.imageBg(@backgroundColor) when not (@backgroundColor = none) { background:@backgroundColor; }
+			
+			
+			.imagePlaceholder(@urlPlaceholder) when not (@urlPlaceholder = none) {
+				.imagePlaceholderPosition(@placeholderPosition) when (@placeholderPosition = bottom){
+					.imageBg(@backgroundColor) when not (@backgroundColor = none) { background:@backgroundColor url(@urlPlaceholder) no-repeat 50% 100%; }
+					.imageBg(@backgroundColor) when (@backgroundColor = none) { background:url(@urlPlaceholder) no-repeat 50% 100%; }
+				}
+				
+				.imagePlaceholderPosition(@placeholderPosition) when (@placeholderPosition = left){
+					.imageBg(@backgroundColor) when not (@backgroundColor = none) { background:@backgroundColor url(@urlPlaceholder) no-repeat 0 50%; }
+					.imageBg(@backgroundColor) when (@backgroundColor = none) { background:url(@urlPlaceholder) no-repeat 0 50%; }
+				}
+				
+				.imagePlaceholderPosition(@placeholderPosition) when (@placeholderPosition = top){
+					.imageBg(@backgroundColor) when not (@backgroundColor = none) { background:@backgroundColor url(@urlPlaceholder) no-repeat 50% 0; }
+					.imageBg(@backgroundColor) when (@backgroundColor = none) { background:url(@urlPlaceholder) no-repeat 50% 0; }
+				}
+				
+				.imagePlaceholderPosition(@placeholderPosition) when (@placeholderPosition = right){
+					.imageBg(@backgroundColor) when not (@backgroundColor = none) { background:@backgroundColor url(@urlPlaceholder) no-repeat 100% 50%; }
+					.imageBg(@backgroundColor) when (@backgroundColor = none) { background:url(@urlPlaceholder) no-repeat 100% 50%; }
+				}
+				
+				.imagePlaceholderPosition(@placeholderPosition);
+			};
+			.imagePlaceholder(@urlPlaceholder);
+			.imageBg(@backgroundColor);
+			
+			
+		> .holder { display:block; overflow:hidden; width:@imgWidth; height:@imgHeight; text-align:center; line-height:@imgHeight;
+			img {
+				.photoToTop(@imgToTop) when (@imgToTop = 0) { vertical-align:middle; }
+				.photoToTop(@imgToTop) when not (@imgToTop = 0) { vertical-align:top; }
+				.photoToTop(@imgToTop);
+			}
+		}
+	}
+	> .text-col { display:table-cell; padding-left:@paddingRight;
+		.textColToTop(@rightSideToTop) when (@rightSideToTop = 0) { vertical-align:middle; }
+		.textColToTop(@rightSideToTop) when not (@rightSideToTop = 0) { vertical-align:top; }
+		.textColToTop(@rightSideToTop);
+	}
+}
+
+//centruje 2 divy pionowo wzgledem siebie
+.likeTable() { display:table; width:100%;
+	> * { display:table-cell; vertical-align:middle; }
+}
+
+
+
+
+
+
+.beforeBorder(@height; @marginLeft:5px; @marginRight:5px; @bgColor; @width:1px) {
+	&::before { content:" "; display:inline-block; vertical-align:middle; margin-left:@marginLeft; margin-right:@marginRight; width:@width; height:@height; background:@bgColor no-repeat 0 0; }
+}
+.afterBorder(@height; @marginLeft:5px; @marginRight:5px; @bgColor; @width:1px) {
+	&::after { content:" "; display:inline-block; vertical-align:middle; margin-left:@marginLeft; margin-right:@marginRight; width:@width; height:@height; background:@bgColor no-repeat 0 0; }
+}
+
+
+
+
+
+
+
+//lista elementow z floatem do lewej
+.floatedList(@marginLeft, @marginBottom) { margin:0 0 0 -@marginLeft; padding:0; overflow:hidden;
+	> li { margin-left:@marginLeft; margin-bottom:@marginBottom; float:left; list-style:none; }
+}
+
+
+//zmienia wielkosc znacznika wraz z backgroundem (przewaznie znacznik a z okreslonymi wymiarami i wczytanym bg)
+.resizeWithBg(@width; @height) { width:@width; height:@height; background-size:@width @height; }
+
+
+
+
+//tagi (linki)
+//Parametry
+//@paddingLeftRight - padding wewnetrzny elementow
+//@marginLeft - odstep w poziomie miedzy elementami
+//@marginBottom - odstep w pionie miedzy elementami
+//@lineHeight - wysokosc elementow
+//@border - czy elementy maja border (domyslnie 1 - maja)
+//@borderColor - kolor obramowania (domyslnie czarny)
+//@radius - border-radius
+.tags(@marginLeft; @marginBottom; @paddingLeftRight; @fontSize; @lineHeight; @borderColor:black; @radius:0; @border:1) { margin:0 0 0 -@marginLeft; padding:0; overflow:hidden;
+	> li { margin-left:@marginLeft; margin-bottom:@marginBottom; float:left; list-style:none;
+		a { display:block; padding:0 @paddingLeftRight; font-size:@fontSize; line-height:@lineHeight;
+			.radius(@radius) when (@radius > 0) { border-radius:@radius; }
+			.radius(@radius);
+			.border(@border) when (@border = 1) {
+				.borderColor(@borderColor) when (@borderColor = black) { border:1px solid black; }
+				.borderColor(@borderColor) when not (@borderColor = black) { border:1px solid @borderColor; }
+				.borderColor(@borderColor);
+			}
+			.border(@border);
+		}
+	}
+}
+
+
+
+
+
+
+//Nawigacja ze strzałkami
+//
+//@param width - szerokosc li
+//@param height - wysokosc li
+//@param top - pozycja od gory li (domyslnie wycentrowana)
+//@param left - pozycja li z lewej strony
+//@param right - pozycja li z prawej strony
+//@param urlLeft - url tła wczytanego do li z lewej strony
+//@param urlRight - url tła wczytanego z prawej strony
+//@param urlSprite - url tła wczytanego do li
+.nav(@width; @height; @top:center; @left:0; @right:0; @urlLeft:0; @urlRight:0; @urlSprite:0;) { margin:0; padding:0;
+	//jesli jest pozycja pionowa center to ustawia navigacje na pozycje absolutna z wysokoscia 100% nadrzednego znacznika.
+	.totalHeight(@top) when (@top = center) { position:absolute; width:100%; height:100%; top:0; left:0; }
+	.totalHeight(@top) when not (@top = center) { height:0; position:relative; }
+	.totalHeight(@top);
+	//
+	li { position:absolute; list-style:none; width:@width;
+		//pozycja od góry li
+		.topPos(@top) when (@top = center) { height:@height; top:50%; margin-top:-@height/2; }
+		.topPos(@top) when not (@top = center) { top:@top; }
+		.topPos(@top);
+		//
+		a { display:block; background-repeat:none; text-indent:-10000px; background-position:0 0; width:@width; height:@height;
+			.bg(@urlSprite) when (isurl(@urlSprite)) { background-image:@urlSprite; }
+			.bg(@urlSprite);
+		}
+		
+		&.prev { left:@left;
+			a {
+				.bgLeft(@urlLeft) when (isurl(@urlLeft)){ background-image:@urlLeft; }
+				.bgLeft(@urlLeft);
+			}
+		}
+		&.next { right:@right;
+			a {
+				.bgRight(@urlRight) when (isurl(@urlRight)){ background-image:@urlRight; }
+				.bgRight(@urlRight);
+				.bgPosition(@urlSprite) when (isurl(@urlSprite)){ background-position:@width 0; }
+				.bgPosition(@urlSprite);
+			}
+		}
+	}
+}
+
+
+
+.breadcrumbs(@width; @height; @marginLeft; @marginRight; @url) {
+	ul { margin:0; padding:0;
+		li { list-style:none; float:left;
+			&:before { content:" "; margin:0 @marginRight 0 @marginLeft; width:@width; height:@height; display:inline-block; vertical-align:middle; background:@url no-repeat 0 0; }
+			&::before { content:" "; margin:0 @marginRight 0 @marginLeft; width:@width; height:@height; display:inline-block; vertical-align:middle; background:@url no-repeat 0 0; }
+			&:first-child {
+				&:before { display:none; }
+				&::before { display:none; }
+			}
+		}
+	}
+}
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//STYLE GAPS
+//////////////
+//@displayType - sposob wyswietlania (domyslnie 0 - float)
+//							 1 - inline-block
+.gaps(@gap; @gapBottom; @columns:1; @displayType:0; @paramMedia:0; @allMedia:0) { margin-left:-@gap; margin-right:-@gap;
+		
+	.display(@displayType) when (@displayType = 0) { overflow:hidden; }
+	.display(@displayType);
+
+	> * { padding-left:@gap; padding-right:@gap; margin-bottom:@gapBottom;
+		
+		.display(@displayType) when (@displayType = 0) { float:left; }
+		.display(@displayType) when not (@displayType = 0) { display:inline-block; vertical-align:top; }
+		.display(@displayType);
+	
+	
+		.cols(@columns) when (@columns = 1) { width:100%; }
+		.cols(@columns) when (@columns = 2) { width:50%; }
+		.cols(@columns) when (@columns = 3) { width:33%; }
+		.cols(@columns) when (@columns = 4) { width:25%; }
+		.cols(@columns) when (@columns = 5) { width:20%; }
+		.cols(@columns);
+		
+		
+		.tmpAll(@allMedia) when (@allMedia = 0) {
+		
+			.tmpMedia(@paramMedia) when not (@paramMedia = 0) {
+				@media (max-width:@paramMedia)
+				{
+					.cols(@columns) when (@columns = 2) { width:100%; }
+					.cols(@columns) when (@columns = 3) { width:50%; }
+					.cols(@columns) when (@columns = 4) { width:33%; }
+					.cols(@columns);
+				}
+			}
+			.tmpMedia(@paramMedia);	
+			
+		}
+		
+		.tmpAll(@allMedia) when not (@allMedia = 0) {
+		
+			.tmpMedia(@paramMedia) when not (@paramMedia = 0) {
+				@media all and (max-width:@paramMedia)
+				{
+					.cols(@columns) when (@columns = 2) { width:100%; }
+					.cols(@columns) when (@columns = 3) { width:50%; }
+					.cols(@columns) when (@columns = 4) { width:33%; }
+					.cols(@columns);
+				}
+			}
+			.tmpMedia(@paramMedia);	
+			
+		}
+		.tmpAll(@allMedia);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//INPUTY
+//@labelFontSize - font size labelki
+//@labelWidth - szerokosc labelki gdy jest z lewej strony
+//@labelMarginBottom - margin dolny labelki gdy jest u gory
+//@inputWidth - szerokosc inputa
+//@height - wysokosc inputa
+//@inputPadding - padding wewnetrzny boczny inputa
+//@radius - border radius
+//@borderColor - color borderu
+//@bgColor - background inputa (domyslny bialy)
+//@inputFontSize - font-size dla inputa (domyslny taki jak labelka)
+.genInputs(@marginBottom; @labelFontSize; @labelWidth; @labelMarginBottom;   @inputWidth; @height; @inputPadding; @inputFontSize; @radius; @borderColor:none;   @textareaWidth; @textareaHeight;   @selectArrowWidth:0; @selectArrowHeight:0; @selectArrowUrl:0; @selectArrowTopPos:0; @selectArrowRightPos:0;  @bgColor:white;   @errorColor:#b6000d; @disabledColor:darkenColorAuto) { margin-bottom:@marginBottom; position:relative;
+
+	&.error {
+		input, .input, textarea { border-color:@errorColor !important; }
+	}
+	
+	
+	input[type="text"]:disabled {
+		.disabled(@disabledColor) when (@disabledColor = darkenColorAuto) { background-color:darken(@bgColor, 2%) !important; }
+		.disabled(@disabledColor) when not (@disabledColor = darkenColorAuto) { background-color:@disabledColor !important; }
+		.disabled(@disabledColor)
+	}
+
+	label { float:left; width:@labelWidth; font-size:@labelFontSize; color:black; line-height:@height;
+		.holder { line-height:(@height / 2); display:inline-block; vertical-align:middle; }
+	}
+	.input { position:relative; }
+	input, textarea, .input {
+		.border(@borderColor) when not (@borderColor = none) { border:1px solid @borderColor; }
+		.border(@borderColor);
+	}
+	input, .input { float:left; width:@inputWidth; height:@height; padding:0 @inputPadding; border-radius:@radius; font-size:@inputFontSize; background-color:@bgColor; color:black; }
+	textarea { width:@textareaWidth; height:@textareaHeight; padding:@inputPadding - 2 @inputPadding @inputPadding + 2; float:left; border-radius:@radius; font-size:@inputFontSize; background-color:@bgColor; color:black; }
+	.file-holder { float:left; }
+	
+	&.label-up { overflow:visible;
+		label { width:auto; display:block; float:none; margin-bottom:@labelMarginBottom; line-height:@labelFontSize; }
+		input, .input, textarea { float:none; }
+	}
+	&.label-on { overflow:visible;
+		label { width:auto; position:absolute; top:0; left:@inputPadding; float:none; z-index:1; }
+		input, .input, textarea { float:none; }
+	}
+	&.no-label {
+		label { display:none; }
+		input, .input, textarea { float:none; }
+	}
+	
+	&.full-size {
+		input, .input, textarea, select { width:100%; }
+	}
+	
+	.isSelect(@selectArrowUrl) when not (@selectArrowUrl = 0) {
+		&.select {
+			.input-holder { position:relative; display:inline-block;
+				&::after { content:" "; position:absolute; width:@selectArrowWidth; height:@selectArrowHeight; background:url(@selectArrowUrl) no-repeat 0 0; top:@selectArrowTopPos; right:@selectArrowRightPos; }
+				select { cursor:pointer; opacity:0; position:absolute; top:0; left:0; width:@inputWidth; height:@height; line-height:@height; z-index:1; }
+			}
+		}	
+	}
+	.isSelect(@selectArrowUrl);
+}
+
+
+
+//Input File
+.genInputFile(@width:100px; @height:100px; @borderColor:0; @borderWidth:1px; @borderRadius:0; ) {
+	&.file { height:@height;
+		.file-holder { width:@width; height:@height; position:relative;
+			
+			.borderStyle(@borderColor) when not (@borderColor = 0) { border:@borderWidth solid @borderColor; }
+		 	.borderStyle(@borderColor);
+		
+			.borderRadius(@borderRadius) when not (@borderRadius = 0) { border-radius:@borderRadius; }
+			.borderRadius(@borderRadius);
+			
+			input { position:absolute; left:0; top:0; cursor:pointer; max-width:100%; width:100%; height:100%; opacity:0; }	
+		}
+	}
+}
+//
+
+
+
+
+//w htmlu MUSI byc otaczajacy znacznik .input-holder
+.inputButtonOn(@inputCurrentPaddingRight; @width; @url; @iconPositionLeft:center; @iconPositionTop:center) { position:relative;
+	input[type="text"] { padding-right:@width + @inputCurrentPaddingRight; }
+	input[type="submit"] { cursor:pointer; width:@width; height:100%; position:absolute; top:0; right:0; border:none; background:transparent url(@url) no-repeat @iconPositionLeft @iconPositionTop; text-indent:-10000px; }
+}
+
+
+
+
+
+.genCheckboxes(@marginBottom; @labelFontSize; @labelLineHeight; @labelStyledMarginLeft:0; @labelRelativeTopPos:0;    @inputAboveLabelOption:0; @labelType:inline; @labelWidth:auto;    @inputWidth:auto; @inputHeight:auto;     @inputUrlWithPos:none;    @inputUrlCheck:none; @inputUrlCheckWidth:0; @inputUrlCheckHeight:0; @inputUrlCheckPosLeft:0; @inputUrlCheckPosTop:0;     @bgColor:white; @borderWidth:1px; @borderColor:white; @borderRadius:0;    @errorColor:#b6000d; @disabledColor:darkenColorAuto) { margin-bottom:@marginBottom;
+
+	.labelDisplayType(@labelType) when (@labelType = block) { display:inline-block; vertical-align:middle; width:100%; }	
+	.labelDisplayType(@labelType);
+
+
+	&.error {
+		.inputWidth(@inputWidth) when (@inputWidth = auto) {
+			label { color:@errorColor !important; }
+		}
+		.inputWidth(@inputWidth) when not (@inputWidth = auto) {
+			.inputBgWithPos(@inputUrlWithPos) when (@inputUrlWithPos = none) {
+				label .icon-holder {
+					.inputBorderColor(@borderColor) when (@borderColor = none) { background-color:@errorColor !important; }
+					.inputBorderColor(@borderColor) when not (@borderColor = none) { border-color:@errorColor !important; }
+					.inputBorderColor(@borderColor);
+				}
+			}
+			.inputBgWithPos(@inputUrlWithPos) when not (@inputUrlWithPos = none) {
+				label { color:@errorColor !important; }
+			}
+			.inputBgWithPos(@inputUrlWithPos);
+		}
+		.inputWidth(@inputWidth);
+	}
+	
+	input[type="checkbox"]:disabled {
+		.ifBgColor(@bgColor) when not (@bgColor = none) {
+			.disabled(@disabledColor) when (@disabledColor = darkenColorAuto) { background-color:darken(@bgColor, 2%) !important; }
+			.disabled(@disabledColor) when not (@disabledColor = darkenColorAuto) { background-color:@disabledColor !important; }
+			.disabled(@disabledColor);
+		}
+		.ifBgColor(@bgColor);
+	}
+
+
+	&.active {
+		label {
+			.icon-holder {
+				.inputBgWithPos(@inputUrlWithPos) when not (@inputUrlWithPos = none) { background-position:0 -@inputHeight; }
+				.inputBgWithPos(@inputUrlWithPos);		
+			
+				.inputBgCheck(@inputUrlCheck) when (@inputUrlCheck = radio) {
+					&::before { content:" "; position:absolute; width:@inputUrlCheckWidth; height:@inputUrlCheckHeight; top:@inputUrlCheckPosTop; left:@inputUrlCheckPosLeft; background-color:@borderColor; border-radius:1000px; }			
+				}
+				.inputBgCheck(@inputUrlCheck) when not (@inputUrlCheck = none) {
+					.inputBgCheck(@inputUrlCheck) when not (@inputUrlCheck = radio) {
+						&::before { content:" "; position:absolute; width:@inputUrlCheckWidth; height:@inputUrlCheckHeight; top:@inputUrlCheckPosTop; left:@inputUrlCheckPosLeft; background:url(@inputUrlCheck) no-repeat 0 0; }			
+					}
+					.inputBgCheck(@inputUrlCheck);
+				}
+				.inputBgCheck(@inputUrlCheck);		
+			}
+		}
+	}
+	
+	label { font-size:@labelFontSize; line-height:@labelLineHeight;
+		
+		.inputAboveLabelOption(@inputAboveLabelOption) when not (@inputAboveLabelOption = 0) { display:block; }
+		.inputAboveLabelOption(@inputAboveLabelOption);
+	
+		//jesli input ma nie byc stylowany
+		.inputWidth(@inputWidth) when (@inputWidth = auto) {
+			.labelDisplayType(@labelType) when (@labelType = block) { float:left; width:@labelWidth; }	
+			.labelDisplayType(@labelType);
+			
+			.labelRelativePosTop(@labelRelativeTopPos) when not (@labelRelativeTopPos = 0) { position:relative; top:@labelRelativeTopPos; }
+			.labelRelativePosTop(@labelRelativeTopPos);
+		}
+		.inputWidth(@inputWidth) when not (@inputWidth = auto) {
+			.holder { margin-left:@labelStyledMarginLeft;
+				
+				.labelDisplayType(@labelType) when (@labelType = block) { float:left; width:@labelWidth; }	
+		 		.labelDisplayType(@labelType);
+			
+				.labelRelativePosTop(@labelRelativeTopPos) when not (@labelRelativeTopPos = 0) { position:relative; top:@labelRelativeTopPos; }
+				.labelRelativePosTop(@labelRelativeTopPos);
+				
+				.inputAboveLabelOption(@inputAboveLabelOption) when not (@inputAboveLabelOption = 0) { display:block; }
+				.inputAboveLabelOption(@inputAboveLabelOption);
+			}
+			.icon-holder { position:relative; display:inline-block; vertical-align:middle; width:@inputWidth; height:@inputHeight;
+				.labelDisplayType(@labelType) when (@labelType = block) { float:left; }	
+				.labelDisplayType(@labelType); 	
+			
+				.inputBgWithPos(@inputUrlWithPos) when (@inputUrlWithPos = none) { background:@bgColor;
+					.inputBorderColor(@borderColor) when not (@borderColor = none) { border:@borderWidth solid @borderColor; }
+					.inputBorderColor(@borderColor);
+					
+					.inputBorderRadius(@borderRadius) when not (@borderRadius = 0) { border-radius:@borderRadius; }
+					.inputBorderRadius(@borderRadius);
+				}
+				.inputBgWithPos(@inputUrlWithPos) when not (@inputUrlWithPos = none) { background:url(@inputUrlWithPos) no-repeat 0 0; }
+				.inputBgWithPos(@inputUrlWithPos);
+			}
+		}
+		.inputWidth(@inputWidth);
+	}
+	input {
+		.inputWidth(@inputWidth) when (@inputWidth = auto) {
+			.labelDisplayType(@labelType) when (@labelType = block) { float:left; }	
+			.labelDisplayType(@labelType);
+		}
+		.inputWidth(@inputWidth) when not (@inputWidth = auto) { position:absolute; left:-100000px; }
+		.inputWidth(@inputWidth);
+	}
+	
+	
+	
+
+	
+	
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//BUTTONS
+.genButtons(@fontSize:12px; @padding:10px; @height:30px; @borderWidth:0; @borderColor:black; @borderRadius:0) {
+	a, input, button { font-size:@fontSize; border-radius:@borderRadius; display:inline-block; vertical-align:middle; white-space:nowrap; text-align:center;
+		.border(@borderWidth) when not (@borderWidth = 0) { border:@borderWidth solid @borderColor; }
+		.border(@borderWidth);
+		.borderRadius(@borderRadius) when not (@borderRadius = 0) { border-radius:@borderRadius; }
+		.borderRadius(@borderRadius);
+		
+		span.icon { margin-left:-5px; display:inline-block; margin-right:5px; position:relative;
+			img { vertical-align:middle; }
+			&.right { margin-left:5px; margin-right:-5px; }
+		}
+	}
+	input, button { padding:0 @padding; cursor:pointer; background:none;
+		.border(@borderWidth) when (@borderWidth = 0) { border-width:0; height:@height; line-height:@height - 2; padding-top:1px; }
+		.border(@borderWidth) when not (@borderWidth = 0) { height:@height; line-height:@height - 3; }
+		.border(@borderWidth);
+	}
+	a { padding:0 @padding; height:@height;
+		.lineHeight(@borderWidth) when (@borderWidth = 0) { line-height:@height; }
+		.lineHeight(@borderWidth) when not (@borderWidth = 0) { line-height:@height - 2; }
+		.lineHeight(@borderWidth);
+	}
+	
+	&.full-size {
+		a { display:block; }
+		input { width:100%; }
+		button { width:100%; }
+	}
+	
+	
+}
+
+	//bez bordera
+	//input, button { padding:0 @padding; cursor:pointer; background:none; padding-top:1px;
+		//.border(@borderWidth) when (@borderWidth = 0) { border-width:0; height:@height; line-height:@height - 2; }
+		//.border(@borderWidth) when not (@borderWidth = 0) { height:@height; line-height:@height - 2; }
+		//.border(@borderWidth);
+	//}
+
+
+//usuniecie styli domyslnych dla buttona
+.genButtonText() {
+	input, button { padding:0; border-width:0; background:none; cursor:pointer; }
+}
+
+
+//dodawanie koloru z klasa dla buttona
+.addButtonColor(@className; @backgroundColor; @color) {
+	&.@{className} { color:@color;
+		a { color:@color; background-color:@backgroundColor; }
+		input { color:@color; background-color:@backgroundColor; }
+		button { color:@color; background-color:@backgroundColor; }
+	}		
+}
+
+//szerokosc dla buttonow
+.buttonWidth(@width) {
+	a { width:@width; }
+	input { width:@width; }
+	button { width:@width; }
+}
+
+//wysokosc dla buttonow
+.buttonHeight(@height; @fontSize:auto) {
+	a { font-size:@fontSize; line-height:@height; height:@height; }
+	input { font-size:@fontSize; height:@height; }
+	button { font-size:@fontSize; height:@height; }
+}
+
+
+
+
+
+
+
+
+
+
+//text
+.genText(@margin; @fontSize; @lineHeight) { font-size:@fontSize; line-height:@lineHeight;
+	p { margin-bottom:@margin; }
+	ul { margin-bottom:@margin; }
+	ol { margin-bottom:@margin; }
+	table { margin-bottom:@margin; }
+	img { margin-bottom:@margin; }
+}
+
+
+
+
+//nagłówki
+.addHeading(@marginBottom:0;   @headingFontSize; @headingLineHeight; @headingMarginBottom:0;   @subFontSize:0; @subLineHeight:0; @subMarginBottom:0) {
+
+	.genMargin(@marginBottom) when not (@marginBottom = 0) { margin-bottom:@marginBottom; }
+	.genMargin(@marginBottom);
+
+	.title { font-size:@headingFontSize; line-height:@headingLineHeight;
+		.genMarginHeading(@headingMarginBottom) when not (@headingMarginBottom = 0) { margin-bottom:@headingMarginBottom; }
+		.genMarginHeading(@headingMarginBottom);		
+	}
+	.subtitle {
+		.genFontSizeSub(@subFontSize) when not (@subFontSize = 0) { font-size:@subFontSize; }
+		.genFontSizeSub(@subFontSize);	
+		.genLineHeightSub(@subFontSize) when not (@subFontSize = 0) { line-height:@subLineHeight; }
+		.genLineHeightSub(@subFontSize);			
+		.genMarginSub(@subMarginBottom) when not (@subMarginBottom = 0) { margin-bottom:@subMarginBottom; }
+		.genMarginSub(@subMarginBottom);		
+	}
+}
+
+
+
+.socialFixed(@position:left, @top:center, @height:auto) { position:fixed; z-index:103;
+	.socialVerticalPos(@top) when (@top = center) { top:50%; margin-top:-(@height/2); } 	
+	.socialVerticalPos(@top) when not (@top = center) { top:@top; }
+	.socialVerticalPos(@top);
+	.socialHorizontalPos(@position) when (@position = left) { left:0; }
+	.socialHorizontalPos(@position) when (@position = right) { right:0; }
+	.socialHorizontalPos(@position);
+}
+
+
+.justify(@height:auto; @vAlign:none) { text-align:justify;
+	.height(@height) when not (@height = auto) { height:@height; }
+	.height(@height);
+	&::after { content:" "; display:inline-block; width:100%; height:0; }
+	> * { display:inline-block;
+	
+		.vAlign(@vAlign) when (@vAlign = middle) { vertical-align:middle; }
+		.vAlign(@vAlign) when (@vAlign = bottom) { vertical-align:bottom; }
+		.vAlign(@vAlign) when (@vAlign = top) { vertical-align:top; }
+		.vAlign(@vAlign);
+	}
+}
+
+.absolute-fill-padding(@padding) {
+  position: absolute;
+  top: @padding;
+  right: @padding;
+  bottom: @padding;
+  left: @padding;
+}
+
+.absolute-fill( @top: 0, @right: 0, @bottom: 0, @left: 0 ) {
+	position: absolute;
+	top: @top;
+	right: @right;
+	bottom: @bottom;
+	left: @left;
+}
+
+.absolute-top( @top: 0, @right: 0, @height: auto, @left: 0 ) {
+  position: absolute;
+  top: @top;
+  right: @right;
+  height: @height;
+  left: @left;
+}
+
+.absolute-bottom( @height: auto, @right: 0, @bottom: 0, @left: 0 ) {
+  position: absolute;
+  height: @height;
+  right: @right;
+  bottom: @bottom;
+  left: @left;
+}
+
+.absolute-fill-textarea() {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 100%;
+	height: 100%;
+}

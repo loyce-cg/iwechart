@@ -1,0 +1,16 @@
+{
+  "name": "privfs-mail-client-electron",
+  "version": "1.0.0",
+  "description": "Mail client electron",
+  "license": "PrivMX",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@simplito.com:122/privfs-mail-client"
+  },
+  "dependencies": {
+    "devtron": "^1.4.0",
+    "electron": "^6.0.12",
+    "electron-packager": "13.1.0"
+  }
+}

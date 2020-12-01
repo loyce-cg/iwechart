@@ -1,0 +1,343 @@
+@import { InternalModel } from "../TaskPanelController";
+@import { func as iconTemplate } from "../../../window/taskGroupForm/template/icon.html";
+@model InternalModel
+{{
+  let tpl = Helper.createTemplate(iconTemplate);
+}}
+<div class="layout-container {{@model.horizontalLayout?'flex-row':''}}">
+  {{ if (model.taskExists) { }}
+  <div class="scrollable-content-left">
+    {{ if (model.editable) { }}
+      <div class="flex-row">
+        <div class="flex-3">
+          <div class="custom-select-status"></div>
+          <div class="custom-select-type"></div>
+          <div class="custom-select-priority"></div>
+        </div>
+        <div class="flex-2">
+          <div class="custom-select-project"></div>
+        </div>
+      </div>
+      <div class="flex-row description">
+        <div class="textarea-wrapper">
+          <div class="textarea-like if-editable" id="task-description" placeholder="{{@Helper.i18n('plugin.tasks.component.taskPanel.task.description.placeholder')}}"></div>
+        </div>
+      </div>
+      <div class="flex-row">
+        <div class="custom-select-taskgroup flex-3"></div>
+        <div class="custom-select-assignedto flex-2"></div>
+      </div>
+    {{ } else { }}
+      <div class="grid-row">
+        <div class="task-status-info {{@model.taskLabelClass}}-color">
+          <div class="make-editable" data-editable-target="status">
+            <span class="task-label {{@model.taskLabelClass}}">#{{@(<any>(model.taskId ? model.taskId : "")).substr(0, 5)}}</span>
+            <span class="status-text">{{@model.taskStatus}}</span>
+          </div>
+        </div>
+        <div>
+          {{ if (model.projectId.substr(0, 8) == "private:") { }}
+            <span class="person inline lg make-editable" data-editable-target="project"><canvas class="not-rendered icon" data-auto-refresh="true" data-auto-size="true" data-hashmail-image="{{@model.myAvatar}}" data-tooltip-trigger="{{@model.myAvatar}}"></canvas><span>{{@Helper.i18n("plugin.tasks.component.taskPanel.privateTasks")}}</span></span>
+          {{ } else { }}
+            <div class="section-element wi-element make-editable" data-editable-target="project">
+              <div class="wi-element-inner">
+                <div class="wi-element-icon bckg-icon {{@model.projectPublic?'':'bckg-icon-border'}} has-section-tooltip" data-section-id="{{@model.projectId}}"><img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}"></div>
+                <div class="wi-element-name">
+                  {{ if (model.projectPrefix) { }}
+                    <span class="project-full-name">
+                      <span class="project-prefix">{{@model.projectPrefix}}</span>
+                      <span class="project-name">{{@model.projectName}}</span>
+                    </span>
+                  {{ } else { }}
+                    {{@model.projectName}}
+                  {{ } }}
+                </div>
+              </div>
+            </div>
+          {{ } }}
+        </div>
+      </div>
+      <div class="flex-row description">
+        {{
+          let msg = Helper.formatRichMessage(model.taskDescription, "html", model.taskStatuses);
+          let lines = msg.split("<br>");
+          let idx = lines[0].indexOf(">") + 1;
+          let htmlTag = lines[0].substr(0, idx);
+          let firstLine = lines[0].substr(idx);
+          lines[0] = htmlTag + "<span class=\"task-description-first-line\">" + firstLine + "</span>";
+          msg = lines.join("<br>");
+        }}
+        <div class="textarea-like" id="task-description-ro">{{#msg}}</div>
+      </div>
+      <div class="grid-row {{@model.taskAssignedToArray.length > 1 ? 'preserve-right' : ''}} after-description">
+        <div>
+          <ul class="task-lists-badges make-editable" data-editable-target="taskGroups">
+            {{
+              for (let id in model.taskGroupNames) {
+              let name = model.taskGroupNames[id];
+              let pinned = model.taskGroupsPinned.indexOf(model.taskGroupIds[id]) >= 0;
+              let tgId = model.taskGroupIds[id];
+              let icon = model.taskGroupsIcons[id];
+              let iconStr = icon ? tpl.render(icon) : "";
+            }}
+              <li><span class="taskgroup-label {{@pinned?'pinned':''}}" data-taskgroup-id="{{@tgId}}" title="{{@name}}"><span>{{#iconStr}}</span><span>{{@name}}</span></span></li>
+            {{ } }}
+          </ul>
+        </div>
+        <div>
+          <ul class="assigned-to make-editable {{@model.taskAssignedToArray.length > 1 ? 'multi' : ''}}" data-editable-target="assignedTo">
+            {{ for (let person of model.taskAssignedToArray) { }}
+              <li class="person"><canvas class="not-rendered icon" data-auto-refresh="true" data-auto-size="true" data-hashmail-image="{{@person.avatar}}" data-tooltip-trigger="{{@person.id}}"></canvas><span>{{@person.name}}</span></li>
+            {{ } }}
+          </ul>
+        </div>
+      </div>
+    {{ } }}
+    <div class="flex-row attachments">
+      <div class="attachments">
+        <ul>
+          <li>
+            <h4 class="attachments-header make-editable" style="margin-top:5px;" data-editable-target="attachments">
+              {{@Helper.i18n("plugin.tasks.component.taskPanel.task.attachments.header")}}
+            </h4>
+          </li>
+          {{ for (let attachmentStr of model.taskAttachments) { }}
+            {{ let attachment = JSON.parse(attachmentStr); }}
+            <li class="attachment{{@attachment.trashed ? ' trashed' : ''}}">
+              <span class="link" data-did="{{@attachment.did}}">{{@attachment.name}}</span>
+              <i class="fa fa-trash del-attachment" data-did="{{@attachment.did}}"></i>
+            </li>
+          {{ } }}
+          <li>
+            <button class="btn btn-default btn-sm small btn-success add-attachment">
+              <i class="fa fa-plus"></i>
+              {{@Helper.i18n("plugin.tasks.component.taskPanel.task.attachments.add")}}
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="flex-row calendar">
+      <div class="calendar">
+        <ul>
+          <li>
+            <h4 class="calendar-header" style="margin-top:5px;">
+              {{@Helper.i18n("plugin.tasks.component.taskPanel.task.calendar.header")}}
+            </h4>
+          </li>
+          <li class="calendar-enable-hours {{@model.taskWholeDays ? 'off' : 'on'}}">
+            <input type="checkbox" id="checkbox-whole-day" {{@model.taskWholeDays ? 'checked' : ''}} />
+            <label for="checkbox-whole-day">{{@Helper.i18n("plugin.tasks.component.taskPanel.task.wholeDay")}}</label>
+          </li>
+          <li class="calendar-start make-editable" data-editable-target="startTimestamp">
+            <i class="privmx-icon privmx-icon-calendar"></i>
+            {{
+              let ts = model.taskStartTimestamp ? model.taskStartTimestamp : 0;
+              let str = Helper.dateWithHourLocal(ts, false);
+              let startTitle = "";
+              if (model.taskWholeDays) {
+                str = str.substr(0, str.length - 6);
+                startTitle = Helper.i18n("plugin.tasks.component.taskPanel.task.wholeDay");
+              }
+              else {
+                startTitle = Helper.calendarDate(ts);
+              }
+            }}
+            <span title="{{@startTitle}}">{{@str}}</span>
+          </li>
+          <li class="calendar-end make-editable" data-editable-target="endTimestamp">
+            <i class="privmx-icon privmx-icon-calendar"></i>
+            {{
+              ts = model.taskEndTimestamp ? model.taskEndTimestamp : 0;
+              str = Helper.dateWithHourLocal(ts, false);
+              if (model.taskWholeDays) {
+                str = str.substr(0, str.length - 6);
+                startTitle = Helper.i18n("plugin.tasks.component.taskPanel.task.wholeDay");
+              }
+            }}
+            <span title="{{@Helper.calendarDate(ts)}}">{{@str}}</span>
+          </li>
+          {{ if (model.canRemoveFromCalendar) { }}
+          <li class="rm-from-calendar">
+            <!-- <i class="fa fa-times remove-from-calendar"></i> -->
+            <span class="remove-from-calendar link">{{@Helper.i18n("plugin.tasks.component.taskPanel.task.calendar.removeFromCalendar")}}</span>
+          </li>
+          {{ } }}
+          <li class="add-calendar-container">
+            <button class="btn btn-default btn-sm small btn-success add-calendar" data-mode="timeframe">
+              <i class="fa fa-plus"></i>
+              {{@Helper.i18n("plugin.tasks.component.taskPanel.task.calendar.add.timeframe")}}
+            </button>
+            <button class="btn btn-default btn-sm small btn-success add-calendar" data-mode="wholeDay">
+              <i class="fa fa-plus"></i>
+              {{@Helper.i18n("plugin.tasks.component.taskPanel.task.calendar.add.wholeDay")}}
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="flex-row with-ok-cancel-buttons">
+      <div class="ok-cancel-buttons">
+        <div class="ok">
+          <button class="btn btn-success edit-save" disabled>{{@Helper.i18n("plugin.tasks.component.taskPanel.save")}}</button>
+          <span class="enter-saves">
+            <input id="enter-saves-task" class="enter-saves-task" type="checkbox"  {{@model.enterSavesTask?'checked':''}} />
+            <label for="enter-saves-task">{{@Helper.i18n("plugin.tasks.component.taskPanel.enterSavesTask")}}</label>
+          </span>
+        </div>
+        <div class="cancel">
+          <button class="btn btn-default gray edit-cancel">{{@Helper.i18n("plugin.tasks.component.taskPanel.cancel")}}</button>
+        </div>
+        {{ if (!model.newTask) { }}
+          <button class="btn btn-warning btn-sm small delete">
+            <span>
+              <span class="fa fa-times"></span>
+              {{@Helper.i18n("plugin.tasks.component.taskPanel.delete")}}
+            </span>
+          </button>
+          <button class="btn btn-warning btn-sm small restore-from-trash">
+            <span>
+              <span class="fa fa-reply"></span>
+              {{@Helper.i18n("plugin.tasks.component.taskPanel.restoreFromTrash")}}
+            </span>
+          </button>
+          <button class="btn btn-warning btn-sm small delete move-to-trash">
+            <span>
+              <span class="fa fa-trash"></span>
+              {{@Helper.i18n("plugin.tasks.component.taskPanel.moveToTrash")}}
+            </span>
+          </button>
+          <span class="link toggle-marked-as-read">
+            <span>
+              <span class="fa fa-check"></span>
+              <span class="text-content">{{@model.isRead ? Helper.i18n("plugin.tasks.component.taskPanel.markAsUnread") : Helper.i18n("plugin.tasks.component.taskPanel.markAsRead")}}</span>
+            </span>
+          </span>
+        {{ } }}
+      </div>
+    </div>
+  </div>
+  <div class="scrollable-content-right">
+    <h4 style="margin-top:15px;margin-bottom:5px;" class="if-task-exists">{{@Helper.i18n("plugin.tasks.component.taskPanel.task.history.header")}}</h4>
+    <div class="flex-row if-task-exists">
+      <div class="history comments">
+          {{ if (model.taskHistory.length > 0) { }}
+          <div class="history history-grid">
+            {{
+              let merged: any = [];
+              let i = 0;
+              for (let it of model.resolvedTaskHistory) {
+                merged.push({
+                  datetime: it.when,
+                  type: "history",
+                  payload: it,
+                  entryId: i,
+                });
+                ++i;
+              }
+              for (let it of model.taskComments) {
+                merged.push({
+                  datetime: it.dateTime,
+                  type: "comment",
+                  payload: it,
+                });
+              }
+              merged.sort((a:any, b:any) => a.datetime - b.datetime);
+              let prevItCommentAuthor = null;
+              for (let i = 0; i < merged.length; ++i) {
+                let it = merged[i];
+            }}
+                {{ if (it.type == "history") { }}
+                  {{
+                    let entryId = it.entryId;
+                    let entry = it.payload;
+                    prevItCommentAuthor = null;
+                    if (entry.what == "modified" && entry.arg == "name") {
+                      continue;
+                    }
+                  }}
+                  <div data-history-id="{{@entryId}}" class="history-entry">
+                    {{ if (entry.what != "created" && entry.arg != "projectId") { }}
+                    <button class="btn btn-default btn-sm btn-micro no-text revert gray" title="{{@Helper.i18n('plugin.tasks.component.taskPanel.task.history.revert')}}" data-action="task-history-revert">
+                      <i class="fa fa-undo"></i>
+                    </button>
+                    {{ } }}
+                    {{ if (entry.what == "modified" && entry.arg == "description") { }}
+                    <button class="btn btn-default btn-sm btn-micro no-text more gray" title="{{@Helper.i18n('plugin.tasks.component.taskPanel.task.history.more')}}" data-action="task-history-more">
+                      <i class="fa fa-ellipsis-h"></i>
+                    </button>
+                    {{ } }}
+                    {{
+                      let trashedCls = entry.isAttachmentTrashed ? ' trashed' : '';
+                      let msg = Helper.escapeHtml(entry.message)
+                        .replace(/{!{BEGIN_TG_LABEL}!}(.*?)\|\|\|(.*?)\|\|\|(.*?)\|\|\|(.*?){!{END_TG_LABEL}!}/g, (match, tgId, tgName, pinned, tgIcon) => {
+                          let tgIconStr = tgIcon ? tpl.render(tgIcon.replace(/&quot;/g, '"')) : "";
+                          return '<span class="taskgroup-label small' + (pinned == '1' ? ' pinned' : '') + '" data-taskgroup-id="' + tgId + '" title="' + tgName + '"><span>' + tgIconStr + '</span><span>' + tgName + '</span></span>';
+                        })
+                        .replace(/{!{BEGIN_STATUS}!}(.*?)\|\|\|(.*?){!{END_STATUS}!}/g, '<span style="font-weight:bold;" class="$2-color" title="$1">$1</span>')
+                        .replace(/{!{BEGIN_SECTION}!}(.*?)\|\|\|(.*?)\|\|\|(.*?){!{END_SECTION}!}/g, '<span class="section $2"><span class="section-img-wrapper has-section-tooltip" data-section-id="$3"><img src="' + Helper.getAssetByName('DEFAULT_PRIVMX_ICON') + '" /></span><span style="font-weight:bold;" title="$1">$1</span></span>')
+                        .replace(/{!{BEGIN_ATTACHMENT}!}(.*?)\|\|\|(.*?){!{END_ATTACHMENT}!}/g, '<span class="link' + trashedCls + '" data-did="$1">$2</span>')
+                        .replace(/{!{BEGIN_PERSON}!}(.*?)\|\|\|(.*?)\|\|\|(.*?){!{END_PERSON}!}/g, '<span class="person inline"><span class="av-cnv"><canvas class="not-rendered icon" data-auto-refresh="true" data-auto-size="true" data-hashmail-image="$1" data-tooltip-trigger="$3"></canvas></span><span class="av-txt">$2</span></span>')
+                        .replace(/{!{BEGIN_STARTTS}!}(.*?){!{END_STARTTS}!}/g, (match, ts) => Helper.escapeHtml(Helper.dateWithHourLocal(ts, false)))
+                        .replace(/{!{BEGIN_DURATION}!}(.*?){!{END_DURATION}!}/g, (match, ts) => Helper.escapeHtml(Helper.lastTime(ts)));
+                    }}
+                    <span class="message">{{#msg}}</span>
+                    {{ if (entry.what == "modified" && entry.arg == "description") { }}
+                    <div class="more hidden">
+                      <span class="more-title">{{@Helper.i18n("plugin.tasks.component.taskPanel.task.history.oldDescription")}}:</span>
+                      <span class="more-content">{{#Helper.formatRichMessage(entry.oldString, "html")}}</span>
+                      <span class="more-title">{{@Helper.i18n("plugin.tasks.component.taskPanel.task.history.newDescription")}}:</span>
+                      <span class="more-content">{{#Helper.formatRichMessage(entry.newString, "html")}}</span>
+                    </div>
+                    {{ } }}
+                  </div>
+                  <div data-history-id="{{@entryId}}">
+                    <span class="when" title="{{@Helper.dateWithHourLocal(entry.when)}}" data-timeago-type="calendarDate" data-timeago="{{@entry.when}}">
+                      {{@Helper.calendarDate(entry.when)}}
+                    </span>
+                  </div>
+                {{ } else { }}
+                  {{
+                    let taskComment = it.payload;
+                    let repeatedPerson = prevItCommentAuthor == it.payload.userAvatar;
+                    let nextRepeatedPerson = false;
+                    let next = merged[i + 1];
+                    if (next && next.type == "comment" && next.payload.userAvatar == it.payload.userAvatar) {
+                      nextRepeatedPerson = true;
+                    }
+                  }}
+                  <div class="comment-left comment-first-row {{@repeatedPerson ? ' repeated' : ''}} {{@nextRepeatedPerson ? ' next-repeated' : ''}}">
+                    <span class="message">
+                      <span class="person inline{{@repeatedPerson ? ' repeated' : ''}}"><span class="av-cnv"><canvas class="not-rendered icon" data-auto-refresh="true" data-auto-size="true" data-hashmail-image="{{@taskComment.userAvatar}}" data-tooltip-trigger="{{@taskComment.userHashmail}}"></canvas></span><span class="av-txt">{{@taskComment.userName}}:</span></span>
+                    </span>
+                  </div>
+                  <div class="comment-right comment-first-row {{@repeatedPerson ? ' repeated' : ''}} {{@nextRepeatedPerson ? ' next-repeated' : ''}}">
+                    <span class="when comment{{@prevItCommentAuthor == it.payload.userAvatar ? '' : ' first'}}" title="{{@Helper.dateWithHourLocal(taskComment.dateTime)}}" data-timeago-type="calendarDate" data-timeago="{{@taskComment.dateTime}}">
+                      {{@Helper.calendarDate(taskComment.dateTime)}}
+                    </span>
+                  </div>
+                  <div class="comment-left comment-second-row">
+                    <div class="box">
+                      <div class="message">{{#Helper.formatRichMessage(taskComment.message, "html", model.taskStatuses)}}</div>
+                    </div>
+                  </div>
+                  {{
+                    prevItCommentAuthor = it.payload.userAvatar;
+                  }}
+                {{ } }}
+              {{ } }}
+                </div>
+            <div class="comment-form">
+              <div class="textarea-like box" id="new-comment-text" placeholder="{{@Helper.i18n('plugin.tasks.component.taskPanel.task.comments.addPlaceholder')}}"></div>
+              <button class="btn btn-success" data-trigger="add-comment">{{@Helper.i18n("plugin.tasks.component.taskPanel.task.comments.addButton")}}</button>
+              <span class="enter-saves">
+                <input id="enter-adds-comment" class="enter-adds-comment" type="checkbox" {{@model.enterAddsComment?'checked':''}} />
+                <label for="enter-adds-comment">{{@Helper.i18n("plugin.tasks.component.taskPanel.enterAddsComment")}}</label>
+              </span>
+            </div>
+        {{ } }}
+      </div>
+    </div>
+  </div>
+  {{ } }}
+</div>

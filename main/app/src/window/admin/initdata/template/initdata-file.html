@@ -1,0 +1,9 @@
+@import {File} from "../InitDataEditor";
+@model File
+<div class="item well">
+  <label>{{@Helper.i18n("window.admin.initData.file.name.label")}}</label>
+  <input type="text" name="file.name" value="{{@model.name}}" />
+  <label>{{@Helper.i18n("window.admin.initData.file.content.label")}}</label>
+  <textarea name="file.content">{{@model.content}}</textarea>
+  <button type="button" class="btn btn-xs btn-warning" data-action="remove-item"><i class="fa fa-remove"></i></button>
+</div>

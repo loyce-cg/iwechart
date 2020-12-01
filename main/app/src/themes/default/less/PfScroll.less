@@ -1,0 +1,110 @@
+.pf-scrollable-backdrop {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: none;
+  z-index: 99999;
+}
+
+.pf-scrollable {
+  position: relative;
+  
+  &.pf-scrollable-turned-off {
+    .pf-content {
+      position: static;
+    }
+    .pf-scroll-panel {
+      display: none;
+    }
+  }
+  &:hover {
+    >.pf-scroll-panel {
+      opacity: 1;
+    }
+  }
+  &.dragged {
+    .pf-scroll-panel {
+      opacity: 1;
+      .pf-scroll {
+        .pf-mover {
+          background-color: #FFF;
+        }
+      }
+    }
+  }
+  .pf-content {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    overflow: hidden;
+  }
+  &.pf-scrollable-horizontal {
+    >.pf-content {
+      overflow-y: visible;
+    }
+    >.pf-scroll-panel {
+      top: auto;
+      bottom: 0;
+      left: 5px;
+      right: 5px;
+      height: 16px;
+      width: auto;
+      
+      >.pf-scroll {
+        top: 4px;
+        bottom: 4px;
+        left: 0;
+        right: 0;
+        
+        >.pf-mover {
+          left: 0;
+          top: 1px;
+          bottom: 1px;
+          right: auto;
+          height: auto;
+          width: 40px;
+        }
+      }
+    }
+  }
+  .pf-scroll-panel {
+    top: 5px;
+    bottom: 5px;
+    right: 0px;
+    width: 16px;
+    position: absolute;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out 0s;
+    
+    .pf-scroll {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 4px;
+      right: 4px;
+      background-color: #4A6B6B;
+      border-radius: 16px;
+      overflow: hidden;
+      
+      .pf-mover {
+        position: absolute;
+        left: 1px;
+        right: 1px;
+        top: 0px;
+        height: 40px;
+        cursor: pointer;
+        background-color: var(--scrollbar-inner-bg);
+        border-radius: 16px;
+        transition: background-color 0.2s ease-in-out 0s;
+        
+        &:hover {
+          background-color: #FFF;
+        }
+      }
+    }
+  }
+}

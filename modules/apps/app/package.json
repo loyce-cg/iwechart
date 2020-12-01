@@ -1,0 +1,11 @@
+{
+  "name": "privmx-desktop-client-apps-module",
+  "version": "0.0.1",
+  "description": "Apps module",
+  "license": "PrivMX Source Code License",
+  "private": true,
+  "dependencies": {
+    "pmc-mail": "^2.25.0-20201009205706697",
+    "pmc-web": "^2.25.0-20201009205706697"
+  }
+}

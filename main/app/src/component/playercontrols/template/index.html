@@ -1,0 +1,31 @@
+@import { Model } from "../PlayerControlsController";
+@model Model
+<div class="component-player-controls paused empty-playlist open{{@model.independent ? ' independent' : ''}}">
+  <div class="toggle-player-button" data-action="toggle-player-button">
+    <i class="fa fa-music if-collapsed"></i>
+    <i class="fa fa-angle-right if-open"></i>
+  </div>
+  <div class="info if-open">
+      <div class="title-container"><div class="fake">A</div><div class="title"></div></div>
+      <div class="slider-container"></div>
+  </div>
+  <div class="buttons if-open">
+    <button class="btn btn-default" data-action="play-prev"><i class="fa fa-fast-backward"></i></button>
+    <button class="btn btn-primary" data-action="play-pause"><i class="fa fa-play play"></i><i class="fa fa-pause pause"></i></button>
+    <button class="btn btn-default" data-action="play-next"><i class="fa fa-fast-forward"></i></button>
+    <button class="btn btn-default" data-action="set-loop"><i class="fa fa-undo"></i></button>
+    <button class="btn btn-default" data-action="set-random"><i class="fa fa-random"></i></button>
+    <button class="btn btn-default volume-control" data-action="toggle-muted"><i class="fa fa-volume-up"></i></button>
+    <button class="btn btn-default" data-action="open-playlist"><i class="fa fa-caret-down"></i></button>
+  </div>
+  <div class="volume-slider-container"></div>
+  <div class="playlist-dropdown x-context-menu if-open">
+    <div class="x-context-menu-backdrop2"></div>
+    <div class="x-context-menu-content">
+      <div class="playlist-scroller">
+        <span data-action="clear-playlist"><i class="fa fa-times"></i>{{@Helper.i18n("component.playerControls.clearPlaylist")}}</span>
+        <ul class="playlist"></ul>
+      </div>
+    </div>
+  </div>
+</div>

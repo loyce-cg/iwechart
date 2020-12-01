@@ -1,0 +1,50 @@
+@import {Model} from "../LoginsController";
+@import {func as rowsTemplate} from "./rows.html";
+@model Model
+{{ function renderPageNo(pageNo: number) { {{
+  <span class="page-no" data-action="get-page" data-page-no="{{@pageNo}}">{{@pageNo + 1}}</span>
+}} }; }}
+{{ function renderPages() { {{
+<div class="pages">{{
+  {{<span class="pages-label">{{@Helper.i18n("window.admin.logins.pages")}}: </span>}}
+  if (model.pageNo >= 3) {
+    renderPageNo(0);
+  }
+  if (model.pageNo >= 4) {
+    {{...}}
+  }
+  if (model.pageNo - 2 >= 0) renderPageNo(model.pageNo - 2);
+  if (model.pageNo - 1>= 0) renderPageNo(model.pageNo - 1);
+  {{<span class="page-no-current">{{@model.pageNo + 1}}</span>}}
+  if (model.pageNo + 1 < model.pages) renderPageNo(model.pageNo + 1);
+  if (model.pageNo + 2 < model.pages) renderPageNo(model.pageNo + 2);
+  if (model.pageNo + 3 < model.pages) {
+    {{...}}
+    renderPageNo(model.pages - 1);
+  }
+}}</div>
+}} } }}
+<div class="panel-header">
+  <i class="fa fa-list"></i>
+  {{@Helper.i18n("window.admin.logins.menu")}}
+  <!-- {{ renderPages(); }} -->
+</div>
+
+<!-- <div class="table-container">
+  <table class="table small fixed_header">
+    <thead>
+      <th>{{@Helper.i18n("window.admin.logins.table.date")}}</th>
+      <th>{{@Helper.i18n("window.admin.logins.table.user")}}</th>
+      <th>{{@Helper.i18n("window.admin.logins.table.ip")}}</th>
+      <th>{{@Helper.i18n("window.admin.logins.table.deviceId")}}</th>
+      <th>{{@Helper.i18n("window.admin.logins.table.valid")}}</th>
+    </thead>
+    {{#Helper.createTemplate(rowsTemplate).render(model)}}
+  </table>
+</div> -->
+<!-- {{ renderPages(); }} -->
+<div class="table-container">
+  <div id="myGrid" class="ag-theme-balham-dark aggrid-panel">
+</div>
+
+</div>

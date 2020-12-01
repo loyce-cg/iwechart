@@ -1,0 +1,57 @@
+@import {LastMessagesModel} from "../WhitelistController";
+@model LastMessagesModel
+<div class="whitelist-messages">
+  {{ if (model.messages.length == 0) { {{
+    <div class="no-msg-info">
+      {{@Helper.i18n("window.settings.section.whitelist.table.lastMessage.noMessages")}}
+    </div>
+  }} } else { {{
+    <table>
+      <thead>
+        <tr>
+          <th class="sender">
+            {{@Helper.i18n("window.settings.section.whitelist.table.lastMessage.sender")}}
+          </th>
+          <th class="title">
+            {{@Helper.i18n("window.settings.section.whitelist.table.lastMessage.title")}}
+          </th>
+          <th class="date">
+            {{@Helper.i18n("window.settings.section.whitelist.table.lastMessage.date")}}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {{model.messages.forEach(function(x) {
+          let sinkType = x.sinkType;
+          let info = x.info;
+          let senderName = sinkType == "form" && x.isAnon ? Helper.i18n("core.formSender", x.sinkName) : x.nameWithHashmailA;
+          {{
+          <tr>
+            <td class="sender" title="{{@senderName}}">
+              <div>
+                {{ if (sinkType == "form") { {{
+                  <i class="fa fa-list-alt"></i>
+                }} } else if (x.senderHasAvatar) { {{
+                  <img src="{{#x.senderAvatar}}" alt="">
+                }} } else { {{
+                  <i class="fa fa-user"></i>
+                }} } }}
+                {{@senderName}}
+              </div>
+            </td>
+            <td class="title {{@info.special ? 'special' : ''}}" title="{{@info.title}}">
+              <div>
+                {{@info.title}}
+              </div>
+            </td>
+            <td class="date" title="{{@Helper.dateWithHourLocal(x.sourceServerDate)}}">
+              <div>
+                {{@Helper.timeAgo(x.sourceServerDate)}}
+              </div>
+            </td>
+          </tr>
+        }} }); }}
+      </tbody>
+    </table>
+  }} } }}
+</div>

@@ -1,0 +1,125 @@
+@import * as privfs from "privfs-client";
+@import RawUserAdminData = privfs.types.core.RawUserAdminData;
+@import {Context} from "../../../../component/extlist/ExtListView";
+@import {BaseCollection} from "../../../../utils/collection/BaseCollection";
+@import {ImageTypeDetector} from "../../../../utils/ImageTypeDetector";
+@import {UserInfo} from "../UsersController";
+@model UserInfo & {privacyLevel: "managed"|"private", twofa: boolean, blocked: boolean, isFirstAdmin: boolean}
+@context Context<UserInfo>
+{{
+//  var userFirstAdmin = (model as any).initDataKey == "Admin";
+//  var userManaged = !(model as any).adminDataForUser && (model as any).recoveryData && !userFirstAdmin;
+//  var userPrivate = (model as any).adminDataForUser || !(model as any).recoveryData;
+
+var userFirstAdmin = model.isFirstAdmin;
+var userManaged = model.privacyLevel == "managed" && !userFirstAdmin;
+var userPrivate = model.privacyLevel == "private";
+  
+  var hasWeakPassword = model.weakPassword !== false;
+  var profileName = "";
+  var avatar = Helper.getAssetByName('DEFAULT_USER_AVATAR');
+  var defaultAvatar = true;
+
+  var username = model.displayName 
+
+  if (model.cachedPkiEntry) {
+    if (model.cachedPkiEntry.image) {
+      avatar = ImageTypeDetector.createDataUrlFromBase64(model.cachedPkiEntry.image);
+      defaultAvatar = false;
+    }
+    if (model.cachedPkiEntry.name) {
+      profileName = model.cachedPkiEntry.name;
+    }
+  }
+}}
+
+<tr>
+  <td class="image-col" style="width: 1%;">
+    <img class="{{#defaultAvatar ? 'default-avatar' : ''}}" src="{{@avatar}}" alt="" />
+  </td>
+  <td>
+    <span class="username">{{@username}}</span>
+    <span data-field="is-admin" class="label label-default {{@model.isAdmin ? '' : 'hide'}}">
+      {{@Helper.i18n("window.admin.users.table.admin")}}
+    </span>
+  </td>
+
+  <td>
+    {{ if (userManaged) { }}
+    {{@Helper.i18n("window.admin.users.table.description.managedPostfix")}}
+    {{ } }}
+    {{ if (userPrivate || userFirstAdmin) { }}
+    {{@Helper.i18n("window.admin.users.table.description.privatePostfix")}}
+    {{ } }}
+  </td>
+
+  <td class="online-status">
+    {{
+    if (model.present) { {{
+      {{@Helper.i18n("core.onlineStatus.onlineFor", Helper.timeAgo(model.loggedInSince, true))}}
+    }} }
+    else { {{
+      {{@Helper.i18n("core.onlineStatus.lastSeen")}} {{@Helper.timeAgoWithNull(model.lastSeenDate)}}
+    }} }
+  }}
+  </td>
+
+  <td>
+    {{ if (!model.registrationDate) { {{
+      <span title="{{@Helper.i18n('window.admin.users.table.noRegisteredYet')}}">[?]</span>
+    }} } else if (model.generatedPassword) { {{
+      <span title="{{@Helper.i18n('window.admin.users.table.generatedPassword.info')}}">
+        {{@Helper.i18n("window.admin.users.table.generatedPassword")}}
+      </span>
+    }} } else if (hasWeakPassword) { {{
+      <span style="color: yellow;">{{@Helper.i18n("window.admin.users.table.passwordIsWeak")}}</span>
+    }} } else { {{
+      {{@Helper.i18n("window.admin.users.table.passwordIsOK")}}
+    }} } }}
+  </td>
+  <td class="last-client-version">
+      {{@model.lastClientVersion}}
+  </td>
+  <td class="last-device">
+    {{@model.lastDevice}}
+  </td>
+  <td class="last-ip">
+    {{@model.lastIp}}
+  </td>
+
+  <td class="center">
+    {{
+      if (model.twofa) { {{
+        <span class="disable-2fa" data-action="disable-2fa" data-username="{{@model.username}}">
+          <i class="fa fa-lock" title='{{@Helper.i18n("window.admin.users.table.disable2fa")}}'></i>
+        </span>
+      }} }
+      else { {{
+        <span class="disable-2fa">{{@Helper.i18n("window.admin.users.table.2fadisabled")}}</span>
+      }} }
+    }}
+  </td>
+  <td class="center">
+    {{
+      if (model.myself) {
+        {{
+          <span class="block-unblock">-</span>
+        }} 
+      }
+      else
+      if (model.blocked) { {{
+        <span class="block-unblock" data-action="unblock-user" data-username="{{@model.username}}"><i class="fa fa-lock" title='{{@Helper.i18n("window.admin.users.table.unblockUserHint")}}'></i></span>
+      }} }
+      else { {{
+        <span class="block-unblock" data-action="block-user" data-username="{{@model.username}}"><i class="fa fa-unlock" title='{{@Helper.i18n("window.admin.users.table.blockUserHint")}}'></i></span>
+      }} }
+    }}
+  </td>
+
+  <td class="text-right">
+    <button class="btn btn-default gray btn-xs" data-action="edit-user" data-username="{{@model.username}}">
+      <i class="fa fa-pencil"></i>
+      {{@Helper.i18n("window.admin.users.details.action.edit")}}
+    </button>
+  </td>
+</tr>

@@ -1,0 +1,106 @@
+@import "../../themes/default/less/common";
+@import "../../component/statusbar/index";
+@import "../../component/titletooltip/index.less";
+
+* {
+  box-sizing: border-box;
+  font-family: var(--misc-ui-font-family);
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: @colorBackground;
+}
+
+textarea {
+  display: block;
+}
+
+body {
+  &:extend(.unselectable);
+}
+
+a, a *,
+button, button *,
+.link, .link *,
+.selectable a, .selectable a * {
+  cursor: pointer;
+}
+
+.btn.disabled *, .btn[disabled] *, fieldset[disabled] .btn * {
+  cursor: not-allowed;
+}
+
+::-moz-focus-inner {
+  border:0;
+}
+
+.status-bar {
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  .status {
+    color: #1b404b;
+  }
+}
+
+.component-splitter-panel,
+.component-splitter-vertical > .component-splitter-handle,
+.component-splitter-horizontal > .component-splitter-handle {
+  background: transparent;
+}
+
+.component-splitter-vertical > .component-splitter-handle {
+  width: @splitterHandleSize;
+}
+
+.component-splitter-horizontal > .component-splitter-handle {
+  height: @splitterHandleSize;
+}
+
+/*
+.block-ui-message {
+  background: none !important;
+  border: none !important;
+}
+
+.block-ui-message .fa-pulse {
+  font-size: 40px;
+  -webkit-animation: fa-spin .7s infinite steps(8);
+  color: #fff;
+}
+
+.block-ui-message > div {
+  margin-top: 10px;
+  color: #fff;
+  font-weight: bold;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.dropdown-menu li > a:hover, .dropdown-menu li > a:focus, .dropdown-submenu:hover > a {
+  background: #60AE1C;
+}
+
+.text-center {
+  text-align: center;
+}
+
+*/
+.logo-127x112-container {
+    width: 127px;
+    margin: auto;
+}
+.logo-127x112-container > img {
+    max-width: 100%;
+    height: auto;
+    
+}

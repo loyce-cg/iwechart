@@ -1,0 +1,57 @@
+{
+  "name": "privmx-desktop-client-builder",
+  "version": "1.0.0",
+  "description": "PrivMX desktop client builder",
+  "main": "index.html",
+  "scripts": {
+    "start": "./node_modules/.bin/http-server -a 127.0.0.1 -p 3333",
+    "build": "./node_modules/.bin/browserify -r privfs-client -r q -r moment -r is_js -r ./index.js:mail > build/mail.js",
+    "build-full": "./node_modules/.bin/browserify -r privfs-client -r q -r moment -r is_js -r ./index.js:mail -o build/mail.js && uglifyjs build/mail.js -o build/mail.min.js --source-map build/mail.min.js.map -c",
+    "build-worker": "./node_modules/.bin/browserify -r q ./node_modules/privfs-client/app/AsyncWorkerServer.js > build/AsyncWorkerServer.js",
+    "watch": "./node_modules/.bin/watchify -v -r privfs-client -r q -r moment -r is_js -r ./index.js:mail -o build/mail.js",
+    "watch-worker": "./node_modules/.bin/watchify -v -r q ./node_modules/privfs-client/app/AsyncWorkerServer.js -o build/AsyncWorkerServer.js",
+    "watch-gulp": "./node_modules/.bin/gulp default --watch",
+    "watch-less": "./node_modules/.bin/gulp watch-less",
+    "start-e": "gulp default && electron app/out/app/electron/start.js",
+    "dist-and-build": "gulp electron-dist && gulp electron-build"
+  },
+  "author": "PrivMX B.V.",
+  "license": "PrivMX Source Code License",
+  "private": true,
+  "dependencies": {
+    "privmx-builder": "1.4.0"
+  },
+  "window": {
+    "toolbar": true,
+    "show": true,
+    "icon": "dist/icons/app-icon.png"
+  },
+  "homepage": "https://privmx.com",
+  "build": {
+    "asar": true,
+    "app-bundle-id": "com.simplito.privmx",
+    "app-category-type": "public.app-category.productivity",
+    "win": {
+      "name": "privmx-desktop-client",
+      "productName": "PrivMX",
+      "iconUrl": "https://privmx.com/images/icon.ico",
+      "loadingGif": "electron-customization/loading.gif",
+      "setupIcon": "electron-customization/icon.ico",
+      "description": "PrivMX Desktop Client"
+    },
+    "linux": {
+      "version": "1.0.0",
+      "name": "privmx-desktop-client",
+      "productName": "PrivMX",
+      "desktopName": "PrivMX Desktop Client",
+      "comment": "PrivMX Desktop Client for Linux"
+    }
+  },
+  "directories": {
+    "buildResources": "app/src/electron-customization",
+    "output": "electron-build"
+  },
+  "devDependencies": {
+    "svg2img": "^0.6.1"
+  }
+}

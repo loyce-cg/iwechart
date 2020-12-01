@@ -1,0 +1,29 @@
+@import * as Types from "../../Types";
+@import {Context} from "../extlist/ExtListView";
+@model Types.webUtils.HostListElementModel
+@context Context<Types.webUtils.HostListElementModel>
+<div class="host-element wi-element teamserver {{@context.isActive ? 'active' : ''}} {{@model.muted ? 'muted' : ''}} {{@model.disabled ? 'disabled' : ''}} {{@model.unread > 0 && !model.disabled ? 'with-badge' : ''}} {{@model.elementsCount != null && !model.disabled ? 'with-elements-count' : ''}} {{@model.searchCount > 0 || !model.allSearched ? 'with-search-count' : ''}}" data-host-id="{{@model.id}}">
+  <div class="wi-element-inner">
+    <i class="fa left-side collapsed fa-caret-right {{@!model.isExpanded ? '' : 'hide'}}"></i>
+    <i class="fa left-side expanded fa-caret-down {{@model.isExpanded ? '' : 'hide'}}"></i>
+    <div class="bckg-icon" data-section-id="{{@model.id}}">
+      <img src="{{@Helper.getAssetByName('DEFAULT_TEAMSERVER_ICON')}}" />
+    </div>
+    <div class="wi-element-name">
+      {{@model.name}}
+    </div>
+    <div class="loading hide"><i class="fa fa-circle-o-notch"></i></div>
+    <div class="wi-element-elements-count number">
+      {{@model.elementsCount === null ? "" : model.elementsCount}}
+    </div>
+    <div class="wi-element-badge number has-basic-tooltip" data-basic-id="{{@model.id}}">
+      {{@model.unread}}{{@model.elementsCount ? "/" + model.elementsCount : ""}}
+    </div>
+    <div class="wi-element-search-count number">
+      {{@model.searchCount === null ? "" : model.searchCount}}{{@model.allSearched ? "" : "+"}}<i class="fa fa-search"></i>
+      {{ if (!model.allSearched) { }}
+        <div class="infotooltip not-rendered" data-tooltip-theme="light" data-tooltip-message='{{@Helper.i18n("component.common.moreElementsMayMatch")}}'></div>
+      {{ } }}
+    </div>
+  </div>
+</div>

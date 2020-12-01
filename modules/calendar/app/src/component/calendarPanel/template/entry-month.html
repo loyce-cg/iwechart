@@ -1,0 +1,27 @@
+<div class="entry">
+  <div class="month-info"></div>
+  <div class="weeks">
+    {{ for (let w = 0; w < 6; ++w) { }}
+      <div class="week">
+      {{ for (let i = 0; i < 7; ++i) { }}
+        {{
+          let cls = "";
+          if (i == 0) {
+            cls += " first-column";
+          }
+          if (i == 6) {
+            cls += " last-column";
+          }
+          cls += " col-" + i;
+        }}
+        <div class="day{{@cls}}">
+          <span class="day-number"></span>
+          <div class="tasks"></div>
+          <div class="more-tasks-info"></div>
+          <div class="expanded-day-backdrop"></div>
+        </div>
+      {{ } }}
+      </div>
+    {{ } }}
+  </div>
+</div>

@@ -1,0 +1,182 @@
+@import "../../../../node_modules/pmc-web/src/component/splitter/index";
+@import "../../../component/taskGroupsPanel/template/main.less";
+@import "../../../component/taskPanel/template/main.less";
+@import "../../../../node_modules/pmc-web/src/component/sectionstabs/index.less";
+@import "../../../../node_modules/pmc-web/src/component/infotooltip/index.less";
+@import "../../../../node_modules/pmc-web/src/component/sidebar/index.less";
+@import "../../../../node_modules/pmc-web/src/component/template/bckg-icon.less";
+@import "../../../../node_modules/pmc-web/src/component/template/conversation.less";
+@import "../../../../node_modules/pmc-web/src/component/disabledsection/index.less";
+
+.sidebar-container {
+  outline: none;
+  
+  .wi-element .wi-element-inner .wi-element-icon.small-icon i {
+    font-size: var(--font-size-xl);
+  }
+}
+
+.panel {
+  background: transparent;
+}
+.taskgroupspanels-container {
+  height: 100%;
+  
+  .taskgroupspanel-container {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: none;
+    
+    &.active {
+      display: block;
+    }
+  }
+}
+.window-tasks {
+  .panels {
+    .absolute-fill();
+    
+    .component-splitter-panel {
+      background: transparent;
+      
+      &.component-splitter-panel-left .sidebar {
+        .component-splitter-horizontal {
+          background: var(--sidebar-bg);
+        }
+        
+        .component-splitter-handle {
+          background: var(--sidebar-splitter-color);
+        }
+        
+        .section-list {
+          border-top-color: var(--sidebar-splitter-color);
+        }
+      }
+    }
+    
+    .component-splitter-vertical {
+      .component-splitter-handle.sidebar-handle {
+        z-index: 2;
+      }
+    }
+    
+    .pf-scrollable:not(.custom-select-dropdown):not(.time-container) {
+      .absolute-fill();
+      overflow: hidden;
+    }
+      
+    .projects-scrollable {
+      .panel-projects {
+        padding-top: 1px;
+        min-height: 100%;
+      }
+    }
+    
+    .taskgroups-scrollable {
+      height: 100%;
+    }
+    
+    .hide-task-panel {
+      width: 100% !important;
+      height: 100% !important;
+      z-index: 1;
+    }
+    
+    .component-splitter-panel-left.hide-preview.show-task-panel {
+      width: 100% !important;
+      z-index: 1;
+    }
+    
+    .component-splitter-panel-top.hide-preview.show-task-panel {
+      height: 100% !important;
+      z-index: 1;
+    }
+    
+    .hide-task-panel,
+    .hide-preview {
+      ~.component-splitter-panel-bottom,
+      ~.component-splitter-panel-right {
+        display: none;
+      
+        ~.component-splitter-handle {
+          display: none;
+        }
+      }
+    }
+    .component-splitter-panel-right+.component-splitter-handle {
+      z-index: 9;
+    }
+    
+    .show-preview.show-task-panel+.component-splitter-panel-bottom {
+      border-top: 1px solid var(--main-panel-lower-buttons-border);
+    }
+    
+    .component-splitter-horizontal .show-preview.show-task-panel~.component-splitter-handle {
+      background: transparent;
+    }
+    .component-splitter-horizontal .show-preview.show-task-panel~.component-splitter-handle .handle-dot-horizontal,
+    .component-splitter-vertical .show-preview.show-task-panel~.component-splitter-handle .handle-dot-vertical,
+    .component-splitter-vertical .sidebar-handle.component-splitter-handle .handle-dot-vertical {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+    
+    .task-scrollable {
+      background: var(--preview-panel-bg);
+      height: 100%;
+    }
+    
+    .panel {
+      margin-bottom: 0;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    
+    .panel-task {
+      height: 100%;
+    }
+  }
+  
+  .component-splitter-vertical>.component-splitter-handle {
+    width: 5px;
+  }
+  
+}
+
+.section-tasks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  
+  &.with-tabs {
+      margin-top: 21px;
+  }
+  
+  >.component-splitter-vertical>.component-splitter-panel-left>.component-splitter-horizontal>.component-splitter-panel-top {
+    overflow: hidden;
+  }
+}
+
+.focus-highlight {
+  z-index: 8000;
+  border: 5px solid var(--unread-color);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.sections-tabs {
+  display: none;
+}
+
+.component-task-panel-main .ok-cancel-buttons .delete {
+  right: 10px;
+}

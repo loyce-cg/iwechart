@@ -1,0 +1,70 @@
+@import {Model} from "../PublicProfileController";
+@model Model
+<div class="section">
+  <div class="section-header">
+    <i class="fa fa-vcard-o"></i>
+    {{@Helper.i18n("window.settings.section.publicProfile.header")}}
+  </div>
+  <div class="section-info">
+    {{@Helper.i18n("window.settings.section.publicProfile.info")}}
+  </div>
+  
+  <div class="base-form">
+    <div class="fields">
+      
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.settings.section.publicProfile.preview.label")}}
+        </div>
+        <div class="input">
+          <div class="profile-preview-container"></div>
+        </div>
+      </div>
+      
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.settings.section.publicProfile.image.label")}}
+        </div>
+        <div class="input image-input">
+          <img src="" alt="" style="display: none;" class="image-preview" />
+          <div>
+            <span class="link" data-trigger="upload-image">{{@Helper.i18n("window.settings.section.publicProfile.image.change.text")}}</span>
+            <span class="link" data-trigger="remove-image" style="display: none;">{{@Helper.i18n("window.settings.section.publicProfile.image.remove.text")}}</span>
+          </div>
+          <input type="hidden" name="profile.image" />
+        </div>
+      </div>
+      
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.settings.section.publicProfile.name.label")}}
+        </div>
+        <div class="input">
+          <input type="text" name="profile.name" maxlength="100" placeholder="{{@Helper.i18n("window.settings.section.publicProfile.name.placeholder")}}" value="{{@ model.profile ? model.profile.name : ''}}">
+        </div>
+      </div>
+      
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.settings.section.publicProfile.description.label")}}
+        </div>
+        <div class="input">
+          <textarea name="profile.description" maxlength="500" placeholder="{{@Helper.i18n("window.settings.section.publicProfile.description.placeholder")}}">{{@ model.profile ? model.profile.description : ''}}</textarea>
+        </div>
+      </div>
+      
+      <div class="field buttons">
+        <div class="info">
+        </div>
+        <div class="input">
+          <button class="btn btn-success save-button progress-button">
+            <i class="fa fa-save"></i>
+            <span class="button-text">{{@Helper.i18n("window.settings.section.publicProfile.button.save.text")}}</span>
+          </button>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+  
+</div>

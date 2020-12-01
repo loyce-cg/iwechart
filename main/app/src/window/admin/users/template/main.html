@@ -1,0 +1,32 @@
+<div class="panel-header">
+  <i class="fa fa-address-book-o"></i>
+  {{@Helper.i18n("window.admin.users.menu")}}
+  (<span class="users-count"></span>)
+  <button class="btn" data-action="refresh-users">
+    <i class="fa fa-refresh" data-org="fa fa-refresh" data-proc="fa fa-spin fa-circle-o-notch"></i>
+    <span data-org="" data-proc="{{@Helper.i18n("window.admin.users.refresh.button")}}"></span>
+  </button>
+  <button class="btn btn-success pull-right" data-action="add-user">
+    <i class="fa fa-plus"></i>
+    {{@Helper.i18n("window.admin.users.add.button")}}
+  </button>
+</div>
+
+<table class="table small">
+  <thead>
+    <tr>
+      <th></th>
+      <th>{{@Helper.i18n("window.admin.users.table.username")}}</th>
+      <th>{{@Helper.i18n("window.admin.users.table.type")}}</th>
+      <th>{{@Helper.i18n("window.admin.users.table.onlineStatus")}}</th>
+      <th>{{@Helper.i18n("window.admin.users.table.password")}}</th>
+      <th>{{@Helper.i18n("window.admin.users.table.lastClientVersion")}}</th>
+      <th>{{@Helper.i18n("window.admin.users.table.lastDevice")}}</th>
+      <th>{{@Helper.i18n("window.admin.users.table.lastIp")}}</th>
+      <th>{{@Helper.i18n("window.admin.users.table.2FA")}}</th>
+      <th>{{@Helper.i18n("window.admin.users.table.blockUser")}}</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>

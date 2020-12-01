@@ -1,0 +1,85 @@
+@import "../../admin/template/subwindow";
+
+h3 {
+  margin-bottom: 50px;
+}
+
+.add-button.idle .when-adding,
+.add-button.adding .when-idle {
+  display: none;
+}
+.managable-users {
+    margin-left: 10px;
+    color: yellow;
+    display: inline-block;
+    font-size: 0.55em;
+    font-weight: 300;
+}
+.main-info {
+  font-size: var(--font-size);
+  color: var(--body-extra-info-fg);
+  margin: 10px 0 30px 0;
+  height: 70px;
+  
+  .first-line {
+      margin-bottom: 10px;
+  }
+}
+
+.base-form .fields .field .input textarea {
+    height: 55px;
+}
+
+.radiobox,
+.checkbox {
+  margin-left: 170px;
+  margin-top: 5px;
+  margin-bottom: 12px;
+  
+  label {
+    display: block;
+    font-size: var(--font-size);
+    min-height: auto;
+    padding-left: 0;
+    font-weight: 400;
+    
+    input[type="checkbox"] {
+      margin-top: 2px;
+    }
+    input[type=radio] {
+      position: relative;
+      top: 2px;
+    }
+    input[type=radio],
+    strong {
+      cursor: pointer;
+    }
+  }
+}
+
+.checkbox {
+  margin-left: 190px;
+}
+
+.managable {
+  .if-not-managable {
+    display: none;
+  }
+}
+.not-managable {
+  .if-managable {
+    display: none;
+  }
+}
+
+body {
+  .base-form .fields .field .info {
+    width: 160px;
+  }
+  .base-form .fields .field .input {
+    margin-left: 170px;
+  }
+  .base-form .info-ex {
+    margin-left: 170px;
+  }
+}

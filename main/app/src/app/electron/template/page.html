@@ -1,0 +1,440 @@
+@import {AssetsManager} from "../../common/AssetsManager"
+@import {Formatter} from "../../../utils/Formatter"
+@import {app} from "../../../Types";
+@helper Formatter
+@model {assetsManager: AssetsManager, title: string, iframeDataUrl: string, barPosition: string, minimizable: boolean, maximizable: boolean, closable: boolean, platform?: string, preTitleIcon: app.PreTitleIcon, icon?: string, keepSpinnerUntilViewLoaded?: boolean, hideLoadingSpinner?: boolean}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <link href="{{@model.assetsManager.getAsset('themes/default/css/fonts.css')}}" media="all" rel="stylesheet" />
+    <link href="{{@model.assetsManager.getAsset('themes/default/css/font-awesome.min.css')}}" media="all" rel="stylesheet" />
+    <style>
+        html {
+            height: 100%;
+            min-height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        body {
+            min-height: 100%;
+            padding: 0;
+            margin: 0;
+            font-family: source_sans_pro, arial, sans-serif;
+        }
+        .topbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 23px;
+            width: 100%;
+            background-color: #1b1d1e;
+            -webkit-user-select: none;
+            -webkit-app-region: drag;
+            border-bottom: 1px solid #2e2e2e;
+        }
+        .pre-title-icon>img {
+            width: 14px;
+            height: 14px;
+            position: relative;
+            top: 3px;
+            border-radius: 2px;
+            margin-right: 2px;
+        }
+        .pre-title-icon>i.fa {
+            font-size: 12px;
+            position: relative;
+            top: 1px;
+            margin-right: 3px;
+        }
+        .pre-title-icon>.pre-title-icon--section-public,
+        .pre-title-icon>.pre-title-icon--section-non-public {
+            padding: 1px;
+            box-sizing: border-box;
+            border: 1px solid transparent;
+        }
+        .pre-title-icon>.pre-title-icon--section-public {
+            background: #999;
+            opacity: 0.85;
+        }
+        .pre-title-icon>.pre-title-icon--section-non-public {
+            border-color: #999;
+            opacity: 0.7;
+        }
+        .pre-title-icon>* {
+            display: none;
+        }
+        #topbar-title[data-icon-type="section-public"] .pre-title-icon>.pre-title-icon--section-public,
+        #topbar-title[data-icon-type="section-non-public"] .pre-title-icon>.pre-title-icon--section-non-public,
+        #topbar-title[data-icon-type="local"] .pre-title-icon>.pre-title-icon--local,
+        #topbar-title[data-icon-type="private"] .pre-title-icon>.pre-title-icon--private,
+        #topbar-title[data-icon-type="person"] .pre-title-icon>.pre-title-icon--person {
+            display: inline-block;
+        }
+        #topbar-title[data-icon-type="none"] .pre-title-icon {
+            display: none;
+        }
+        #topbar-title:not([data-icon-type="none"]) .topbar-title-icon {
+            display: none;
+        }
+        .topbar .topbar-title {
+            position: absolute;
+            top: 0;
+            left: 0;
+            text-align: center;
+            width: 100%;
+            height: 23px;
+            line-height: 23px;
+            overflow: hidden;
+            font-size: 12px;
+            color: #999;
+            -webkit-user-select: none;
+            -webkit-app-region: drag;
+        }
+        .topbar .topbar-title-icon {
+            position: relative;
+            top: 1px;
+            margin-right: 1px;
+        }
+        #topbar-title.too-long {
+            text-align: left;
+            position: absolute;
+            left: 65px;
+        }
+        #topbar-title.too-long+.dirty-marker {
+            position: absolute;
+            right: 67px;
+            top: 8px;
+        }
+        #topbar-title-text {
+            font-kerning: none;
+            text-rendering: optimizeSpeed;
+        }
+        .topbar .topbar-buttons {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            text-align: right;
+        }
+        .topbar .topbar-button {
+            display: inline-block;
+            width: 10px;
+            height: 16px;
+            font-size: 10px;
+            margin-left: 6px;
+            margin-right: 6px;
+            cursor: pointer;
+            color: #3e474c;
+            float: right;
+            text-align: center;
+        }
+        .topbar .topbar-button:before {
+            display: inline-block;
+            vertical-align: middle;
+            color: #999;
+        }
+        .topbar .topbar-button.ico-minimize:before {
+            position: relative;
+            bottom: -4px;
+        }
+        .topbar .topbar-button:hover {
+            color: #6b7c84;
+        }
+        .topbar.topbar-buttons-to-left .topbar-buttons {
+            text-align: left;
+            right: auto;
+            left: 6px;
+        }
+        .topbar.topbar-buttons-to-left .topbar-button-close {
+            float: left;
+        }
+        .topbar.topbar-buttons-to-left .topbar-button-maximize {
+            float: right;
+        }
+        .topbar.topbar-buttons-to-left .topbar-button-minimize {
+            float: left;
+        }
+        .topbar .dirty-marker {
+          display: none;
+          margin-left: 5px;
+          font-size: 9px;
+          background-color: #ff423e;
+          width: 8px;
+          height: 8px;
+          border-radius: 8px;
+        }
+        .topbar.dirty .dirty-marker {
+          display: inline-block;
+        }
+        .iframe-container {
+            position: absolute;
+            top: 24px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 1px solid #1b1d1e;
+            border-top: none;
+        }
+        iframe {
+            display: block;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        @media print {
+            .topbar {
+                display: none !important;
+            }
+            .iframe-container {
+                position: static !important;
+                border: 0 !important;
+            }
+            .iframe-container.absolute {
+                position: absolute !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <script type="text/javascript">
+        var cnv = document.createElement("canvas");
+        var ctx = cnv.getContext("2d");
+        ctx.font = "12px source_sans_pro, arial, sans-serif";
+        var charWidths = {};
+        function measureChars(str) {
+            for (let i = 0; i < str.length; ++i) {
+                let cc = str.charCodeAt(i);
+                if (cc in charWidths) {
+                    continue;
+                }
+                charWidths[cc] = ctx.measureText(str[i]).width;
+            }
+        }
+        function getMaxTextLength(str, width, fullWords) {
+            measureChars(str);
+            var lineWidth = 0;
+            str = str.trimEnd();
+            let l = str.length;
+            let widths = charWidths;
+            let prevWordBreakAt = -1;
+            for (let i = 0; i < l; ++i) {
+                let cc = str.charCodeAt(i);
+                lineWidth += widths[cc];
+                if (cc == 32) {
+                    prevWordBreakAt = i;
+                }
+                if (lineWidth > width) {
+                    return [fullWords && prevWordBreakAt > 0 ? prevWordBreakAt : i, lineWidth];
+                }
+            }
+            return [l, lineWidth];
+        }
+        var topbar, topbarTitle;
+        function titleEllipsis(title) {
+            var rect = topbar.getBoundingClientRect();
+            var availWidth = rect.width - 170;
+            title = title.split("").reverse().join("");
+            var [maxChars, lineWidth] = getMaxTextLength(title, availWidth, false);
+            if (maxChars < title.length) {
+                topbarTitle.style.width = (availWidth + 30) + "px";
+                topbarTitle.classList.add("too-long");
+            }
+            else {
+                topbarTitle.style.width = null;
+                topbarTitle.classList.remove("too-long");
+            }
+            return (maxChars < title.length ? "..." : "") + title.substr(0, maxChars).split("").reverse().join("");
+        }
+        var fullTitle;
+        function setTitle(title) {
+            fullTitle = title;
+            document.getElementById("topbar-title-text").textContent = titleEllipsis(title);
+        }
+    </script>
+    <div id="topbar" class="topbar {{@model.barPosition == 'left' ? 'topbar-buttons-to-left' : ''}}" data-platform="{{@model.platform}}">
+        <div class="topbar-title">
+          <span id="topbar-title" data-icon-type="{{@model.preTitleIcon?model.preTitleIcon:'none'}}">
+              <span class="pre-title-icon">
+                  <img class="pre-title-icon--section-public" src="{{@model.assetsManager.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+                  <img class="pre-title-icon--section-non-public" src="{{@model.assetsManager.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+                  <i class="fa fa-desktop pre-title-icon--local"></i>
+                  <img class="pre-title-icon--private" src="{{@model.assetsManager.getAssetByName('MY_AVATAR')}}" />
+                  <img class="pre-title-icon--person" src="{{@model.assetsManager.getAssetByName('DEFAULT_USER_AVATAR')}}" />
+              </span>
+              <span class="topbar-title-icon {{@model.icon}}"></span>
+            <span class="topbar-title-text" id="topbar-title-text">{{@model.title}}</span>
+          </span>
+          <span class="dirty-marker"></span>
+        </div>
+        {{ if (model.platform != "darwin") { {{
+        <div class="topbar-buttons" style="-webkit-app-region: no-drag;">
+            {{ if (model.closable) { {{
+                <a id="close-button" class="topbar-button topbar-button-close ico-x"></a>
+            }} } }}
+            {{ if (model.maximizable) { {{
+                <a id="maximize-button" class="topbar-button topbar-button-maximize ico-maximize"></a>
+            }} } }}
+            {{ if (model.minimizable) { {{
+                <a id="minimize-button" class="topbar-button topbar-button-minimize ico-minimize"></a>
+            }} } }}
+        </div>
+        }} } }}
+    </div>
+    <div class="iframe-container">
+        {{
+            if (! model.hideLoadingSpinner) {
+                {{
+                    <div id="loader" style="display: block; position: fixed; top:0; left:0; right:0; bottom:0; z-index:9999;">
+                        <div style="position: absolute; top: 50%; transform: translateY(-50%); text-align: center; width: 100%;">
+                            <i style="font-size: 30px;" class="fa fa-spin fa-circle-o-notch"></i>    
+                        </div>
+                    </div>
+            
+                }}
+            }
+        }}
+        <iframe id="window-iframe" src="{{@model.iframeDataUrl}}"></iframe>
+        <script type="text/javascript">
+            {{ 
+                if (!model.keepSpinnerUntilViewLoaded) { }}
+                document.getElementById('window-iframe').onload = function() {
+                    let loader = document.querySelector("#loader");
+                    if (loader) {
+                        loader.parentNode.removeChild(loader);
+                    }
+                }
+            {{ } }}
+        </script>
+    </div>
+    <script type="text/javascript">
+        var performanceLog = (name) => {
+            let t = new Date().getTime() * 0.001;
+            setTimeout(() => {
+                ipc.send(ipcChannelName + "/wnd", "performanceLog", name, "", t);
+            }, 1000);
+        };
+        performanceLog("openingWindows.pageHtml.start");
+        topbar = document.getElementById("topbar");
+        topbarTitle = document.getElementById("topbar-title");
+        fullTitle = document.getElementById("topbar-title-text").textContent;
+        document.fonts.ready.then(() => {
+            measureChars(".");
+            setTitle(fullTitle);
+        });
+        var ipc = require("electron").ipcRenderer;
+        var iframe = document.querySelector("iframe");
+        var controllerId = null;
+        var ipcChannelName = null;
+        var data = null;
+        var windowId = null;
+        iframe.contentWindow.isElectron = true;
+        iframe.addEventListener("load", function() {
+            performanceLog("openingWindows.pageHtml.iframeOnLoad");
+            if (controllerId) {
+                onControllerLoad();
+            }
+        });
+        var topbar = document.getElementById("topbar");
+        if (topbar && topbar.dataset.platform == "darwin") {
+            topbar.addEventListener("dblclick", function(event) {
+                if (event.target.hasAttribute('-webkit-app-region') && event.target.getAttribute("-webkit-app-region") !== "drag") return;
+                ipc.send(ipcChannelName + "/wnd", "maximizeToggle");
+            });
+            let activeElements = [];
+            topbar.addEventListener("mousedown", function(event) {
+                if (event.target.hasAttribute('-webkit-app-region') && event.target.getAttribute("-webkit-app-region") !== "drag") return;
+                activeElements = [];
+                let doc = document;
+                while (doc && doc.activeElement) {
+                    activeElements.push(doc.activeElement);
+                    doc = doc.activeElement.contentDocument;
+                }
+            });
+            topbar.addEventListener("click", function(event) {
+                if (event.target.hasAttribute('-webkit-app-region') && event.target.getAttribute("-webkit-app-region") !== "drag") return;
+                let deepestActiveElement = activeElements && activeElements.length > 0 ? activeElements[activeElements.length - 1] : null;
+                if (deepestActiveElement) {
+                    deepestActiveElement.focus();
+                }
+            });
+        }
+
+
+        var closeButton = document.getElementById("close-button");
+        if (closeButton) {
+            closeButton.addEventListener("click", function() {
+                ipc.send(ipcChannelName + "/wnd", "close");
+            });
+        }
+        var maximizeButton = document.getElementById("maximize-button");
+        if (maximizeButton) {
+            maximizeButton.addEventListener("click", function() {
+                ipc.send(ipcChannelName + "/wnd", "maximizeToggle");
+            });
+        }
+        var minimizeButton = document.getElementById("minimize-button");
+        if (minimizeButton) {
+            minimizeButton.addEventListener("click", function() {
+                ipc.send(ipcChannelName + "/wnd", "minimize");
+            });
+        }
+        
+        function onControllerLoad() {
+            iframe.contentWindow.electronRequire = require;
+            iframe.contentWindow.initView();
+            iframe.contentWindow.privmxViewRequire("Starter").Starter.onControllerStart(null, data);
+        }
+        
+        window.addEventListener("resize", () => {
+            setTitle(fullTitle);
+        });
+        
+        ipc.on("controller-start", function(sender, _data) {
+            performanceLog("openingWindows.pageHtml.ipcOnControllerStart");
+            data = _data;
+            controllerId = data.controllerId;
+            ipcChannelName = data.ipcChannelName;
+            if (iframe.contentWindow.document.readyState == "complete") {
+                onControllerLoad();
+            }
+        });
+        ipc.on("window-id", function(sender, wId) {
+            windowId = wId;
+        });
+        ipc.on("set-title", function(sender, title) {
+            setTitle(title);
+        });
+        ipc.on("set-pre-title-icon", function(sender, icon) {
+            document.querySelector("#topbar-title").setAttribute("data-icon-type", icon);
+        });
+        ipc.on("set-dirty", function(sender, dirty) {
+            let container = document.getElementById("topbar");
+            if (dirty) {
+                container.classList.add("dirty");
+            }
+            else {
+                container.classList.remove("dirty");
+            }
+        });
+        ipc.on("set-buttons-position", function(sender, position) {
+            let container = document.getElementById("topbar");
+            if (position == "left") {
+                container.classList.add("topbar-buttons-to-left");
+            }
+            else {
+                container.classList.remove("topbar-buttons-to-left");
+            }
+        });
+        ipc.on("remove-spinner", function () {
+            let loader = document.querySelector("#loader");
+            if (loader) {
+                loader.parentNode.removeChild(loader);
+            }
+        });
+        performanceLog("openingWindows.pageHtml.end");
+    </script>
+</body>
+</html>

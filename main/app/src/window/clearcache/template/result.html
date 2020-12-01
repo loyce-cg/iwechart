@@ -1,0 +1,12 @@
+@model {result: boolean, domain:string}
+<div class="clear-cache-info">
+    <div class="main-info">
+    {{ if(model.result === true) { {{
+      <i class="fa fa-check"></i>
+      {{@Helper.i18n('window.admin.clearCache.done', model.domain)}}
+  }} } else { {{
+      <i class="fa fa-times-circle"></i>
+      {{@Helper.i18n('window.admin.clearCache.empty_cache')}}
+  }} } }}
+    </div>
+</div>

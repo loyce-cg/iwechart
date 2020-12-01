@@ -1,0 +1,16 @@
+@import {Profile} from "../../../../mail/UserPreferences";
+@model Profile
+{{
+  var description = Helper.shortDescription(model.description);
+}}
+<div class="profile-preview {{@description ? 'with-description' : 'without-description'}}">
+  <div class="image">
+    {{ if (model.image ) { {{
+      <img src="{{@ model.image}}" alt="" />
+    }} } else { {{
+      <img src="{{@Helper.getAssetByName('DEFAULT_USER_AVATAR')}}" />
+    }} } }}
+  </div>
+  <div class="name">{{@ model.name }}</div>
+  <div class="description">{{@ description }}</div>
+</div>

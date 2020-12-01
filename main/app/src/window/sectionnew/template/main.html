@@ -1,0 +1,125 @@
+@import {Model} from "../SectionNewWindowController";
+@model Model
+<div class="window-section-new">
+  <div class="base-form">
+    <div class="fields">
+      <div class="field">
+        <div class="info parent-name">
+          {{@Helper.i18n("window.sectionNew.parentchange.label")}}
+        </div>
+        <div class="field-value">
+          <div class="wi-element">
+            <div class="wi-element-inner">
+              <div class="wi-element-icon bckg-icon bckg-icon-inverse2" vf-class="{'bckg-icon-border':this.parentScope == 'private', 'not-selected':this.parentId == 'not-selected'}">
+                <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+              </div>
+              <span class="parent-name" vf-model="parentName" vf-class="{'hide': this.parentId == 'not-selected'}"></span>
+              <!-- <button class="btn btn-link edit-btn" vf-visible="editable" vf-click="move()" vf-disabled="loading" vf-class="{'btn-value': this.parentId == 'not-selected'}">
+                <span vf-visible="{this.parentId == 'not-selected'}">{{@Helper.i18n("window.sectionNew.selectSection")}}</span>
+                <span vf-visible="{this.parentId != 'not-selected'}">{{@Helper.i18n("core.button.change.label")}}</span>
+              </button> -->
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="second-step"">
+
+        <div class="field">
+          <div class="info input-info">
+            {{@Helper.i18n("window.sectionNew.section_name.label")}}
+          </div>
+          <div class="input">
+            <input type="text" class="name-input" vf-model="name" maxlength="100" placeholder="{{@Helper.i18n('window.sectionNew.section_name.placeholder')}}" vf-readonly="editable == false" vf-disabled="loading">
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-value">
+            {{ if (model.state.isAdmin) { {{
+            <div class="radio">
+              <label>
+                <input type="radio" value="false" vf-model="isPrivate" vf-disabled="loading">
+                <span class="bolder">{{@Helper.i18n("window.sectionNew.ismanaged")}}</span> - <span>{{@Helper.i18n("window.sectionNew.managed")}}</span>
+              </label>
+            </div>
+            <div class="radio">
+              <label>
+                <input type="radio" value="true" vf-model="isPrivate" vf-disabled="loading">
+                <span class="bolder">{{@Helper.i18n("window.sectionNew.isnotmanaged")}}</span> - <span>{{@Helper.i18n("window.sectionNew.notmanaged")}}</span>
+              </label>
+
+            </div>
+          }} } else { {{
+            <span class="bolder">{{@Helper.i18n("window.sectionNew.isnotmanaged.only")}}</span> - <span>{{@Helper.i18n("window.sectionNew.notmanaged")}}</span>
+          }} } }}
+          </div>
+        </div>
+        
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.sectionNew.active_modules")}}
+          </div>
+          <div class="field-value sorted-modules">
+            {{ model.modules.forEach((module, i) => { {{
+            <div class="checkbox sorted-module-{{@module}}">
+              <label>
+                <input class="module-checked" type="checkbox" vf-model="modules[{{@i}}].selected" vf-disabled="editable == false || this.loading" />
+                <div class="module-icon">
+                    {{ if (module == "calendar") { {{ <i class="privmx-icon privmx-icon-calendar"></i> }} } }}
+                    {{ if (module == "kvdb") { {{ <i class="privmx-icon privmx-icon-tasks"></i> }} } }}
+                    {{ if (module == "chat") { {{ <i class="privmx-icon privmx-icon-chat"></i> }} } }}
+                    {{ if (module == "file") { {{ <i class="privmx-icon privmx-icon-notes2"></i> }} } }}
+                </div>
+                <span class="module-text">{{@Helper.i18n("window.sectionNew.module." + module)}}</span>
+              </label>
+            </div>
+            }} }); }}
+          </div>
+        </div>
+  
+      </div>
+      
+    </div>
+  </div>
+  <div class="buttons-container">
+    <div class="buttons">
+      <button class="btn btn-success" vf-visible="parentId != 'not-selected'" vf-click="confirm()" vf-disabled="loading" tabindex="1">
+        <i class="fa" vf-class="{'fa-plus': this.mode == 'create' && !this.saving, 'fa-floppy-o': this.mode == 'update' && !this.saving, 'fa-circle-o-notch': this.saving, 'fa-spin': this.saving}"></i>
+        <span vf-visible="mode == 'create'">
+          <span vf-visible="saving == false">
+            {{@Helper.i18n("core.button.add.label")}}
+          </span>
+          <span vf-visible="saving">
+            {{@Helper.i18n("core.button.adding.label")}}
+          </span>
+        </span>
+        <span vf-visible="mode == 'update'">
+          <span vf-visible="saving == false">
+            {{@Helper.i18n("core.button.save.label")}}
+          </span>
+          <span vf-visible="saving">
+            {{@Helper.i18n("core.button.saving.label")}}
+          </span>
+        </span>
+      </button>
+      <button class="btn btn-warning" vf-visible="mode == 'update'" vf-click="remove()" vf-disabled="loading" tabindex="3">
+        <i class="fa" vf-class="{'fa-trash': !this.removing, 'fa-circle-o-notch': this.removing, 'fa-spin': this.removing}"></i>
+        <span vf-visible="removing == false">
+          {{@Helper.i18n("core.button.remove.label")}}
+        </span>
+        <span vf-visible="removing">
+          {{@Helper.i18n("core.button.removing.label")}}
+        </span>
+      </button>
+      {{ if (!model.docked) { {{
+        <button class="btn btn-default" vf-click="close()" vf-disabled="loading" tabindex="4">
+          {{@Helper.i18n("core.button.cancel.label")}}
+        </button>
+      }} } }}
+      <span class="saved-indicator text-success hide">
+        <i class="fa fa-check"></i>
+        {{@Helper.i18n("core.button.saved.label")}}
+      </span>
+    </div>
+  </div>
+</div>

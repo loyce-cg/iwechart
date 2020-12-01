@@ -1,0 +1,36 @@
+@import "../../base/BaseWindow";
+@import "../../../themes/default/less/form";
+@import "common.less";
+
+body {
+  overflow: auto;
+  background: var(--admin-color-main-bg);
+  color: var(--admin-color-fg);
+  padding: 20px;
+}
+
+.base-form {
+  .info-ex {
+    margin-left: 230px;
+    font-size: var(--font-size);
+    color: var(--body-extra-info-fg);
+    
+    .buttons & {
+      padding-top: 5px;
+    }
+  }
+  .fields .field .info {
+    width: 220px;
+  }
+  .fields .field .input {
+    margin-left: 230px;
+  }
+}
+
+.table>thead>tr>th, .table>tbody>tr>th, .table>tfoot>tr>th, .table>thead>tr>td, .table>tbody>tr>td, .table>tfoot>tr>td {
+  border-top: 1px solid #404040;
+}
+
+.table>thead>tr>th {
+  border-bottom: 1px solid #404040;
+}

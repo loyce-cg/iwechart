@@ -1,0 +1,117 @@
+@import "../../base/BaseWindow";
+
+body {
+  background: @colorBackground;
+  font-size: var(--font-size-l);
+  &.admin-alert {
+    background: #292929;
+    color: #eee;
+    
+    .processing {
+      .process-label {
+        background: #292929;
+      }
+    }
+  }
+}
+
+.window-alert-main {
+  height: 100%;
+  
+  .processing {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 1;
+    
+    &.active {
+      display: block;
+    }
+    .process-label {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      font-size: var(--font-size);
+      padding: 5px;
+      background-color: var(--main-panel-bg);
+      border-radius: 0 4px 0 0;
+    }
+  }
+  .content {
+    position: absolute;
+    top: 10px;
+    left: 15px;
+    right: 15px;
+    bottom: 60px;
+    overflow: auto;
+    
+    &.content-below-buttons {
+      top: auto;
+      bottom: 10px;
+    }
+    
+    .input-container {
+      padding: 10px 0;
+      
+      .input-error {
+        display: none;
+        color: @colorError;
+        padding: 10px 0 0 0;
+        font-size: var(--font-size);
+        
+        &.active {
+          display: block;
+        }
+      }
+      .form-control {
+        display: block;
+        width: 100%;
+        line-height: calc(var(--font-size) + 4px);
+        font-size: var(--font-size);
+        padding: 5px 10px;
+        
+        &textarea {
+          height: 100px;
+        }
+      }
+    }
+    .info {
+      font-size: var(--font-size);
+    }
+    .checkbox-container {
+      margin: 10px 0;
+      
+      label {
+        font-weight: normal;
+      }
+      input {
+        vertical-align: top;
+        margin-top: 5px;
+      }
+    }
+  }
+  .buttons {
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    
+    &.with-info-below {
+      bottom: 40px;
+    }
+    
+    .btn {
+      margin: 0 10px;
+    }
+  }
+}
+
+.content {
+  input, textarea, .form-control {
+    border-color: hsla(var(--preview-panel-bg-h), var(--preview-panel-bg-s), calc(var(--preview-panel-bg-l) + var(--login-input-shadow-delta) + 15%), var(--preview-panel-bg-a));
+  }
+}

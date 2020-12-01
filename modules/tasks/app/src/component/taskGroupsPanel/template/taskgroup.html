@@ -1,0 +1,45 @@
+@import { TaskGroupModel } from "../TaskGroupsPanelController";
+@model TaskGroupModel
+<div class="header taskgroup-header">
+  <div class="left">
+    <button class="btn btn-sm btn-micro no-text btn-transparent" title="{{@Helper.i18n('plugin.tasks.component.taskGroupsPanel.taskGroup.toggleCollapsedTooltip')}}" data-action="taskgroup-toggle-collapsed" data-payload="{{@model.id}}">
+      <i class="fa fa-caret-down"></i>
+    </button>
+    <div class="name">
+      <span class="taskgroup-label" title=""><span></span><span></span></span>
+    </div>
+    <button class="pin pin-taskgroup">
+      <i class="fa fa-thumb-tack"></i>
+    </button>
+    <div class="progress progress-all">
+      {{ for (let k in model.taskLabelClasses) { let cls = model.taskLabelClasses[k]; }}
+      <div style="width:0%;" class="{{@cls}}-progressbar">0</div>
+      {{ } }}
+    </div>
+    <div class="progress progress-not-done">
+      {{ for (let k in model.taskLabelClasses) { let cls = model.taskLabelClasses[k]; }}
+      <div style="width:0%;" class="{{@cls}}-progressbar">0</div>
+      {{ } }}
+    </div>
+  </div>
+  <div class="right">
+    <button class="btn btn-default btn-sm btn-micro gray in-summary-as-icon" title="{{@Helper.i18n('plugin.tasks.component.taskGroupsPanel.taskGroup.pasteIntoTaskGroupTooltip')}}" data-action="taskgroup-paste" data-payload="" data-taskgroup-project-id="">
+      <i class="fa fa-paste"></i>
+      <span data-keep-text="1">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.taskGroup.pasteIntoTaskGroup")}}</span>
+    </button>
+    <button class="btn btn-default btn-sm btn-micro gray in-summary-as-icon" title="{{@Helper.i18n('plugin.tasks.component.taskGroupsPanel.taskGroup.editTaskGroupTooltip')}}" data-action="taskgroup-edit" data-payload="" data-taskgroup-project-id="">
+      <i class="fa fa-pencil"></i>
+      <span data-keep-text="1">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.taskGroup.editTaskGroup")}}</span>
+    </button>
+    <button class="btn btn-success btn-sm btn-micro in-summary-as-icon" title="{{@Helper.i18n('plugin.tasks.component.taskGroupsPanel.taskGroup.newTaskTooltip')}}" data-action="task-new" data-payload="" data-taskgroup-project-id="">
+      <i class="fa fa-plus"></i>
+      <span data-keep-text="1">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.taskGroup.newTask")}}</span>
+    </button>
+    <div class="order-buttons">
+      <button data-action="tg-move-to-top"><i class="fa fa-angle-double-up"></i></button>
+      <button data-action="tg-move-up"><i class="fa fa-angle-up"></i></button>
+      <button data-action="tg-move-down"><i class="fa fa-angle-down"></i></button>
+      <button data-action="tg-move-to-bottom"><i class="fa fa-angle-double-down"></i></button>
+    </div>
+  </div>
+</div>

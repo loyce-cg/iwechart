@@ -1,0 +1,22 @@
+<div>
+  <div class="panel-header">
+    <i class="fa fa-handshake-o"></i>
+    {{@Helper.i18n("window.admin.initData.menu")}}
+    <!-- <button class="btn btn-success pull-right" data-action="add-mail"><i class="fa fa-plus"></i> {{@Helper.i18n("window.admin.initData.form.mails.add")}}</button> -->
+  </div>
+
+  <div class="initdata-editor">
+    <div class="initdata-editor-menu">
+      {{@Helper.i18n("window.admin.initData.menu.header")}}
+      <br/>
+      <ul class="initdata-editor-menu-langs">
+      </ul>
+      <a href="javascript:;" class="small" data-action="add-lang">{{@Helper.i18n("window.admin.initData.menu.add")}}</a>
+    </div>
+    
+    <div class="initdata-editor-content"></div>
+    
+    <div class="initdata-editor-overlay"></div>
+  </div>
+
+</div>

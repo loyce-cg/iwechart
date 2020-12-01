@@ -1,0 +1,234 @@
+@import {Model} from "../AdminEditUserWindowController";
+@import {ImageTypeDetector} from "../../../utils/ImageTypeDetector";
+@import * as privfs from "privfs-client";
+@import {func as passwordTemplate} from "./password.html";
+@import {func as passwordWithEmailTemplate} from "./password-with-email-link.html";
+@model Model
+
+<form class="base-form" action="javascript:void(0)">
+  <div class="fields">
+    
+    {{
+      var staticField = function(label: string, text: string, info?: string, func?: () => void): void { {{
+        <div class="field">
+          <div class="info">{{@Helper.i18n(label)}}</div>
+          <div class="input text-only text-align selectable">
+            {{ if (func) {
+              func();
+            } else { {{
+              {{@text}}
+              {{ if (info) { {{
+                <span class="sub-info">{{@info}}</span>
+              }} } }}
+            }} } }}
+          </div>
+        </div>
+      }} };
+      var inputField = function(label: string, name: string, action: string, value: string): void { {{
+        <div class="field">
+          <div class="info">{{@Helper.i18n(label)}}</div>
+          <div class="input">
+            <input type="text" value="{{@value}}" name="{{@name}}" />
+          </div>
+        </div>
+      }} };
+      var inputAcTokenField = function(label: string, name: string, action: string, value: string): void { {{
+        <div class="field ac-token">
+          <div class="info">{{@Helper.i18n(label)}}</div>
+          <div class="input">
+            <textarea name="{{@name}}" disabled class="selectable">{{@value}}</textarea>
+          </div>
+          <span class="copy-link ac-token-copy-link" data-copy="{{@value}}">
+            <span>
+              <i class="fa fa-copy"></i>
+              <span class="txt">{{@Helper.i18n("core.copy")}}</span>
+            </span>
+          </span>
+        </div>
+      }} };
+      var yesNoSelect = function(label: string, name: string, action: string, value: boolean, info?: string, disabled?: boolean, selectableInfo?: boolean): void { {{
+        <div class="field inline-edit {{@action}}">
+          <div class="info">{{@Helper.i18n(label)}}</div>
+          <div class="input">
+            <select name="{{@name}}" {{#disabled ? 'disabled="disabled"' : ''}}>
+              <option value="true" {{#value ? 'selected="selected"' : ''}}>{{@Helper.i18n("core.bool.yes")}}</option>
+              <option value="false" {{#!value ? 'selected="selected"' : ''}}>{{@Helper.i18n("core.bool.no")}}</option>
+            </select>
+            {{ if (info) { {{
+              <span class="sub-info {{@selectableInfo ? 'selectable' : ''}}">{{@info}}</span>
+            }} } }}
+          </div>
+        </div>
+      }} };
+      var yesNoSelectCore = function(name: string, value: boolean, disabled?: boolean): void { {{
+        <select name="{{@name}}" {{#disabled ? 'disabled="disabled"' : ''}}>
+          <option value="true" {{#value ? 'selected="selected"' : ''}}>{{@Helper.i18n("core.bool.yes")}}</option>
+          <option value="false" {{#!value ? 'selected="selected"' : ''}}>{{@Helper.i18n("core.bool.no")}}</option>
+        </select>
+      }} };
+      
+      var profilePreview = function(user: privfs.types.core.RawUserAdminData): void {
+        var img = Helper.getAssetByName('DEFAULT_USER_AVATAR');
+        var description = '';
+        var name = user.username + '#' + (user.hosts ? user.hosts[0] : Helper.getDefaultHost());
+        if (user.cachedPkiEntry) {
+          if (user.cachedPkiEntry.image) {
+            img = ImageTypeDetector.createDataUrlFromBase64(user.cachedPkiEntry.image);
+          }
+          if (user.cachedPkiEntry.description) {
+            description = Helper.shortDescription(user.cachedPkiEntry.description);
+          }
+          if (user.cachedPkiEntry.name) {
+            name = user.cachedPkiEntry.name;
+          }
+        }
+      {{
+        <div class="field">
+          <div class="info"></div>
+          <div class="input selectable">
+            <div class="profile-preview {{@model.basicUser ? 'external' : ''}} {{@description ? 'with-description' : 'without-description'}}">
+              <div class="image">
+                <div class="image-wrapper">
+                  <img src="{{@ img }}" alt="" />
+                </div>
+              </div>
+              <div class="name">{{@ name }}</div>
+              <div class="description">{{@ description }}</div>
+            </div>
+          </div>
+        </div>
+      }} };
+      
+      var getNotificationsValue = function(model: Model): string {
+        if ( model.user.notificationsEntry &&  model.user.notificationsEntry.enabled &&  model.user.notificationsEntry.email &&
+             model.user.notificationsEntry.tags &&  model.user.notificationsEntry.tags.length > 0) {
+          return Helper.turnOnOff(true) + " (" +  model.user.notificationsEntry.email + ")";
+        }
+        return Helper.turnOnOff(false);
+      }
+      if (! model.user.activated && model.userType == "private") {
+        inputAcTokenField("window.adminEditUser.users.details.invitationLink", "ACToken", "actoken", (<any>model.adminData).activateToken);
+      }
+      else if (model.user.type == "basic") {
+        profilePreview(model.user);
+      }
+      else {
+        profilePreview(model.user);
+        staticField("window.adminEditUser.users.details.username" + (model.isExternalUser ? ".externalUser" : ""),  model.user.username);
+      }
+      
+      if ( model.user.activated) {
+          staticField("window.adminEditUser.users.details.lastLoginDate",  model.user.lastLoginDate ? Helper.dateWithHourLocal( model.user.lastLoginDate) : '');
+      }
+      
+      inputField("window.adminEditUser.users.details.description", "description", "change-description",  model.user.description);
+      if (model.user.type == "local") {
+          if ( model.user.activated) {
+              if ( model.user.username == model.currentUsername) {
+                  yesNoSelect("window.adminEditUser.users.details.administrator", "", "", model.user.isAdmin, Helper.i18n("window.adminEditUser.users.details.administrator.selfAdmin"), true);
+              }
+              else {
+                  yesNoSelect("window.adminEditUser.users.details.administrator", "admin", "change-is-admin",  model.user.isAdmin);
+              }
+          }
+          else {
+              yesNoSelect("window.adminEditUser.users.details.administrator", "", "", false, Helper.i18n("window.adminEditUser.users.details.administrator.noActivatedInfo"), true);
+          }
+      }
+      
+      if (model.user.activated) {
+        staticField("window.adminEditUser.users.details.language", Helper.i18n("window.adminEditUser.users.details.language." +  model.user.language));
+        staticField("window.adminEditUser.users.details.notifications", getNotificationsValue(model));
+      }
+      if (model.user.type == "basic") {
+          staticField("window.adminEditUser.users.details.email",  model.user.email);
+      }
+      else {
+          inputField("window.adminEditUser.users.details.email", "email", "change-email",  model.user.email);
+      }
+      
+      if (model.user.activated) {
+        if (model.user.generatedPassword && model.userType == "managable") { {{
+          {{#Helper.createTemplate(passwordWithEmailTemplate).render((<any>model.adminData).generatedPassword)}}
+        }} 
+      } else { {{
+          <div class="password-section">
+          {{ staticField("window.adminEditUser.users.details.passwordComplexity.label", null, null, () => {
+            if (model.user.weakPassword !== false) { {{
+              <span style="color: yellow;">{{@Helper.i18n("window.adminEditUser.users.details.passwordComplexity.weak")}}</span>
+            }} }
+            else { {{
+              {{@Helper.i18n("window.adminEditUser.users.details.passwordComplexity.ok")}}
+            }} }
+          }); }}
+          </div>
+        }} }
+        /*{{
+          <div class="field inline-edit contact-form-enabled-field">
+            <div class="info">{{@Helper.i18n("window.adminEditUser.users.details.contactFormEnabled")}}</div>
+            <div class="input">
+              {{yesNoSelectCore("contactFormEnabled", model.user.contactFormEnabled);}}
+              <span class="selectable sub-info {{@model.user.contactFormEnabled ? '' : 'hide'}}">
+                <a class="selectable" href="{{@model.contactFormLink}}" target="_blank">{{@model.contactFormLink}}</a>
+              </span>
+            </div>
+          </div>
+        }}*/
+        // yesNoSelect("window.adminEditUser.users.details.secureForms", "secureFormsEnabled", "change-secure-forms-enabled",  model.user.secureFormsEnabled);
+        staticField("window.adminEditUser.users.details.registrationDate",  model.user.registrationDate ? Helper.dateWithHourLocal( model.user.registrationDate) : '');
+      }
+      
+      if ( model.user.invitedBy) {
+          staticField("window.adminEditUser.users.details.invitedBy",  model.user.invitedBy);
+      }
+      
+      if (!model.user.activated) {
+        staticField("window.adminEditUser.users.details.activated", Helper.yesNo( model.user.activated));
+      }
+      
+      {{
+        {{
+          if (model.user.type == "basic") {
+            {{
+              <div class="field">
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" vf-model="privateSectionAllowed" name="privateSectionAllowed" vf-disabled="adding" {{@model.user.privateSectionAllowed ? 'checked' : ''}} />
+                    {{@Helper.i18n("window.adminEditUser.users.details.withPrivateSection" + (model.isExternalUser ? ".externalUser" : ""))}}
+                  </label>
+                </div>
+              </div>
+              
+            }}
+          }
+        }}
+        
+        <div class="field">
+          <div class="info"></div>
+          <div class="input">
+            <button type="button" class="btn btn-success" data-action="save-changes">
+              <i class="fa fa-floppy-o" data-org="fa fa-floppy-o" data-proc="fa fa-spin fa-circle-o-notch"></i>
+              {{@Helper.i18n("window.adminEditUser.users.details.button.save.text")}}
+            </button>
+            {{ if ( model.user.username !== model.currentUsername) { }}
+              <button type="button" class="btn btn-warning" data-action="remove-user">
+                <i class="fa fa-trash" data-org="fa fa-trash" data-proc="fa fa-spin fa-circle-o-notch"></i>
+                {{@Helper.i18n("window.adminEditUser.users.details.button.remove.text" + (model.isExternalUser ? ".externalUser" : ""))}}
+              </button>
+            {{ } }}
+            {{ if (model.userType == "managable") { {{
+              <button type="button" class="btn btn-default" data-action="reset-password">
+                <i class="fa fa-exclamation-triangle" data-org="fa fa-exclamation-triangle" data-proc="fa fa-spin fa-circle-o-notch"></i>
+                {{@Helper.i18n("window.adminEditUser.users.details.button.resetPassword.text")}}
+              </button>
+            }} } }}
+            <button type="button" class="btn btn-default" data-action="close">
+              {{@Helper.i18n("core.button.close.label")}}
+            </button>
+          </div>
+        </div>
+      }}
+    }}
+    
+  </div>
+</form>

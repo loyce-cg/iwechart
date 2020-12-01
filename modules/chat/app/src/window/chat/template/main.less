@@ -1,0 +1,49 @@
+// @import "../../base/BaseAppWindow";
+
+@import "../../../../node_modules/pmc-web/src/component/template/conversation.less";
+@import "../../../../node_modules/pmc-web/src/component/template/wi-element.less";
+@import "../../../../node_modules/pmc-web/src/component/template/bckg-icon.less";
+@import "../../../../node_modules/pmc-web/src/component/persontooltip/template/main.less";
+@import "../../../../node_modules/pmc-web/src/component/dragdrop/index.less";
+@import "../../../../node_modules/pmc-web/src/component/sectionstabs/index.less";
+@import "../../../../node_modules/pmc-web/src/component/infotooltip/index.less";
+@import "../../../../node_modules/pmc-web/src/component/emojipicker/index.less";
+@import "../../../../node_modules/pmc-web/src/component/emojiviewbar/index.less";
+@import "../../../../node_modules/pmc-web/src/component/sidebar/index.less";
+@import "../../../component/chatmessages/template/main.less";
+@import "../../../component/privateconversations/template/main.less";
+@import "../../../component/nosections/template/main.less";
+@import "../../../../node_modules/pmc-web/src/component/disabledsection/index.less";
+
+.focus-hightlight {
+  z-index: 8000;
+  border: 5px solid var(--unread-color);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.sections-tabs {
+  display: none;
+}
+
+.section-chats {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  &.with-tabs {
+      margin-top: 21px;
+  }
+}
+
+.component-splitter-panel {
+  background: transparent;
+}
+
+
+@import "channels";
+@import "chats";

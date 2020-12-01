@@ -1,0 +1,26 @@
+@import {Model} from "../AudioWindowController";
+@model Model
+<div class="file-info">
+  <div class="name">
+    <i class="fa fa-file"></i>
+    <div class="text"><span class="text-inner{{@model.previewMode ? '' : ' with-ellipsis'}}">{{@model.name}}</span></div>
+  </div>
+  <div class="file-info-inner">
+    <div class="entry">{{@Helper.i18n("window.audio.fileInfo.type", [model.mimeType])}}</div>
+    <div class="entry">{{@Helper.i18n("window.audio.fileInfo.size", [model.size ? Helper.bytesSize(model.size) : "unknown"])}}</div>
+  </div>
+  <div class="audio-buttons">
+    <button class="btn btn-play" data-action="add-to-playlist-and-play">
+      <i class="fa fa-play"></i>
+    </button>
+    <button class="btn btn-default gray{{@model.isInPlaylist ? '' : ' hidden'}}" data-action="del-from-playlist">
+      <i class="fa fa-minus"></i>
+      {{@Helper.i18n("window.audio.musicPlayer.delFromPlaylist")}}
+    </button>
+    <button class="btn btn-default gray{{@model.isInPlaylist ? ' hidden' : ''}}" data-action="add-to-playlist">
+      <i class="fa fa-plus"></i>
+      {{@Helper.i18n("window.audio.musicPlayer.addToPlaylist")}}
+    </button>
+  </div>
+  <audio></audio>
+</div>

@@ -1,0 +1,8 @@
+@import {Model} from "../MindmapEditorWindowController";
+@model Model
+<div class="window-mindmap-editor {{@model.docked?'docked':'not-docked'}}">
+  <div class="print-header"></div>
+  <div class="notifications"></div>
+  <div class="toolbar-container"></div>
+  <div id="editor-container"></div>
+</div>

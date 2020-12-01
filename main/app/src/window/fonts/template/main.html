@@ -1,0 +1,55 @@
+@import {Model} from "../FontsWindowController";
+@model Model
+<div class="window-fonts">
+  <table style="table-layout: fixed;">
+    <tbody>
+      {{
+        let sizes = [11,12,13,14,15,16,17,18];
+        let styles = [
+          "font-weight:400;font-style:normal;",
+          "font-weight:400;font-style:italic;",
+          "font-weight:500;font-style:normal;",
+          "font-weight:500;font-style:italic;",
+          "font-weight:600;font-style:normal;",
+          "font-weight:600;font-style:italic;",
+          "font-weight:700;font-style:normal;",
+          "font-weight:700;font-style:italic;",
+        ];
+        let text = model.txt;
+        for (let style of styles) {
+          {{ <tr><td colspan="4" class="h">{{@style}}</td></tr> }}
+          {{ <tr> }}
+          let i = 0;
+          for (let size of sizes) {
+            ++i;
+            if (i == 1) {
+              {{</tr>
+                <tr>
+                  <th>11px</th>
+                  <th>12px</th>
+                  <th>13px</th>
+                  <th style="font-weight: 600;">14px</th>
+                </tr>
+              <tr>}}
+            }
+            else if (i == 5) {
+              {{</tr>
+                <tr>
+                  <th>15px</th>
+                  <th>16px</th>
+                  <th>17px</th>
+                  <th>18px</th>
+                </tr>
+              <tr>}}
+            }
+            {{
+              <td style="{{@style}};font-size:{{@size}}px">{{@text}}</td>
+            }}
+          }
+          {{ </tr> }}
+        }
+      }}
+    </tbody>
+  </table>
+  <button data-trigger="set-text">Set text</button>
+</div>

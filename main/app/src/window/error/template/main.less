@@ -1,0 +1,80 @@
+@import "../../base/BaseWindow";
+@import "../../../component/notification/index";
+
+.window-error-main {
+  padding: 15px;
+  font-size: var(--font-size);
+  
+  h3 {
+    font-size: var(--font-size-xl);
+  }
+  
+  p {
+    margin: 10px 0;
+  }
+  
+  ul {
+    list-style-type: none;
+  }
+  
+  .report-options {
+    label {
+      font-weight: normal;
+      cursor: pointer;
+    }
+    
+    .link {
+      margin-left: 10px;
+    }
+  }
+  
+  .buttons {
+    text-align: center;
+    margin-top: 15px;
+    
+    .btn {
+      margin: 0 5px;
+    }
+  }
+  
+  .switch {
+    display: inline-block;
+    vertical-align: middle;
+    width: 27px;
+    height: 10px;
+    background-color: var(--switch-bg);
+    border-radius: @radius;
+    position: relative;
+    cursor: pointer;
+    margin: -3px 5px 0 0;
+    
+    &::before {
+      content: " ";
+      position: absolute;
+      top: -3px;
+      left: 0;
+      right: auto;
+      width: 16px;
+      height: 16px;
+      background-color: var(--switch-bg2);
+      border-radius: 1000px;
+    }
+    &.active {
+      background-color: @colorSuccess;
+      
+      &:before {
+          left: auto;
+          right: 0;
+      }
+    }
+  }
+  
+  .notifications-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+  }
+}

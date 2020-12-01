@@ -1,0 +1,43 @@
+@import {Model} from "../ActivateController";
+@import {func as keyInfoTemplate} from "./key-info.html";
+@model Model
+<div class="window-login-activate page">
+  <div class="inner with-bottom-link">
+    <header>
+      <h1><div class="logo-127x112-container"><img src="{{#Helper.getAssetByName('CUSTOM_LOGO_127X112')}}" /></div></h1>
+      <div class="header-info">{{@Helper.i18n("window.login.activate.header")}}</div>
+    </header>
+    <form name="register" method="post" onsubmit="return false;">
+      <section>
+          
+          <div class="row">
+            <div class="col-xs-12">
+              <div style="font-family: source_sans_pro,arial,sans-serif; font-size: 13px; width: 100%; text-align: left; padding-bottom: 4px;">
+                {{@Helper.i18n("window.login.activate.words.label")}}
+              </div>
+              <div class="form-group with-icon">
+                <div class="holder">
+                  <textarea class="form-control words" name="words"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row key-info"></div>
+      </section>
+    </form>
+    <div class="buttons-container">
+      <button type="button" class="btn btn-primary" data-action="open-login">
+        {{@Helper.i18n("window.login.activate.btn.back")}}
+      </button>
+      
+      <button type="button" class="btn btn-primary" data-action="go-next">
+        {{@Helper.i18n("window.login.activate.btn.continue")}}
+      </button>
+    </div>
+  </div>
+  <div class="pre-info-box">
+    <div class="selectable">
+      {{@Helper.i18n("window.login.activate.keyGetherInfo")}}<br/>
+    </div>
+  </div>
+</div>

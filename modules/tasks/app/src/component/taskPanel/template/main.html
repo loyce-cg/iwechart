@@ -1,0 +1,24 @@
+@import { InternalModel } from "../TaskPanelController";
+@model InternalModel
+{{
+  let cls = model.hasTask ? "has-task" : "";
+  cls += model.docked ? " docked" : " standalone";
+  cls += model.editable ? " editable" : " readonly";
+  cls += model.newTask ? " new-task" : "";
+  cls += model.taskExists ? "" : " no-task";
+  cls += model.isEditTaskWindow ? " edit-task-window" : "";
+  cls += model.taskIsTrashed ? " trashed" : "";
+  cls += model.autoMarkAsRead ? " auto-mark-as-read" : "";
+}}
+<div class="component-task-panel-main {{@cls}}">
+  <div class="notifications-container-wrapper"></div>
+  <div class="date-time-picker-container"></div>
+  <div class="date-time-picker2-container"></div>
+  <div class="buttons"></div>
+  {{ if (model.docked) { }}
+  <div class="no-task-info">{{@Helper.i18n("plugin.tasks.component.taskPanel.noTaskSelected")}}</div>
+  <div class="multiple-tasks-info">{{@Helper.i18n("plugin.tasks.component.taskPanel.multipleTasksSelected")}}</div>
+  {{ } }}
+  <div class="no-task-msg">{{@Helper.i18n("plugin.tasks.component.taskPanel.taskDoesntExist")}}</div>
+  <div class="scrollable-content"></div>
+</div>

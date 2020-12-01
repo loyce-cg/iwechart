@@ -1,0 +1,118 @@
+@import "../../base/BaseWindow";
+@import "../../../component/notification/index.less";
+
+@window-height: 330px;
+@space: 15px;
+@chooser-height: 240px;
+@list-height: @chooser-height - 32;
+
+body {
+  font-size: var(--font-size);
+  min-height: 0;
+  height: auto;
+}
+
+div:focus {
+  outline: none;
+}
+
+.hide {
+  display: none !important;
+}
+
+.window-select-contacts-main {
+  padding: @space;
+  .header {
+    font-weight: bold;
+  }
+  .filter {
+    position: relative;
+    i {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      display: block;
+      color: var(--body-extra-info-fg);
+    }
+    input {
+      width: 100%;
+      padding: 5px 30px 5px 10px;
+      border: 1px solid var(--main-panel-chats-separator-bg);
+      background-color: var(--preview-panel-bg);
+      font-size: var(--font-size);
+      font-family: var(--misc-ui-font-family);
+    }
+  }
+  .lists-container {
+    position: relative;
+    width: 100%;
+    min-height: 215px;
+    .choosen, .chooser {
+      width: 50%;
+      position: absolute;
+      height: @chooser-height;
+
+      .list {
+        background: var(--preview-panel-bg);
+        height: @list-height;
+        overflow-y: auto;
+        border: 1px solid var(--main-panel-chats-separator-bg);
+        border-top: none;
+      }
+      .any {
+        line-height: @list-height;
+        width: 100%;
+        text-align: center;
+        color: var(--body-extra-info-fg);
+
+        background: var(--preview-panel-bg);
+        height: @list-height;
+        border: 1px solid var(--main-panel-chats-separator-bg);
+        border-top: none;
+
+      }
+    }
+    .choosen {
+      left: 50%;
+    }
+    .chooser {
+      left: 0;
+    }
+  }
+  .buttons-container {
+    position:relative;
+    bottom: 0;
+    width: 100%;
+    .buttons {
+      position:relative;
+      text-align: center;
+      margin: @space 0 0 0;
+      button {
+        min-width: 65px;
+        margin: 0 10px;
+        &:focus {
+          outline: #aaa dotted 1px;
+        }
+      }
+    }
+  }
+  .status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: auto;
+  }
+}
+
+.notifications-container-wrapper {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+@import "user";
+@import "group";
+@import "section";

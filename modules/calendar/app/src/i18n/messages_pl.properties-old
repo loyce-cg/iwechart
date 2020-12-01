@@ -1,0 +1,83 @@
+plugin.calendar.window.main.title=Kalendarz
+
+plugin.calendar.buttons.ok=Ok
+plugin.calendar.buttons.cancel=Anuluj
+
+plugin.calendar.settings.headers.view-settings=Opcje widoku
+plugin.calendar.settings.enable-day-preview-panel=Włącz podgląd dnia
+plugin.calendar.settings.show-task-preview-panel=Pokaż podgląd sprawy
+plugin.calendar.settings.horizontal-task-preview-window-layout=Poziomy podgląd sprawy
+plugin.calendar.settings.show-task-tooltip=Pokaż tooltip sprawy
+
+plugin.calendar.mode.month=Miesiąc
+plugin.calendar.mode.week=Dni
+plugin.calendar.mode.singleweek=Tydzień
+plugin.calendar.mode.singleday=Dzień
+
+plugin.calendar.month.0=Styczeń
+plugin.calendar.month.1=Luty
+plugin.calendar.month.2=Marzec
+plugin.calendar.month.3=Kwiecień
+plugin.calendar.month.4=Maj
+plugin.calendar.month.5=Czerwiec
+plugin.calendar.month.6=Lipiec
+plugin.calendar.month.7=Sierpień
+plugin.calendar.month.8=Wrzesień
+plugin.calendar.month.9=Październik
+plugin.calendar.month.10=Listopad
+plugin.calendar.month.11=Grudzień
+
+plugin.calendar.month.short.0=Sty
+plugin.calendar.month.short.1=Lut
+plugin.calendar.month.short.2=Mar
+plugin.calendar.month.short.3=Kwi
+plugin.calendar.month.short.4=Maj
+plugin.calendar.month.short.5=Cze
+plugin.calendar.month.short.6=Lip
+plugin.calendar.month.short.7=Sie
+plugin.calendar.month.short.8=Wrz
+plugin.calendar.month.short.9=Paź
+plugin.calendar.month.short.10=Lis
+plugin.calendar.month.short.11=Gru
+
+plugin.calendar.daysOfWeek.0=Poniedziałek
+plugin.calendar.daysOfWeek.1=Wtorek
+plugin.calendar.daysOfWeek.2=Środa
+plugin.calendar.daysOfWeek.3=Czwartek
+plugin.calendar.daysOfWeek.4=Piątek
+plugin.calendar.daysOfWeek.5=Sobota
+plugin.calendar.daysOfWeek.6=Niedziela
+
+plugin.calendar.daysOfWeek.short.0=Pon
+plugin.calendar.daysOfWeek.short.1=Wt
+plugin.calendar.daysOfWeek.short.2=Śr
+plugin.calendar.daysOfWeek.short.3=Czw
+plugin.calendar.daysOfWeek.short.4=Pt
+plugin.calendar.daysOfWeek.short.5=So
+plugin.calendar.daysOfWeek.short.6=Nd
+
+plugin.calendar.sidebar.private=Mój prywatny kalendarz
+plugin.calendar.sidebar.all=Wszystkie kalendarze
+plugin.calendar.sidebar.created-by-me=Stworzone przeze mnie
+plugin.calendar.sidebar.assigned-to-me=Przypisane do mnie
+plugin.calendar.sidebar.trash=Kosz
+
+plugin.calendar.component.calendarPanel.view-refresh-tooltip=Odśwież widok
+plugin.calendar.component.calendarPanel.view-options-tooltip=Opcje widoku
+plugin.calendar.component.calendarPanel.new-task-tooltip=Utwórz nową sprawę
+plugin.calendar.component.calendarPanel.new-task=Nowa sprawa
+plugin.calendar.component.calendarPanel.more-tasks-info=Więcej spraw: {0}
+
+plugin.calendar.component.dateTimePicker.today=Dzisiaj
+plugin.calendar.component.dateTimePicker.whole-day=Cały dzień
+
+plugin.calendar.notifications.refreshing=Odświeżanie...
+
+plugin.calendar.filter.show-all-tasks=wszystkie sprawy
+plugin.calendar.filter.show-only-idea=<span class="task-label task-status-idea">idee</span>
+plugin.calendar.filter.show-only-todo=<span class="task-label task-status-todo">do zrobienia</span>
+plugin.calendar.filter.show-only-in-progress=<span class="task-label task-status-inprogress">w trakcie</span>
+plugin.calendar.filter.show-only-done=<span class="task-label task-status-done">zrobione</span>
+plugin.calendar.filter.show-only-not-done=<strong>niezrobione</strong>
+
+plugin.calendar.sidebar.newsection=Nowa sekcja

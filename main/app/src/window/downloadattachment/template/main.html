@@ -1,0 +1,18 @@
+@import {Model} from "../DownloadAttachmentWindowController";
+@model Model
+<div class="window-download-attachment-main">
+  
+  <small>{{@Helper.i18n("window.downloadAttachment.main.text")}}</small>
+  
+  <div>
+    {{@model.name}}
+    <br/>
+    <small class="text-muted">{{@Helper.bytesSize(model.size)}}</small>
+  </div>
+  
+  <div class="progress-wrapper">
+    <i class="fa fa-circle-o-notch fa-spin"></i>
+    <div class="progress-value"></div>
+  </div>
+  
+</div>

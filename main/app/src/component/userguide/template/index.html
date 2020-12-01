@@ -1,0 +1,23 @@
+@import { Model } from "../UserGuideController";
+@model Model
+  <div class='component-user-guide'>
+      <div class="info">
+        <div class="hole" trigger-action="overlay-action">
+          <div class="arrow rotation">
+            <i class="fa fa-arrow-up faa-bounce animated"></i>
+          </div>      
+        </div>
+
+        <div class="text">
+          {{$model.options.text}}
+        </div>
+        {{ if (model.options.actionButton) { {{
+        <button class="btn btn-success" trigger-action="button-action">
+          <i class="fa fa-check"></i>
+          {{$model.options.actionButton.text}}
+        </button>
+        }} } }}
+      </div>
+      <div class="overlay"></div>
+  </div>
+

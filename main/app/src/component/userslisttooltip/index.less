@@ -1,0 +1,116 @@
+.info-tooltip-component.section-tooltip-component {
+  .info-tooltip {
+    padding: 15px 15px;
+  }
+  .wi-element {
+    padding-left: 0;
+    cursor: default;
+    font-size: calc(var(--font-size) + 1px);
+    margin-right: 70px;
+    font-weight: 500;
+    
+    .wi-element-inner {
+      .wi-element-name {
+        color: var(--sidebar-bg-as-text);
+        
+        .parent-section {
+          color: hsla(var(--wi-element-breadcrumb-fg-h), var(--wi-element-breadcrumb-fg-s), calc(var(--wi-element-breadcrumb-fg-l) - 20%), var(--wi-element-breadcrumb-fg-a));
+        }
+      }
+    }
+    
+    &:hover {
+      background: transparent;
+    }
+    
+    .wi-element-icon {
+      background: var(--section-color-icon);
+      transform: scale(1.2);
+      
+      &.bckg-icon-border {
+        background: transparent;
+        border: 1px solid var(--section-color-icon);
+        
+        img {
+          filter: brightness(70%);
+        }
+      }
+    }
+    
+    .wi-element-name {
+      color: inherit;
+      padding-left: 5px;
+    }
+  }
+    
+  img.module-icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .section-tooltip-modules {
+    font-size: var(--font-size-l);
+    position: absolute;
+    right: 10px;
+    top: 20px;
+    
+    >* {
+      vertical-align: middle;
+      padding: 3px;
+      
+      &.fa {
+        position: relative;
+        top: -2px;
+      }
+      
+      &.disabled {
+        opacity: 0.3;
+      }
+    }
+  }
+  
+  canvas {
+    border-radius: 3px;
+    vertical-align: middle;
+  }
+  
+  .access-info {
+    display: grid;
+    grid-template-columns: min-content max-content;
+    margin-top: 10px;
+    
+    .row-left {
+      line-height: 1;
+      margin-top: 10px;
+      font-weight: 500;
+      white-space: nowrap;
+      text-align: right;
+    }
+    
+    .row-right {
+      max-width: 400px;
+      margin-left: 10px;
+      margin-right: 10px;
+      
+      .entry {
+        white-space: nowrap;
+        .fa {
+          color: #ccc;
+          margin-left: 0;
+        }
+      }
+      
+      .sep {
+        width: 10px;
+        display: inline-block;
+      }
+      
+      i+span,
+      canvas+span {
+        margin-left: 3px;
+      }
+    }
+  }
+  
+}
+  

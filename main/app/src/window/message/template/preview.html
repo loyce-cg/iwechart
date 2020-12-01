@@ -1,0 +1,92 @@
+@import {PreviewModel} from "../MessageWindowView";
+@import {func as headerTemplate} from "./header.html";
+@import {func as formDataTemplate} from "./formData.html";
+@model PreviewModel
+<div class="window-message-preview flex-container">
+  {{ if(model != null && model.indexEntry != null) {
+    var indexEntry = model.indexEntry;
+    var message = indexEntry.getMessage(); {{
+    {{#Helper.createTemplate(headerTemplate).render(model)}}
+    <div class="content selectable" data-flex="1">
+      {{
+        var formData = null;
+        var contactFormMsg = indexEntry.isContactFormMessage();
+        var sinkType = indexEntry.getOriginalSinkType();
+        var formData;
+        if (contactFormMsg || sinkType == "form") {
+          try {
+            formData = JSON.parse(message.text);
+          } catch(e) {}
+        }
+        if (formData && typeof formData == "object") {
+          if (contactFormMsg && ("text" in formData)) { {{
+            <div class="text">
+              {{#Helper.formatMessage(formData.text, "")}}
+            </div>
+          }} } else { {{
+            <div class="form-data">
+              {{#Helper.createTemplate(formDataTemplate).render(formData)}}
+            </div>
+          }} }
+        } else { }}
+          <div class="text">
+            {{
+              if(message.type === "pki-event") {
+                var content = "";
+                var contentType = "";
+                try {
+                  content = JSON.parse(message.text).content;
+                  contentType = "html";
+                } catch(e) {
+                  content = message.text;
+                }
+              } else {
+                content = message.text;
+                contentType = message.contentType;
+              }
+            }}
+            {{#Helper.formatMessage(content, contentType)}}
+          </div>
+      {{ } }}
+      <div class="inline-att-images">
+        {{ for(var i in message.attachments) {
+          var attachment = message.attachments[i];
+          if (attachment.getMimeType().indexOf("image/") == 0) { {{
+            <div class="image" data-index="{{@message.msgId}}-{{@i}}">
+              <div class="info">
+                <div class="name">{{@attachment.getName()}}</div>
+              </div>
+              <div class="img-container">
+                  <div class="inner">
+                    <div class="progress-container">
+                      <div class="spinner">
+                        <i class="fa fa-circle-o-notch fa-spin"></i>
+                      </div>
+                      <div class="progress-text">
+                          &nbsp;
+                      </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }} }
+        } }}
+      </div>
+    </div>
+    {{ if(message.attachments.length) { }}
+      <footer class="attachments">
+        <span class="ico-attach"></span>
+          <ul class="attachments-list">
+            {{ for(var i in message.attachments) { }}
+              <li>
+                <span class="link name" data-attachment="{{@ i}}" tabindex="-1">{{@ message.attachments[i].getName()}}</span>
+                {{ if (message.attachments[i].getSize() != null) { {{
+                  <span class="size">{{@Helper.bytesSize(message.attachments[i].getSize())}}</span>
+                }} } }}
+              </li>
+            {{ } }}
+          </ul>
+      </footer>
+    {{ } }}
+  }} } }}
+</div>

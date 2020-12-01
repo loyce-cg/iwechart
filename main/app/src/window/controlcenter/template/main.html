@@ -1,0 +1,7 @@
+@import {Model} from "../ControlCenterWindowController";
+@model Model
+<div class="window-controlcenter-main">
+  <div class="inner-view">
+    <iframe id="server-iframe" src="{{@model.url}}"></iframe>
+  </div>
+</div>

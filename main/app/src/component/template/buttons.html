@@ -1,0 +1,16 @@
+@import {webUtils} from "../../Types";
+@model webUtils.ButtonsModel
+<div class="screen-buttons {{@model.enabled ? '' : 'hidden-buttons'}}">
+  <div class="inner">
+    {{ model.buttons.forEach(button => { {{
+      <button class="btn btn-default btn-sm small gray-transparent {{@button.enabled ? '' : 'hide'}}" data-action="{{@button.action}}">
+        {{ if (button.icon.indexOf("fa") == 0) { {{
+          <i class="fa {{@button.icon}}"></i>
+        }} } else { {{
+          <span class="{{@button.icon}}"></span>
+        }} } }}
+        {{@button.label}}
+      </button>
+    }} }); }}
+  </div>
+</div>

@@ -1,0 +1,57 @@
+@import "../../../../themes/default/less/vars";
+
+.profile-preview {
+  color: #fff;
+  position: relative;
+  background: hsla(var(--unread-color-h), calc(var(--unread-color-s) - 29%), calc(var(--unread-color-l) - 16%), var(--unread-color-a));
+  padding: 6px 15px;
+  width: 50%;
+  margin-bottom: 40px;
+  height: 42px;
+  overflow: hidden;
+  .image {
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    top: 6px;
+    left: 15px;
+    text-align: center;
+    img {
+      max-width: 30px;
+      max-height: 30px;
+      border-radius: @radius;
+      vertical-align: middle;
+    }
+  }
+  &.with-description .name {
+    margin-bottom: 3px;
+  }
+  .name,
+  .description {
+    margin-left: 40px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .name {
+    opacity: 0.8;
+    font-size: var(--font-size);
+    line-height: var(--font-size);
+  }
+  .description {
+    opacity: 0.4;
+    font-size: var(--font-size-xs);
+    line-height: var(--font-size-xs);
+    .link {
+      color: #fff;
+    }
+  }
+  &.without-description {
+    .name {
+      line-height: 30px;
+    }
+    .description {
+      display: none;
+    }
+  }
+}

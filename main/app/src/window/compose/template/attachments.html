@@ -1,0 +1,11 @@
+@import * as privfs from "privfs-client";
+@model {attachments: privfs.lazyBuffer.IContent[]}
+<ul>
+  {{model.attachments.forEach(attachment => { {{
+    <li>
+      <i class="fa fa-text-file"></i>
+      <span class="attachment-link name">{{@attachment.getName()}}</span>
+      <i class="fa fa-trash-o delete" title="{{@Helper.i18n('window.compose.button.attach.delete.label')}}"></i>
+    </li>
+  }} }); }}
+</ul>

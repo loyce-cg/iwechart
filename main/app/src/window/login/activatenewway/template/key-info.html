@@ -1,0 +1,13 @@
+@import {Model} from "../ActivateNewWayController";
+@model Model
+
+{{ if (model.keyCorrect) { {{
+  {{ if (model.isAdmin) { {{
+    <div>{{@Helper.i18n("window.login.activate.info.server")}}</div>
+  }} } else { {{
+    <div>{{@Helper.i18n("window.login.activate.info.user")}}</div>
+  }} } }}
+  <div class="host">{{@model.host}}</div>
+}} } else { {{
+  <div class="incorrect-key">{{@Helper.i18n("window.login.activate.info.incorrectKey")}}</div>
+}} } }}

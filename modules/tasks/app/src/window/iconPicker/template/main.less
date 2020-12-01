@@ -1,0 +1,66 @@
+@import "../../../../node_modules/pmc-web/src/themes/default/less/form.less";
+@import "../../../../node_modules/pmc-web/src/component/template/wi-element.less";
+@import "../../main/template/common.less";
+@import "../../taskGroupForm/template/icon.less";
+
+body {
+  height: auto;
+}
+
+.window-icon-picker {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 10px 0 10px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  
+  .scrollable-content {
+    flex: 1 1 auto;
+  }
+  
+  .buttons-container {
+    flex: 0 0 auto;
+    text-align: center;
+  }
+  
+  button {
+    margin: 10px;
+  }
+  
+  h4 {
+    font-weight: 500;
+  }
+  
+  p {
+    font-size: var(--font-size);
+  }
+  
+  .colors-extlist-container .taskgroup-icon { 
+    font-size: var(--font-size-xxl);
+  }
+  
+  .taskgroup-icon {
+    cursor: pointer;
+    border-radius: 3px;
+    background: transparent;
+    padding: 1px 6px;
+    display: inline-block;
+    
+    &.active,
+    &:hover {
+      background: var(--preview-panel-bg);
+    }
+  }
+  
+  h4 {
+    color: var(--body-extra-info-fg);
+    text-transform: uppercase;
+    font-size: var(--font-size-s);
+  }
+  div+h4 {
+    margin-top: 6px;
+  }
+}

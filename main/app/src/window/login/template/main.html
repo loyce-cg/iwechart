@@ -1,0 +1,23 @@
+@import {Model} from "../LoginWindowController";
+@import {func as langsTemplate} from "./langs.html";
+@model Model
+<div class="window-login-main">
+  {{#Helper.createTemplate(langsTemplate).render()}}
+  <div class="main {{@model.forceUpdate ? 'hide' : ''}}">
+    <div class="logo-container">
+      <div class="logo">
+        <img src="{{@Helper.getAssetByName('CUSTOM_LOGO_127X112_ORIG')}}" width="127" height="110" alt="">
+      </div>  
+    </div>
+  </div>
+  <div class="force-update-info {{@model.forceUpdate ? '' : 'hide'}} loading-indicator">
+    <div>
+      <div>
+        <span class="message">{{@Helper.i18n("core.updater.forceUpdateInfo")}}</span>
+      </div>
+    </div>
+  </div>
+  <div class="updates-container"></div>
+  <div class="version-info">PrivMX Desktop version: {{@model.appVersion}}</div>
+  <div class="status-bar"></div>
+</div>

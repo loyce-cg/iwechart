@@ -1,0 +1,8 @@
+@import {VerifyErrorModel} from "../VerifyDomainWindowController";
+@model VerifyErrorModel
+<div class="verify-info">
+    <div class="main-info">
+      <i class="fa fa-times-circle"></i>
+      {{@Helper.i18n(model.type =="connect" ? 'window.admin.verifydomain.state.cannotConnect' : 'window.admin.verifydomain.state.nonexist', model.domain)}}
+    </div>
+</div>

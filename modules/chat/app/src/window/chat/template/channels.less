@@ -1,0 +1,87 @@
+@import "../../../../node_modules/pmc-web/src/themes/default/less/vars";
+
+.people-panel {
+  .new-chat-panel {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    .new-chat {
+      padding: 0 15px;
+      
+      .btn {
+        margin-bottom: 20px;
+        font-weight: bold;
+        font-size: var(--font-size);
+        position: relative;
+        &:before {
+          position: absolute;
+          left: 13px;
+          top: 9px;
+        }
+      }
+    }
+  }
+
+}
+
+.chats-channels {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding-top: 20px;
+  
+  .wi-element .wi-element-inner .wi-element-icon {
+    text-align: center;
+    
+    canvas {
+      border-radius: 5px;
+      vertical-align: middle;
+    }
+  }
+  
+  .left-panel-entry[data-chat-id=my] {
+    .wi-element-name {
+      margin-left: 53px;
+    }
+  }
+
+  
+  .chats-channels-header {
+    position: absolute;
+    top: 20px;
+    left: 15px;
+    right: 15px;
+    text-align: center;
+    font-family: var(--misc-ui-font-family);
+    font-size: var(--font-size);
+    color: var(--preview-panel-input-active-bg);
+    
+    .title {
+      font-weight: bold;
+      line-height: 18px;
+    }
+    .domain {
+      line-height: var(--font-size);
+    }
+  }
+  .my-channels-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 15px;
+    right: 15px;
+    
+    .btn {
+      font-weight: bold;
+      position: relative;
+      display: block;
+      
+      i {
+        position: absolute;
+        left: 13px;
+        top: 9px;
+      }
+    }
+  }
+}

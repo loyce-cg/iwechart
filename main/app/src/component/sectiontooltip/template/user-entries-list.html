@@ -1,0 +1,24 @@
+@model { host: string, data: { admins: boolean, all: boolean, users: string[] }, usernames: { [key: string]: string } }
+{{ if (model.data.all) { }}
+<span class="entry">
+  <i class="fa fa-group"></i>
+  <span>{{@Helper.i18n("component.sectionTooltip.acl.all")}}</span>
+</span>
+{{ } }}
+{{ if (model.data.all && (model.data.admins || (model.data.users && model.data.users.length > 0))) { }}<span class="sep"></span>{{ } }}
+{{ if (model.data.admins) { }}
+  <span class="entry">
+    <i class="fa fa-group"></i>
+    <span>{{@Helper.i18n("component.sectionTooltip.acl.admins")}}</span>
+  </span>
+{{ } }}
+{{ if (model.data.admins && model.data.users && model.data.users.length > 0) { }}<span class="sep"></span>{{ } }}
+{{ let first = true; }}
+{{ for (let user of model.data.users) { }}
+  {{ if (user == "<admins>") { continue; } }}
+  {{ if (first) { first = false; } else { }}<span class="sep"></span>{{ } }}
+  <span class="entry">
+    <canvas class="not-rendered" data-width="16" data-height="16" data-auto-size="true" data-hashmail-image="{{@user}}#{{@model.host}}" data-auto-refresh="true" width="32" height="32" style="width: 16px; height: 16px;"></canvas>
+    <span>{{@model.usernames[user]}}</span>
+  </span>
+{{ } }}

@@ -1,0 +1,254 @@
+@import { Model } from "../CalendarPanelController";
+@model Model
+@context {render(model: any, context?: any):string}
+{{
+  let checked: string;
+}}
+<div class="panel calendar-panel-component" tabindex="-1">
+  <div class="notifications-container-wrapper"></div>
+  <div class="top">
+    <div class="left">
+      {{ if (model.isInSummaryWindow) { }}
+      <div class="wi-element active">
+        <div class="wi-element-inner">
+          <div class="wi-element-icon bckg-icon small-icon">
+            <i class="fa fa-calendar"></i>
+          </div>
+          <div class="wi-element-name">
+            {{@Helper.i18n("plugin.calendar.component.calendarPanel.summaryWindow.title")}}
+          </div>
+        </div>
+      </div>
+      {{ } else if (model.isConv2Section) { }}
+        {{#context.render(model.conv2Model, {})}}
+      {{ } else if (model.isPrivateSection || model.isTasksAssignedToMe || model.isTasksCreatedByMe) { }}
+        <li class="conversation-element contact without-description small-icon" data-conversation-id="{{@model.myHashmail}}">
+          <span>
+            <div class="image-with-data">
+              <p class="image">
+                <canvas class="not-rendered" data-tooltip-trigger="{{@model.myHashmail}}" data-hashmail-image="{{@model.myHashmail}}" data-width="30" data-height="30" data-auto-size="true" data-auto-refresh="true" width="60" height="60" style="width: 30px; height: 30px;"></canvas>
+              </p>
+              <div class="text-col">
+                <p class="name">
+                  {{ if (model.isPrivateSection) { }}
+                    {{@Helper.i18n("plugin.calendar.component.calendarPanel.sidebar.private")}}
+                  {{ } if (model.isTasksAssignedToMe) { }}
+                    {{@Helper.i18n("plugin.calendar.component.calendarPanel.sidebar.assigned-to-me")}}
+                  {{ } if (model.isTasksCreatedByMe) { }}
+                    {{@Helper.i18n("plugin.calendar.component.calendarPanel.sidebar.created-by-me")}}
+                  {{ } }}
+                </p>
+              </div>
+            </div>
+          </span>
+        </li>
+      {{ } else { }}
+      <div class="wi-element active">
+        <div class="wi-element-inner">
+          <div class="small-icon wi-element-icon bckg-icon {{@!model.isPublic && model.isRegularSection && !model.isPrivateSection ? 'bckg-icon-border' : ''}} {{@model.isPrivateSection ? '' : 'has-section-tooltip'}}" data-section-id="{{@model.projectId}}">
+            <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" class="{{@model.isTrash || model.isAllTasks ? 'hidden': ''}}" />
+            <i class="fa fa-calendar proj-fa-icon {{@!model.isAllTasks ? 'hidden' : ''}}"></i>
+            <i class="fa ico-bin proj-fa-icon {{@!model.isTrash ? 'hidden' : ''}}"></i>
+          </div>
+          <div class="wi-element-name">
+            {{@model.projectName}}
+          </div>
+        </div>
+      </div>
+      {{ } }}
+      <div class="buttons-go-to">
+        <span class="btn btn-sm go-to-chat" data-action="open-chat" data-window-opener="true">
+          <i class="ico-comment"></i>
+        </span>
+        <span class="btn btn-sm go-to-notes" data-action="open-notes" data-window-opener="true">
+          <i class="ico-note"></i>
+        </span>
+        <span class="btn btn-sm go-to-tasks" data-action="open-tasks" data-window-opener="true">
+          <i class="fa fa-tasks"></i>
+        </span>
+      </div>
+      <div class="extra-calendars-container"></div>
+      <div class="filter-container"></div>
+    </div>
+    <div class="datepicker-container"></div>
+    <div class="button-container">
+      <div class="mode-container"></div>
+      <button class="btn btn-xs btn-default refresh" title="{{@Helper.i18n("plugin.calendar.component.calendarPanel.view-refresh-tooltip")}}">
+        <span class="fa fa-refresh"></span>
+      </button>
+      <button class="btn btn-xs btn-default settings" title="{{@Helper.i18n("plugin.calendar.component.calendarPanel.view-options-tooltip")}}">
+        <span class="ico-settings"></span>
+      </button>
+      <button class="btn btn-success btn-sm small in-summary-as-icon" data-action="task-new" title="{{@Helper.i18n("plugin.calendar.component.calendarPanel.new-task-tooltip")}}" data-payload="__orphans__" data-taskgroup-project-id="{{@model.isConv2Section?'conv2':(model.projectId?model.projectId:model.privateSectionId)}}">
+        <i class="fa fa-plus"></i>
+        <span>{{@Helper.i18n("plugin.calendar.component.calendarPanel.new-task")}}</span>
+      </button>
+    </div>
+  </div>
+	<div class="context-menu-settings context-menu">
+	  <div class="context-menu-backdrop2"></div>
+	  <ul class="context-menu-content">
+      <li class="context-menu-group-header">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.headers.view-settings")}}</li>
+      <li>
+        <span class="hide-in-summary">
+          {{ checked = model.settings["enable-day-preview-panel"] ? " checked" : ""; }}
+          <input type="checkbox" id="calendar-settings-enable-day-preview-panel-{{@model.safeProjectId}}-{{@model.calendarId}}" data-setting="enable-day-preview-panel" {{@checked}} />
+          <label for="calendar-settings-enable-day-preview-panel-{{@model.safeProjectId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.enable-day-preview-panel")}}</label>
+        </span>
+      </li>
+      <li>
+        <span class="hide-in-summary">
+          {{ checked = model.settings["show-task-preview-panel"] ? " checked" : ""; }}
+          <input type="checkbox" id="calendar-settings-show-task-preview-panel-{{@model.safeProjectId}}-{{@model.calendarId}}" data-setting="show-task-preview-panel" {{@checked}} />
+          <label for="calendar-settings-show-task-preview-panel-{{@model.safeProjectId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.show-task-preview-panel")}}</label>
+        </span>
+      </li>
+      <li class="subitem hide-in-summary">
+        <span>
+          {{ checked = model.settings["horizontal-task-preview-window-layout"] ? " checked" : ""; }}
+          <input type="checkbox" id="calendar-settings-horizontal-task-preview-window-layout-{{@model.safeProjectId}}-{{@model.calendarId}}" data-setting="horizontal-task-preview-window-layout" {{@checked}} />
+          <label for="calendar-settings-horizontal-task-preview-window-layout-{{@model.safeProjectId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.horizontal-task-preview-window-layout")}}</label>
+        </span>
+      </li>
+      <li>
+        <span>
+          {{ checked = model.settings["show-task-tooltip"] ? " checked" : ""; }}
+          <input type="checkbox" id="calendar-settings-show-task-tooltip-{{@model.safeProjectId}}-{{@model.calendarId}}" data-setting="show-task-tooltip" {{@checked}} />
+          <label for="calendar-settings-show-task-tooltip-{{@model.safeProjectId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.show-task-tooltip")}}</label>
+        </span>
+      </li>
+      <li>
+        <span>
+          {{ checked = model.settings["show-files"] ? " checked" : ""; }}
+          <input type="checkbox" id="calendar-settings-show-files-{{@model.safeProjectId}}-{{@model.calendarId}}" data-setting="show-files" {{@checked}} />
+          <label for="calendar-settings-show-files-{{@model.safeProjectId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.show-files")}}</label>
+        </span>
+      </li>
+      <li class="settings-item--sort-files-by">
+        <span>
+          {{ let sortFilesBy = model.settings["sort-files-by"]; }}
+          <label for="calendar-settings-sort-files-by-{{@model.safeProjectId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.sort-files-by")}}</label>
+          <ul class="option-chooser" data-setting="sort-files-by">
+            <li class="option-chooser-option {{@sortFilesBy == 'created' ? 'active' : ''}}" data-option="created">created</li>
+            <li class="option-chooser-option {{@sortFilesBy == 'modified' ? 'active' : ''}}" data-option="modified">modified</li>
+          </ul>
+        </span>
+      </li>
+	  </ul>
+  </div>
+  <div class="modes">
+    <div class="mode mode-month">
+      <div class="day-headers">
+        {{ for (let i = 0; i < 7; ++i) { }}
+          <div>{{@Helper.i18n("plugin.calendar.component.calendarPanel.daysOfWeek." + i)}}</div>
+        {{ } }}
+      </div>
+      <div class="fl-container">
+        <div class="fl-padding-container">
+          <div class="fl-entries-container"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mode mode-week">
+      <div class="hours-container">
+        <div class="hours-container-inner">
+          <div class="left-hours-header">
+            {{ for (let t = 0; t < 24; ++t) { }}
+              <div>{{@(t < 10 ? "0" : "") + t}}:00</div>
+            {{ } }}
+          </div>
+          <div class="hours-lines">
+            {{ for (let t = 0; t < 24; ++t) { }}
+              <div></div>
+            {{ } }}
+          </div>
+        </div>
+      </div>
+      <div class="scrollable-contents-container">
+        <div class="fl-container">
+          <div class="fl-padding-container">
+            <div class="fl-entries-container"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mode mode-singleweek">
+      <div class="fixed-tasks-container">
+        {{ for (let i = 0; i < 7; ++i) { }}
+          <div class="entry day">
+            <div class="entry-inner">
+              <div class="entry-header"></div>
+              <div class="entry-tasks"></div>
+            </div>
+          </div>
+        {{ } }}
+      </div>
+      <div class="second-container">
+        <div class="hours-container">
+          <div class="hours-container-inner">
+            <div class="left-hours-header">
+              {{ for (let t = 0; t < 24; ++t) { }}
+                <div>{{@(t < 10 ? "0" : "") + t}}:00</div>
+              {{ } }}
+            </div>
+            <div class="hours-lines">
+              {{ for (let t = 0; t < 24; ++t) { }}
+                <div></div>
+              {{ } }}
+            </div>
+          </div>
+        </div>
+        <div class="entries-container">
+          {{ for (let i = 0; i < 7; ++i) { }}
+            <div class="entry day">
+              <div class="entry-inner">
+                <div class="entry-tasks"></div>
+              </div>
+            </div>
+          {{ } }}
+        </div>
+      </div>
+    </div>
+    <div class="mode mode-singleday">
+      <div class="fixed-tasks-container">
+        {{ for (let i = 0; i < 1; ++i) { }}
+          <div class="entry day">
+            <div class="entry-inner">
+              <div class="entry-header"></div>
+              <div class="entry-tasks"></div>
+            </div>
+          </div>
+        {{ } }}
+      </div>
+      <div class="second-container">
+        <div class="hours-container">
+          <div class="hours-container-inner">
+            <div class="left-hours-header">
+              {{ for (let t = 0; t < 24; ++t) { }}
+                <div>{{@(t < 10 ? "0" : "") + t}}:00</div>
+              {{ } }}
+            </div>
+            <div class="hours-lines">
+              {{ for (let t = 0; t < 24; ++t) { }}
+                <div></div>
+              {{ } }}
+            </div>
+          </div>
+        </div>
+        <div class="entries-container">
+          {{ for (let i = 0; i < 1; ++i) { }}
+            <div class="entry day">
+              <div class="entry-inner">
+                <div class="entry-tasks"></div>
+              </div>
+            </div>
+          {{ } }}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="zoom-buttons">
+    <div class="zoom-btn zoom-btn-minus" data-action="zoom-out"><i class="fa fa-minus"></i></div>
+    <div class="zoom-btn zoom-btn-plus" data-action="zoom-in"><i class="fa fa-plus"></i></div>
+  </div>
+</div>

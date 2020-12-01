@@ -1,0 +1,62 @@
+@import {State} from "../ImageEditorWindowView";
+@model State
+<div class="toolbar {{@model.editMode ? 'edit-mode' : ''}}">
+  
+  <span class="file-name-with-rename-trigger">
+      <i class="fa fa-circle dirty-marker"></i>
+    <i class="file-icon fa fa fa-file-image-o"></i>
+    <span class="file-name">{{@model.fileName}}</span>
+    <span class="attached-task-badge">
+      {{ let bindedTasks: { taskId: string, labelClass: string }[] = model.boundTasksStr ? JSON.parse(model.boundTasksStr) : []; }}
+      {{ let bindedTask = bindedTasks ? bindedTasks[0] : null; }}
+      {{ if (bindedTask) {
+        let taskLabelClass = bindedTask.labelClass || "task-status-unknown";
+        let tId = bindedTask.taskId;
+        let taskLabel = "#" + (tId.indexOf(",") < 0 ? tId.substr(0, 5) : "...");
+        {{
+          <span class="task-id has-task-tooltip task-label {{@taskLabelClass}}" data-task-id="{{@bindedTask.taskId}}">{{@taskLabel}}</span>
+        }}
+      } }}
+    </span>
+  </span>
+  
+  <span class="toolbar-separator"></span>
+
+  <button class="btn" data-action="save" {{#model.dirty ? '' : 'disabled="disabled"'}}>
+    <i class="fa fa-floppy-o"></i>
+    {{@Helper.i18n("window.imageeditor.button.save.label")}}
+  </button>
+  <button class="btn" data-action="enter-edit-mode">
+    <i class="fa fa-pencil"></i>
+    {{@Helper.i18n("window.imageeditor.button.enterEditMode.label")}}
+  </button>
+  <button class="btn" data-action="print">
+    <i class="fa fa-print"></i>
+        {{@Helper.i18n("window.imageeditor.button.print.label")}}
+  </button>
+  <button class="btn" data-action="send">
+    <i class="fa ico-paper-airplane"></i>
+        {{@Helper.i18n("window.imageeditor.button.send.label")}}
+  </button>
+  <button class="btn" data-action="attach-to-task">
+      <i class="fa privmx-icon privmx-icon-tasks"></i>
+      {{@Helper.i18n("window.imageeditor.button.attachToTask.label")}}
+  </button>
+  {{ if (model.editMode) { }}
+  <button class="btn" data-action="history">
+    <i class="fa fa-book"></i>
+    {{@Helper.i18n("window.imageeditor.button.history.label")}}
+  </button>
+  
+  <button class="btn" data-action="rename">
+    <i class="fa fa-pencil-square-o"></i>
+    {{@Helper.i18n("window.imageeditor.toolbar.button.rename.label")}}
+  </button>
+  {{ } }}
+</div>
+<span class="more-button hide" data-action="open-toolbar-more">&raquo;</span>
+<div class="context-menu-toolbar-more {{@model.editMode ? 'edit-mode' : ''}}">
+  <div class="context-menu-backdrop2"></div>
+  <div class="context-menu-content">
+  </div>
+</div>

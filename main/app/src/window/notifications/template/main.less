@@ -1,0 +1,240 @@
+@import "../../base/BaseWindow";
+@import "../../../component/template/bckg-icon.less";
+@import "../../../component/template/wi-element.less";
+
+body {
+  font-size: var(--font-size);
+  min-height: 0;
+  height: auto;
+}
+
+div:focus {
+  outline: none;
+}
+
+.hide {
+  display: none !important;
+}
+
+body {
+  height: 100%;
+}
+
+.window-notifications-main {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  .window-header {
+    padding: 10px;
+    h3 {
+      margin-top: 3px;
+      padding: 0 0 0 5px;
+    }
+    p {
+      color: #666;
+      font-size: var(--font-size);
+      padding: 12px 5px 5px 5px;
+    }
+  }
+  
+  .sections-list {
+    flex: 1 1 auto;
+    background: var(--main-panel-bg);
+    
+    &.disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+  }
+  
+  .wi-element-parent.header {
+    height: 40px;
+    margin: 0 5px;
+    
+    .wi-element-name {
+      font-weight: 600;
+      font-size: var(--font-size-l);
+      margin-left: 0;
+    }
+    
+    &.disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+  }
+    
+  .section-entry.dimmed>.section-name {
+    .wi-element-name,
+    .wi-element-icon {
+      opacity: 0.3;
+    }
+  }
+  
+  
+  .wi-element {
+    cursor: default;
+    background: var(--preview-panel-bg);
+    padding: 6px 0 6px 10px;
+    margin: 2px 10px;
+    .wi-element-name {
+      margin-right: 130px;
+    }
+    .wi-element-icon {
+      cursor: pointer;
+    }
+  }
+  .header .wi-element {
+    background: transparent;
+  }
+  .section-name > .wi-element-inner > .wi-element-module-icon {
+    position: absolute;
+    top: -6px;
+    right: 0;
+    height: 42px;
+    .module-icon {
+      float: right;
+      text-align: center;
+      cursor: pointer;
+      display: inline-block;
+      padding: 0 10px;
+      height: 42px;
+      border-left: var(--main-panel-bg) 2px solid;
+      
+      &.highlighted,
+      &:hover {
+        i, span, img {
+          transform: scale(1.2);
+        }
+      }
+      i, span {
+        color: inherit;
+        font-size: var(--font-size-xl);
+        position: relative;
+        top: 9px;
+        display: inline-block;
+      }
+      img {
+        width: 22px;
+        height: 22px;
+        position: relative;
+        top: 2px;
+      }
+    }
+    .dimmed {
+      i, span {
+        opacity: 0.3;
+      }
+    }
+    .disabled {
+      pointer-events: none;
+      
+      i, span {
+        opacity: 0;
+      }
+    }
+    .bckg-icon {
+      float: right;
+      padding-top: 4px;
+      margin-left: 5px;
+      i {
+        color: inherit;
+        margin-top: -5px;
+        font-size: var(--font-size-xl);
+      }
+    }
+  }
+  .wi-element-parent:not(.active)>.wi-element.section-name.hidden-section>.wi-element-inner>.wi-element-name {
+    color: hsla(var(--sidebar-bg-h), var(--sidebar-bg-s), calc(var(--sidebar-bg-l) + var(--sidebar-bg-as-text-delta)), 0.7);
+  }
+  .disabled-badge,
+  .hidden-badge {
+    font-size: var(--font-size-xxxs);
+    line-height: calc(var(--font-size-xxxs) + 2px);
+    margin-left: 5px;
+    color: #fff;
+    background-color: #666;
+    padding: 2px 5px;
+    display: inline-block;
+    border-radius: 5px;
+  }
+  
+  .buttons-container {
+    display: flex;
+    align-items: center;
+    
+    .notifications-main-switch-container {
+      display: flex;
+      flex: 1 1 auto;
+      padding-left: 17px;
+      
+      input {
+        margin-right: 5px;
+        margin-top: 3px;
+      }
+      
+      label {
+        font-weight: normal;
+      }
+    }
+    
+    .refresh {
+      color: #aaa;
+      margin-right: 5px;
+    }
+  }
+  
+  .buttons-container2 {
+    text-align: center;
+    padding: 10px;
+    
+    i {
+      margin-right: 3px;
+    }
+    
+    button.save,
+    button.cancel {
+      margin: 0 8px;
+      height: 33px;
+    }
+  }
+  
+  .pf-scrollable .pf-scroll-panel .pf-scroll {
+    background-color: var(--scrollbar-bg);
+  }
+  .pf-content {
+    padding: 0 5px;
+  }
+  
+}
+
+.switch {
+  display: inline-block;
+  vertical-align: middle;
+  width: 27px;
+  height: 10px;
+  background-color: var(--switch-bg);
+  border-radius: @radius;
+  position: relative;
+  cursor: pointer;
+  margin: 5px 5px 0 0;
+  
+  &::before {
+    content: " ";
+    position: absolute;
+    top: -3px;
+    left: 0;
+    right: auto;
+    width: 16px;
+    height: 16px;
+    background-color: var(--switch-bg2);
+    border-radius: 1000px;
+  }
+  &.active {
+    background-color: @colorSuccess;
+    
+    &:before {
+        left: auto;
+        right: 0;
+    }
+  }
+}

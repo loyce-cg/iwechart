@@ -1,0 +1,12 @@
+@import {Model} from "../SecureFormDevWindowController";
+@model Model
+<script>
+  privmx.send({
+    host: "{{#model.host}}",
+    sid: "{{#model.sinkID}}",
+    data: { name: "Joe", age: "30" },
+    subject: "New data from contact form",
+    onSuccess: function() { alert("OK :)"); },
+    onError: function() { alert("ERROR :("); }
+  });
+</script>

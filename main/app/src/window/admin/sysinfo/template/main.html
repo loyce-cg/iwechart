@@ -1,0 +1,101 @@
+@import {Model} from "../SysInfoController";
+@model Model
+<div class="panel-header">
+  <i class="fa fa-info"></i>
+  {{@Helper.i18n("window.admin.sysinfo.menu")}}
+</div>
+
+{{
+  var field = function(label: string, value: string): void { {{
+    <div class="field">
+      <div class="info">
+        {{@label}}:
+      </div>
+      <div class="input text-only">
+        {{@value}}
+      </div>
+    </div>
+  }} };
+}}
+
+<table>
+  <tbody>
+    <tr>
+      <td class="logo-column">
+        <div><img src="{{@Helper.getAssetByName('SYSINFO_LOGO')}}" alt=""></div>
+        <div class="host-info">{{@model.config.hosts.join(", ")}}</div>
+        {{
+        if (model.canDeleteDemoContent) {
+          {{
+            <div class="field">
+              <div class="info">
+              </div>
+              <div class="input text-only">
+                <div class="link bold" data-action="delete-demo-content">{{@Helper.i18n("window.admin.sysinfo.deleteDemoContent.button.label")}}</div>
+              </div>
+            </div>
+          }}
+        }
+      }}
+      </td>
+      <td class="values-column">
+        <div class="base-form">
+          <div class="fields">
+            {{
+              if (model.instanceName) {
+                field(Helper.i18n("window.admin.sysinfo.instanceName"), model.instanceName);
+              }
+              field(Helper.i18n("window.admin.sysinfo.users"), model.currentUsers.internal + model.currentUsers.external + " / " + model.currentUsers.maxUsers + " ("
+               + Helper.i18n("window.admin.sysinfo.users.internal") + ": " + model.currentUsers.internal + ", "
+               + Helper.i18n("window.admin.sysinfo.users.external") + ": " + model.currentUsers.external              
+               + ")");
+              field(Helper.i18n("window.admin.sysinfo.fsUsage"), Helper.bytesSize(model.config.diskUsage) + " / " + Helper.convertServerTotalStorageSizeToPrivMXFormat(model.totalStorage));
+              if (model.expireDate > -1) {
+                field(Helper.i18n("window.admin.sysinfo.expireDate"), Helper.standardDateWithoutTime(model.expireDate) + " (" + Helper.calendarDate(model.expireDate) + ")");
+              }
+              field(Helper.i18n("window.admin.sysinfo.dcLocation"), model.dataCenterLocation.locationName);
+              field(Helper.i18n("window.admin.sysinfo.lastBackup"), model.lastBackup ? Helper.standardDate(model.lastBackup): "-");
+              field(Helper.i18n("window.admin.sysinfo.version"), model.config.serverVersion);
+            }}
+          </div>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<div class="privmx-info-box">
+  <div class="privmx-panel left">
+    {{
+      let ccLink;
+      if (model.dataCenterUser) {
+        ccLink = "<span class='link bold' data-action='open-cc'>" + Helper.i18n("window.admin.sysinfo.info.title.cc") + "</span>";
+      }
+      else {
+        ccLink = "<span class='bold'>" + Helper.i18n("window.admin.sysinfo.info.title.cc") + "</span>";
+      }
+    }}
+    <div class="info-title">{{#Helper.i18n("window.admin.sysinfo.info.title", ccLink)}}</div>
+    <ul class="info">
+      <li class="info">{{@Helper.i18n("window.admin.sysinfo.info.text2")}}</li>
+      <li class="info">{{@Helper.i18n("window.admin.sysinfo.info.text3")}}</li>
+      <li class="info">{{@Helper.i18n("window.admin.sysinfo.info.text4")}}</li>
+    </ul>
+  </div>
+  <div class="privmx-panel right">
+    {{
+      if (model.dataCenterUser) {
+        {{
+          <div class="info right">
+            {{#Helper.i18n("window.admin.sysinfo.info.loginAs", model.dataCenterUser.login)}}
+          </div>      
+        }}
+      } else {
+        {{
+          <div class="info right">
+            {{@Helper.i18n("window.admin.sysinfo.info.noCcAccess")}}
+          </div>      
+        }}
+      }
+    }}
+  </div>
+</div>

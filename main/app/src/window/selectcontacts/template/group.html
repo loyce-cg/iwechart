@@ -1,0 +1,20 @@
+@import {ContactEntry} from "../SelectContactsWindowController";
+@model ContactEntry
+@context string
+<div class="window-select-contacts-group contact-item" {{#context == "toChoose" ? " data-action=add-contact" : " data-action=remove-contact"}} data-id="{{@model.id}}">
+  <div class="image">
+        <i class="fa fa-users"></i>
+  </div>
+  <div class="name">
+    {{@model.displayName}}
+  </div>
+  {{if (context == "choosen") { {{
+    <button tabindex="-1" class="btn btn-xs btn-warning" data-action="remove-contact" title="{{@Helper.i18n('window.selectContacts.user.removeContact.title')}}">
+      &laquo;
+    </button>
+    }} } else if (context == "toChoose") { {{
+    <button tabindex="-1" class="btn btn-xs btn-default gray" data-action="add-contact" title="{{@Helper.i18n('window.selectContacts.user.addContact.title')}}">
+      &raquo;
+    </button>
+    }} } }}
+</div>

@@ -1,0 +1,7 @@
+@import { TaskGroupModel } from "../TaskGroupSelectorWindowController";
+@import { func as iconTemplate } from "../../../window/taskGroupForm/template/icon.html";
+@model TaskGroupModel
+@context any
+<div class="taskgroup {{@model.isSelected ? 'selected' : ''}}" data-taskgroup-id="{{@model.id}}">
+  <span class="taskgroup-label" title="{{@model.name}}"><span>{{#Helper.createTemplate(iconTemplate).render(model.iconStr)}}</span><span></span>{{@model.name}}</span></span>
+</div>

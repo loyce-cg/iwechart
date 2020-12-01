@@ -1,0 +1,9 @@
+@import {Mail} from "../InitDataEditor";
+@model Mail
+<div class="item well">
+  <label>{{@Helper.i18n("window.admin.initData.mail.subject.label")}}</label>
+  <input type="text" name="mail.subject" value="{{@model.subject}}" />
+  <label>{{@Helper.i18n("window.admin.initData.mail.content.label")}}</label>
+  <div class="mail-content"></div>
+  <!-- <button type="button" class="btn btn-xs btn-warning icon-only" data-action="remove-item"><i class="fa fa-remove"></i></button> -->
+</div>

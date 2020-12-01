@@ -1,0 +1,21 @@
+.drop-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--main-panel-bg);
+}
+.drop-overlay {
+    display:none;
+    background-color: transparent;
+    text-align: center;
+    font-size: 1.5em;
+
+    border: 5px dashed #1b1d1e;
+}
+
+.drop-overlay.file-drag {
+    display: block;
+    z-index: 99999;
+}

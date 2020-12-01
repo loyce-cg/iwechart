@@ -1,0 +1,104 @@
+@import {Model} from "../LoginController";
+@model Model
+<div class="window-login-login page {{@Helper.isDemo() ? 'demo' : ''}}">
+  <div class="fade">
+    <div class="inner {{@Helper.isDemo() || !model.isMnemonicEnabled ? '' : 'with-bottom-link'}} inner-new-way">
+      <header>
+        <h1><div class="logo-127x112-container"><img src="{{#Helper.getAssetByName('CUSTOM_LOGO_127X112')}}" /></div></h1>
+      </header>
+      <div class="box-header">
+        {{$Helper.i18n("window.login.header.label")}}
+      </div>
+      {{ if (model.instanceName) { }}
+        <div class="host-info">
+          {{@model.instanceName}}
+        </div>
+      {{ } else { }}
+      <div class="host-info">&nbsp;</div>
+    {{ } }}
+
+      <div class="error"></div>
+      <form name="login" method="post" onsubmit="return false;">
+        <section>
+            <div class="row">
+              <div>
+                <div class="form-group with-icon">
+                  <div class="holder">
+                    <span class="input-prefix-new-way"><div class="prefix-text">{{@Helper.i18n("window.login.form.username.label")}}</div></span>
+                    <input type="text" class="form-control" placeholder="you#{{@model.host ? model.host : Helper.i18n('window.login.form.login.emptydomain')}}" name="hashmail">
+                    <div class="checkbox-holder">
+                      <div class="checkbox">
+                        <label>
+                          <span><input type="checkbox" data-remember="hashmail" tabindex="-1"></span>
+                          <span class="lab">{{@Helper.i18n("window.login.form.remember.label")}}</span>
+                        </label>
+                      </div>
+                    </div>                  
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+            
+            <div class="row">
+              <div>
+                <div class="form-group with-icon">
+                  <div class="holder">
+                    <span class="input-prefix-new-way"><div class="prefix-text">{{@Helper.i18n("window.login.form.password.label")}}</div></span>
+                    <input type="password" class="form-control" placeholder="password" name="password">
+                    <div class="checkbox-holder">
+                      <div class="checkbox">
+                        <label>
+                          <span><input type="checkbox" data-remember="password" tabindex="-1"></span>
+                          <span class="lab">{{@Helper.i18n("window.login.form.remember.label")}}</span>
+                        </label>
+                      </div>
+                    </div>                   
+                  </div>
+
+                </div>               
+              </div>
+
+            </div>
+            <div class="box-buttons">
+              <button type="submit" class="btn btn-primary btn-block btn-lg login-btn">
+                <span class="icon-holder"></span>
+                {{@Helper.i18n("window.login.form.button.login.label")}}
+              </button>
+            </div>
+            
+            <div class="pre-info-box bottom-container">
+              <div class="selectable">
+                {{$Helper.i18n("window.login.forgotLogin.info")}}<br/>
+              </div>
+            </div>
+
+            {{if (!Helper.isDemo() && model.isMnemonicEnabled) { {{
+              <div class="bottom-link">
+                <a data-action="open-alternative-login" href="javascript:void(0)">
+                  {{@Helper.i18n("window.login.form.alternativeLogin.link")}}
+                </a>
+              </div>
+            }} } }}
+        </section>
+      </form>
+    </div>
+
+    <div class="pre-info-box">
+      <div class="activate-link">
+        <a class="activation-link" trigger-action="managers-zone" href="javascript:void(0)">
+          <span class="ccLoader"></span>
+          <span class="bold">{{@Helper.i18n("window.login.login.managerszone.link")}}</span> {{@Helper.i18n("window.login.login.managerszone.link.description")}}
+        </a>
+  
+        <a class="activation-link" data-action="activate-account" href="javascript:void(0)">
+          <i class="fa fa-key"></i><span class="bold">{{@Helper.i18n("window.login.form.activateTeamServer.link")}}</span> {{@Helper.i18n("window.login.form.activateTeamServer.link.description")}}
+        </a>
+      </div>   
+    </div>
+    <div class="selectable">
+      <a href="https://privmx.com" class="privmx-link"><i class="fa fa-globe"></i>{{@Helper.i18n("window.login.learnMore.info.website")}}</a>
+    </div>
+  </div>
+</div>

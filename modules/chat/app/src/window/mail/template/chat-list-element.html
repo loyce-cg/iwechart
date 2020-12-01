@@ -1,0 +1,56 @@
+@import {ChatRawEntry} from "../../../main/ChatPlugin";
+@import * as Mail from "pmc-mail";
+@import {component} from "pmc-web";
+@model ChatRawEntry
+@context component.extlist.Context<ChatRawEntry>
+{{
+  if (model.type != "chat-plugin-chat-entry") {
+    return <any>false;
+  }
+  if (model.broken) {
+    return "<div>Broken chat entry</div>";
+  }
+  let columns = (<component.exttable.ExtTableView<ChatRawEntry>>context.listView.parent).columns;
+}}
+<div class="table-row {{@model.unreadCount ? 'unread' : ''}} chat-message {{@model.isTrash ? 'trash-entry' : ''}}" data-id="{{@model.id}}" data-type="chat">
+  <div class="table-cell info" style="width: {{@columns[0].width + 'px'}};">
+    <span class="circle"></span>
+    
+  </div>
+  <div class="table-cell" style="width: {{@columns[1].width + 'px'}};">
+    <span class="ico-comment"></span>
+    <span class="holder">
+      {{@Helper.i18n("plugin.chat.mail.messageList.element.chat.subject")}}
+      {{ model.persons.forEach((person, i) => {
+        {{{{@i == 0 ? "" : ", "}}<span data-hashmail-name="{{@person.hashmail}}">{{@person.name}}</span>}}
+      }); }}
+      {{ if (model.unreadCount) { {{
+        ({{@model.unreadCount}})
+      }} } }}
+    </span>
+  </div>
+  <div class="table-cell" style="width: {{@columns[2].width + 'px'}};">
+    <div class="holder">
+        <div class="sender-name {{@model.sender.showPicture ? '' : 'no-picture'}}">
+          {{ if (model.sender.showPicture) { {{
+            <span class="sender-picture" data-hashmail-image="{{@model.sender.hashmail}}">
+              <canvas class="not-rendered"></canvas>
+            </span>
+          }} } }}
+        <span data-hashmail-name="{{@model.sender.hashmail}}">
+          {{@model.sender.name}}
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="table-cell" style="width: {{@columns[3].width + 'px'}};">
+    <span class="holder">
+      {{ model.receivers.forEach((receiver, i) => {
+        {{{{@i == 0 ? "" : ", "}}{{if (model.showReceiverPicture) { {{<span class="receiver-picture {{#i == 0 ? '' : 'next'}}" data-hashmail-image="{{@receiver.hashmail}}"><canvas class="not-rendered"></canvas></span>}} } }}<span data-hashmail-name="{{@receiver.hashmail}}">{{@receiver.name}}</span>}}
+      }); }}
+    </span>
+  </div>
+  <div class="table-cell" style="width: {{@columns[4].width + 'px'}};">
+    <span class="holder" title="{{@Helper.dateWithHourLocal(model.serverDate)}}">{{@Helper.calendarDate(model.serverDate)}}</span>
+  </div>
+</div>

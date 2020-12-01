@@ -1,0 +1,34 @@
+@import {Model} from "../MailController";
+@model Model
+<div class="section">
+  <div class="section-header">
+    <i class="fa fa-pencil"></i>
+    {{@Helper.i18n("window.settings.section.mail.header")}}
+  </div>
+  
+  <div class="base-form">
+    <div class="fields">
+      
+      <div class="field">
+        <div class="info">
+          {{@Helper.i18n("window.settings.section.mail.signature.label")}}
+        </div>
+        <div class="input">
+          <textarea rows="5" name="mail.signature">{{@ model.mail ? model.mail.signature : ''}}</textarea>
+        </div>
+      </div>
+      
+      <div class="field buttons">
+        <div class="info">
+        </div>
+        <div class="input">
+          <button class="btn btn-success save-button progress-button">
+            <i class="fa fa-save"></i>
+            <span class="button-text">{{@Helper.i18n("window.settings.section.mail.button.save.text")}}</span>
+          </button>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>

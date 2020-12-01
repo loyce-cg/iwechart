@@ -1,0 +1,33 @@
+<div class="window-recentfiles-main" tabindex="-1">
+  <div class="header">
+    {{@Helper.i18n("plugin.notes2.window.recentfiles.title")}}
+    <span class="btn btn-sm refresh" data-action="refresh">
+      <i class="fa fa-refresh"></i>
+    </span>
+  </div>
+  <div class="table-container">
+    <table>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+  <div class="buttons-container">
+    <div class="buttons">
+      <button class="btn btn-success" data-action="open" tabindex="2">
+        <i class="fa fa-check"></i>
+        {{@Helper.i18n("plugin.notes2.window.recentfiles.button.ok.label")}}
+      </button>
+      <button class="btn btn-default" data-action="close" tabindex="3">
+        {{@Helper.i18n("plugin.notes2.window.recentfiles.button.close.label")}}
+      </button>
+      <span class="link button-clear-list" data-action="clear-list">
+        <i class="fa fa-trash"></i> {{@Helper.i18n("plugin.notes2.window.recentfiles.clearList")}}
+      </span>
+    </div>
+  </div>
+  <div class="tab-index-guard" tabindex="999"></div>
+  <div class="notifications-container"></div>
+  <div class="loading-container">
+    <span class="loading"><i class="fa fa-circle-o-notch"></i></span>
+  </div>
+</div>

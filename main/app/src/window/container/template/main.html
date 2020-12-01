@@ -1,0 +1,20 @@
+@import {Model} from "../ContainerWindowController";
+@import {func as loadingScreenTemplate} from "./loading-screen.html";
+@model Model
+{{var withStatusBar = model.showStatusBar && !model.isElectronApp}}
+<div class="container-window-main {{withStatusBar ? 'with-status-bar' : ''}}">
+  {{#Helper.createTemplate(loadingScreenTemplate).render()}}
+  <div class="windows-container"></div>
+  {{if (model.showStatusBar) { {{
+    <div class="status-bar-container">
+      <div class="current-tasks-info">
+        <span class="info"></span>
+      </div>
+      <div class="version">
+        <span class="auto-update-status-container"></span>
+        <span>web client, ver. {{#Helper.version()}}</span>
+      </div>
+    </div>
+  }} } }}
+  <div class="update-notification"></div>
+</div>

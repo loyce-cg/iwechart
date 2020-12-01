@@ -1,0 +1,171 @@
+@import "../../../window/main/template/common.less";
+
+.date-picker-component {
+  .day-container,
+  .month-container,
+  .year-container {
+    .custom-select-button {
+      height: 30px;
+    }
+    .component-custom-select-main {
+      height: 30px;
+      .custom-select-button {
+        background: var(--preview-panel-bg);
+      }
+      &.open .custom-select-button {
+        background: var(--main-panel-bg);
+      }
+    }
+  }
+  .day-container,
+  .month-container,
+  .year-container {
+    display: inline-block;
+  }
+  .day-container,
+  .year-container {
+    width: 80px;
+  }
+  .month-container {
+    width: 120px;
+  }
+  
+  .prev-btn,
+  .next-btn {
+    display: inline-block;
+    padding: 0 8px;
+    border: 0;
+    box-shadow: none;
+    line-height: 30px;
+    height: 30px;
+    margin-top: -2px;
+  }
+  .today-btn {
+    display: none;
+    line-height: 1;
+    font-size: var(--font-size-s);
+    padding: 4px 6px;
+    margin-left: 5px;
+  }
+  
+  .popup-buttons {
+    display: inline-block;
+    margin-top: 5px;
+  }
+  
+  .popup-buttons {
+    margin-left: 5px;
+    float: right;
+  }
+  
+  &.duration-picker {
+    .date {
+      display: inline-block;
+    }
+    .popup-buttons {
+      margin-top: 0;
+    }
+  }
+  
+  &.no-day {
+    .day-container {
+      display: none;
+    }
+  }
+  &.no-month {
+    .month-container {
+      display: none;
+    }
+  }
+  &.no-year {
+    .year-container {
+      display: none;
+    }
+  }
+  
+  &.no-prev {
+    .prev-btn {
+      display: none;
+    }
+  }
+  &.no-next {
+    .next-btn {
+      display: none;
+    }
+  }
+  &.with-today {
+    .today-btn {
+      display: inline-block;
+    }
+  }
+  
+  &.no-buttons {
+    .popup-buttons {
+      display: none;
+    }
+  }
+  
+  &.popup {
+    display: none;
+    position: absolute;
+    z-index: 99999;
+    background: var(--main-panel-bg);
+    box-shadow: var(--preview-panel-input-shadow) 0px 0 4px;
+    border-radius: 5px;
+    padding: 5px;
+    
+    &.popup-visible {
+      display: block;
+    }
+  }
+  
+  .day-container,
+  .month-container,
+  .year-container {
+    width: 60px;
+  }
+  
+  &.narrow {
+    font-size: 0;
+    
+    .day-container {
+      width: 30px;
+    }
+    .month-container,
+    .year-container {
+      width: 40px;
+    }
+    .prev-btn,
+    .next-btn,
+    .today-btn {
+      margin-top: -10px;
+      font-size: var(--font-size-xxxxs);
+    }
+    .prev-btn,
+    .next-btn {
+      padding: 0 4px;
+    }
+    .today-btn {
+      font-size: 0;
+      padding: 3px;
+      margin-left: 2px;
+      
+      &:after {
+        content: "\f192";
+        display: block;
+        font-size: var(--font-size-xs);
+        font-family: FontAwesome;
+      }
+    }
+    .component-custom-select-main .custom-select-button {
+      .fa-caret-down {
+        display: none;
+      }
+      
+      .selected-items {
+        max-width: 100%;
+      }
+    }
+  }
+  
+}

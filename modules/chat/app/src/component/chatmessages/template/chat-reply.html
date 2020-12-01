@@ -1,0 +1,78 @@
+@model {messagesCount: number, hasNotes2: boolean, hasTasks: boolean}
+<div class="chat-reply">
+  <div class="textarea-wrapper">
+    <div placeholder="{{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.input.placeholder')}}" class="form-control reply-field" data-role="reply-field"></div>
+    <div class="edit-mode-info">{{@Helper.i18n("plugin.chat.component.chatMessages.chatReply.editModeInfo")}}</div>
+  
+    <div class="buttons">
+      <button class="btn btn-default btn-sm btn-success small msg-send-btn" data-action="send-chat-message">
+        <span class="left ico-paper-airplane"></span>
+        {{@Helper.i18n("plugin.chat.component.chatMessages.chatReply.button.submit.label")}}
+      </button>
+      <button class="btn btn-default btn-sm btn-success small msg-edit-btn" data-action="send-message-edit">
+        <span class="left ico-paper-airplane"></span>
+        {{@Helper.i18n("plugin.chat.component.chatMessages.chatReply.button.edit.label")}}
+      </button>
+      <button class="btn btn-default btn-sm btn-default gray small msg-edit-btn" data-action="cancel-message-edit">
+        {{@Helper.i18n("plugin.chat.component.chatMessages.chatReply.button.cancelEdit.label")}}
+      </button>
+      <div class="checkbox">
+        <label>
+          <input type="checkbox" name="enter-sends" data-trigger="enter-sends-toggle" />
+          {{@Helper.i18n("plugin.chat.component.chatMessages.chatReply.input.enterSends.label")}}
+        </label>
+      </div>
+      <div class="additional-buttons">
+        <span class="std-buttons">
+          <button class="btn btn-default btn-sm small gray" data-action="new-file">
+            <span class="left privmx-icon privmx-icon-notes2" style="vertical-align:middle"></span>
+            {{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.button.file.label')}}
+          </button>
+          <button class="btn btn-default btn-sm small gray {{@model.hasTasks?'':'hidden'}}" data-action="new-task">
+            <span class="left privmx-icon privmx-icon-tasks" style="vertical-align:middle"></span>
+            {{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.button.task.label')}}
+          </button>  
+        </span>
+        <span class="buttons-when-not-in-voice-chat">
+          <button class="btn btn-default btn-success btn-sm small" data-action="join-voice-chat">
+            <span class="left fa fa-phone" style="vertical-align:middle"></span>
+            {{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.button.joinVoiceChat.label')}}
+          </button>
+        </span>  
+      </div>
+    </div>
+  </div>
+  <div class="voice-chat-people">
+    <div class="inner">
+      <div class="list"></div>
+      <div class="buttons">
+        <div class="additional-buttons">
+          <span class="buttons-when-in-voice-chat">
+            <i class="fa fa-microphone" data-action="toggle-talking">
+              <div class="infotooltip not-rendered" data-tooltip-theme="dark" data-tooltip-message="{{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.voicechat.mic.tooltip')}}"></div>
+            </i>
+            <button class="btn btn-default btn-sm small gray voice" data-action="leave-voice-chat">
+              <span class="left fa fa-phone" style="vertical-align:middle"></span>
+              {{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.button.leaveVoiceChat.label')}}
+            </button>
+            <!-- <button class="btn btn-default btn-sm small gray" data-action="ring-the-bell">
+              <span class="left fa fa-bell" style="vertical-align:middle"></span>
+              {{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.button.ringTheBell.label')}}
+            </button> -->
+          </span>
+          <span class="buttons-when-voice-chat-active">
+            <i class="fa fa-microphone"></i>
+            <button class="btn btn-success btn-sm small voice" data-action="join-voice-chat">
+              <span class="left fa fa-phone" style="vertical-align:middle"></span>
+              {{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.button.joinVoiceChat.label')}}
+            </button>
+            <!-- <button class="btn btn-default btn-sm small gray" data-action="ring-the-bell">
+              <span class="left fa fa-bell" style="vertical-align:middle"></span>
+              {{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.button.ringTheBell.label')}}
+            </button> -->
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

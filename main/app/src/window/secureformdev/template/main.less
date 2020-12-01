@@ -1,0 +1,28 @@
+@import "../../base/BaseAppWindow";
+@import "../../../themes/default/css/highlight.css";
+
+body {
+  background: white;
+  padding: 20px;
+  overflow: auto;
+  font-size: var(--font-size);
+}
+
+h2 {
+  font-weight: bold;
+  font-size: calc(var(--font-size-xxl) + 2px);
+  margin-bottom: 10px;
+}
+
+pre {
+  margin: 15px 0;
+}
+
+p {
+  margin-bottom: 20px;
+  &.with-border {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+}

@@ -1,0 +1,68 @@
+@import {TrialModel} from "../NavBarView";
+@model TrialModel
+{{
+    if (model.trial) {
+        {{ 
+            <div class="menu">
+                {{
+                    if (model.startDate) {
+                        {{
+                            <div class="row center">
+                                <span class="text-label">{{@Helper.i18n("component.navbar.trialMenu.startDate")}}:</span><span class="text-value date">{{@Helper.standardDateWithoutTime(model.startDate)}}</span>
+                            </div>
+                        }}
+                    }
+                }}
+                <div class="row center {{@model.isAdmin ? '' : 'no-columns bottom-padding'}}">
+                    {{ 
+                        if (model.expired) {
+                            {{<span class="text-label">{{@Helper.i18n("component.navbar.trialMenu.expiredDate")}}:</span><span class="text-value date">{{@Helper.standardDateWithoutTime(model.endDate)}}</span>}}
+                        } else if (model.endDate > -1) {
+                            {{<span class="text-label">{{@Helper.i18n("component.navbar.trialMenu.endDate")}}:</span><span class="text-value date expire-date">{{@Helper.standardDateWithoutTime(model.endDate)}} ({{@Helper.calendarDate(model.endDate)}})</span>                            }}
+                        }
+                    }}
+                </div>
+                {{
+                    if (model.maxUsers && model.totalStorage) {
+                        {{
+                            <div class="row center">
+                                <span class="text-label">{{@Helper.i18n("component.navbar.trialMenu.maxUsers")}}:</span><span class="text-value date">{{@model.maxUsers}}</span>
+                            </div>
+                            <div class="row center">
+                                <span class="text-label">{{@Helper.i18n("component.navbar.trialMenu.totalStorage")}}:</span><span class="text-value date">{{@Helper.convertServerTotalStorageSizeToPrivMXFormat(model.totalStorage)}}</span>
+                            </div>
+                            <div class="row-divider with-margin"></div>
+                            <div class="row no-columns center top-padding bottom-padding">
+                                    {{$Helper.i18n("component.navbar.trialMenu.openOrders.label")}}
+                                    {{
+                                        if (model.dataCenterUser) { {{
+                                            <span class="menu-button link" data-trigger="open-order-info">{{@Helper.i18n("component.navbar.trialMenu.openOrders")}}</span>
+                                        }} }
+                                        else
+                                        { {{
+                                            <span class="bold">{{@Helper.i18n("component.navbar.trialMenu.openOrders")}}</span>
+                                        }} }
+                                    }}         
+                            </div>
+                            {{
+                                if (model.dataCenterUser) {
+                                  {{
+                                    <div class="row no-columns center bottom-padding">
+                                      {{$Helper.i18n("component.navbar.trialMenu.loginAs")}}:<br/><span class="login">{{@model.dataCenterUser.login}}</span>
+                                    </div>      
+                                  }}
+                                } else {
+                                  {{
+                                    <div class="row no-columns center bottom-padding">
+                                      {{$Helper.i18n("component.navbar.trialMenu.noCcAccess")}}
+                                    </div>      
+                                  }}
+                                }
+                              }}
+                        }}
+                    }
+                }}
+            </div>
+        }}
+    }
+}}

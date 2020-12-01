@@ -1,0 +1,44 @@
+.panel.trusted {
+  
+  [data-action=refresh-domains] {
+    font-size: var(--font-size-l);
+    margin-left: 5px;
+    font-weight: normal;
+    background: transparent;
+    color: #eee;
+    .fa {
+      margin-right: 0;
+    }
+    > span {
+      margin-left: 3px;
+    }
+    .fa-refresh + span {
+      display: none;
+    }
+  }
+
+  .buttons {
+    text-align: center;
+    margin: 25px 0 20px 0;
+    padding-top: 20px;
+    .button-with-info {
+      display: inline-block;
+      .info {
+        color: #666;
+        font-size: var(--font-size-xs);
+        margin-top: 5px;
+      }
+    }
+  }
+  .action-col .btn-cnt {
+    width: 50px;
+  }
+  .state.publish {
+    color: #84d501;
+    font-weight: bold;
+  }
+  button.publish {
+    background-color: #84d501;
+    text-shadow: none;
+  }
+}
