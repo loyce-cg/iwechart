@@ -19,7 +19,7 @@
   "license": "PrivMX Source Code License",
   "private": true,
   "dependencies": {
-    "privmx-builder": "1.4.0"
+    "privmx-builder": "1.4.5"
   },
   "window": {
     "toolbar": true,

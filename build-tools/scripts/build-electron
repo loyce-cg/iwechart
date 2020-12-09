@@ -1,0 +1,48 @@
+#!/bin/bash
+
+if [[ -f "vars.sh" ]]; then
+    source "vars.sh"
+else
+    source "../vars.sh"
+fi
+
+GULP_CMD="gulp build-electron";
+for param in "$@"
+do
+    if [ "$param" = "--production" ]; then
+        GULP_CMD+=" --production";
+    fi
+
+    if [ "$param" = "--deploy" ]; then
+        GULP_CMD+=" >/dev/null";
+    fi
+done
+
+PLUGINS_DIR=$MAIN/$MAIN_PROJECT_NAME/electron/electron-plugins/plugins
+rm -rf $PLUGINS_DIR
+
+for MODULE in "${submodulesNames[@]}"
+do
+    echo "creating dir: $PLUGINS_DIR/$MODULE"
+    
+    mkdir -p $PLUGINS_DIR/$MODULE
+    echo "copy $MAIN/$SUBMODULES_DIR/$MODULE/dist-electron/*  => $PLUGINS_DIR/$MODULE/"
+    cp -R $MAIN/$SUBMODULES_DIR/$MODULE/dist-electron/* $PLUGINS_DIR/$MODULE/
+    if [ $? -ne 0 ] ; then
+        echo "ERROR"
+        echo "$?"
+        exit 1;
+    else
+        echo "OK"
+    fi
+done
+
+echo -n "Building electron ... "
+cd $MAIN/$MAIN_PROJECT_NAME
+eval $GULP_CMD
+if [ $? -ne 0 ] ; then
+    echo "ERROR"
+    exit 1;
+else
+    echo "OK"
+fi

@@ -1,0 +1,84 @@
+{
+  "filesToCheck": {
+    "common": [
+          {"type": "file", "path": "out/app/electron/start.js"},
+          {"type": "file", "path": "node_modules/pson/dist/PSON.js"},
+          {"type": "file", "path": "out/build/core-electron.js"},
+          {"type": "lib", "path": "node_modules/screenshot-desktop/lib"},
+          {"type": "lib", "path": "node_modules/clipboard-files/lib"},
+          {"type": "lib", "path": "node_modules/jimp"},
+          {"type": "lib", "path": "node_modules/@jimp/bmp"},
+          {"type": "lib", "path": "node_modules/@jimp/core"},
+          {"type": "lib", "path": "node_modules/@jimp/custom"},
+          {"type": "lib", "path": "node_modules/@jimp/gif"},
+          {"type": "lib", "path": "node_modules/@jimp/jpeg"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-blit"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-blur"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-circle"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-color"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-contain"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-cover"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-crop"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-displace"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-dither"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-fisheye"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-flip"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-gaussian"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-invert"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-mask"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-normalize"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-print"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-resize"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-rotate"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-scale"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-shadow"},
+          {"type": "lib", "path": "node_modules/@jimp/plugin-threshold"},
+          {"type": "lib", "path": "node_modules/@jimp/plugins"},
+          {"type": "lib", "path": "node_modules/@jimp/png"},
+          {"type": "lib", "path": "node_modules/@jimp/tiff"},
+          {"type": "lib", "path": "node_modules/@jimp/types"},
+          {"type": "lib", "path": "node_modules/@jimp/utils"},
+
+          {"type": "lib", "path": "node_modules/@babel/runtime/helpers"},
+          {"type": "lib", "path": "node_modules/@babel/runtime/regenerator"},
+
+          {"type": "lib", "path": "node_modules/lodash"}
+
+
+
+      ],
+    "darwin": [
+      {"type": "file", "path": "node_modules/sqlite3/lib/binding/electron-v6.0-darwin-x64/node_sqlite3.node"}
+
+    ],
+    "linux": [
+      {"type": "file", "path": "node_modules/sqlite3/lib/binding/electron-v6.0-linux-x64/node_sqlite3.node"}
+    ],
+    "win32": [
+      {"type": "file", "path": "node_modules/sqlite3/lib/binding/electron-v6.0-win32-x64/node_sqlite3.node"}
+    ],
+    "plugins": {
+      "notes2": {
+        "common": [],
+        "darwin": [
+          {"type": "file", "path": "node_modules/trash/lib/macos-trash"}
+        ],
+        "linux": [],
+        "win32": [
+          {"type": "file", "path": "node_modules/trash/lib/win-trash.exe"}
+        ]
+        
+      }
+    }
+  },
+  "libPackages": {
+    "common": [
+        "os", "path", "fs", "util", "crypto", "electron", "assert", "events", "constants",
+        "child_process", "dns", "tty", "stream", "zlib", "tls", "net", "querystring", "url",
+        "http", "https", "vm", "memcpy", "xor4096"
+      ],
+    "darwin": ["osx-temperature-sensor"],
+    "linux": [],
+    "win32": []
+  }
+}

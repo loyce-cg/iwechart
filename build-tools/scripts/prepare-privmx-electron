@@ -1,0 +1,108 @@
+#!/bin/bash
+if [[ -f "vars.sh" ]]; then
+    source "vars.sh"
+else
+    source "../vars.sh"
+fi
+
+rm -rf $PRIVMX_ELECTRON/app
+rm -rf $PRIVMX_ELECTRON/dist
+rm -rf $PRIVMX_ELECTRON/electron-plugins
+rm -rf $PRIVMX_ELECTRON/src
+rm -rf $PRIVMX_ELECTRON/out
+
+cd $MAIN/$MAIN_PROJECT_NAME
+declare -a appSrcDirs=(
+"app/out"
+"app/node_modules"
+"app/package.json"
+)
+declare -a distSrcDirs=(
+"dist/icons"
+"dist/component"
+"dist/sounds"
+"dist/themes"
+"dist/window"
+"dist/build"
+"dist/dictionaries"
+"dist/assets"
+)
+
+mkdir -p $PRIVMX_ELECTRON/app
+mkdir -p $PRIVMX_ELECTRON/dist
+
+for i in "${appSrcDirs[@]}"
+do
+     echo "Copy: $MAIN/$MAIN_PROJECT_NAME/$i  =>  $PRIVMX_ELECTRON/$i"
+     # cp -R -L $MAIN/privfs-mail-client/$i $PRIVMX_ELECTRON/$i
+
+     cp -R $MAIN/$MAIN_PROJECT_NAME/$i $PRIVMX_ELECTRON/$i
+done
+
+for i in "${distSrcDirs[@]}"
+do
+     cp -R $MAIN/$MAIN_PROJECT_NAME/electron/dist/$i $PRIVMX_ELECTRON/$i
+done
+
+# cp -R -L $MAIN/privfs-mail-client/electron/dist/electron-plugins $PRIVMX_ELECTRON
+echo "Copying plugins to package..."
+cp -R $MAIN/$MAIN_PROJECT_NAME/electron/electron-plugins $PRIVMX_ELECTRON
+
+
+find $PRIVMX_ELECTRON -type f -name "*.d.ts" -delete
+
+#npm cleanup
+cd $DIR/nm-cleaner
+
+node nmcleaner.js $PRIVMX_ELECTRON/app $PRIVMX_ELECTRON/app/cleaner_out >/dev/null
+if [ $? -ne 0 ] ; then
+            echo "ERROR in nm-cleaner: $?"
+            exit 1;
+        else
+            echo "nm-cleaner OK"
+        fi
+node copy-licenses.js $PRIVMX_ELECTRON/app/node_modules $PRIVMX_ELECTRON/dist/assets/vendors >/dev/null
+if [ $? -ne 0 ] ; then
+            echo "ERROR in copy-licenses: $?"
+            exit 1;
+        else
+            echo "copy-licenses OK"
+        fi
+
+rm -rf $PRIVMX_ELECTRON/app/out
+rm -rf $PRIVMX_ELECTRON/app/node_modules
+cp -R $PRIVMX_ELECTRON/app/cleaner_out/* $PRIVMX_ELECTRON/app/
+rm -rf $PRIVMX_ELECTRON/app/cleaner_out
+
+
+echo "Cleaning modules..."
+for SUBMODULE in "${submodulesNames[@]}"
+do
+
+     SUBMODULE_PATH=${PRIVMX_ELECTRON}/electron-plugins/plugins/${SUBMODULE}/main
+     echo "Submodule path: $SUBMODULE_PATH"
+     node nmcleaner.js $SUBMODULE_PATH $SUBMODULE_PATH/cleaner_out plugin
+     rm -rf $SUBMODULE_PATH/main/build
+     rm -rf $SUBMODULE_PATH/component
+     rm -rf $SUBMODULE_PATH/main
+     rm -rf $SUBMODULE_PATH/node_modules
+     cp -R $SUBMODULE_PATH/cleaner_out/* $SUBMODULE_PATH
+     rm -rf $SUBMODULE_PATH/cleaner_out
+
+done
+
+# Copying platform specific files
+PLATFORM=`${DIR}/scripts/get_platform`;
+cd $PRIVMX_ELECTRON
+
+# PRE-PACKAGE
+rm -rf ./electron-plugins/plugins/mail
+rm -rf ./out
+
+cp ./platforms/$PLATFORM/forge.config.$PLATFORM.js ./forge.config.js
+cp -R ./platforms/$PLATFORM/icons/* ./dist/icons
+
+if [ "$PLATFORM" == "darwin" ]; then
+     cp ./platforms/$PLATFORM/entitlements.mac.plist ./
+     cp ./platforms/$PLATFORM/files-extensions.plist ./
+fi

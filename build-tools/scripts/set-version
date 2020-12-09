@@ -1,0 +1,22 @@
+#!/usr/bin/env node
+
+var fs = require("fs");
+var path = require("path");
+
+if (process.argv.length < 3) {
+    console.log("Usage:\n    set-version versionString");
+    console.log("Example:\n    set-version 2.0.0~alpha15-1");
+    return;
+}
+
+var packageJsonFiles = [
+    path.resolve(__dirname, "../privmx-electron/app/package.json"),
+    path.resolve(__dirname, "../privmx-electron/package.json")
+]
+
+packageJsonFiles.forEach( filePath => {
+    var content = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    content.version = process.argv[2];
+    console.log("Updating version field in " + filePath +" with version " + process.argv[2] + "...");
+    fs.writeFileSync(filePath, JSON.stringify(content));
+})

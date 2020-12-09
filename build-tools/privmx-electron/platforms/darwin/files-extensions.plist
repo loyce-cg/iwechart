@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>png</string>
+      </array>
+      <key>CFBundleTypeIconFile</key>
+      <string>electron.icns</string>
+      <key>CFBundleTypeMIMETypes</key>
+      <array>
+        <string>image/png</string>
+      </array>
+      <key>CFBundleTypeName</key>
+      <string>PNG image</string>
+      <key>CFBundleTypeOSTypes</key>
+      <array>
+        <string>PNGf</string>
+      </array>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+    </dict>
+    <dict>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>jpg</string>
+        <string>jpeg</string>
+      </array>
+      <key>CFBundleTypeIconFile</key>
+      <string>electron.icns</string>
+      <key>CFBundleTypeMIMETypes</key>
+      <array>
+        <string>image/jpeg</string>
+      </array>
+      <key>CFBundleTypeName</key>
+      <string>JPEG image</string>
+      <key>CFBundleTypeOSTypes</key>
+      <array>
+        <string>JPEG</string>
+      </array>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+    </dict>
+    <dict>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>gif</string>
+      </array>
+      <key>CFBundleTypeIconFile</key>
+      <string></string>
+      <key>CFBundleTypeMIMETypes</key>
+      <array>
+        <string>image/gif</string>
+      </array>
+      <key>CFBundleTypeName</key>
+      <string>GIF image</string>
+      <key>CFBundleTypeOSTypes</key>
+      <array>
+        <string>GIFf</string>
+      </array>
+      <key>LSHandlerRank</key>
+	    <string>Alternate</string>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+    </dict>
+  </array>
+</dict>
+</plist>

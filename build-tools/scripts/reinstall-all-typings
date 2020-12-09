@@ -1,0 +1,23 @@
+#!/bin/bash
+if [[ -f "vars.sh" ]]; then
+    source "vars.sh"
+else
+    source "../vars.sh"
+fi
+
+
+for MODULE in "${submodulesExceptCalendar[@]}"
+do
+    echo -n "Install typings for module $MODULE ... "
+    cd $MAIN/$MODULE/app
+    rm -rf node_modules/pmc-mail node_modules/pmc-web
+    npm install
+
+    if [ $? -ne 0 ] ; then
+        echo "ERROR"
+        echo "$?"
+        exit 1;
+    else
+        echo "OK"
+    fi
+done

@@ -1,0 +1,50 @@
+#!/bin/bash
+
+if [[ -f "vars.sh" ]]; then
+    source "vars.sh"
+else
+    source "../vars.sh"
+fi
+
+PLATFORM=`${DIR}/scripts/get_platform`;
+VERSION="${1}";
+
+echo "privmx-electron: $PRIVMX_ELECTRON"
+
+    # POST-BUILD
+    cd $PRIVMX_ELECTRON
+    PACKAGE_NAME="PrivMX"
+    echo "Compressing ..."
+
+    if [ "$PLATFORM" == "darwin" ]; then
+        PACKAGE_NAME="PrivMX.app"
+        PACKAGE_DIR="out/PrivMX-darwin-x64"
+        rm -rf $PACKAGE_DIR/LICENSE*
+        echo "$VERSION" > $PACKAGE_DIR/version
+    fi
+
+    if [ "$PLATFORM" == "linux" ]; then
+        PACKAGE_DIR="PrivMX-linux-x64"
+        cd out
+        PWD=`pwd`
+        mv $PACKAGE_DIR $PACKAGE_NAME
+        rm $PACKAGE_NAME/LICENSE
+        mkdir -p ./$PACKAGE_NAME/Licenses
+        cp $PWD/../dist/assets/licence_en.html ./$PACKAGE_NAME/Licenses/PRIVMX_LICENSE.html
+        cp -R $PWD/../dist/assets/vendors ./$PACKAGE_NAME/Licenses/vendors
+        echo "$VERSION" > $PACKAGE_NAME/version
+    fi
+
+    if [ "$PLATFORM" == "win32" ]; then
+        PACKAGE_DIR="PrivMX-win32-x64"
+
+        cd out
+        mv $PACKAGE_DIR $PACKAGE_NAME
+        rm $PACKAGE_NAME/LICENSE
+        #remove spellchecker.node
+        rm ./$PACKAGE_NAME/resources/app.asar.unpacked/app/node_modules/spellchecker/build/Release/spellchecker.node
+        mkdir -p ./$PACKAGE_NAME/Licenses
+        cp $PWD/../dist/assets/licence_en.html ./$PACKAGE_NAME/PRIVMX_LICENSE.html
+        cp -R $PWD/../dist/assets/vendors ./$PACKAGE_NAME/Licenses/vendors
+        echo "$VERSION" > $PACKAGE_NAME/version
+    fi
