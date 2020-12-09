@@ -1,0 +1,174 @@
+#!/bin/bash
+source ./vars.sh
+
+BUILD_ELECTRON_CMD="$DIR/scripts/build-electron";
+
+VERSION_PARAM="--version=";
+PLATFORM_PARAM="--platform="
+STAGE_PARAM="--stage="
+NO_PRODUCTION_PARAM="--no-production"
+HELP_PARAM="--help"
+
+VERSION_DEFAULT="1.0.0";
+VERSION="";
+PLATFORM="";
+STAGE="";
+NO_PRODUCTION=0;
+
+
+for param in "$@"
+do
+    if [ "${param:0:${#PLATFORM_PARAM}}" == "$PLATFORM_PARAM" ]; then
+        PLATFORM=${param:${#PLATFORM_PARAM}}
+    fi
+
+    if [ "${param:0:${#VERSION_PARAM}}" == "$VERSION_PARAM" ]; then
+        VERSION=${param:${#VERSION_PARAM}}
+    fi
+
+    if [ "${param:0:${#STAGE_PARAM}}" == "$STAGE_PARAM" ]; then
+        STAGE=${param:${#STAGE_PARAM}}
+    fi
+
+    if [ "${param:0:${#NO_PRODUCTION_PARAM}}" = "$NO_PRODUCTION_PARAM" ]; then
+        NO_PRODUCTION=1
+    fi
+
+
+    if [ "${param:0:${#HELP_PARAM}}" = "$HELP_PARAM" ]; then
+        echo "
+        --version=<version>
+        --platform=<platform>
+        --stage=<stage_number>  starts script from given stage skipping preceding stages.
+        Available stages:
+            (1) - installing npm packages
+            (2) - reinstall all typings
+            (3) - building all projects
+            (4) - building electron project
+            (5) - preparing privmx-electron project for build
+            (6) - update electron package version by --version
+            (7) - packaging electron
+        --no-production
+        "
+        exit 0;
+    fi
+
+
+done
+if [ "$PLATFORM" == "" ]; then
+    PLATFORM=`${DIR}/scripts/get_platform`
+fi
+
+if [ $NO_PRODUCTION -eq 0 ]; then
+    BUILD_ELECTRON_CMD+=" --production";
+fi
+BUILD_ELECTRON_CMD+=" --deploy";
+
+if [ "$VERSION" == "" ]; then
+    echo "No version specified. Using: $VERSION_DEFAULT"
+    VERSION=${VERSION_DEFAULT};
+fi
+
+
+
+echo "Building project version: $VERSION for platform: $PLATFORM ..."
+
+CURRENT_STAGE="1"
+if [[ "$STAGE" != "" && $CURRENT_STAGE -ge $STAGE ]] || [ "$STAGE" == "" ]; then
+    echo "Installing npm packages ... "
+    $DIR/scripts/npm-install --deploy > /dev/null
+    if [ $? -ne 0 ] ; then
+        echo "ERROR install npm packages"
+        exit 1;
+    else
+        echo "OK"
+    fi
+fi
+
+
+CURRENT_STAGE="2"
+if [[ "$STAGE" != "" && $CURRENT_STAGE -ge $STAGE ]] || [ "$STAGE" == "" ]; then
+    echo "Installing typings ... "
+    $DIR/scripts/reinstall-all-typings > /dev/null
+    if [ $? -ne 0 ] ; then
+        echo "ERROR install typings"
+        exit 1;
+    else
+        echo "OK"
+    fi
+fi
+
+CURRENT_STAGE="3"
+if [[ "$STAGE" != "" && $CURRENT_STAGE -ge $STAGE ]] || [ "$STAGE" == "" ]; then
+    echo "Building projects ... "
+    if [ $NO_PRODUCTION -eq 0 ]; then
+        $DIR/scripts/build --production --deploy
+    else
+        $DIR/scripts/build --deploy
+    fi
+    if [ $? -ne 0 ] ; then
+        echo "ERROR building projects."
+        exit 1;
+    else
+        echo "OK"
+    fi
+fi
+
+CURRENT_STAGE="4"
+if [[ "$STAGE" != "" && $CURRENT_STAGE -ge $STAGE ]] || [ "$STAGE" == "" ]; then
+    echo "Building electron project ..."
+    eval $BUILD_ELECTRON_CMD
+    if [ $? -ne 0 ] ; then
+        echo "ERROR building electron project."
+        exit 1;
+    else
+        echo "OK"
+    fi
+fi
+
+CURRENT_STAGE="5"
+if [[ "$STAGE" != "" && $CURRENT_STAGE -ge $STAGE ]] || [ "$STAGE" == "" ]; then
+    echo "Preparing privmx-electron ..."
+    $DIR/scripts/prepare-privmx-electron >/dev/null
+    if [ $? -ne 0 ] ; then
+        echo "ERROR preparing privmx-electron project."
+        exit 1;
+    else
+        echo "OK"
+    fi
+fi
+
+
+CURRENT_STAGE="6"
+if [[ "$STAGE" != "" && $CURRENT_STAGE -ge $STAGE ]] || [ "$STAGE" == "" ]; then
+    $DIR/scripts/set-version $VERSION >/dev/null
+fi
+
+
+
+CURRENT_STAGE="7"
+if [[ "$STAGE" != "" && $CURRENT_STAGE -ge $STAGE ]] || [ "$STAGE" == "" ]; then
+    echo "Packaging ... "
+    cd $PRIVMX_ELECTRON
+
+    # PACKAGE
+    electron-forge package >/dev/null
+    if [ $? -ne 0 ] ; then
+        echo "ERROR"
+        exit 1;
+    else
+        echo "OK"
+    fi
+fi
+
+CURRENT_STAGE="8"
+if [[ "$STAGE" != "" && $CURRENT_STAGE -ge $STAGE ]] || [ "$STAGE" == "" ]; then
+    # cleanup package
+    $DIR/scripts/finalize $VERSION
+fi
+
+
+
+
+
+

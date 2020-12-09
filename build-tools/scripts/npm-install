@@ -1,0 +1,57 @@
+#!/bin/bash
+
+if [[ -f "vars.sh" ]]; then
+    source "vars.sh"
+else
+    source "../vars.sh"
+fi
+
+for MODULE in "${modules[@]}"
+do
+     echo -n "Installing npm modules for $MODULE ... "
+     cd $MAIN/$MODULE
+     npm ci
+     if [ $? -ne 0 ] ; then
+         echo "ERROR"
+         exit 1;
+     else
+         echo "OK"
+     fi
+
+     cd $MAIN/$MODULE/app
+     npm ci
+     if [ $? -ne 0 ] ; then
+         echo "ERROR"
+         exit 1;
+     else
+         echo "OK"
+     fi
+
+done
+
+cd $MAIN/main/electron
+npm ci
+if [ $? -ne 0 ] ; then
+    echo "ERROR"
+    exit 1;
+else
+    echo "OK"
+fi
+
+cd $MAIN/build-tools/privmx-electron
+npm install
+if [ $? -ne 0 ] ; then
+    echo "ERROR"
+    exit 1;
+else
+    echo "OK"
+fi
+
+cd $MAIN/build-tools/nm-cleaner
+npm install
+if [ $? -ne 0 ] ; then
+    echo "ERROR"
+    exit 1;
+else
+    echo "OK"
+fi

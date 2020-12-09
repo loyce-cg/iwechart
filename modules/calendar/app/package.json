@@ -8,7 +8,7 @@
     "postinstall": "link-module-alias"
   },
   "dependencies": {
-    "privfs-mail-client-tasks-plugin": "file:../../tasks-plugin/app",
+    "privfs-mail-client-tasks-plugin": "file:../../tasks/app",
     "resize-observer-polyfill": "^1.5.1"
   },
   "devDependencies": {

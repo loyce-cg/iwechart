@@ -1,0 +1,7 @@
+#!/usr/bin/env node
+
+function getPlatform() {
+    console.log(process.platform);
+}
+getPlatform();
+
