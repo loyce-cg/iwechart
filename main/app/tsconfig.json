@@ -10,7 +10,8 @@
         "declaration": true,
         "preserveConstEnums": true,
         "sourceMap": true,
-        "outDir": "out"
+        "outDir": "out",
+        "allowUnreachableCode": false
     },
     "include": ["src/**/*"],
     "exclude": ["node_modules"]

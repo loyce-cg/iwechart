@@ -1,8 +1,5 @@
-import { window, component, Types, Q, utils, mail, privfs } from "pmc-mail";
-import { Settings } from "pmc-web/out/utils";
-import { ContainerWindowController } from "pmc-web/out/window/container/main";
+import { window, component, Types, Q, utils, mail } from "pmc-mail";
 import { CalendarPanelController } from "../../component/calendarPanel/CalendarPanelController";
-import Inject = utils.decorators.Inject;
 import Dependencies = utils.decorators.Dependencies;
 import { CalendarPlugin, CalendarTaskPreviewRequestEvent, CalendarDayPreviewRequestEvent, CalendarPreviewUpdateRequestEvent, CalendarTaskPreviewChangeVisibilityRequestEvent, HorizontalCalendarTaskPreviewWindowLayoutChangeRequestEvent, CalendarBadgesUpdateRequestEvent, CalendarSearchUpdateEvent, CalendarComponentFactory, CalendarDayPreviewChangeVisibilityRequestEvent, CalendarSettingChanged, CalendarsFileAdded, CalendarsFileRemoved, ExtraCalendarsChanged } from "../../main/CalendarPlugin";
 import { CalendarTasksCountManager } from "../../main/CalendarTasksCountManager";
@@ -48,7 +45,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
     sidebar: component.sidebar.SidebarController;
     componentFactory: CalendarComponentFactory;
     calendarPlugin: CalendarPlugin;
-    subSettings: { [key: string]: Settings } = {};
+    subSettings: { [key: string]: utils.Settings } = {};
     afterViewLoaded: Q.Deferred<void> = Q.defer();
     privateSection: mail.section.SectionService;
     dirty: boolean = false;
@@ -249,8 +246,8 @@ export class CalendarWindowController extends window.base.BaseWindowController {
         
         this.app.addEventListener("focusChanged", (event) => {
             let windowId = (<any>event).windowId;
-            this.calendarPlugin.activeWindowFocused = windowId == "main-window" || windowId == "focus-restored" ? (<ContainerWindowController>this.parent.parent).activeModel.get() : windowId;
-            if (windowId == "tasks" || (windowId == "main-window" && (<ContainerWindowController>this.parent.parent).activeModel.get() == "tasks") ) {
+            this.calendarPlugin.activeWindowFocused = windowId == "main-window" || windowId == "focus-restored" ? (<window.container.ContainerWindowController>this.parent.parent).activeModel.get() : windowId;
+            if (windowId == "tasks" || (windowId == "main-window" && (<window.container.ContainerWindowController>this.parent.parent).activeModel.get() == "tasks") ) {
                 setTimeout(() => {
                     this.callViewMethod("grabFocus", true);
                 }, 200);
@@ -517,7 +514,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
             this.selectProject(session, event.element.section.getId());
             this.app.viewContext = "section:" + event.element.section.getId();
 
-        }        
+        }
         else if (event.element.type == component.sidebar.SidebarElementType.REMOTE_CONVERSATION) {
             let session = this.app.sessionManager.getSessionByHostHash(event.element.hostHash);
             this.selectProject(session, event.element.conv2.id);
@@ -1299,7 +1296,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                 return this.app.sessionManager.createRemoteSession(hostEntry.host)
                 .then(() => {
                     return this.app.sessionManager.init(hostHash);
-                })        
+                })
                 .fail(() => {
                     this.sidebar.callViewMethod("showHostLoading", hostHash, false);
                     return this.errorCallback;

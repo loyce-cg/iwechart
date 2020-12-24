@@ -45,10 +45,18 @@
               if (model.instanceName) {
                 field(Helper.i18n("window.admin.sysinfo.instanceName"), model.instanceName);
               }
-              field(Helper.i18n("window.admin.sysinfo.users"), model.currentUsers.internal + model.currentUsers.external + " / " + model.currentUsers.maxUsers + " ("
-               + Helper.i18n("window.admin.sysinfo.users.internal") + ": " + model.currentUsers.internal + ", "
-               + Helper.i18n("window.admin.sysinfo.users.external") + ": " + model.currentUsers.external              
-               + ")");
+              if (model.currentUsers.maxUsers && Number(model.currentUsers.maxUsers) > -1 ) {
+                field(Helper.i18n("window.admin.sysinfo.users"), model.currentUsers.internal + model.currentUsers.external + " / " + model.currentUsers.maxUsers + " ("
+                + Helper.i18n("window.admin.sysinfo.users.internal") + ": " + model.currentUsers.internal + ", "
+                + Helper.i18n("window.admin.sysinfo.users.external") + ": " + model.currentUsers.external              
+                + ")"); 
+              }
+              else {
+                field(Helper.i18n("window.admin.sysinfo.users"), model.currentUsers.internal + model.currentUsers.external + " ("
+                + Helper.i18n("window.admin.sysinfo.users.internal") + ": " + model.currentUsers.internal + ", "
+                + Helper.i18n("window.admin.sysinfo.users.external") + ": " + model.currentUsers.external              
+                + ")"); 
+              }
               field(Helper.i18n("window.admin.sysinfo.fsUsage"), Helper.bytesSize(model.config.diskUsage) + " / " + Helper.convertServerTotalStorageSizeToPrivMXFormat(model.totalStorage));
               if (model.expireDate > -1) {
                 field(Helper.i18n("window.admin.sysinfo.expireDate"), Helper.standardDateWithoutTime(model.expireDate) + " (" + Helper.calendarDate(model.expireDate) + ")");

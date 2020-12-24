@@ -67,6 +67,7 @@ import { MailConst } from "../../mail";
 import { MimeType } from "../../mail/filetree";
 import { Session } from "../../mail/session/SessionManager";
 import { WindowUrl } from "./WindowUrl";
+// import {measure} from "../../utils/Decorators";
 
 let Logger = RootLogger.get("privfs-mail-client.app.electron.ElectronApplication");
 let ipc = electron.ipcMain;
@@ -523,6 +524,10 @@ export class ElectronApplication extends CommonApplication {
     
     getFromObjectMap<T = any>(id: number): T {
         return ObjectMapModule.get(id);
+    }
+
+    removeFromObjectMap(id: number): void {
+        ObjectMapModule.remove(id);
     }
     
     getMailClientViewHelperModel(): app.MailClientViewHelperModel {
@@ -2331,6 +2336,7 @@ export class ElectronApplication extends CommonApplication {
     }
     
     getClipboardElementToPaste(allowedPrivMxFormats: string[], allowedSystemFormats: string[], onlyPlainText: boolean = false): Q.Promise<ClipboardElement> {
+        this.clipboard.populateFromSystem();
         let elementPrivMx: ClipboardElement = null;
         let elementSystem: ClipboardElement = null;
         let elementPrivMxId: number = null;
@@ -2592,10 +2598,6 @@ export class ElectronApplication extends CommonApplication {
     
     getSystemUserName(): string {
         return os.userInfo().username;
-    }
-    
-    getPlayerManager(): PlayerManager {
-        return (<PlayerHelperWindowController>this.windows.playerHelper).playerManager;
     }
     
     saveAsPdf(session: Session, file: OpenableElement, parentWindow?: AppWindow): Q.Promise<void> {

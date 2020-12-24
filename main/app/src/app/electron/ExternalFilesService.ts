@@ -3,15 +3,12 @@ import * as privfs from "privfs-client";
 import * as Q from "q";
 import * as path from "path";
 import {MsgBoxResult} from "../../window/msgbox/MsgBoxWindowController";
-import { OpenableFile, OpenableElement } from "../common/shell/ShellTypes";
+import { OpenableFile, OpenableElement, DescriptorVersionElement } from "../common/shell/ShellTypes";
 
-import { CommonApplication } from "../common";
 import * as Types from "../../Types";
-import { SectionService } from "../../mail/section/SectionService";
 import { SectionManager } from "../../mail/section/SectionManager";
 import * as fs from "fs";
 import { Session } from "../../mail/session/SessionManager";
-import { resolve } from "url";
 import { Formatter } from "../../utils/Formatter";
 import * as RootLogger from "simplito-logger";
 import { FilesLockingService } from "../common/fileslockingservice/FilesLockingService";
@@ -93,8 +90,6 @@ export class ExternalFilesService  {
 
                 this.registeredFiles[mapId] = null;
                 this.reduceFilesMap();
-                // syncing with preview
-                // console.log("syncing with preview");
                 if (mapId in this.registeredPreviews) {
                     this.registeredPreviews[mapId].setLockEnabled(false);
                 }
@@ -216,6 +211,9 @@ export class ExternalFilesService  {
     }
 
     openFileWithNoLock(session: Session, openableFile: OpenableFile): Q.Promise<privfs.fs.descriptor.Handle> {
+        if (openableFile instanceof DescriptorVersionElement) {
+            return Q(openableFile.handle);
+        }
         return openableFile.fileSystem.openFile(openableFile.path, privfs.fs.file.Mode.READ_WRITE);
     }
 
@@ -229,8 +227,6 @@ export class ExternalFilesService  {
             if (openableFile.isLocalFile()) {
                 return null;
             }
-            // return openableFile.fileSystem.openFile(openableFile.path, privfs.fs.file.Mode.READ_WRITE, true)
-            // return this.tryLock(session, openableFile)
             return this.openFileWithNoLock(session, openableFile)
             .then(handleOrNull => {
                 handle = handleOrNull;
@@ -258,45 +254,17 @@ export class ExternalFilesService  {
     
         })
     }
-    // setLockingTimer(elementId: string): NodeJS.Timer {
-    //     let lockingTimer = setInterval(() => {
-    //         Q().then(() => {
-    //             return this.reLockOrReject(elementId)
-    //         })
-    //     }, 60 * 1000);
-    //     return lockingTimer;
-    // }
-
-    
-    // reLockOrReject(elementId: string): Q.Promise<any> {
-    //     // console.log("on relockOrReject");
-    //     return Q().then(() => {
-    //         if (!(elementId in this.registeredFiles)) {
-    //             return;
-    //         }
-
-    //         let handle = this.registeredFiles[elementId].handle;
-    //         // console.log("trying to refresh lock..", elementId);
-    //         return handle.lock(false, false)    
-    //     })
-
-    // }
 
     createConflictedFileName(openableFile: OpenableFile): string {
         try {
-            // console.log("orig path:", openableFile.path);
             let parentPath = openableFile.path.split("/").slice(0, -1).join("/");
-            // console.log("parent path: ", parentPath);
             let fileName = openableFile.getName();
-            // console.log("filename:", fileName);
             let fileParts = fileName.split(".");
             let ext: string = "";
             if (fileParts.length > 1) {
                 ext = fileParts[fileParts.length - 1];
                 fileName = fileParts.slice(0, -1).join(".");
             }
-            // console.log("fileParts: ", fileParts);
-            // console.log("ext: ", ext);
             
             let formatter = new Formatter();
             let conflictedCopyStr = this.app.localeService.i18n("externalFilesService.conflictedCopy");
@@ -317,13 +285,11 @@ export class ExternalFilesService  {
             if (! registeredFile.openableElement) {
                 return;
             }
-            // console.log("sessionManager ready.. creating lazyBuffer of registeredFile..", registeredFile.hddPath);
             let lazyBuffer = new privfs.lazyBuffer.NodeFileLazyContent(registeredFile.hddPath, registeredFile.openableElement.getMimeType());
             
             let openableFile = (registeredFile.openableElement as OpenableFile);
             let fname = this.createConflictedFileName(openableFile)
 
-            // console.log("created conflicted name: ", fname);
             return openableFile.fileSystem.resolvePath(fname)
             .then(resolvedPath => {
                 return openableFile.fileSystem.save(resolvedPath.path, lazyBuffer);
@@ -342,7 +308,6 @@ export class ExternalFilesService  {
 
 
     saveFileAsRecovery(session: Session, elementId: string): Q.Promise<void> {
-        // console.log("on saveFileAsRecovery");
         let registeredFile: RegisteredExternalFile;
         let mapId = this.getMapId(session, elementId);
         if (mapId in this.registeredFiles) {
@@ -353,7 +318,6 @@ export class ExternalFilesService  {
                 return;
             }
 
-            // console.log("sessionManager ready.. creating lazyBuffer of registeredFile..", registeredFile.hddPath);
             let lazyBuffer = new privfs.lazyBuffer.NodeFileLazyContent(registeredFile.hddPath, registeredFile.openableElement.getMimeType());
             return this.uploadToMy(session.sectionManager, lazyBuffer);
         })
@@ -362,17 +326,12 @@ export class ExternalFilesService  {
 
             return openableFile.fileSystem.openFile(openableFile.path, privfs.fs.file.Mode.READ_WRITE)
             .then(h => {
-                // console.log("updating handle on recovery..")
                 Logger.debug("updating handle on recovery..");
                 return h.lock().thenResolve(h);
             })
             .then(handle => {
-                // update registered file data\
-                // console.log("registering new created file", result.openableElement.getElementId());                
                 this.startSyncing(session, result.openableElement, registeredFile.hddPath, handle);
 
-                // unregister old file
-                // console.log("unregister old file", registeredFile.openableElement.getElementId());
                 return this.unregisterFile(session, registeredFile.openableElement.getElementId());
 
             })
@@ -399,21 +358,7 @@ export class ExternalFilesService  {
     }
 
 
-    // if (privfs.core.ApiErrorCodes.is(e, "DESCRIPTOR_LOCKED")) {
-    //     return this.saveFileAsRecovery(text);
-    // }
-    // else
-    // if (privfs.core.ApiErrorCodes.is(e, "OLD_SIGNATURE_DOESNT_MATCH")) {
-    //     return this.saveFileAsRecovery(text);
-    // }
 
-
-
-
-
-
-
-    
     lockedByMeInOtherSession(e: any, handle: privfs.fs.descriptor.Handle): Q.Promise<void> {
         return Q().then(() => {
             if (!privfs.core.ApiErrorCodes.is(e, "DESCRIPTOR_LOCKED") || e.data.error.data.lockerPub58 != this.identity.pub58) {
@@ -450,7 +395,6 @@ export class ExternalFilesService  {
                 syncing: false,
                 intervalId: syncTimer = setInterval(() => {
                     if (!fs.existsSync(filePath)) {
-                        // clearTimeout(syncTimer);
                         this.unregisterFile(session, openableElement.getElementId());
                         return;
                     }
@@ -465,12 +409,9 @@ export class ExternalFilesService  {
                             else {
                                 return handle.write(lazyBuffer)
                                 .fail(e => {
-                                    console.log("trying to write file ended with error", e);
-                                    // console.log("writing in original location failed...", e);
                                     if (privfs.core.ApiErrorCodes.is(e, "DESCRIPTOR_LOCKED") || privfs.core.ApiErrorCodes.is(e, "OLD_SIGNATURE_DOESNT_MATCH")) {
                                         return this.saveFileAsConflicted(session, openableElement.getElementId())
                                         .fail(ex => {
-                                            // console.log("could not write recovery file..");
                                             Logger.error("Could not write recovery file...")
                                         })
                                     }
@@ -491,7 +432,6 @@ export class ExternalFilesService  {
             }
             if (! openableElement.isLocalFile()) {
                 this.registerFile(session, openableElement, filePath, handle, entry.intervalId);
-                // this.externalOpenedFilesSyncIntervals.push(entry);
             }
     }
 

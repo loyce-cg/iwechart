@@ -7,15 +7,12 @@ import { LocaleService, section } from "../../mail";
 import { i18n } from "./i18n";
 import Q = require("q");
 import { Mindmap } from "./Mindmap";
-import { MindmapNode } from "./MindmapNode";
 import { OpenableElement, OpenableFile } from "../../app/common/shell/ShellTypes";
 import { MindmapOperation, ChangeNodePropertyOperation, ComplexNodeOperation } from "./MindmapOperation";
 import * as Types from "../../Types";
 import { NotificationController } from "../notification/main";
 import { Tree, Helper as TreeHelper } from "../../mail/filetree/NewTree";
 import { MsgBoxResult } from "../../window/msgbox/main";
-import { Identity } from "privfs-client/out/identity";
-import { ContactService } from "../../mail/contact";
 import { OpenableSectionFile, SectionService, FileSystemModuleService } from "../../mail/section";
 import { CommonApplication } from "../../app/common";
 import { Clipboard as PrivMxClipboard } from "../../app/common/clipboard/Clipboard";
@@ -95,8 +92,6 @@ export class MindmapEditorController extends ComponentController {
     }
     
     @Inject componentFactory: ComponentFactory;
-    // @Inject identity: Identity;
-    // @Inject contactService: ContactService;
     
     afterViewLoaded: Q.Deferred<void>;
     afterMindmapRendered: Q.Deferred<void>;
@@ -304,12 +299,14 @@ export class MindmapEditorController extends ComponentController {
                 }));
             }
             return Q.all(proms);
-        }).then(() => {
+        })
+        .then(() => {
             if (Object.keys(newTexts).length > 0) {
                 this.callViewMethod("setNewLabelTexts", JSON.stringify(newTexts), JSON.stringify(newMetaData));
             }
             content = privfs.lazyBuffer.Content.createFromText(JSON.stringify(this.mindmap), this.openableElement.getMimeType(), this.openableElement.getName());
-        }).then(() => {
+        })
+        .then(() => {
             if (this.openableElement && (<any>this.openableElement).openableElementType == "LocalOpenableElement") {
                 return this.openableElement.save(content).thenResolve(null);
             }
@@ -382,36 +379,7 @@ export class MindmapEditorController extends ComponentController {
         return key;
     }
     
-    lock(withVersionUpdate: boolean = true): Q.Promise<void> {
-        // let viewId = this.currentViewId;
-        // return Q().then(() => {
-        //     if (this.currentViewId != viewId) {
-        //         return;
-        //     }
-        //     if (this.handle) {
-        //         return this.handle.lock(false, withVersionUpdate);
-        //     }
-        // })
-        // .then(() => {
-        //     if (this.currentViewId != viewId) {
-        //         return;
-        //     }
-        //     this.startLockInterval();
-        //     this.startAutoSaveInterval();
-        // })
-        // .fail(e => {
-        //     if (this.currentViewId != viewId) {
-        //         return;
-        //     }
-        //     return this.lockedByMeInOtherSession(e)
-        //     .fail(e => {
-        //         if (privfs.core.ApiErrorCodes.is(e, "DESCRIPTOR_LOCKED")) {
-        //             this.editMode = false;
-        //             this.onError(e);
-        //             return Q.reject(e);
-        //         }
-        //     });
-        // });
+    lock(_withVersionUpdate: boolean = true): Q.Promise<void> {
         return Q();
     }
     
@@ -437,7 +405,7 @@ export class MindmapEditorController extends ComponentController {
             this.releasingLock = false;
         });
     }
-
+    
     autoSave(): Q.Promise<void> {
         return Q().then(() => {
             if (!this.handle) {
@@ -460,7 +428,7 @@ export class MindmapEditorController extends ComponentController {
             });
         })
     }
-
+    
     saveFileAsConflicted(content: privfs.lazyBuffer.Content): Q.Promise<void> {
         return Q().then(() => {
             let openableFile = (this.openableElement as OpenableSectionFile);
@@ -469,7 +437,7 @@ export class MindmapEditorController extends ComponentController {
             let newOpenableFile: OpenableSectionFile;
             return openableFile.fileSystem.resolvePath(fname)
             .then(resolvedPath => {
-                return openableFile.fileSystem.save(resolvedPath.path, content).thenResolve(resolvedPath.path); 
+                return openableFile.fileSystem.save(resolvedPath.path, content).thenResolve(resolvedPath.path);
             })
             .then(newPath => {
                 newOpenableFile = new OpenableSectionFile(this.session.sectionManager.getSection(currentSectionId), openableFile.fileSystem, newPath, true);
@@ -480,28 +448,19 @@ export class MindmapEditorController extends ComponentController {
             })
             .then(newHandle => {
                 this.handle = newHandle;
-                
                 this.openableElement = newOpenableFile;
-
-                let text = content.getText();
-                let newFullFileName = newOpenableFile.path;
-                let newFileName: string = newFullFileName.substr(newFullFileName.lastIndexOf("/") + 1);
-                // this.updateFileName(newFileName, newFullFileName, this.getTitle(newFullFileName));
                 this.app.filesLockingService.showWarning(newOpenableFile.path);
             })
             .fail(e => {
                 return Q.reject(e);
-            })    
+            })
         })
     }
-
+    
     createConflictedFileName(openableFile: OpenableFile): string {
         try {
-            // console.log("orig path:", openableFile.path);
             let parentPath = openableFile.path.split("/").slice(0, -1).join("/");
-            // console.log("parent path: ", parentPath);
             let fileName = openableFile.getName();
-            // console.log("filename:", fileName);
             let fileParts = fileName.split(".");
             let ext: string = "";
             if (fileParts.length > 1) {
@@ -513,31 +472,32 @@ export class MindmapEditorController extends ComponentController {
             let conflictedCopyStr = this.app.localeService.i18n("plugin.editor.window.editor.saveAsConflicted.conflictedCopy");
             let dateString = formatter.standardDate(new Date()).replace(/:/g, "-").replace(/ /g, "-");
             return parentPath + "/" + fileName + " - " + conflictedCopyStr + " - " + dateString + (ext.length > 0 ? "." + ext : "");
-        } catch (e) {
+        }
+        catch (e) {
             console.log("error creating filename",e);
         }
     }
-
+    
     saveFileAsRecovery(text: string): Q.Promise<void> {
         let section: SectionService;
         let osf: OpenableSectionFile;
         let filesService: FileSystemModuleService;
         let recoveryHandle: privfs.fs.descriptor.Handle;
-
+        
         return Q().then(() => {
             if (!this.openableEditableElement) {
                 return;
             }
-
+            
             osf = (<OpenableSectionFile>this.openableEditableElement);
             section = osf.section;
             filesService = section.getFileModule();
-
-            return filesService.getFileSystem();                
+            
+            return filesService.getFileSystem();
         })
         .then(fs => {
             let content = privfs.lazyBuffer.Content.createFromText(text, osf.getMimeType());
-
+            
             if (this.lastRecoveryFilePath) {
                 return Q().then(() => {
                     return fs.openFile(this.lastRecoveryFilePath, privfs.fs.file.Mode.READ_WRITE, true);
@@ -592,15 +552,6 @@ export class MindmapEditorController extends ComponentController {
             if (result.result != "yes") {
                 throw new Error("locked-in-another-session-by-me");
             }
-            // if (this.handle) {
-            //     return this.handle.lock(true).then(() => {
-            //         if (this.currentViewId != viewId) {
-            //             return;
-            //         }
-            //         this.startLockInterval();
-            //         this.startAutoSaveInterval();
-            //     });
-            // }
         });
     }
     
@@ -632,7 +583,7 @@ export class MindmapEditorController extends ComponentController {
             }, 60 * 1000);
         }
     }
-
+    
     stopAutoSaveInterval(): void {
         if (this.autoSaveInterval) {
             clearInterval(this.autoSaveInterval);
@@ -691,7 +642,6 @@ export class MindmapEditorController extends ComponentController {
                     if (this.currentViewId != viewId) {
                         return;
                     }
-                    let lastVersion = controller.handle.updateToLastVersion();
                     if (result.result != "yes") {
                         return;
                     }
@@ -835,8 +785,6 @@ export class MindmapEditorController extends ComponentController {
             this.readyDeferred.reject();
         });
     }
-
-
     
     copyToSystemClipboard(str: string): void {
         if (this.app) {
@@ -905,13 +853,10 @@ export class MindmapEditorController extends ComponentController {
         this.tasksPlugin.unWatch(this.session, "task", "*", "*", this.taskChangedHandlerBound);
     }
     
-    
-    
-    
-    
     /**************************************************
     **************** Task/file pickers ****************
     ***************************************************/
+    
     updateTaskStatuses(collectFromStrings: boolean = true): void {
         // Collect new statuses
         let newTaskStatuses: { [taskId: string]: string } = {};
@@ -979,6 +924,4 @@ export class MindmapEditorController extends ComponentController {
     taskChangedHandler(): void {
         this.updateTaskStatuses(false);
     }
-    
 }
-

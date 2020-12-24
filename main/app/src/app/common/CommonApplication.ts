@@ -35,7 +35,7 @@ import { ShellRegistry } from "./shell/ShellRegistry";
 import {MimeType as MimeTypeTree} from "../../mail/filetree";
 import {UrlWindowController} from "../../window/url/UrlWindowController";
 import { UnsupportedWindowController } from "../../window/unsupported/UnsupportedWindowController";
-import { OpenableAttachment, OpenableElement, SimpleOpenableElement, ApplicationBinding, ShellOpenOptions, ShellOpenAction, ShellUnsupportedError, ShellAppActionOptions, ShellActionType, OpenableFile } from "./shell/ShellTypes";
+import { OpenableAttachment, OpenableElement, SimpleOpenableElement, ApplicationBinding, ShellOpenOptions, ShellOpenAction, ShellUnsupportedError, ShellAppActionOptions, ShellActionType, } from "./shell/ShellTypes";
 import { Clipboard, ClipboardData, ClipboardElement } from "./clipboard/Clipboard";
 import { ImageEditorWindowController } from "../../window/imageeditor/ImageEditorWindowController";
 import { PdfWindowController } from "../../window/pdf/PdfWindowController";
@@ -61,9 +61,8 @@ import { PlayerManager } from "./musicPlayer/PlayerManager";
 import { NotificationsService } from "./notifications/NotificationsService";
 import { AudioWindowController } from "../../window/audio/AudioWindowController";
 import { PollingItem } from "../../mail/SinkIndex";
-import { CssVariables, CssParser } from "./customization/CssParser";
+import { CssParser } from "./customization/CssParser";
 import { CustomizationData } from "./customization/CustomizationData";
-import { CustomizationService } from "./customization/CustomizationService";
 import { EventDispatcher } from "../../utils/EventDispatcher";
 import { SectionPickerWindowController } from "../../window/sectionpicker/SectionPickerWindowController";
 import { SectionNewWindowController } from "../../window/sectionnew/SectionNewWindowController";
@@ -77,13 +76,11 @@ import { SupportWindowController } from "../../window/support/SupportWindowContr
 import { SoundsLibrary } from "../../sounds/SoundsLibrary";
 import { KeyboardShortcuts } from "./KeyboardShortcuts";
 import { SessionManager } from "../../mail/session/SessionManager";
-import { SectionEditWindowController } from "../../window/sectionedit/SectionEditWindowController";
 import { FileStyleResolver } from "./FileStyleResolver";
 import { StickersList } from "../../component/emojipicker/StickersList";
 import { HelperWindowController } from "../../window/helper/HelperWindowController";
 import { WebCCApi } from "../../mail/WebCCApi";
 import { Session } from "../../mail/session/SessionManager";
-import { PrivFsSrpSecure } from "../../../node_modules/privfs-client/out/core";
 import { ContentEditableEditorMetaData, FilePickerData } from "../../web-utils/ContentEditableEditorMetaData";
 import { ThumbsManager } from "../../mail/thumbs";
 import { FileRenameObserver } from "./FileRenameObserver";
@@ -103,18 +100,16 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     
     static ENC_KEY = new Buffer("d2014a39e7c4d0f524279560f82aa57ec1c894acbd242ef74aaaf3cce47cfde4", "hex");
     static MIN_ATTACHMENT_SIZE_TO_OPEN_DOWNLOAD_WINDOW = 2 * 1024 * 1024;
-
+    
     app: CommonApplication;
     storage: utils.Storage<string, string>;
     localeService: LocaleService;
     msgBox: MsgBox;
     defaultSettings: EncryptedStorage;
     mcaFactory: McaFactory;
-    // mailClientApi: MailClientApi;
     windows: {[name: string]: BaseWindowController};
     networkStatusService: NetworkStatusService;
     connectionStatusChecker: ConnectionStatusChecker;
-    // notifier: Notifier;
     preventLeavePageAlert: boolean;
     viewLogLevel: string;
     mailResourceLoader: mail.MailResourceLoader;
@@ -156,7 +151,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     serverConfigPromise: Q.Promise<privfs.types.core.ConfigEx>;
     serverConfigForUser: privfs.types.core.UserConfig;
     filesLockingService: FilesLockingService;
-
+    
     openTryMarkAsReadConfirms: { event: event.TryMarkAsReadEvent, window: Window }[] = [];
     soundsLibrary: SoundsLibrary = new SoundsLibrary();
     keyboardShortcuts: KeyboardShortcuts = null;
@@ -207,7 +202,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         this.ioc.registerComponent("titletooltip", components.titletooltip.TitleTooltipController);
         this.ioc.registerComponent("sectiontooltip", components.sectiontooltip.SectionTooltipController);
         this.ioc.registerComponent("userslisttooltip", components.userslisttooltip.UsersListTooltipController);
-
+        
         this.ioc.registerComponent("tree", components.tree.TreeController);
         this.ioc.registerComponent("emojipicker", components.emojipicker.EmojiPickerController);
         this.ioc.registerComponent("emojiviewbar", components.emojiviewbar.EmojiViewBarController);
@@ -341,7 +336,6 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         windows.support.SupportWindowController.registerTexts(localeService);
         windows.switchvoicechatconfirm.SwitchVoiceChatConfirmWindowController.registerTexts(localeService);
         
-        
         this.localeService = this.ioc.registerByValue("localeService", localeService, Lifecycle.ETERNAL);
         this.assetsManager = this.ioc.registerByValue("assetsManager", assetsManager, Lifecycle.ETERNAL);
         this.networkStatusService = this.ioc.registerByValue("networkStatusService", new NetworkStatusService(), Lifecycle.ETERNAL);
@@ -394,9 +388,9 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         this.addEventListener<event.OpenEditSectionDialogEvent>("open-edit-section-dialog", e => {
             this.openEditSectionDialogFromSidebar(e.sectionId);
         }, "main", "ethernal");
-
+        
         this.usersPresenceChecker = new UsersPresenceChecker(this);
-
+        
         this.windows = {};
         
         this.openedElementsManager = new OpenedElementsManager();
@@ -404,7 +398,6 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         this.searchModel = new Model({value: "", visible: false});
         this.onLogoutCallback = [];
         this.customMenuItems = [];
-        // this.mailClientApi = null;
         this.connectionStatusChecker = null;
         this.unclosableWindowsName = ["container"];
         this.openedWindows = [];
@@ -420,7 +413,6 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     }
     
     openChildWindow<T extends BaseWindowController>(win: T, delayedOpenDeferred?: Q.Deferred<T>): T {
-        // this.openedWindows.push(win);
         let prep = win.prepareBeforeShowing();
         if (prep) {
             prep.then(() => {
@@ -439,6 +431,8 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     abstract addToObjectMap(obj: any): number;
     
     abstract getFromObjectMap<T = any>(id: number): T;
+
+    abstract removeFromObjectMap(id: number): void;
     
     abstract getMailClientViewHelperModel(): app.MailClientViewHelperModel;
     
@@ -446,7 +440,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         return "channel-" + this.ipcChannelId++;
     }
     
-    createIpcSender(channelId: string = null): app.IpcSender {
+    createIpcSender(_channelId: string = null): app.IpcSender {
         throw new Error("Ipc sender cannot be create directly in application");
     }
     
@@ -588,17 +582,16 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     
     onLogin(mailClientApi: MailClientApi, userCredentials: app.UserCredentials): void {
         let containerWindow: ContainerWindowController;
-        let authData: privfs.types.core.UserDataEx;
         this.userCredentials = userCredentials;
         Q().then(() => {
             return Q.all([
-                mailClientApi.privmxRegistry.getServerProxyService(),
                 mailClientApi.privmxRegistry.getSessionManager(),
-                mailClientApi.privmxRegistry.getAuthData()
+                mailClientApi.privmxRegistry.getAuthData(),
+                mailClientApi.privmxRegistry.getServerProxyService()
             ])
         })
         .then(res => {
-            let [serverProxyService, sessionManager, authData] = res;
+            let [sessionManager, authData] = res;
             this.sessionManager = sessionManager;
             return this.sessionManager.addLocalSession(authData, mailClientApi);
         })
@@ -606,13 +599,11 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             return this.sessionManager.initAfterLogin();
         })
         .then(() => {
-            // console.log("create player helper window")
             this.ioc.create(PlayerHelperWindowController, [this]).then(helperWindow => {
                 helperWindow.playerManager = new PlayerManager(this, helperWindow);
                 this.windows.playerHelper = this.registerInstance(helperWindow);
                 this.windows.playerHelper.open();
             });
-            // console.log('create player helper window after')
             return this.afterLoginBefore();
         })
         .then(() => {
@@ -642,17 +633,17 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             ]);
         })
         .then(res => {
-            let [srpSecure, userConfig, client, userPreferences, contactService, mailFilter] = res[0];
+            let [srpSecure, userConfig, client, userPreferences, contactService] = res[0];
             let [authData, networkStatusService, eventDispatcher, customizationApi, utilApi, identityProvider] = res[1];
             let [personService] = res[2];
             this.identity = identityProvider.getIdentity();
             this.filesLockingService = new FilesLockingService(this, this.identity);
             this.userPreferences = userPreferences;
-
+            
             this.usersPresenceChecker.start();
             
             utilApi.getDeviceToken().then(deviceToken => {
-                privfs.core.PrivFsRpcManagerClass.GATEWAY_PROPERTIES["deviceToken"] = deviceToken;
+                srpSecure.gateway.properties["deviceToken"] = deviceToken;
             })
             .fail(e => {
                 console.log("Error during getting device token", e);
@@ -660,8 +651,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             // lazy loaded serverConfig for admin windows
             this.serverConfigPromise = identityProvider.isAdmin() ? srpSecure.getConfigEx() : Q.resolve(null);
             this.serverConfigForUser = userConfig;
-
-
+            
             customizationApi.getCustomization().then(theme => {
                 theme.cssVariables = CssParser.parseVariables(theme.css).cssVars;
                 this.useCustomizedTheme(theme, true);
@@ -683,7 +673,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                 userPreferences: userPreferences
             });
             this.voiceChatService.initAfterLogin();
-
+            
             this.getPlayerManager().init(eventDispatcher);
             this.getPlayerManager().onUserPreferencesChange({
                 type: "userpreferenceschange",
@@ -691,19 +681,10 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                 userPreferences: userPreferences
             });
             this.registerStreamsEvents(eventDispatcher);
-            // this.notifier = new Notifier(this, eventDispatcher);
-            // this.notifier.addCountModel(contactService.starredContactCountModel);
-            // this.notifier.addCountModel(mailFilter.unknownDomains.messagesCount);
-            // this.notifier.onUserPreferencesChange({
-            //     type: "userpreferenceschange",
-            //     operation: "load",
-            //     userPreferences: userPreferences
-            // });
             eventDispatcher.addEventListener<event.RevertSinkIndexEntry>("revertsinkindexentry", this.onRevertEntry.bind(this));
             eventDispatcher.addEventListener<event.UserPreferencesChangeEvent>("userpreferenceschange", this.onUserPreferencesChange.bind(this));
             this.addCountModel(contactService.starredContactCountModel);
-            // this.addCountModel(mailFilter.unknownDomains.messagesCount);
-
+            
             this.commonNotificationsService = new NotificationsService(this, eventDispatcher);
             containerWindow = <ContainerWindowController>this.windows.container;
             containerWindow.closeLoginWindow();
@@ -715,7 +696,6 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             
             if (authData.myData.raw.generatedPassword) {
                 this.ioc.create(ChangePasswordWindowController, [this, (newPassword: string) => {
-                    // containerWindow.switchToAppMode();
                     this.userCredentials.password = newPassword;
                     this.app.dispatchEvent<Types.event.AfterPasswordChangedEvent>({type: "afterPasswordChanged", userCredentials: this.userCredentials});
                     this.checkFirstLoginAndSwitchToAppMode(this.userPreferences, containerWindow);
@@ -725,7 +705,6 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                 });
             }
             else {
-                // containerWindow.switchToAppMode();
                 this.checkFirstLoginAndSwitchToAppMode(this.userPreferences, containerWindow);
             }
             this.contactService = contactService;
@@ -755,10 +734,9 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         })
         .then(() => {
             containerWindow.switchToAppMode();
-        })
-
+        });
     }
-
+    
     addCountModel(model: Model<number>) {
         if (! this.countModels) {
             this.countModels = [];
@@ -774,7 +752,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         });
         this.setNewCount(newCount);
     }
-
+    
     onRevertEntry(event: event.RevertSinkIndexEntry): void {
         let message = this.app.localeService.i18n("app.revert.default");
         if (event.indexEventType == "update-revert") {
@@ -791,8 +769,6 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         }
         this.msgBox.alert(message);
     }
-
-    
     
     onStorageEvent(_event: privfs.types.core.SPMEvent): void {
     }
@@ -853,7 +829,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     
     afterLogout(): void {
         this.sessionManager.closeAllRemoteSessions();
-
+        
         this.dispatchEvent<Types.event.AfterLogoutPlugin>({type: "afterlogout", target: this});
     }
     
@@ -869,11 +845,11 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         if (this.sessionManager) {
             this.sessionManager.closeLocalSession();
         }
-
+        
         if (this.mcaFactory) {
             this.mcaFactory = null;
         }
-
+        
         this.mcaFactory = new McaFactory(this.localeService, this, this.ioc);
         this.defaultSettings.get("endpoints").then(endpoints => {
             if (endpoints) {
@@ -886,7 +862,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             this.mailClientApi.destroy();
         }
     }
-
+    
     getOriginalUrl(): string {
         return null;
     }
@@ -979,11 +955,11 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             }
         }
     }
-
+    
     openSingletonWindowWithReturn(name: string, controller: {new(app: app.WindowParent, params?: any): BaseWindowController} | BaseWindowController, params?: any): Q.Promise<BaseWindowController> {
         return Q().then(() => {
             let registered = this.manager.getSingleton(name);
-        
+            
             if (registered) {
                 if (registered.controller.nwin.isMinimized()) {
                     registered.controller.nwin.minimizeToggle();
@@ -1012,8 +988,6 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         })
     }
     
-
-
     openSettings(section?: string): void {
         this.openSingletonWindow("settings", SettingsWindowController, section);
     }
@@ -1025,11 +999,11 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     openAbout(): void {
         this.openSingletonWindow("about", AboutWindowController);
     }
-
+    
     openSupport(): void {
         this.openSingletonWindow("support", SupportWindowController);
     }
-
+    
     openSwitchVoiceChatConfirm(): Q.Promise<boolean> {
         return Q().then(() => {
             return this.sessionManager.getLocalSession().mailClientApi.privmxRegistry.getUserPreferences()
@@ -1054,10 +1028,9 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                     return Q.resolve(true);
                 }
             })
-        })
-
+        });
     }
-
+    
     openFonts(): void {
         this.openSingletonWindow("fonts", FontsWindowController);
     }
@@ -1124,7 +1097,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         }
     }
     
-    playAudio(_soundName: string, force: boolean = false): void {
+    playAudio(_soundName: string, _force: boolean = false): void {
     }
     
     onUserPreferencesChange(event: event.UserPreferencesChangeEvent): void {
@@ -1171,7 +1144,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     
     abstract openFiles(parentWindow?: AppWindow): Q.Promise<privfs.lazyBuffer.IContent[]>;
     
-    chooseDirectory(parentWindow?: AppWindow): Q.Promise<string> {
+    chooseDirectory(_parentWindow?: AppWindow): Q.Promise<string> {
         return Q.reject();
     }
     
@@ -1297,19 +1270,19 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         return this.options.maxFileSize.value;
     }
     
-    canPasteFile(path: string): boolean {
+    canPasteFile(_path: string): boolean {
         return false;
     }
     
-    getFileBuffer(path: string): Buffer {
+    getFileBuffer(_path: string): Buffer {
         return null;
     }
     
-    getFileName(filePath: string): string {
+    getFileName(_filePath: string): string {
         return null;
     }
     
-    getFileMimeType(filePath: string): string {
+    getFileMimeType(_filePath: string): string {
         return null;
     }
     
@@ -1397,7 +1370,6 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     allowMultipleInstances(): boolean {
         return false;
     }
-    
     
     registerViewersEditors() {
         MimeTypeTree.add(".url", "application/internet-shortcut");
@@ -1542,7 +1514,6 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         this.shellRegistry.registerApplicationBinding({applicationId: "core.video", mimeType: "video/*", action: ShellOpenAction.OPEN});
         this.shellRegistry.registerApplicationBinding({applicationId: "core.url", mimeType: "application/internet-shortcut"});
         this.shellRegistry.registerApplicationBinding({applicationId: "core.pdf", mimeType: "application/pdf"});
-        // this.shellRegistry.registerApplicationBinding({applicationId: "core.pdf", mimeType: "application/pdf", action: ShellOpenAction.EXTERNAL});
         
         this.shellRegistry.registerApplicationBinding({applicationId: "core.unsupported", mimeType: "*"});
         this.shellRegistry.registerApplicationBinding({applicationId: "core.download", mimeType: "*", action: ShellOpenAction.DOWNLOAD});
@@ -1562,7 +1533,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             labelKey: "app.core.actions.upload",
             icon: "fa fa-upload",
             overwritesName: true,
-            onCall: (filename?: string, parentWindow?: AppWindow) => {
+            onCall: (_filename?: string, parentWindow?: AppWindow) => {
                 return this.app.openFile(parentWindow);
             }
         });
@@ -1573,7 +1544,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             labelKey: "app.core.actions.upload-multi",
             icon: "fa fa-upload",
             overwritesName: true,
-            onCallMulti: (filenames?: string[], parentWindow?: AppWindow) => {
+            onCallMulti: (_filenames?: string[], parentWindow?: AppWindow) => {
                 return this.app.openFiles(parentWindow);
             }
         });
@@ -1583,7 +1554,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         return null;
     }
     
-    getSystemCliboardData(skipCheck: boolean = false): ClipboardData {
+    getSystemCliboardData(_skipCheck: boolean = false): ClipboardData {
         return null;
     }
     
@@ -1666,7 +1637,9 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         });
     }
     
-    abstract getPlayerManager(): PlayerManager;
+    getPlayerManager(): PlayerManager {
+        return (<PlayerHelperWindowController>this.windows.playerHelper).playerManager;
+    }
     
     isPrintable(mimeType: string): boolean {
         let printableMimeTypes = [
@@ -1795,10 +1768,8 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                 .then(win => {
                     return this.openChildWindow(win);
                 });
-
             });
         });
-
     }
     
     openEditSectionDialogFromSidebar(sectionId: string): void {
@@ -1856,18 +1827,21 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     openLicenseVendorsWindow(): void {
     }
     
-    openErrorWindow(error: Types.app.Error): void {
+    openErrorWindow(_error: Types.app.Error): void {
     }
     
     getHelpCenterUrl(helpCenterCode: number): string {
         return "http://127.0.0.1/PrivMXHelpCenter/" + helpCenterCode;
     }
     
-    log(...entry: string[]): void {}
-
-    exitApp(): void {}
+    log(..._entry: string[]): void {
+    }
     
-    acceptLicence(afterUpdate?: boolean): void {}
+    exitApp(): void {
+    }
+    
+    acceptLicence(_afterUpdate?: boolean): void {
+    }
     
     setLoginInfoHidden(): void {}
     
@@ -1875,18 +1849,18 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         return true;
     }
     
-    isProfileUsed(profile: string): Q.Promise<boolean> {
+    isProfileUsed(_profile: string): Q.Promise<boolean> {
         return Q.resolve(false);
     }
     
-    registerProfile(profile: string): Q.Promise<void> {
+    registerProfile(_profile: string): Q.Promise<void> {
         return Q.resolve();
     }
     
-    unregisterProfile(profile: string): Q.Promise<void> {
+    unregisterProfile(_profile: string): Q.Promise<void> {
         return Q.resolve();
     }
-
+    
     getCcApiEndpoint(): string {
         return null;
     }
@@ -2016,11 +1990,11 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             }, 50);
         }
     }
-
+    
     isRunningInDevMode(): boolean {
         return false;
     }
-
+    
     isFirstLogin(userPreferences: UserPreferences): boolean {
         if (userPreferences) {
             let seen = this.userPreferences.getValue("ui.seenFirstLoginInfo", 0);
@@ -2031,7 +2005,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         }
     }
     
-    tryPasteFiles(paths: string[]): Q.Promise<boolean> {
+    tryPasteFiles(_paths: string[]): Q.Promise<boolean> {
         return Q.reject();
     }
     
@@ -2042,15 +2016,16 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     getPlatform(): string {
         return "";
     }
-
+    
     get mailClientApi() {
         return this.sessionManager && this.sessionManager.hasLocalSession() ? this.sessionManager.getLocalSession().mailClientApi: null;
     }
+    
     setSilentMode(value: boolean) {
         this.userPreferences.set(MailConst.UI_APP_SILENT_MODE, value, true);
         (<HelperWindowController>this.windows.helper).setSilentMode(value);
     }
-
+    
     getSilentMode(): boolean {
         if (this.userPreferences) {
             return this.userPreferences.getValue(MailConst.UI_APP_SILENT_MODE, false);
@@ -2060,7 +2035,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         }
     }
     
-    getClipboardElementToPaste(allowedPrivMxFormats: string[], allowedSystemFormats: string[], onlyPlainText: boolean = false): Q.Promise<ClipboardElement> {
+    getClipboardElementToPaste(_allowedPrivMxFormats: string[], _allowedSystemFormats: string[], _onlyPlainText: boolean = false): Q.Promise<ClipboardElement> {
         return Q(null);
     }
     
@@ -2111,10 +2086,10 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         });
     }
     
-    listLocalFiles(path: string): string[] {
+    listLocalFiles(_path: string): string[] {
         return [];
     }
-
+    
     openOrderInfo() {
         return Q().then(() => {
             return this.mailClientApi.privmxRegistry.getSrpSecure()
@@ -2129,7 +2104,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             });
         })
     }
-
+    
     updatePaymentStatus(): Q.Promise<void> {
         return Q().then(() => {
             return Q.all([
@@ -2156,7 +2131,6 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                         type: "trial-status-update",
                         isAdmin: identityProvider.isAdmin(),
                         subscriptionEnding: ps.subscriptionEnding,
-                        // subscriptionEnding: true,
                         trial: ps.free,  // free znaczy tutaj czy server jest na trialowym okresie.. troche nieszczesna ta nazwa schodzi z serwera
                         startDate: Number(ps.startDate),
                         endDate: ps.endDate ? Number(ps.endDate) : -1,
@@ -2183,15 +2157,14 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                         hasExtendOrder: ps.hasExtendOrder,
                     }
                     this.dispatchEvent<event.TrialStatusUpdateEvent>(trialStatusUpdate);
-                })
-
+                });
             }
         })
         .fail(e => {
             Logger.error(e);
         })
     }
-
+    
     startPaymentStatusUpdater(): void {
         if (this.paymentStatusUpdater) {
             clearInterval(this.paymentStatusUpdater);
@@ -2200,17 +2173,17 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             this.updatePaymentStatus();
         }, 60 * 10000);
     }
-
+    
     stopPaymentStatusUpdater(): void {
         if (this.paymentStatusUpdater) {
             clearInterval(this.paymentStatusUpdater);
         }
     }
-
+    
     abstract startScreenCover(): void;
     abstract stopScreenCover(): void;
     
-    sendActivationData(username: string, temporaryPassword: string, email?: string, newAccount?: boolean): void {
+    sendActivationData(_username: string, _temporaryPassword: string, _email?: string, _newAccount?: boolean): void {
     }
     
     getNotificationTitleMaxLength(): number {
@@ -2255,15 +2228,12 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         return Q.all([
             this.app.mailClientApi.privmxRegistry.getSectionManager(),
             this.app.mailClientApi.privmxRegistry.getConv2Service(),
-        ]).then(([sectionManager, conv2Service]) => {
+        ]).then(([sectionManager]) => {
             if (!session) {
                 session = this.app.sessionManager.getLocalSession();
             }
             if (session && session.sectionManager) {
                 sectionManager = session.sectionManager;
-            }
-            if (session && session.conv2Service) {
-                conv2Service = session.conv2Service;
             }
             let proms: Q.Promise<void>[] = [];
             if (!metaData.filePickerData) {
@@ -2294,10 +2264,10 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                         }));
                     }
                 }
-                
             }
             return Q.all(proms);
-        }).then(() => {
+        })
+        .then(() => {
             return metaData.attach(html);
         });
     }
@@ -2305,30 +2275,31 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     getTmpAbsolutePath(): string {
         return null;
     }
-
-    writeTemplateFile(name: string, html: string): void {}
-
-    readTemplateFile(name: string): string {
+    
+    writeTemplateFile(_name: string, _html: string): void {
+    }
+    
+    readTemplateFile(_name: string): string {
         return null;
     }
-    getRenderedTemplateUrl(name: string): string {
+    
+    getRenderedTemplateUrl(_name: string): string {
         return null;
     }
-
+    
     askForMicrophoneAccess(): Q.Promise<boolean> {
         return Q.resolve(true);
     }
-
+    
     getSystemPlatfrom(): string {
         return "";
     }
-
+    
     registerStreamsEvents(eventDispatcher: EventDispatcher): void {
         (<PlayerHelperWindowController>this.windows.playerHelper).registerStreamsEvents(eventDispatcher);
     }
-
+    
     getUsersListTooltipContent(session: Session, sectionId: string): string {
-        let section = session.sectionManager.getSection(sectionId);
         let users = session.webSocketNotifier.getVoiceChatCachedUsers(session, sectionId);
         return JSON.stringify({
             persons: WebSocketNotifier.getListeningPeople(session, sectionId, users)
@@ -2338,6 +2309,4 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     getAssetSafeUrl(path: string) {
         return this.assetsManager.getAsset(path);
     }
-
-
 }

@@ -7,18 +7,15 @@ import { Formatter } from "../../utils/Formatter";
 import { NotificationController } from "../../component/notification/NotificationController";
 import { BaseWindowManager } from "../../app/BaseWindowManager";
 import * as shelltypes from "../../app/common/shell/ShellTypes";
-import { Dependencies, Inject } from "../../utils/Decorators";
-import { SectionManager } from "../../mail/section/SectionManager";
+import { Dependencies } from "../../utils/Decorators";
 import { TaskChooserWindowController } from "../taskchooser/TaskChooserWindowController";
-import { TaskChooserCloseEvent, TaskChooserController } from "../../component/taskchooser/TaskChooserController";
+import { TaskChooserController } from "../../component/taskchooser/TaskChooserController";
 import { TaskTooltipController } from "../../component/tasktooltip/TaskTooltipController";
-import { OpenableSectionFile, SectionService } from "../../mail/section";
+import { OpenableSectionFile } from "../../mail/section";
 import { Tree, Entry } from "../../mail/filetree/NewTree";
 import { PersonsController } from "../../component/persons/PersonsController";
-import { ContactService } from "../../mail/contact";
 import { LocaleService } from "../../mail";
 import { i18n } from "./i18n";
-import { MsgBoxResult } from "../msgbox/MsgBoxWindowController";
 import { Session } from "../../mail/session/SessionManager";
 import { ThumbsManager } from "../../mail/thumbs/ThumbsManager";
 
@@ -56,11 +53,6 @@ export class ImageEditorWindowController extends BaseWindowController {
         localeService.registerTexts(i18n, this.textsPrefix);
     }
     
-    // @Inject client: privfs.core.Client;
-    // @Inject identity: privfs.identity.Identity
-    // @Inject contactService: ContactService;
-    // @Inject sectionManager: SectionManager;
-    
     name: string;
     docked: boolean;
     imageBuffers: Buffer[];
@@ -88,15 +80,15 @@ export class ImageEditorWindowController extends BaseWindowController {
     constructor(parent: app.WindowParent, public session: Session, public options: Options) {
         super(parent, __filename, __dirname);
         this.ipcMode = true;
-
+        
         this.tasksPlugin = this.app.getComponent("tasks-plugin");
         this.deferred = Q.defer();
         this.addViewScript({path: "build/tui/fabric-dist/dist/fabric.js"});
         this.addViewScript({path: "build/tui/tui-code-snippet/dist/tui-code-snippet.min.js"});
-
+        
         this.addViewScript({path: "build/tui/tui-color-picker/dist/tui-color-picker.min.js"});
         this.addViewStyle({path: "build/tui/tui-color-picker/dist/tui-color-picker.min.css"});
-
+        
         this.addViewScript({path: "build/tui/tui-image-editor/dist/tui-image-editor.js"});
         this.addViewStyle({path: "build/tui/tui-image-editor/dist/tui-image-editor.css"});
         this.addViewScript({path: "build/tui/tui-image-editor/examples/js/theme/black-theme.js"});
@@ -389,7 +381,7 @@ export class ImageEditorWindowController extends BaseWindowController {
                     if (privfs.core.ApiErrorCodes.is(e, "OLD_SIGNATURE_DOESNT_MATCH")) {
                         return this.saveFileAsConflicted(content);
                     }
-                }) 
+                })
                 .then(() => {
                     return true;
                 });
@@ -404,7 +396,7 @@ export class ImageEditorWindowController extends BaseWindowController {
                 let entryId = this.openableElement.getElementId();
                 let resolved = this.session.sectionManager.resolveFileId(entryId);
                 if (resolved) {
-                    return ThumbsManager.getInstance().createThumb(resolved.section, resolved.path).fail(e => null);
+                    return ThumbsManager.getInstance().createThumb(resolved.section, resolved.path).fail(() => null);
                 }
             }
         })
@@ -416,17 +408,17 @@ export class ImageEditorWindowController extends BaseWindowController {
             this.notifications.hideNotification(notificationId);
         });
     }
-
+    
     saveFileAsConflicted(content: privfs.lazyBuffer.Content): Q.Promise<void> {
         return Q().then(() => {
             let openableFile = (this.openableElement as OpenableSectionFile);
             let currentSection = this.session.sectionManager.getSection(this.documentSectionId);
-
+            
             let fname = this.createConflictedFileName(openableFile)
             let newOpenableFile: OpenableFile;
             return openableFile.fileSystem.resolvePath(fname)
             .then(resolvedPath => {
-                return openableFile.fileSystem.save(resolvedPath.path, content).thenResolve(resolvedPath.path); 
+                return openableFile.fileSystem.save(resolvedPath.path, content).thenResolve(resolvedPath.path);
             })
             .then(newPath => {
                 newOpenableFile = new OpenableSectionFile(currentSection, openableFile.fileSystem, newPath, true);
@@ -437,28 +429,19 @@ export class ImageEditorWindowController extends BaseWindowController {
             })
             .then(newHandle => {
                 this.handle = newHandle;
-                
                 this.openableElement = newOpenableFile;
-
-                let text = content.getText();
-                let newFullFileName = newOpenableFile.path;
-                let newFileName: string = newFullFileName.substr(newFullFileName.lastIndexOf("/") + 1);
-                // this.updateFileName(newFileName, newFullFileName, this.getTitle(newFullFileName));
                 this.app.filesLockingService.showWarning(newOpenableFile.path);
             })
             .fail(e => {
                 return Q.reject(e);
-            })    
-        })
+            });
+        });
     }
-
+    
     createConflictedFileName(openableFile: OpenableFile): string {
         try {
-            // console.log("orig path:", openableFile.path);
             let parentPath = openableFile.path.split("/").slice(0, -1).join("/");
-            // console.log("parent path: ", parentPath);
             let fileName = openableFile.getName();
-            // console.log("filename:", fileName);
             let fileParts = fileName.split(".");
             let ext: string = "";
             if (fileParts.length > 1) {
@@ -470,12 +453,12 @@ export class ImageEditorWindowController extends BaseWindowController {
             let conflictedCopyStr = this.app.localeService.i18n("plugin.editor.window.editor.saveAsConflicted.conflictedCopy");
             let dateString = formatter.standardDate(new Date()).replace(/:/g, "-").replace(/ /g, "-");
             return parentPath + "/" + fileName + " - " + conflictedCopyStr + " - " + dateString + (ext.length > 0 ? "." + ext : "");
-        } catch (e) {
+        }
+        catch (e) {
             console.log("error creating filename",e);
         }
     }
-
-
+    
     uploadToMy(content: privfs.lazyBuffer.Content): Q.Promise<section.UploadFileResultEx> {
         return Q().then(() => {
             return this.session.sectionManager.uploadFile({
@@ -485,7 +468,7 @@ export class ImageEditorWindowController extends BaseWindowController {
             })
         })
     }
-        
+    
     getResult(): Q.Promise<ScreenshotResult> {
         return this.deferred.promise;
     }
@@ -683,13 +666,9 @@ export class ImageEditorWindowController extends BaseWindowController {
         return openableFile.fileSystem.openFile(openableFile.path, privfs.fs.file.Mode.READ_WRITE).then(handle => {
             this.editMode = false;
             this.handle = handle;
-            // return this.lock().then(() => {
-            //     this.editMode = true;
-            // });
             this.editMode = true;
         });
     }
-    
     
     onViewEnterEditMode(): void {
         this.openableElement.getBlobData().then(data => {
@@ -712,25 +691,7 @@ export class ImageEditorWindowController extends BaseWindowController {
             return;
         }
         this.logError(e);
-        if (privfs.core.ApiErrorCodes.is(e, "DESCRIPTOR_LOCKED")) {
-            // if (this.editMode && !this.releasingLock) {
-            //     this.lockedByMeInOtherSession(e);
-            // }
-            // else {
-            //     let pub58 = e.data.error.data.lockerPub58;
-            //     let contactService = this.session.conv2Service.contactService;
-            //     let contact = contactService.getContactByPub58(pub58);
-            //     let msg;
-            //     if (contact) {
-            //         msg = this.i18n("window.imageeditor.error.anotherUserLock.known", [contact.getDisplayName()]);
-            //     }
-            //     else {
-            //         msg = this.i18n("window.imageeditor.error.anotherUserLock.unknown", [pub58]);
-            //     }
-            //     this.alert(msg);
-            // }
-        }
-        else if (privfs.core.ApiErrorCodes.is(e, "OLD_SIGNATURE_DOESNT_MATCH")) {
+        if (privfs.core.ApiErrorCodes.is(e, "OLD_SIGNATURE_DOESNT_MATCH")) {
             let controller = this;
             Q().then(() => {
                 return controller.handle.refresh();
@@ -740,7 +701,6 @@ export class ImageEditorWindowController extends BaseWindowController {
                 return controller.confirm(msg);
             })
             .then(result => {
-                let lastVersion = controller.handle.updateToLastVersion();
                 if (result.result != "yes") {
                     return;
                 }
@@ -756,7 +716,6 @@ export class ImageEditorWindowController extends BaseWindowController {
     
     destroy(): void {
         super.destroy();
-        // this.stopLockInterval();
     }
     
     updateFileName(newFileName: string, newFullFileName: string, newTitle: string): void {
@@ -829,5 +788,4 @@ export class ImageEditorWindowController extends BaseWindowController {
             this.isRenaming = false;
         });
     }
-    
 }

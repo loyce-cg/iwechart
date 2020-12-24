@@ -3,7 +3,6 @@ import {func as mainTemplate} from "./template/main.html";
 import {func as sectionTemplate} from "./template/section.html";
 import {ViewModel} from "./AppsWindowController";
 import {SectionModel} from "./AppsWindowController";
-import { Model } from "pmc-mail/out/utils";
 
 export class AppsWindowView extends wnd.base.BaseAppWindowView<ViewModel> {
     
@@ -151,7 +150,7 @@ export class AppsWindowView extends wnd.base.BaseAppWindowView<ViewModel> {
             this.setAppWindowBadgeFullyLoaded(appWindowId, fullyLoaded);
             let def = Q.defer<void>();
             setTimeout(() => {
-               def.resolve(); 
+               def.resolve();
             }, AppsWindowView.MIN_TIME_BETWEEN_LOADING_SPINNERS_REMOVAL);
             return def.promise;
         });

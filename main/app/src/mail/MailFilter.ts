@@ -6,7 +6,7 @@ import {FilterMode} from "./FilterMode";
 import {Model} from "../utils/Model";
 import {Event} from "../utils/Event";
 import * as Q from "q";
-import { KvdbMap } from "./kvdb/KvdbMap";
+import { utils } from "../Types";
 
 export interface MailFilterEntry {
     mode: FilterMode;
@@ -113,14 +113,14 @@ export class UnknownDomains {
 
 export class MailFilter {
     
-    kvdb: KvdbMap<MailFilterEntry>;
+    kvdb: utils.IKvdbMap<MailFilterEntry>;
     filteredCollections: FilteredCollection<SinkIndexEntry>[];
     domainsCollections: DomainsCollections;
     unknownDomains: UnknownDomains;
     currentFilter: TheFilter;
     listChangeEvent: Event<any, any, any>
     
-    constructor(kvdb: KvdbMap<MailFilterEntry>) {
+    constructor(kvdb: utils.IKvdbMap<MailFilterEntry>) {
         this.kvdb = kvdb;
         this.filteredCollections = [];
         this.domainsCollections = new DomainsCollections();

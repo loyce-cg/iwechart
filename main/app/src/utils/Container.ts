@@ -195,7 +195,7 @@ export class Container extends EventDispatcher {
         this.bindedPmxEvents.splice(index, 1);
     }
     
-    destroy() {
+    removeComponentsAndEvents(): void {
         Object.keys(this.components).forEach(id => {
             this.removeComponent(id);
         });
@@ -214,6 +214,8 @@ export class Container extends EventDispatcher {
         this.bindedPmxEvents.forEach(x => {
             x.event.remove(<() => void>x.bindedHandler);
         });
-        this.bindedPmxEvents = [];
+        this.bindedPmxEvents = [];  
     }
+
+    destroy() {}
 }

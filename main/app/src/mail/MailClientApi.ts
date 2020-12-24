@@ -588,7 +588,7 @@ export class MailClientApi {
     
     getServerKeystoreWithoutCosigners(srpSecure: privfs.core.PrivFsSrpSecure, domain: string): Q.Promise<pki.Types.keystore.IKeyStore2> {
         return Q().then(() => {
-            let privmxPKI = srpSecure.privFsSrp.createDefaultPki();
+            let privmxPKI = privfs.core.PrivFsSrpSecure.createDefaultPki(srpSecure.gateway);
             return privmxPKI.setOptions({domain: domain})
             .then(() => {
                 return privmxPKI.getServerKeyStore();
@@ -661,6 +661,7 @@ export class MailClientApi {
                 .then(cosigners => {
                     cosignersService.trustedServers = new privfs.pki.CosignersProvider.CosignersProvider(cosigners, maxCosigners);
                     srpSecure.privmxPKI = new privfs.pki.PrivmxPKI(gateway, gateway.getHost(), cosignersService.trustedServers, pkiCache, pkiCache);
+                    return srpSecure.privmxPKI.getHead();
                 });
             });
         })

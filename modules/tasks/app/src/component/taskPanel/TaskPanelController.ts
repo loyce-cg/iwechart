@@ -5,8 +5,8 @@ import { Task, TaskStatus } from "../../main/data/Task";
 import { CustomSelectController, CustomSelectItem } from "../customSelect/CustomSelectController";
 import { TaskWindowController } from "../../window/task/TaskWindowController";
 import { Project } from "../../main/data/Project";
-import { MsgBoxResult, MsgBoxOptions } from "pmc-web/out/window/msgbox/main";
-import { BaseWindowController } from "pmc-web/out/window/base/main";
+import MsgBoxResult = window.msgbox.MsgBoxResult;
+import MsgBoxOptions = window.msgbox.MsgBoxOptions;
 import Inject = utils.decorators.Inject;
 import Dependencies = utils.decorators.Dependencies;
 import { TaskGroup } from "../../main/data/TaskGroup";
@@ -16,8 +16,6 @@ import { i18n } from "./i18n/index";
 import { AttachmentsManager } from "../../main/AttachmentsManager";
 import { HistoryManager } from "../../main/HistoryManager";
 import { Utils } from "../../main/utils/Utils";
-import { MainWindowController } from "../../window/main/MainWindowController";
-import { SinkIndex } from "pmc-mail/out/mail";
 
 const Logger = RootLogger.get("privfs-tasks-plugin.TaskPanelController");
 
@@ -164,7 +162,7 @@ export interface ActionHandlers {
     confirm: (msg: string) => Q.Promise<MsgBoxResult>,
     confirmEx: (options: MsgBoxOptions) => Q.Promise<MsgBoxResult>,
     openWindowParent: any,
-    openChildWindow: <T extends BaseWindowController>(win: T) => T,
+    openChildWindow: <T extends window.base.BaseWindowController>(win: T) => T,
     updateDirty: (dirty: boolean) => void,
 }
 
@@ -426,7 +424,7 @@ export class TaskPanelController<T extends window.base.BaseWindowController = wi
         .then(() => {
             this.callViewMethod("setHostHash", this.session.hostHash);
         });
-    } 
+    }
     
     watchedTasksHistoryRebuildHandler(hostHash: HostHash, pId: ProjectId): void {
         if (this.internalModel.projectId == pId && this.session.hostHash == hostHash) {
@@ -558,7 +556,7 @@ export class TaskPanelController<T extends window.base.BaseWindowController = wi
         return this.handlers.alert(msg);
     }
     
-    requestParentOpenChildWindow<T extends BaseWindowController>(wnd: T): T {
+    requestParentOpenChildWindow<T extends window.base.BaseWindowController>(wnd: T): T {
         return this.handlers.openChildWindow(wnd);
     }
     
@@ -1133,7 +1131,7 @@ comment: ""
     
     fetchTaskComments(task: Task): Q.Promise<void> {
         // console.log("fetch task comments")
-        //TODO: check whether sinkIndexManager is binding to session        
+        //TODO: check whether sinkIndexManager is binding to session
         
         let toLoad: { [sinkId: string]: number[] } = { };
         let msgs: number[] = [];
@@ -1347,9 +1345,6 @@ comment: ""
                 }
                 else if (entry.arg == "duration") {
                     continue;
-                    newEntry.oldString = <string>entry.oldVal;
-                    newEntry.newString = <string>entry.newVal;
-                    newEntry.message = this.i18n("plugin.tasks.component.taskPanel.task.history.entry.modifiedDuration", fMakePerson(who), fMakeDuration(newEntry.oldString), fMakeDuration(newEntry.newString));
                 }
                 else if (entry.arg == "endTimestamp") {
                     newEntry.oldString = <string>entry.oldVal;
@@ -1358,9 +1353,6 @@ comment: ""
                 }
                 else if (entry.arg == "wholeDays") {
                     continue;
-                    newEntry.oldString = <string>entry.oldVal;
-                    newEntry.newString = <string>entry.newVal;
-                    newEntry.message = this.i18n("plugin.tasks.component.taskPanel.task.history.entry.modifiedWholeDays", fMakePerson(who), newEntry.oldString, newEntry.newString);
                 }
                 else if (entry.arg == "attachment") {
                     newEntry.newAttachment = <AttachmentId>entry.newVal;
@@ -2981,14 +2973,6 @@ comment: ""
     getActiveSection(): mail.section.SectionService {
         return this.session.sectionManager.getSection(this.internalModel.projectId);
     }
-
-    // getSessionByTaskId(taskId: TaskId): mail.session.Session {
-    //     return this.tasksPlugin.getSessionByProjectId(this.tasksPlugin.getTask(taskId).getProjectId()) || this.app.sessionManager.getLocalSession();
-    // }
-
-    // getSessionByTask(task: Task): mail.session.Session {
-    //     return this.tasksPlugin.getSessionByProjectId(task.getProjectId()) || this.app.sessionManager.getLocalSession();
-    // }
     
     onUserPreferencesChange(event: Types.event.UserPreferencesChangeEvent): void {
         let autoMarkAsRead = this.app.userPreferences.getAutoMarkAsRead();

@@ -6,11 +6,10 @@ import { PersonModel, ChatPlugin, ChatValidMessageTypeForDisplayChangeEvent, GUI
 import Inject = utils.decorators.Inject;
 import Dependencies = utils.decorators.Dependencies;
 import { i18n } from "./i18n/index";
-import { OpenableSectionFile, SectionManager } from "../../../node_modules/pmc-mail/out/mail/section";
-import { SinkIndex, SinkIndexEntry } from "../../../node_modules/pmc-mail/out/mail";
+import SectionManager = mail.section.SectionManager;
+import SinkIndexEntry = mail.SinkIndexEntry;
 
 import { SendingQueue } from "./SendingQueue";
-import { FindAllEnumerable } from "../../../node_modules/@types/privmx-pki/lib/Enumerable";
 import { SendingFileLocksManager } from "./SendingFileLocksManager";
 
 export interface ChannelModel {
@@ -328,10 +327,10 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         this.messagesCollection.changeEvent.add(event => {
             Q().then(() => {
                 if (this.isFilterEnabled()) {
-                    this.refreshMatches(false);    
+                    this.refreshMatches(false);
                 }
                 else {
-                    this.refreshMatches(true);          
+                    this.refreshMatches(true);
                 }
             })
         });
@@ -652,8 +651,8 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                     return collection.list.filter(entry => {
                         let data = entry.getContentAsJson();
                         return data && data.did && nonExistant.indexOf(data.did) > -1;
-                    });        
-                })    
+                    });
+                })
             })
         })
     }
@@ -887,7 +886,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
 
     onViewSendMessage(text: string): void {
         this.encryptionEffect.customShowForChat(text);
-        this.sendingQueue.add(text);    
+        this.sendingQueue.add(text);
     }
 
     onViewEditMessage(originalMessageId: number, text: string): void {
@@ -1231,7 +1230,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         //         this.lastMessageIndex = event.index;
         //     }
         //     this.processUnreadMarkers();
-        // }       
+        // }
     }
 
     processUnreadMarkers(): void {
@@ -1272,7 +1271,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
             }
             if (this.chatInfo.type == ChatType.CONVERSATION) {
                 return this.chatInfo.conversation.id;
-            }                
+            }
         }
         return null;
     }
@@ -1496,7 +1495,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                             destination: section.getId(),
                             text: options.text,
                             attachments: options.attachments
-                        }, message)    
+                        }, message)
                     })
                 })
             })
@@ -1535,9 +1534,9 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                 if (resendOnError && queueId) {
                     this.sendingQueue.resend(queueId);
                     return Q.reject<void>();
-                }               
+                }
 
-            })        
+            })
         });
     }
     
@@ -1700,7 +1699,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                 let userExtraInfo = this.personService.persons.contactService.getUserExtraInfo(person.username);
                 if (userExtraInfo) {
                     let data = <any>userExtraInfo;
-                    client = data.client.platform ? "Desktop " + data.client.version : "Web" + data.client.version;  
+                    client = data.client.platform ? "Desktop " + data.client.version : "Web" + data.client.version;
                 }
                 let personModel: Types.webUtils.PersonModelFull = {
                     hashmail: person.getHashmail(),
@@ -2298,7 +2297,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                     this.session.mailClientApi.privmxRegistry.getMessageFlagsUpdater(),
                     this.session.mailClientApi.privmxRegistry.getIdentity(),
                     this.session.mailClientApi.privmxRegistry.getHashmailResolver(),
-                    this.session.mailClientApi.privmxRegistry.getPersonService(),    
+                    this.session.mailClientApi.privmxRegistry.getPersonService(),
                 ]),
                 Q.all([
                     this.session.mailClientApi.privmxRegistry.getSinkIndexManager(),
@@ -2579,7 +2578,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         let conv = this.chatInfo.conversation ? this.chatInfo.conversation: null;
 
         let id = section ? section.getId(): conv.id;
-        this.app.eventDispatcher.dispatchEvent<UpdateVoiceChatUsersEvent>({type: "update-voice-chat-users", hostHash: this.session.hostHash, sectionId: id });        
+        this.app.eventDispatcher.dispatchEvent<UpdateVoiceChatUsersEvent>({type: "update-voice-chat-users", hostHash: this.session.hostHash, sectionId: id });
     }
     
     onViewToggleTalking(): void {

@@ -22,7 +22,6 @@ require("../../web-utils/JQueryExt");
 export function WindowView(constructor: any) {
     //Empty decorator it only mark WindowView to be registered
 }
-
 export class BaseWindowView<M, C = any> extends ComponentView {
     
     helper: MailClientViewHelper;
@@ -306,6 +305,9 @@ export class BaseWindowView<M, C = any> extends ComponentView {
     onBodyKeydown(event: KeyboardEvent): void {
         if (event.which == 122) {
             this.triggerEvent("toogleDevTools");
+        }
+        if (event.ctrlKey && event.which == KEY_CODES.key8) {
+            this.triggerEvent("shareSection");
         }
     }
     

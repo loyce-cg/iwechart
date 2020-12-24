@@ -31,13 +31,11 @@ import {ApplicationBinding, ShellOpenAction, ShellOpenOptions, OpenableElement} 
 import {BaseWindowManager} from "../BaseWindowManager";
 import {BaseWindowController} from "../../window/base/BaseWindowController";
 import * as privfs from "privfs-client";
-import { MusicPlayer } from "../common/musicPlayer/MusicPlayer";
-import { PlayerManager } from "../common/musicPlayer/PlayerManager";
 import { Window as AppWindow } from "../common/window/Window";
-import { CssVariables, CssParser } from "../common/customization/CssParser";
+import { CssParser } from "../common/customization/CssParser";
 import { CustomizationData } from "../common/customization/CustomizationData";
 import { KeyboardShortcuts } from "./KeyboardShortcuts";
-import { Session } from "../../mail/session/SessionManager"; 
+import { Session } from "../../mail/session/SessionManager";
 
 let Logger = RootLogger.get("privfs-mail-client.app.common.CommonApplication");
 
@@ -57,8 +55,6 @@ export class WebApplication extends CommonApplication {
     history: history.History;
     $offlineIndicator: JQuery;
     $offlineIndicatorParent: JQuery;
-    musicPlayer: MusicPlayer;
-    playerManager: PlayerManager;
     usedIpcChannelNames: { [key: string]: boolean } = {};
     registerTokenInfo: utils.RegisterTokenInfo;
     connectionRestoredDeferred: Q.Deferred<void> = null;
@@ -79,7 +75,6 @@ export class WebApplication extends CommonApplication {
             $cover: $("#screen-cover")
         });
         this.initAudio();
-        this.initPlayer();
         this.initHistory();
         this.setNewCount(0);
         this.windowManager = new WindowManager(this.initializer.rootUrl, Fullscreen, this.getWindowsTitleBarButtonsPosition(), this.initializer.electronModule, this);
@@ -142,6 +137,10 @@ export class WebApplication extends CommonApplication {
     
     getFromObjectMap<T = any>(id: number): T {
         return this.initializer.electronModule.objectMap.get(id);
+    }
+
+    removeFromObjectMap(id: number): void {
+        return this.initializer.electronModule.objectMap.remove(id);
     }
     
     getMailClientViewHelperModel(): app.MailClientViewHelperModel {
@@ -245,12 +244,6 @@ export class WebApplication extends CommonApplication {
         this.audioPlayer.add("notification", this.assetsManager.getAsset("sounds/new-messages.wav"));
         this.audioPlayer.add("message-sent", this.assetsManager.getAsset("sounds/message-sent.wav"));
         this.audioPlayer.add("message-deleted", this.assetsManager.getAsset("sounds/message-deleted.wav"));
-    }
-    
-    initPlayer(): void {
-        this.musicPlayer = new MusicPlayer();
-        this.musicPlayer.initPlayer(<HTMLAudioElement>$("#main-music-player").get(0));
-        this.playerManager = new PlayerManager(this, this.musicPlayer);
     }
     
     openWindow(load: app.WindowLoadOptions, options: app.WindowOptions, controller: BaseWindowController, _parentWindow: app.WindowParent, singletonName?: string): WebWindow {
@@ -518,7 +511,7 @@ export class WebApplication extends CommonApplication {
         return this.saveContent(content, session, _parent);
     }
     
-    saveContent(content: privfs.lazyBuffer.IContent, session: Session, parent?: app.WindowParentEx): Q.Promise<void> {
+    saveContent(content: privfs.lazyBuffer.IContent, _session: Session, parent?: app.WindowParentEx): Q.Promise<void> {
         return Q().then(() => {
             return content.getContent();
         })
@@ -745,11 +738,7 @@ export class WebApplication extends CommonApplication {
         this.shellRegistry.registerApplicationBinding({applicationId: "core.web.external", mimeType: "*", action: ShellOpenAction.EXTERNAL});
     }
     
-    getPlayerManager(): PlayerManager {
-        return this.playerManager;
-    }
-    
-    saveAsPdf(session: Session, file: OpenableElement, parentWindow?: AppWindow): Q.Promise<void> {
+    saveAsPdf(session: Session, file: OpenableElement, _parentWindow?: AppWindow): Q.Promise<void> {
         return this.shellRegistry.shellOpen({
             element: file,
             action: ShellOpenAction.PRINT,

@@ -19,7 +19,6 @@ import { i18n } from "./i18n";
 import { WindowUtils } from "./WindowUtils";
 import { IdentityProfile } from "../../mail/person/IdentityProfile";
 import { Profile } from "../../mail/UserPreferences";
-import * as PmxApi from "privmx-server-api";
 import { PersonService } from "../../mail/person/PersonService";
 
 export interface Model {
@@ -43,7 +42,6 @@ export class AdminAddExternalUserWindowController extends BaseWindowController {
     }
     
     static SHARE_COMMON_KVDB_KEY: boolean = true;
-    static ON_AFER_CREATE_MANAGABLE: (registerResult: RegisterResult) => any;
     
     sharedKvdbExtKey: privfs.crypto.ecc.ExtKey;
     @Inject srpSecure: privfs.core.PrivFsSrpSecure;
@@ -91,12 +89,7 @@ export class AdminAddExternalUserWindowController extends BaseWindowController {
             showSendActivationLink: !AdminAddExternalUserWindowController.SHARE_COMMON_KVDB_KEY
         }
     }
-    
-    onViewAddUser(data: AddUserModel): void {
-        // data.userType == "email" ? this.createExternalUser(data) : this.createExternalPrivMXUser(data);
-        this.createExternalPrivMXUser(data);
-    }
-    
+        
     createMcaFactory(): McaFactory {
         let ioc = new IOC();
         let localeService = ioc.registerByValue("localeService", this.app.localeService);
@@ -117,161 +110,6 @@ export class AdminAddExternalUserWindowController extends BaseWindowController {
         return new McaFactory(localeService, eventDispatcher, ioc);
     }
     
-    generateUsername(): string {
-        return privfs.crypto.service.randomBytes(10).toString("hex");
-    }
-    
-    createExternalUser(data: AddUserModel): void {
-        let language: string, password: string, host: string, registerResult: RegisterResult;
-        let username: string = data.login;
-        
-        this.addTaskEx("", true, () => {
-            let mcaFactory = this.createMcaFactory();
-            return Q().then(() => {
-                return this.utilApi.getForbiddenUsernames()
-                .then(usernames => {
-                    if (usernames.indexOf(username) !== -1) {
-                        throw "__forbidden_username__";
-                    }
-                });
-            })
-            .then(() => {
-                language = this.app.localeService.currentLang;
-                password = Utils.randomTemporaryPassword(6);
-                host = this.gateway.getHost();
-                return this.utilApi.addBasicUser({
-                    creator:  <PmxApi.api.core.Username>this.identity.user,
-                    username: <PmxApi.api.core.Username>username,
-                    email: <PmxApi.api.core.Email>"",
-                    description: <PmxApi.api.user.UserDescription>data.description,
-                    notificationsEnabled: true,
-                    language: <PmxApi.api.core.Language>language,
-                    privateSectionAllowed: data.privateSectionAllowed
-                })
-
-            //     return this.srpSecure.addExternalUser(this.identity.user, data.login, "", data.description,
-            //         true, language, data.privateSectionAllowed);
-            })
-            .then(addUserResult => {
-                return this.adminDataCreatorService.createUnregisterSessionSignature(this.identity, username).then(unregisteredSession => {
-                    return mcaFactory.register({
-                        username: username,
-                        host: host,
-                        login: data.login,
-                        password: password,
-                        email: "",
-                        pin: "",
-                        token: addUserResult.token,
-                        weakPassword: false,
-                        registerKey: "",
-                        creatorHashmail: this.identity.hashmail,
-                        unregisteredSession: unregisteredSession
-                    });
-                });
-            })
-            .then(rr => {
-                registerResult = rr;
-                let adminData: mail.AdminData = {
-                    masterSeed: registerResult.registerData.privData.l1.masterSeed,
-                    recovery: registerResult.registerData.privData.l1.recovery,
-                    generatedPassword: password
-                };
-                return this.adminDataCreatorService.setAdminData(username, adminData);
-            })
-            .then(() => {
-                if (AdminAddExternalUserWindowController.ON_AFER_CREATE_MANAGABLE) {
-                    return Q().then(() => {
-                        return AdminAddExternalUserWindowController.ON_AFER_CREATE_MANAGABLE(registerResult);
-                    })
-                    .fail(e => {
-                        this.logError(e);
-                    });
-                }
-            })
-
-            .then(() => {
-                return this.contactService.getContactsDb();
-            })
-            .then(() => {
-                return this.app.mailClientApi.privmxRegistry.getConv2Service()
-            })
-            .then(conv2Service => {
-                return conv2Service.createUserGroup([this.identity.user, username]);
-            })
-            .then(sectionService => {
-                return Q.all([
-                    sectionService.sendMessage({text: this.app.localeService.i18n("core.createuser.admin_message")}),
-                    this.personService.synchronizeWithUsernames()
-                ])
-            })
-            .then(() => {
-                this.alertEx({
-                    width: 560,
-                    height: 260,
-                    focusOn: "",
-                    contentTemplate: {
-                        templateId: "adminEditUserResetSummaryTemplate",
-                        model: {
-                            username: data.login,
-                            hashmail: data.login + "#" + this.identity.host,
-                            password: password,
-                            createMode: true,
-                            isExternalUser: true,
-                        }
-                    },
-                    extraHandlers: {
-                        "send-link": () => this.sendActivationData(data.login, password),
-                    },
-                })
-                .then(() => {
-                    this.userAdminService.refreshUsersCollection();
-                    return;
-                })
-                .then(() => {
-                    this.close();
-                });
-            })
-            .fail(e => {
-                this.callViewMethod("unlockForm");
-                if (privfs.core.ApiErrorCodes.is(e, "USER_ALREADY_EXISTS")) {
-                    return this.alert(this.i18n("window.admin.userExternalAdd.error.userAlreadyExists"));
-                }
-                if (privfs.core.ApiErrorCodes.is(e, "INVALID_EMAIL")) {
-                    return this.alert(this.i18n("window.admin.userExternalAdd.error.invalidEmail"));
-                }
-                if (e === "__forbidden_username__" || privfs.core.ApiErrorCodes.is(e, "INVALID_USERNAME")) {
-                    return this.alert(this.i18n("window.admin.userExternalAdd.error.invalidUsername"));
-                }
-                if (e === "__no_username__") {
-                    return this.alert(this.i18n("window.admin.userExternalAdd.error.noUsername"));
-                }
-                if (e === "__no_email__") {
-                    return this.alert(this.i18n("window.admin.userExternalAdd.error.noEmail"));
-                }
-                return Q.reject(e);
-            })
-            .fin(() => {
-                mcaFactory.ioc.clearDeps();
-            });
-        });
-    }
-    
-    helperIsProxyExists(proxyApi: ServerProxyApi, host: string): Q.Promise<proxyTypes.ServerProxy> {
-        return Q().then(() => {
-            return proxyApi.getAllServerProxy();
-        })
-        .then(proxies => {
-            let found: proxyTypes.ServerProxy = null;
-            proxies.forEach(proxy => {
-                if (proxy.host == host) {
-                    found = proxy;
-                    return;
-                }
-            })
-            return found;
-        })
-    }
-
     createExternalPrivMXUser(data: AddUserModel): void {
         // console.log("createExternalPrivMXUser...")
         let language: string, password: string, host: string, registerResult: RegisterResult;
@@ -353,8 +191,8 @@ export class AdminAddExternalUserWindowController extends BaseWindowController {
             .then(rr => {
                 registerResult = rr;
                 let adminData: mail.AdminData = {
-                    masterSeed: registerResult.registerData.privData.l1.masterSeed,
-                    recovery: registerResult.registerData.privData.l1.recovery,
+                    masterSeed: registerResult.registerData.masterRecord.l1.masterSeed,
+                    recovery: registerResult.registerData.masterRecord.l1.recovery,
                     generatedPassword: password
                 };
                 return this.adminDataCreatorService.setAdminData(username, adminData);
@@ -371,17 +209,6 @@ export class AdminAddExternalUserWindowController extends BaseWindowController {
                 })
                 .catch(e => console.log("Error", e))
             })
-            .then(() => {
-                if (AdminAddExternalUserWindowController.ON_AFER_CREATE_MANAGABLE) {
-                    return Q().then(() => {
-                        return AdminAddExternalUserWindowController.ON_AFER_CREATE_MANAGABLE(registerResult);
-                    })
-                    .fail(e => {
-                        this.logError(e);
-                    });
-                }
-            })
-            
             .then(() => {
                 return this.contactService.getContactsDb();
             })
@@ -439,24 +266,31 @@ export class AdminAddExternalUserWindowController extends BaseWindowController {
             });
         });
     }
-
-    cleanUI(mcaFactory: McaFactory): void {
-        mcaFactory.ioc.clearDeps();
-        this.callViewMethod("unlockForm");
-    }
-        
-    onViewClose(): void {
-        this.close();
+    
+    generateUsername(): string {
+        return privfs.crypto.service.randomBytes(10).toString("hex");
     }
     
-    ////////////////////// HELPERS ////////////////////////
+    helperIsProxyExists(proxyApi: ServerProxyApi, host: string): Q.Promise<proxyTypes.ServerProxy> {
+        return Q().then(() => {
+            return proxyApi.getAllServerProxy();
+        })
+        .then(proxies => {
+            let found: proxyTypes.ServerProxy = null;
+            proxies.forEach(proxy => {
+                if (proxy.host == host) {
+                    found = proxy;
+                    return;
+                }
+            })
+            return found;
+        })
+    }
+    
     helperCheckCurrentProxies(api: ServerProxyApi, remoteHost: string): Q.Promise<proxyTypes.ServerProxy> {
         let proxy: proxyTypes.ServerProxy = null;
         return Q().then(() => {
             return this.serverProxyService.checkRemoteServerProxy(remoteHost)
-            .then(res => {
-                // console.log(res);
-            })
             .fail(() => {
                 return Q.reject("no-remote-proxy-after-auto-init");
             })
@@ -499,8 +333,18 @@ export class AdminAddExternalUserWindowController extends BaseWindowController {
         })
     }
 
-    sendActivationData(username: string, password: string): void {
-        this.app.sendActivationData(username, password);
+    cleanUI(mcaFactory: McaFactory): void {
+        mcaFactory.ioc.clearDeps();
+        this.callViewMethod("unlockForm");
     }
-    
+
+    onViewAddUser(data: AddUserModel): void {
+        // data.userType == "email" ? this.createExternalUser(data) : this.createExternalPrivMXUser(data);
+        this.createExternalPrivMXUser(data);
+    }
+
+    onViewClose(): void {
+        this.close();
+    }
+
 }

@@ -22,8 +22,8 @@ export class AdminKeyChecker {
             return Q(false);
         }
         return Q().then(() => {
-            if (this.authData.privDataL2.data.adminKey) {
-                this.adminKeyHolder.setAdminKey(privfs.crypto.ecc.ExtKey.fromBase58(this.authData.privDataL2.data.adminKey));
+            if (this.authData.masterRecordLevel2.data.adminKey) {
+                this.adminKeyHolder.setAdminKey(privfs.crypto.ecc.ExtKey.fromBase58(this.authData.masterRecordLevel2.data.adminKey));
                 return true;
             }
             return Q().then(() => {

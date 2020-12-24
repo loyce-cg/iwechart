@@ -1,8 +1,6 @@
 import {Editor, EditorOptions} from "./Editor";
 import {func as styleSwitcherTemplate} from "../template/style-switcher.html";
-import {JQuery as $, Types} from "pmc-web";
-import {NotesPreferences} from "../../../main/EditorPlugin";
-import { fonts } from "pmc-mail/out/window/main";
+import {JQuery as $} from "pmc-web";
 import { component } from "pmc-web";
 
 export interface DataWithStyle {

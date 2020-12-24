@@ -72,7 +72,9 @@ export class ComponentController extends Container {
     flushIpcQueue() {
         try {
             this.ipcSendPromise = null;
-            this.ipcSender.send(this.ipcQueue);
+            if (this.ipcSender) {
+                this.ipcSender.send(this.ipcQueue);                
+            }
             this.ipcQueue = null;
         }
         catch (e) {
@@ -152,8 +154,15 @@ export class ComponentController extends Container {
     }
     
     destroy() {
-        super.destroy();
-        this.ipcSender.destroy();
+        super.removeComponentsAndEvents();
+
+        try {
+            this.ipcSender.destroy();
+            this.ipcSender = null;
+    
+        } catch (e) {}
+        super.destroy();    
+
     }
     
     

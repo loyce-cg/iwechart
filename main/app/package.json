@@ -34,7 +34,8 @@
     "@types/pdfjs-dist": "^2.0.0-simplito",
     "@types/pitch-shift": "0.0.0",
     "@types/platform": "^1.3.1",
-    "@types/privmx-server-api": "^1.0.0-202010131438",
+    "@types/privmx-server-api": "^1.0.202012040009",
+    "@types/privmx-server-data-center-plugin-api": "^1.0.202011251324",
     "@types/q": "^1.4.1",
     "@types/qrious": "^4.0.2",
     "@types/request": "^2.48.1",
@@ -81,7 +82,7 @@
     "pdfjs-dist": "^2.0.943",
     "pitch-shift": "0.0.0",
     "platform": "^1.3.1",
-    "privfs-client": "^1.67.1",
+    "privfs-client": "^1.69.3",
     "privmx-crypto": "^1.2.3",
     "privmx-exception": "^1.0.0",
     "privmx-rpc": "^1.5.5",
@@ -107,15 +108,14 @@
   },
   "typesGen": {
     "configs": [
+      "core",
       "web",
       "main"
     ],
-    "version": "2.25.0-20201116153854717",
+    "version": "2.25.0-20201209134741933",
     "versionGen": true,
-    "web": {
-      "name": "pmc-web",
-      "main": "index.js",
-      "typings": "out/build/view.d.ts",
+    "core": {
+      "name": "pmc-core",
       "excludeDeps": [
         "electron-unhandled",
         "he",
@@ -128,11 +128,28 @@
         "systeminformation",
         "sudo-prompt"
       ],
-      "explicitDepVersion": true,
+      "explicitDepVersion": true
+    },
+    "web": {
+      "name": "pmc-web",
+      "main": "index.js",
+      "typings": "types.d.ts",
+      "ignore": [
+        "out",
+        "src"
+      ],
+      "clearDependencies": true,
+      "includeDeps": {
+        "pmc-core": "$version"
+      },
       "copyFiles": [
         [
           "../lib/pmc-web.js",
           "index.js"
+        ],
+        [
+          "../lib/pmc-web-types.js",
+          "types.d.ts"
         ],
         "src/themes/default/less",
         "src/component/dropdown/index.less",
@@ -161,20 +178,15 @@
       "name": "pmc-mail",
       "main": "index.js",
       "browser": "browser.js",
-      "typings": "out/build/core.d.ts",
-      "excludeDeps": [
-        "electron-unhandled",
-        "he",
-        "striptags",
-        "mime-types",
-        "fabric-dist",
-        "tui-image-editor",
-        "lodash.get",
-        "lodash.set",
-        "systeminformation",
-        "sudo-prompt"
+      "typings": "types.d.ts",
+      "ignore": [
+        "out",
+        "src"
       ],
-      "explicitDepVersion": true,
+      "clearDependencies": true,
+      "includeDeps": {
+        "pmc-core": "$version"
+      },
       "copyFiles": [
         [
           "../lib/pmc-mail.js",
@@ -183,6 +195,10 @@
         [
           "../lib/pmc-mail-browser.js",
           "browser.js"
+        ],
+        [
+          "../lib/pmc-mail-types.js",
+          "types.d.ts"
         ]
       ]
     }

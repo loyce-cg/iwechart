@@ -801,12 +801,6 @@ export class EditorWindowView extends wnd.base.BaseWindowView<Model> {
             return;
         }
         return element.clientHeight < 50;
-        let $parent = $(element);
-        let elementsWidth = 0;
-        $parent.children().each((_, x) => {
-            elementsWidth += this.getElementWidth(x);
-        });
-        return (element.offsetWidth - elementsWidth) > 0;
     }
     
     getElementWidth(element: HTMLElement): number {

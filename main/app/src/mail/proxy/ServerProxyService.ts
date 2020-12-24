@@ -16,7 +16,6 @@ import { UserLbkService } from "./UserLbkService";
 import { RemoteServerApi } from "./RemoteServerApi";
 import { ServerProxyApi } from "./ServerProxyApi";
 import { RemoteLoginManager } from "./RemoteLoginManager";
-import { BaseCollection } from "../../utils/collection/BaseCollection";
 import { MutableCollection } from "../../utils/collection/MutableCollection";
 
 let Logger = RootLogger.get("privfs-mail-client.ServerProxyService");
@@ -78,14 +77,14 @@ export class ServerProxyService {
     }
     
     //returns lbkDataKey which should be sent to user
-    setUserLbk(registerData: privfs.types.core.RegisterData, remoteUsername: string, remoteHost: string): Q.Promise<Buffer> {
+    setUserLbk(masterRecordL1Key: Buffer, localUsername: string, remoteUsername: string, remoteHost: string): Q.Promise<Buffer> {
         let lbkDataKey: Buffer;
         return Q().then(() => {
             lbkDataKey = privfs.crypto.service.randomBytes(32);
-            return UserLbkService.encryptedLbkFromRegisterData(registerData, lbkDataKey);
+            return UserLbkService.encryptedLbkFromRegisterData(masterRecordL1Key, lbkDataKey);
         })
         .then(encryptedLbk => {
-            return new UserLbkService(this.srpSecure).fetchKeyAndSetUserLbk(remoteHost, encryptedLbk, remoteUsername, registerData.username);
+            return new UserLbkService(this.srpSecure).fetchKeyAndSetUserLbk(remoteHost, encryptedLbk, remoteUsername, localUsername);
         })
         .then(() => {
             return lbkDataKey;

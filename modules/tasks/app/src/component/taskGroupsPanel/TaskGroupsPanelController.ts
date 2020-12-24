@@ -14,10 +14,10 @@ import { CustomSelectController, CustomSelectItem } from "../customSelect/Custom
 import { i18n } from "./i18n/index";
 import { Utils } from "../../main/utils/Utils";
 import * as striptags from "striptags";
-import { SectionManager, Conv2Service } from "pmc-mail/out/mail/section";
+import SectionManager = mail.section.SectionManager;
+import Conv2Service = mail.section.Conv2Service;
 import { TasksWindowController } from "../../window/tasks/TasksWindowController";
-import { PersonService } from "pmc-mail/out/mail/person";
-import { ViewSettings } from "../../main/ViewSettings";
+import PersonService = mail.person.PersonService;
 import { SearchFilter } from "../../main/SearchFilter";
 
 export class Model {

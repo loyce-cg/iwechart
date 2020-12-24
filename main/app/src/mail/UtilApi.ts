@@ -1,16 +1,16 @@
 import * as privfs from "privfs-client";
 import * as Q from "q";
 import * as PmxApi from "privmx-server-api";
+import * as PmxDcApi from "privmx-server-data-center-plugin-api";
 
-
-export interface AddExternalUserModel {        
-    creator: PmxApi.api.core.Username;        
+export interface AddExternalUserModel {       
+    creator: PmxApi.api.core.Username;       
     username: PmxApi.api.core.Username;       
-    email: PmxApi.api.core.Email;        
-    description: PmxApi.api.user.UserDescription;        
-    notificationsEnabled: boolean;        
-    language: PmxApi.api.core.Language;        
-    privateSectionAllowed: boolean;    
+    email: PmxApi.api.core.Email;       
+    description: PmxApi.api.user.UserDescription;       
+    notificationsEnabled: boolean;       
+    language: PmxApi.api.core.Language;       
+    privateSectionAllowed: boolean;   
 }
 
 export class UtilApi {
@@ -46,7 +46,7 @@ export class UtilApi {
 
     pingRejectDelay(reason: any) {
         return Q.Promise((_resolve, reject) => {
-            setTimeout(reject.bind(null, reason), 1000); 
+            setTimeout(reject.bind(null, reason), 1000);
         });
     }
 
@@ -60,19 +60,19 @@ export class UtilApi {
     }
     
     getUsernamesEx(addDeletedUsers?: boolean): Q.Promise<PmxApi.api.user.UsernameEx[]> {
-        return this.srpSecure.request("getUsernamesEx", {addDeletedUsers: addDeletedUsers})    
+        return this.srpSecure.request("getUsernamesEx", {addDeletedUsers: addDeletedUsers})
     }
 
-    getPaymentStatus(): Q.Promise<PmxApi.api.dataCenter.PaymentStatusSimple> {
+    getPaymentStatus(): Q.Promise<PmxDcApi.api.dataCenter.PaymentStatusSimple> {
         return this.srpSecure.request("getPaymentStatus", {});
     }
 
-    getFullPaymentStatus(): Q.Promise<PmxApi.api.dataCenter.PaymentStatusRes> {
+    getFullPaymentStatus(): Q.Promise<PmxDcApi.api.dataCenter.PaymentStatusRes> {
         return Q().then(() => {
             return this.srpSecure.request("getFullPaymentStatus", {})
         })
         .catch(e => {
-            return <PmxApi.api.dataCenter.PaymentStatusRes> {
+            return <PmxDcApi.api.dataCenter.PaymentStatusRes> {
                 serverParams: {
                     users: -1,
                     storage: "999999G",
@@ -89,16 +89,14 @@ export class UtilApi {
         })
     }
 
-    getDataCenterLocationInfo(): Q.Promise<any> {
+    getDataCenterLocationInfo(): Q.Promise<PmxDcApi.api.dataCenter.DataCenterLocationInfo> {
         return Q().then(() => {
             return this.srpSecure.request("getDataCenterLocationInfo", {})
         })
         .catch(e => {
-            return {
+            return <PmxDcApi.api.dataCenter.DataCenterLocationInfo>{
                 dcName: "none/DEV",
-                location: {
-                    displayName: "none/DEV"
-                }
+                displayName: "none/DEV"
             }
         })
     }

@@ -1,38 +1,19 @@
 import * as privfs from "privfs-client";
-import * as Q from "q";
 
 export class RemoteLoginService {
+    
     constructor(
-        public privFsKeyLogin: privfs.core.PrivFsKeyLogin
+        public gateway: privfs.gateway.RpcGateway,
+        public identityIndex: number
     ) {
     }
     
-    login(priv: privfs.crypto.ecc.PrivateKey, lbkDataKey: Buffer, defaultPKI: boolean) {
-        return Q().then(() => {
-            return this.loginStep1(priv, lbkDataKey, defaultPKI);
-        })
-        .then(info => {
-            return this.privFsKeyLogin.loginStep2(info);
-        })
-        .then(info => {
-            return this.privFsKeyLogin.loginStep3(info);
-        })
-        .then(result => {
-            return privfs.core.PrivFsSrpEx.loginLastStep(result.srpSecure, result.privDataInfo.privData, this.privFsKeyLogin.identityIndex);
-        });
-    }
-    
-    loginStep1(priv: privfs.crypto.ecc.PrivateKey, lbkDataKey: Buffer, defaultPKI: boolean): Q.Promise<privfs.types.core.BasicLoginResult> {
-        return Q().then(() => {
-            return this.privFsKeyLogin.rpcGateway.rpc.keyHandshake(priv, this.privFsKeyLogin.rpcGateway.properties);
-        })
-        .then(() => {
-            let privmxPKI = defaultPKI === false ? null : this.privFsKeyLogin.privFsSrp.createDefaultPki();
-            let srpSecure = new privfs.core.PrivFsSrpSecure(this.privFsKeyLogin.rpcGateway, this.privFsKeyLogin.privFsSrp, privmxPKI);
-            return {
-                srpSecure: srpSecure,
-                dataKey: lbkDataKey
-            };
-        });
+    async login(priv: privfs.crypto.ecc.PrivateKey, lbkDataKey: Buffer, defaultPKI: boolean): Promise<privfs.types.core.UserDataEx> {
+        await this.gateway.rpc.keyHandshake(priv, this.gateway.properties);
+        await this.gateway.checkAdditionalLoginStep();
+        const model = await this.gateway.getMasterRecord();
+        const decryptedMasterRecord = await privfs.core.MasterRecordUtils.decrypt(model, lbkDataKey, privfs.types.core.LoginMode.LBK);
+        const srpSecure = privfs.core.PrivFsSrpSecure.create(this.gateway, defaultPKI);
+        return privfs.core.LoginUtils.loginLastStep(srpSecure, decryptedMasterRecord.masterRecord, this.identityIndex);
     }
 }

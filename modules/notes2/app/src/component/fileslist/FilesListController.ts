@@ -8,14 +8,16 @@ import Inject = utils.decorators.Inject;
 import Dependencies = utils.decorators.Dependencies;
 import { NewNoteWindowController } from "../../window/newnote/NewNoteWindowController";
 import { FilesConst, ViewMode, ViewContext, SelectionChangeMode } from "../../main/Common";
-import { Entry, Directory } from "pmc-mail/out/mail/filetree/NewTree";
+import Entry = mail.filetree.nt.Entry;
+import Directory = mail.filetree.nt.Directory;
 import { LocalEntry, LocalFS, LocalOpenableElement } from "../../main/LocalFS";
-import { MsgBoxOptions, MsgBoxResult } from "pmc-mail/out/window/msgbox/MsgBoxWindowController";
+import MsgBoxOptions = window.msgbox.MsgBoxOptions;
+import MsgBoxResult = window.msgbox.MsgBoxResult;
 import { IContent } from "simplito-lazybuffer/out/common/IContent";
-import { OpenableElement } from "pmc-mail/out/app/common/shell/ShellTypes";
+import OpenableElement = app.common.shelltypes.OpenableElement;
 import { ViewSettings } from "../../main/ViewSettings";
 import { i18n } from "./i18n";
-import { SectionManager, SectionService } from "pmc-mail/out/mail/section";
+import SectionManager = mail.section.SectionManager;
 import { Notes2WindowController } from "../../window/notes2/Notes2WindowController";
 
 export enum SelectionMode {
@@ -290,7 +292,7 @@ export class FilesListController extends window.base.WindowComponentController<w
                     hashmail: person.hashmail,
                     present: person.isPresent()
                 };
-                return JSON.stringify({persons: [data]}); 
+                return JSON.stringify({persons: [data]});
             }
             else {
                 return null;
@@ -2777,7 +2779,7 @@ export class FilesListController extends window.base.WindowComponentController<w
     getDidOfFile(section: mail.section.SectionService, path: string): Q.Promise<string> {
         return Q().then(() => {
             if (section && !section.isPrivate() && section.hasChatModule()) {
-                return section.getFileOpenableElement(path, false).then(osf => { 
+                return section.getFileOpenableElement(path, false).then(osf => {
                     return osf.handle.descriptor.ref.did;
                 })
             }
@@ -3636,12 +3638,12 @@ export class FilesListController extends window.base.WindowComponentController<w
         if (entry) {
             if (event.lockReleased) {
                 delete this.filesLocksMap[event.did];
-                this.collection.triggerUpdateElement(entry);                
+                this.collection.triggerUpdateElement(entry);
             }
             else
             if (event.locked) {
-                this.filesLocksMap[event.did] = event.user as DescriptorLockUser;                    
-                this.collection.triggerUpdateElement(entry);                
+                this.filesLocksMap[event.did] = event.user as DescriptorLockUser;
+                this.collection.triggerUpdateElement(entry);
             }
 
         }
@@ -3662,7 +3664,7 @@ export class FilesListController extends window.base.WindowComponentController<w
         })
         .then(canUnlock => {
             this.updateLockInfoOnActionButtons(active.locked, canUnlock);
-        })        
+        })
     }
 
     updateLockInfoOnActionButtons(locked: boolean, canUnlock: boolean) {

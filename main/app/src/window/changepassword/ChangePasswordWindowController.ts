@@ -49,7 +49,7 @@ export class ChangePasswordWindowController extends BaseWindowController {
                 return this.app.mailClientApi.privmxRegistry.getIdentityProvider();
             })
             .then(identityProvider => {
-                return this.srpSecure.changePasswordByOldPassword(this.identity.user, identityProvider.getLogin(), currentPassword, newPassword, weakPassword);
+                return this.srpSecure.changePasswordByOldPassword(identityProvider.getLogin(), currentPassword, newPassword, weakPassword);
             })
             .then(() => {
                 this.close();

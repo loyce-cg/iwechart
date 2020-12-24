@@ -126,6 +126,7 @@ class CaretHelper {
     }
     
     static getNodeFromPath(rootNode: Node, path: string): Node {
+        console.log("getPathFromNode", rootNode, "path", path)
         let pathElements = (path || "").split("/").filter(x => !!x).map(x => parseInt(x));
         let node: Node = rootNode;
         for (let i = 0; i < pathElements.length && node; ++i) {
@@ -135,21 +136,7 @@ class CaretHelper {
     }
     
     static placeCaret(rootNode: Node, position: CaretPosition): void {
-        if (!position) {
-            ContentEditableEditor.placeCaretAtEnd(<HTMLElement>rootNode);
-            return;
-        }
-        
-        let startContainer: Node = CaretHelper.getNodeFromPath(rootNode, position.startContainerPath);
-        let endContainer: Node = CaretHelper.getNodeFromPath(rootNode, position.endContainerPath);
-        let sel = document.getSelection();
-        if (sel) {
-            let rng = document.createRange();
-            rng.setStart(startContainer, position.startOffset);
-            rng.setEnd(endContainer, position.endOffset);
-            sel.removeAllRanges();
-            sel.addRange(rng);
-        }
+        ContentEditableEditor.placeCaretAtEnd(<HTMLElement>rootNode);
     }
     
     static onCaretPositionChange($elem: JQuery, callback: () => void): void {
@@ -327,6 +314,11 @@ class ChangesManager {
         }
         else {
             this.lastUndoBackspaceAt = -1;
+        }
+        let wrappedData = this.wrapData(data);
+        let lastUndoStep = this.getLastUndo();
+        if (wrappedData.data == lastUndoStep.data && wrappedData.lastCaretPosition == lastUndoStep.lastCaretPosition) {
+            return;
         }
         this.undoStack.push(this.wrapData(data));
         this.redoStack.length = 0;

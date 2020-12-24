@@ -19,7 +19,6 @@ import { ContactService } from "./contact/ContactService";
 import { PersonService } from "./person/PersonService";
 import { Persons } from "./person/Persons";
 import { IdentityProfile } from "./person/IdentityProfile";
-// import { ContactPresenceCheck } from "./contact/ContactPresenceCheck";
 import { SectionKeyManager, SectionKeyManagerOptions } from "./section/SectionKeyManager";
 import { SinkIndexManager } from "./SinkIndexManager";
 import { SectionAdminSink } from "./section/SectionAdminSink";
@@ -76,6 +75,15 @@ import { CommonApplication } from "../app/common/CommonApplication";
 import { TagProvider } from "./TagProvider";
 import { MigrationUtils } from "./misc/MigrationUtils";
 import { KvdbMap } from "./kvdb/KvdbMap";
+import { UserCreationService } from "./admin/userCreation/UserCreationService";
+import { UserCreationApi } from "./admin/userCreation/api/UserCreationApi";
+import { AddUserModelBuilder } from "./admin/userCreation/api/AddUserModelBuilder";
+import { ApiSerializer } from "./admin/userCreation/api/ApiSerializer";
+import { UserCreationContextBuilder } from "./admin/userCreation/UserCreationContextBuilder";
+import { PrivateUserCreator } from "./admin/userCreation/PrivateUserCreator";
+import { AdminRightService } from "./admin/AdminRightService";
+import { UserGroupCreatorService } from "./section/UserGroupCreatorService";
+import { ManagableUserCreator } from "./admin/userCreation/ManagableUserCreator";
 
 class FakeIoc {
     
@@ -337,12 +345,15 @@ export class PrivmxRegistry {
         });
         this.registerByConstructor2(x => x.getUserSettingsKvdbStorage(), KvdbSettingsStorage, () => [this.getUserSettingsKvdb()]);
         this.registerByConstructor2(x => x.getUserSettingsService(), UserSettingsService, () => [this.getUserSettingsKvdb(), this.getEventDispatcher()]);
+        this.registerByFactory(x => x.getSharedKvdbExtKey(), () => {
+            return this.getUserSettingsService().then(userSettingsService => {
+                return userSettingsService.getSharedKvdbExtKey();
+            });
+        });
         this.registerByFactory(x => x.getSharedKvdb(), () => {
-            return Q.all([this.getUserSettingsService(), this.getKvdbCollectionManager()]).then(res => {
-                let [userSettingsService, kvdbCollectionManager] = res;
-                return userSettingsService.getSharedKvdbExtKey().then(extKey => {
-                    return extKey ? kvdbCollectionManager.getByExtKey<KvdbSettingEntry>(extKey) : null;
-                });
+            return Q.all([this.getSharedKvdbExtKey(), this.getKvdbCollectionManager()]).then(res => {
+                let [extKey, kvdbCollectionManager] = res;
+                return extKey ? kvdbCollectionManager.getByExtKey<KvdbSettingEntry>(extKey) : null;
             });
         });
         this.registerByFactory(x => x.getAdminKvdb(), () => {
@@ -732,9 +743,9 @@ export class PrivmxRegistry {
             this.getSrpSecure(),
             this.getUserSettingsService(),
             this.getMessageService(),
-            this.getSharedDbExtKey()
+            this.getSharedKvdbExtKeyFromAdminDb()
         ]);
-        this.registerByFactory(x => x.getSharedDbExtKey(), () => {
+        this.registerByFactory(x => x.getSharedKvdbExtKeyFromAdminDb(), () => {
             return this.getSharedKvdbFromAdminDb().then(x => x.extKey);
         });
         this.registerByConstructor2(x => x.getAdminDataCreatorService(), AdminDataCreatorService, () => [
@@ -779,6 +790,42 @@ export class PrivmxRegistry {
             this.getIdentity(),
             this.getMailStats()
         ]);
+        this.registerByFactory(x => x.getUserCreationContextBuilder(), () => {
+            return Q.all([this.getSrpSecure(), this.getAdminDataCreatorService(), this.getSharedKvdbExtKey()]).then(res => {
+                let [srpSecure, adminDataCreatorService, sharedKvdbExtKey] = res;
+                return new UserCreationContextBuilder(srpSecure.gateway, srpSecure.privmxPKI, adminDataCreatorService, sharedKvdbExtKey);
+            });
+        });
+        this.registerByFactory(x => x.getApiSerializer(), () => new ApiSerializer());
+        this.registerByConstructor2(x => x.getAddUserModelBuilder(), AddUserModelBuilder, () => [this.getApiSerializer()]);
+        this.registerByConstructor2(x => x.getUserCreationApi(), UserCreationApi, () => [this.getGateway()]);
+        this.registerByConstructor2(x => x.getUserCreationService(), UserCreationService, () => [
+            this.getUserCreationContextBuilder(),
+            this.getAddUserModelBuilder(),
+            this.getUserCreationApi()
+        ]);
+        this.registerByConstructor2(x => x.getPrivateUserCreator(), PrivateUserCreator, () => [
+            this.getAdminDataCreatorService(),
+            this.getSharedKvdbExtKey(),
+            this.getSrpSecure()
+        ]);
+        this.registerByConstructor2(x => x.getAdminRightService(), AdminRightService, () => [
+            this.getSrpSecure(),
+            this.getAdminKeySender(),
+            this.getIdentity()
+        ]);
+        this.registerByConstructor2(x => x.getUserGroupCreatorService(), UserGroupCreatorService, () => [
+            this.getContactService(),
+            this.getPersonService(),
+            this.getLocaleService(),
+            this.getConv2Service(),
+            this.getIdentity()
+        ]);
+        this.registerByConstructor2(x => x.getManagableUserCreator(), ManagableUserCreator, () => [
+            this.getUserCreationService(),
+            this.getAdminRightService(),
+            this.getUserGroupCreatorService()
+        ]);
     }
     
     getStickersProvider(): Q.Promise<section.StickersProvider> {
@@ -793,8 +840,12 @@ export class PrivmxRegistry {
         return this.ioc.resolve("adminDataCreatorService");
     }
     
-    getSharedDbExtKey(): Q.Promise<privfs.crypto.ecc.ExtKey> {
-        return this.ioc.resolve("sharedDbExtKey");
+    getSharedKvdbExtKey(): Q.Promise<privfs.crypto.ecc.ExtKey> {
+        return this.ioc.resolve("sharedKvdbExtKey");
+    }
+    
+    getSharedKvdbExtKeyFromAdminDb(): Q.Promise<privfs.crypto.ecc.ExtKey> {
+        return this.ioc.resolve("sharedKvdbExtKeyFromAdminDb");
     }
     
     getSharedDbAdminService(): Q.Promise<SharedDbAdminService> {
@@ -1208,5 +1259,41 @@ export class PrivmxRegistry {
     
     getCollectionFactory(): Q.Promise<CollectionFactory> {
         return this.ioc.resolve("collectionFactory");
+    }
+    
+    getUserCreationContextBuilder(): Q.Promise<UserCreationContextBuilder> {
+        return this.ioc.resolve("userCreationContextBuilder");
+    }
+    
+    getApiSerializer(): Q.Promise<ApiSerializer> {
+        return this.ioc.resolve("apiSerializer");
+    }
+    
+    getAddUserModelBuilder(): Q.Promise<AddUserModelBuilder> {
+        return this.ioc.resolve("addUserModelBuilder");
+    }
+    
+    getUserCreationService(): Q.Promise<UserCreationService> {
+        return this.ioc.resolve("userCreationService");
+    }
+    
+    getUserCreationApi(): Q.Promise<UserCreationApi> {
+        return this.ioc.resolve("userCreationApi");
+    }
+    
+    getPrivateUserCreator(): Q.Promise<PrivateUserCreator> {
+        return this.ioc.resolve("privateUserCreator");
+    }
+    
+    getAdminRightService(): Q.Promise<AdminRightService> {
+        return this.ioc.resolve("adminRightService");
+    }
+    
+    getUserGroupCreatorService(): Q.Promise<UserGroupCreatorService> {
+        return this.ioc.resolve("userGroupCreatorService");
+    }
+    
+    getManagableUserCreator(): Q.Promise<ManagableUserCreator> {
+        return this.ioc.resolve("managableUserCreator");
     }
 }

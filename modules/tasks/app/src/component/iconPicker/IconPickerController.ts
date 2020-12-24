@@ -1,5 +1,5 @@
-import { Q, component, mail } from "pmc-mail";
-import { app } from "pmc-web/out/Types";
+import { Q, component, mail, Types } from "pmc-mail";
+import app = Types.app;
 import { TaskGroupIcon } from "../../main/Types";
 import { IconPickerData } from "./IconPickerData";
 import { i18n } from "./i18n/index";

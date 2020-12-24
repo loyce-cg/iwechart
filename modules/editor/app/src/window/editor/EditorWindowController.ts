@@ -1,12 +1,9 @@
 import {app, mail, utils, window as wnd, Types, privfs, Q, component} from "pmc-mail";
 import {MindmapHelpWindowController} from "../mindmaphelp/MindmapHelpWindowController";
 import {EditorPlugin, NotesPreferences, PartialTasksPlugin} from "../../main/EditorPlugin";
-import Inject = utils.decorators.Inject;
 import Dependencies = utils.decorators.Dependencies;
-
 import { LocalFfWatcher } from "../../main/LocalFsWatcher";
 import {i18n} from "./i18n/index";
-import { buttons } from "pmc-mail/out/component/template/web";
 
 export interface Options {
     docked: boolean;
@@ -145,6 +142,8 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
                 title: title,
                 icon: this.openableElement ? this.app.shellRegistry.resolveIcon(this.openableElement.getMimeType()) : "application/x-stt",
                 preTitleIcon: this.getPreTitleIcon(),
+                keepSpinnerUntilViewLoaded: true,
+                manualSpinnerRemoval: true,
             };
             if (this.printMode) {
                 this.openWindowOptions.widget = false;
@@ -209,7 +208,7 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
                 state.lock = !locked;
                 state.unlock = locked && canUnlock;
                 return state;
-            })    
+            })
         })
     }
     
@@ -414,6 +413,9 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
                 }
                 this.startLockInterval();
                 return Q.reject(e);
+            })
+            .fin(() => {
+                this.nwin.removeSpinner();
             });
         });
         this.initSpellChecker(this.editorPlugin.userPreferences);
@@ -839,7 +841,7 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
                     if (privfs.core.ApiErrorCodes.is(e, "OLD_SIGNATURE_DOESNT_MATCH")) {
                         return this.saveFileAsConflicted(content);
                     }
-                })            
+                })
                 .then(() => {
                     saved = true;
                     if (this.openableElement instanceof mail.section.OpenableSectionFile && this.openableElement.getMimeType() == "application/x-stt") {
@@ -898,7 +900,7 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
             let newOpenableFile: mail.section.OpenableSectionFile;
             return openableFile.fileSystem.resolvePath(fname)
             .then(resolvedPath => {
-                return openableFile.fileSystem.save(resolvedPath.path, content).thenResolve(resolvedPath.path); 
+                return openableFile.fileSystem.save(resolvedPath.path, content).thenResolve(resolvedPath.path);
             })
             .then(newPath => {
                 newOpenableFile = new mail.section.OpenableSectionFile(this.session.sectionManager.getSection(currentSectionId), openableFile.fileSystem, newPath, true);
@@ -924,7 +926,7 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
             })
             .fail(e => {
                 return Q.reject(e);
-            })    
+            })
         })
     }
 
@@ -1002,7 +1004,7 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
         return Q();
         // return Q().then(() => {
         //     if (this.handle) {
-        //         return this.handle.lock(false, withVersionUpdate) //robimy lock, ale bez update wersji.. 
+        //         return this.handle.lock(false, withVersionUpdate) //robimy lock, ale bez update wersji..
         //         .fail(e => {
         //             return this.lockedByMeInOtherSession(e)
         //         })
@@ -1025,7 +1027,7 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
                     if (! hasChangesToSave) {
                         return;
                     }
-                    // return this.handle.lock(false, false)                
+                    // return this.handle.lock(false, false)
                     return Q().then(() => {
                         return this.retrieveFromView<string>("getState");
                     })
@@ -1056,7 +1058,7 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
             section = osf.section;
             filesService = section.getFileModule();
 
-            return filesService.getFileSystem();                
+            return filesService.getFileSystem();
         })
         .then(fs => {
             let content = privfs.lazyBuffer.Content.createFromText(text, this.mimeType);
@@ -1088,7 +1090,7 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
                 return fs.createEx(destPath, content, true, {acl: acl})
                 .then(fInfo => {
                     this.lastRecoveryFilePath = fInfo.path;
-                })    
+                })
             }
         })
     }
@@ -1173,7 +1175,7 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
             }
             else {
                 return this.errorAlert(this.prepareErrorMessage(e), e);
-            }    
+            }
         })
     }
     
@@ -1542,14 +1544,40 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
         this.setTitle(newTitle);
         this.callViewMethod("updateFileName", newFileName, newFullFileName, newTitle);
     }
-    
+
+
+    private async getEntryFromOpenableFile(openableElement: app.common.shelltypes.OpenableElement): Promise<mail.filetree.nt.Entry> {
+        if (openableElement instanceof mail.section.OpenableSectionFile) {
+            let tree = await openableElement.section.getFileTree();
+            let entry = tree.collection.list.find(x => x.name == openableElement.getName())
+            return entry;    
+        }
+        else
+        if (((<any>this.openableElement).openableElementType == "LocalOpenableElement")) {
+            let entry = (<any>openableElement).entry;
+            return entry;
+        }
+    }
+
     onViewRename(): void {
         if (this.isRenaming) {
             return;
         }
         this.isRenaming = true;
         Q().then(() => {
-            return this.prompt(this.i18n("plugin.editor.window.editor.rename.message"), this.openableElement.name);
+            return this.getEntryFromOpenableFile(this.openableElement)
+            .then(entry => {
+                return this.promptEx({
+                    width: 400,
+                    height: 140,
+                    title: this.i18n("plugin.editor.window.editor.rename.message"),
+                    input: {
+                        multiline: false,
+                        value: this.openableElement.name
+                    },
+                    selectionMode: entry.isDirectory() ? "all" : "filename",
+                })    
+            })
         })
         .then(result => {
             if (result.result == "ok" && result.value != this.openableElement.name) {
@@ -1650,7 +1678,7 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
             if (this.editorButtons) {
                 this.editorButtons.updateLockState(locked, canUnlock);
             }
-        })        
+        })
     }
 
     updateLockInfoOnActionButtons(locked: boolean, canUnlock: boolean) {

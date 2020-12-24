@@ -100,6 +100,9 @@ export class MindmapEditorView extends ComponentView {
     }
     
     onNodeClick(e: MouseEvent): void {
+        if (this.isElementAnEditedNode($(<HTMLElement>e.currentTarget))) {
+            return;
+        }
         let isLinkClick = $(e.target).closest(".file-label.link").length > 0;
         let isTaskClick = $(e.target).closest(".task-label.task-id").length > 0;
         if (WebUtils.hasCtrlModifier(e) && (isLinkClick || isTaskClick)) {
@@ -1213,6 +1216,14 @@ export class MindmapEditorView extends ComponentView {
             return;
         }
         return this.enterNodeLabelEditMode(this.selectedNodes[0], focusImmediately, clearCurrentValue);
+    }
+    
+    isElementAnEditedNode($element: JQuery): boolean {
+        if (!this.isInNodeLabelEditMode()) {
+            return false;
+        }
+        let nodeRenderer: NodeRenderer = $element.data("nodeRenderer");
+        return nodeRenderer.node === this.editedNode;
     }
     
     

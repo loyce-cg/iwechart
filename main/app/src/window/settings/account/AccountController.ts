@@ -60,10 +60,10 @@ export class AccountController extends BaseController {
             .then(identityProvider => {
                 login = identityProvider.getLogin();
                 if (type == "oldPassword") {
-                    return this.srpSecure.changePasswordByOldPassword(this.identity.user, login, currentPassword, newPassword, weakPassword);
+                    return this.srpSecure.changePasswordByOldPassword(login, currentPassword, newPassword, weakPassword);
                 }
                 if (type == "secretIdWords") {
-                    return this.srpSecure.changePasswordByRecovery(currentPassword, this.identity.user, login, newPassword, weakPassword);
+                    return this.srpSecure.changePasswordByRecovery(currentPassword, login, newPassword, weakPassword);
                 }
             })
             .then(() => {

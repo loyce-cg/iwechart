@@ -3,19 +3,15 @@ import * as privfs from "privfs-client";
 import * as Q from "q";
 import {app,event} from "../../Types";
 import { OpenableElement, ShellOpenAction } from "../../app/common/shell/ShellTypes";
-import { Formatter } from "../../utils/Formatter";
 import { NotificationController } from "../../component/notification/NotificationController";
 import { BaseWindowManager } from "../../app/BaseWindowManager";
 import * as shelltypes from "../../app/common/shell/ShellTypes";
-import { Dependencies, Inject } from "../../utils/Decorators";
-import { SectionManager } from "../../mail/section/SectionManager";
-import { TaskChooserWindowController } from "../taskchooser/TaskChooserWindowController";
-import { TaskChooserCloseEvent, TaskChooserController } from "../../component/taskchooser/TaskChooserController";
+import { Dependencies } from "../../utils/Decorators";
+import { TaskChooserController } from "../../component/taskchooser/TaskChooserController";
 import { TaskTooltipController } from "../../component/tasktooltip/TaskTooltipController";
-import { OpenableSectionFile, SectionService } from "../../mail/section";
-import { Tree, Entry } from "../../mail/filetree/NewTree";
+import { OpenableSectionFile } from "../../mail/section";
+import { Entry } from "../../mail/filetree/NewTree";
 import { PersonsController } from "../../component/persons/PersonsController";
-import { ContactService } from "../../mail/contact";
 import { LocaleService, filetree } from "../../mail";
 import { i18n } from "./i18n";
 import { MindmapEditorController, MindmapIsDirtyChangedEvent, EntryModel } from "../../component/mindmapeditor/main";
@@ -58,9 +54,6 @@ export class MindmapEditorWindowController extends BaseWindowController {
         localeService.registerTexts(i18n, this.textsPrefix);
     }
     
-    // @Inject client: privfs.core.Client;
-    // @Inject sectionManager: SectionManager;
-
     name: string;
     docked: boolean;
     afterViewLoaded: Q.Deferred<void>;
@@ -152,7 +145,7 @@ export class MindmapEditorWindowController extends BaseWindowController {
             this.nwin.setDirty(this.isDirty);
         });
         this.openableElement = this.mindmapEditor.openableElement;
-
+        
         let client = this.session.sectionManager.client;
         this.registerPmxEvent(client.storageProviderManager.event, this.onStorageEvent);
         if (this.app.isElectronApp() && this.openableElement && (<any>this.openableElement).openableElementType == "LocalOpenableElement") {
@@ -172,7 +165,7 @@ export class MindmapEditorWindowController extends BaseWindowController {
                 this.onViewEnterEditMode();
             }
         });
-        this.app.addEventListener<event.FileLockChangedEvent>("file-lock-changed", event => {
+        this.app.addEventListener<event.FileLockChangedEvent>("file-lock-changed", () => {
             this.updateLockUnlockButtons();
         });
         
@@ -398,7 +391,7 @@ export class MindmapEditorWindowController extends BaseWindowController {
         state.saveAsPdf = true;
         return state;
     }
-
+    
     closeConfirm(): Q.IWhenable<boolean> {
         let defer = Q.defer<boolean>();
         Q().then(() => {
@@ -869,19 +862,19 @@ export class MindmapEditorWindowController extends BaseWindowController {
             this.isRenaming = false;
         });
     }
-
+    
     isFileLocked(): Q.Promise<boolean> {
         if (this.openableElement) {
             return this.app.filesLockingService.isLocked(this.session, this.openableElement);
         }
     }
-
+    
     canUnlockFile(): Q.Promise<boolean> {
         if (this.openableElement) {
             return this.app.filesLockingService.canUnlockFile(this.session, this.openableElement);
         }
     }
-
+    
     lockFile(): Q.Promise<void> {
         return Q().then(() => {
             if (this.openableElement) {
@@ -894,13 +887,13 @@ export class MindmapEditorWindowController extends BaseWindowController {
             }
         })
     }
-
+    
     unlockFile(): Q.Promise<void> {
         if (this.openableElement) {
             return this.app.filesLockingService.manualUnlockFile(this.session, this.openableElement);
         }
     }
-
+    
     updateLockUnlockButtons(): Q.Promise<void> {
         // update toolbar buttons
         return Q().then(() => {
@@ -915,17 +908,17 @@ export class MindmapEditorWindowController extends BaseWindowController {
             if (this.editorButtons) {
                 this.editorButtons.updateLockState(locked, canUnlock);
             }
-        })        
+        });
     }
-
+    
     updateLockInfoOnActionButtons(locked: boolean, canUnlock: boolean) {
         this.callViewMethod("updateLockInfoOnActionButtons", locked, canUnlock);
     }
-
+    
     onViewLockFile(): void {
         this.lockFile();
     }
-
+    
     onViewUnlockFile(): void {
         this.unlockFile();
     }

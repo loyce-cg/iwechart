@@ -1,10 +1,9 @@
-import { component, JQuery as $, Q, Types } from "pmc-web";
+import { component, JQuery as $, Q, Types, webUtils } from "pmc-web";
 import { Model } from "./IconPickerController";
 import { func as mainTemplate } from "./template/main.html";
 import { func as iconTemplate } from "../../window/taskGroupForm/template/icon.html";
-import { MailClientViewHelper } from "pmc-web/out/web-utils";
-import { Template } from "pmc-mail/out/web-utils/template/Template";
-
+import MailClientViewHelper = webUtils.MailClientViewHelper;
+import Template = webUtils.template.Template;
 
 export class IconPickerView extends component.base.ComponentView {
     

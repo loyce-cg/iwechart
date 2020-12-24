@@ -225,14 +225,14 @@ export class AdminEditUserWindowController extends BaseWindowController {
                 let recoveryEntropy = new Buffer((<mail.AdminDataManagable>this.adminData).recovery, "base64");
                 let password = Utils.randomTemporaryPassword(6);
                 return Q().then(() => {
-                    return privfs.core.PrivFsRpcManager.getKeyLoginByHost(MailConst.IDENTITY_INDEX, this.identity.host)
+                    return privfs.core.PrivFsRpcManager.getKeyLoginByHost({identityIndex: MailConst.IDENTITY_INDEX, host: this.identity.host})
                 })
                 .then(keyLogin => {
                     return keyLogin.login(recoveryEntropy, true);
                 })
                 .then(authData => {
                     let login = authData.myData.raw.login;
-                    return authData.srpSecure.changePasswordByRecovery(recoveryEntropy, this.username, login, password, false);
+                    return authData.srpSecure.changePasswordByRecovery(recoveryEntropy, login, password, false);
                 })
                 .then(() => {
                     let adminData: mail.AdminDataManagable = {
