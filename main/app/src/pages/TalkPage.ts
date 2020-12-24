@@ -42,7 +42,7 @@ export interface MsgModel {
     attachments: privfs.message.MessageAttachment[];
 }
 
-export interface LowUserPrivDataL2 extends privfs.types.core.PrivDataL2 {
+export interface LowUserPrivDataL2 extends privfs.types.core.MasterRecordLevel2 {
     displayName?: string;
     avatarSeed?: number;
 }
@@ -90,17 +90,16 @@ export class TalkPageApp {
         let hm: privfs.identity.Hashmail;
         return Q().then(() => {
             hm = new privfs.identity.Hashmail(hashmail);
-            return privfs.core.PrivFsRpcManager.getHttpSrpByHost(hm.host);
+            return privfs.core.PrivFsRpcManager.getHttpSrpByHost({host: hm.host});
         })
         .then(srp => {
-            srp.autoMigrateToPrivData2 = false;
             return srp.login(hm.user, hm.host, password, false, true);
         })
         .then(result => {
             return TalkPageAppSession.create(
                 hm,
-                <LowUserPrivData>result.privDataInfo.privData.l1,
-                <LowUserPrivDataL2>result.privDataInfo.privData.l2,
+                <LowUserPrivData>result.decryptedMasterRecord.masterRecord.l1,
+                <LowUserPrivDataL2>result.decryptedMasterRecord.masterRecord.l2,
                 result.srpSecure
             );
         });
@@ -285,8 +284,8 @@ export class View {
     $pageHeader: JQuery;
     
     constructor(public $ele: JQuery) {
-        privfs.core.PrivFsRpcManagerClass.SERVICE_DISCOVERY_JSON_MODE = window.location.protocol === "https:" ?
-            privfs.serviceDiscovery.JsonMode.HTTPS_ONLY : privfs.serviceDiscovery.JsonMode.HTTP_ONLY;
+        privfs.core.PrivFsRpcManager.setServiceDiscoveryJsonMode(window.location.protocol === "https:" ?
+            privfs.serviceDiscovery.JsonMode.HTTPS_ONLY : privfs.serviceDiscovery.JsonMode.HTTP_ONLY);
         
         this.app = new TalkPageApp();
         this.attachmentId = 0;
@@ -890,7 +889,9 @@ export class View {
     relogin(): Q.Promise<void> {
         let defer = Q.defer<void>();
         if (PASSWORD == "empty") {
-            this.session.srpSecure.gateway.srpRelogin(this.session.identity.user, "<empty>")
+            Q().then(() => {
+                return this.session.srpSecure.gateway.srpRelogin(this.session.identity.user, "<empty>");
+            })
             .then(() => {
                 console.log("Relogin successfully");
                 defer.resolve();
@@ -916,7 +917,9 @@ export class View {
                 $inputs.prop("disabled", true);
                 $error.addClass("hide");
                 $btn.prepend('<i class="fa fa-spin fa-circle-o-notch"></i>');
-                this.session.srpSecure.gateway.srpRelogin(this.session.identity.user, password)
+                Q().then(() => {
+                    return this.session.srpSecure.gateway.srpRelogin(this.session.identity.user, password);
+                })
                 .then(() => {
                     console.log("Relogin successfully");
                     $loginDialog.remove();

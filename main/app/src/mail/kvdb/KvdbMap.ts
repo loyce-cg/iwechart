@@ -1,6 +1,7 @@
 import { KvdbCollection } from "./KvdbCollection";
 import * as privfs from "privfs-client";
 import * as Q from "q";
+import { utils } from "../../Types";
 
 export interface KvdbEntry<T> extends privfs.types.db.KvdbEntry {
     secured: {
@@ -9,7 +10,7 @@ export interface KvdbEntry<T> extends privfs.types.db.KvdbEntry {
     }
 }
 
-export class KvdbMap<T> {
+export class KvdbMap<T> implements utils.IKvdbMap<T> {
     
     dbId: string;
     extKey: privfs.crypto.ecc.ExtKey;
@@ -77,8 +78,8 @@ export class KvdbMap<T> {
         return Q.all(promises).thenResolve(true);
     }
     
-    removeMany(keys: string[]) {
-        return Promise.all(keys.map(x => this.remove(x)));
+    removeMany(keys: string[]): Q.Promise<void> {
+        return Q.all(keys.map(x => this.remove(x))).thenResolve(null);
     }
     
     forEach(func: (key: string, value: T) => void) {

@@ -41,7 +41,7 @@ export interface IdentityResult {
     identityKey: privfs.crypto.ecc.PrivateKey;
 }
 
-export interface LowUserPrivData extends privfs.types.core.PrivDataL1 {
+export interface LowUserPrivData extends privfs.types.core.MasterRecordLevel1 {
     identity: {
         wif: string;
         name: string;
@@ -324,7 +324,7 @@ export class LowUserService {
             privDataL1Key = r[1];
             user.recovery = bip39.entropy.toString("base64");
             privData = {
-                dataVersion: privfs.core.PrivFsSrp.DATA_VERSION,
+                dataVersion: privfs.core.Registration.DATA_VERSION,
                 masterSeed: identityRes.masterSeed.toString("base64"),
                 identity: {
                     wif: user.identity.wif,
@@ -341,7 +341,8 @@ export class LowUserService {
                 },
                 l2Key: r[2].toString("base64")
             };
-            return this.srpSecure.privFsSrp.initUser(user.username, user.username, user.password || "<empty>", privDataL1Key, {l1: privData, l2: {}}, bip39);
+            const privfsSrp = new privfs.core.PrivFsSrp(this.srpSecure.gateway);
+            return privfsSrp.generateAuthorizationParams(user.username, user.password || "<empty>", privDataL1Key, {l1: privData, l2: {}}, bip39);
         })
         .then(registerData => {
             let loginData = JSON.parse(registerData.srp.params);
@@ -353,20 +354,20 @@ export class LowUserService {
                 language: user.language,
                 activated: true,
                 identityKey: identity.pub58,
-                privDataL1: registerData.privData.encryptedL1.toString("base64"),
-                privDataL2: registerData.privData.encryptedL2.toString("base64"),
-                dataVersion: privfs.core.PrivFsSrp.DATA_VERSION,
+                privDataL1: registerData.masterRecord.l1.toString("base64"),
+                privDataL2: registerData.masterRecord.l2.toString("base64"),
+                dataVersion: privfs.core.Registration.DATA_VERSION,
                 passwordType: user.password ? "normal" : "empty",
                 srp: {
                     salt: registerData.srp.salt.toString("hex"),
                     verifier: registerData.srp.verifier.toString("hex"),
                     params: registerData.srp.params,
-                    data: registerData.srp.data.encrypted.toString("base64"),
+                    data: registerData.srp.encryptedL1.toString("base64"),
                     weakPassword: false
                 },
                 lbk: {
-                    pub: registerData.lbk.bip39.extKey.getPublicKey().toBase58DER(),
-                    data: registerData.lbk.data.encrypted.toString("base64")
+                    pub: registerData.lbk.publicKey.toBase58DER(),
+                    data: registerData.lbk.encryptedL1.toString("base64")
                 },
                 notifier: {
                     enabled: true,
@@ -389,7 +390,7 @@ export class LowUserService {
     
     static getPrivDataL1Key(bip39: privfs.crypto.crypto.Interfaces.Bip39, lu: LowUserProps) {
         return Q().then(() => {
-            let lbkKey = privfs.core.PrivFsKeyLogin.getLbkDataKeyFromBip39(bip39);
+            let lbkKey = privfs.core.LoginByKeyUtils.getMasterRecordKeyFromBip39(bip39);
             return privfs.crypto.service.privmxDecrypt(new Buffer(lu.lbkData, "base64"), lbkKey);
         })
     };
@@ -439,29 +440,25 @@ export class LowUserService {
         .then(luProps => {
             if (luProps.dataVersion != "2.0") {
                 throw new Error("Unsupported dataVersion");
-                // return this.migrateLowUserToPrivData2(bip39, luProps, lowUser.password || "<empty>", false).then(x => {
-                //     return x.privData.key;
-                // });
             }
             return LowUserService.getPrivDataL1Key(bip39, luProps);
         })
         .then(privDataL1Key => {
-            return this.srpSecure.privFsSrp.initUser(lowUser.username, lowUser.username, password || "<empty>", privDataL1Key);
+            const privfsSrp = new privfs.core.PrivFsSrp(this.srpSecure.gateway);
+            return privfsSrp.generateSrpParamsAndEncryptL1Key(lowUser.username, password || "<empty>", privDataL1Key);
         })
-        .then(registerData => {
-            let loginData = JSON.parse(registerData.srp.params);
-            loginData.hint = hint;
-            registerData.srp.params = JSON.stringify(loginData);
+        .then(registerDataSrp => {
+            const newParams = this.addHintToLoginParams(registerDataSrp.params, hint);
             return this.srpSecure.request("modifyLowUser", {
                 username: lowUser.username,
                 language: language,
-                dataVersion: privfs.core.PrivFsSrp.DATA_VERSION,
+                dataVersion: privfs.core.Registration.DATA_VERSION,
                 passwordType: password ? "normal" : "empty",
                 srp: {
-                    salt: registerData.srp.salt.toString("hex"),
-                    verifier: registerData.srp.verifier.toString("hex"),
-                    params: registerData.srp.params,
-                    data: registerData.srp.data.encrypted.toString("base64"),
+                    salt: registerDataSrp.salt.toString("hex"),
+                    verifier: registerDataSrp.verifier.toString("hex"),
+                    params: newParams,
+                    data: registerDataSrp.encryptedL1.toString("base64"),
                     weakPassword: false
                 }
             });
@@ -472,6 +469,12 @@ export class LowUserService {
             lowUser.language = language;
             return this.registry.addUser(lowUser);
         });
+    }
+    
+    private addHintToLoginParams(srpLoginParams: string, hint: string) {
+        const loginData = JSON.parse(srpLoginParams);
+        loginData.hint = hint;
+        return JSON.stringify(loginData);
     }
     
     modifyUserBlocked(lowUser: LowUser, blocked: boolean) {
@@ -487,11 +490,11 @@ export class LowUserService {
         });
     }
     
-    modifyPrivDataL2(lowUser: LowUser, modifier: (privDataL2: privfs.types.core.PrivDataL2) => Q.IWhenable<privfs.types.core.PrivDataL2>) {
+    modifyPrivDataL2(lowUser: LowUser, modifier: (privDataL2: privfs.types.core.MasterRecordLevel2) => Q.IWhenable<privfs.types.core.MasterRecordLevel2>) {
         return LowUserService.modifyPrivDataL2(this.srpSecure, lowUser, modifier);
     }
     
-    static modifyPrivDataL2(srpSecure: privfs.core.PrivFsSrpSecure, lowUser: LowUser, modifier: (privDataL2: privfs.types.core.PrivDataL2) => Q.IWhenable<privfs.types.core.PrivDataL2>) {
+    static modifyPrivDataL2(srpSecure: privfs.core.PrivFsSrpSecure, lowUser: LowUser, modifier: (privDataL2: privfs.types.core.MasterRecordLevel2) => Q.IWhenable<privfs.types.core.MasterRecordLevel2>) {
         let luProps: LowUserProps, l2Encryptor: privfs.crypto.utils.ObjectEncryptor;
         return Q().then(() => {
             return Q.all([
@@ -506,12 +509,12 @@ export class LowUserService {
             return LowUserService.getPrivDataL1Key(res[0], luProps);
         })
         .then(l1Key => {
-            return privfs.crypto.service.getObjectEncryptor(l1Key).decrypt<privfs.types.core.PrivDataL1>(new Buffer(luProps.privData, "base64"));
+            return privfs.crypto.service.getObjectEncryptor(l1Key).decrypt<privfs.types.core.MasterRecordLevel1>(new Buffer(luProps.privData, "base64"));
         })
         .then(privData => {
             let privDataL2Key = new Buffer(privData.l2Key, "base64");
             l2Encryptor = privfs.crypto.service.getObjectEncryptor(privDataL2Key)
-            return l2Encryptor.decrypt<privfs.types.core.PrivDataL2>(new Buffer(luProps.privDataL2, "base64"));
+            return l2Encryptor.decrypt<privfs.types.core.MasterRecordLevel2>(new Buffer(luProps.privDataL2, "base64"));
         })
         .then(privDataL2 => {
             return modifier(privDataL2);

@@ -1,4 +1,4 @@
-import { component, app, mail, Q, privfs, Types, Logger as RootLogger } from "pmc-mail";
+import { component, app, mail, window, Q, privfs, Types, Logger as RootLogger } from "pmc-mail";
 import * as Mail from "pmc-mail";
 import { ProjectsMap, TaskGroupsMap, TasksMap, ProjectId, TaskGroupId, TaskId, TaskGroupNamesMap, PersonId, PeopleMap, PeopleNamesMap, Watchable, Action, EventHandler, Person, WatchedTasksMap, WatchedTaskItem, StoredObjectTypes, ViewContext, CustomTasksElements, HostHash } from "./Types";
 import { Project } from "./data/Project";
@@ -6,18 +6,17 @@ import { TaskGroup } from "./data/TaskGroup";
 import { Task, TaskStatus } from "./data/Task";
 import { SettingsStorage } from "./SettingsStorage";
 import { TaskWindowController } from "../window/task/TaskWindowController";
-import { MsgBoxOptions, MsgBoxResult } from "pmc-mail/out/window/msgbox/main";
+import MsgBoxResult = window.msgbox.MsgBoxResult;
+import MsgBoxOptions = window.msgbox.MsgBoxOptions;
 import { CustomSelectController, CustomSelectItem, CustomSelectOptions } from "../component/customSelect/CustomSelectController";
 import { TaskPanelController, ActionHandlers } from "../component/taskPanel/TaskPanelController";
 import { TaskGroupsPanelController, TasksFilterData, TasksFilterUpdater } from "../component/taskGroupsPanel/TaskGroupsPanelController";
 import { ViewSettings } from "./ViewSettings";
 import { TaskGroupFormWindowController } from "../window/taskGroupForm/TaskGroupFormWindowController";
 import { SimpleTaskService } from "./SimpleTaskService";
-import { FixturesGenerator } from "./data/FixturesGenerator";
 import { DataMigration } from "./DataMigration";
 import { UniqueId } from "./UniqueId";
 import { TasksWindowController } from "../window/tasks/TasksWindowController";
-import { ConflictResolverTests } from "./data/ConflictResolverTests";
 import { TaskGroupConflictResolver } from "./data/TaskGroupConflictResolver";
 import { ConflictResolver, ConflictResolutionStatus } from "./data/ConflictResolver";
 import { ProjectConflictResolver } from "./data/ProjectConflictResolver";
@@ -25,10 +24,6 @@ import { TaskConflictResolver } from "./data/TaskConflictResolver";
 import { IconPickerController } from "../component/iconPicker/IconPickerController";
 import { i18n } from "../i18n/index";
 import { AttachmentsManager } from "./AttachmentsManager";
-import { section } from "pmc-mail/out/mail";
-import { Conv2ActivatedEvent } from "pmc-mail/out/component/conv2list/main";
-import { Conv2Service } from "pmc-mail/out/mail/section";
-import { SessionManager } from "pmc-mail/out/mail/session/SessionManager";
 let Logger = RootLogger.get("privfs-tasks-plugin.TasksPlugin");
 
 interface EventWatcher {
@@ -564,9 +559,9 @@ export class TasksPlugin {
             this.tasksSectionsCollection[session.hostHash] = new Mail.utils.collection.FilteredCollection(session.sectionManager.filteredCollection, x => {
                 return !x.isUserGroup() && x.getKvdbModule().hasModule() && (x.isKvdbModuleEnabled() || x.isCalendarModuleEnabled());
             });
-            this.tasksSectionsCollection[session.hostHash].changeEvent.add((event: Types.utils.collection.CollectionEvent<mail.section.SectionService>) => {
+            this.tasksSectionsCollection[session.hostHash].changeEvent.add(() => {
                 this.refreshWatched();
-            });    
+            });
         }
 
         // console.log("XX - check noPrivate Collection...")
@@ -620,7 +615,7 @@ export class TasksPlugin {
             this.tasksRootSections = {};
         }
         if (!(session.hostHash in this.tasksRootSections) && session.sectionManager.sectionsCollection) {
-            this.tasksRootSections[session.hostHash] = new Mail.utils.collection.FilteredCollection(session.sectionManager.sectionsCollection, x => (x.isKvdbModuleEnabled(true) || x.isCalendarModuleEnabled(true)));        
+            this.tasksRootSections[session.hostHash] = new Mail.utils.collection.FilteredCollection(session.sectionManager.sectionsCollection, x => (x.isKvdbModuleEnabled(true) || x.isCalendarModuleEnabled(true)));
         }
 
         if (!this.tasksPrimarySections) {
@@ -765,11 +760,11 @@ export class TasksPlugin {
         }
         return comments;
     }
-
+    
     onTasksSectionChange(event: Mail.Types.utils.collection.CollectionEvent<Mail.mail.section.SectionService>): void {
         if (event.element != null) {
             if (event.element.hasChatModule()) {
-                event.element.getChatSinkIndex().then(sinkIndex => {
+                event.element.getChatSinkIndex().then(() => {
                     if (this.activeTaskGroupsPanel) {
                         let conv2Section = this.activeTaskGroupsPanel.getActiveConv2Section();
                         if (this.activeTaskGroupsPanel && conv2Section && conv2Section.section && conv2Section.section.getId() == event.element.getId()) {
@@ -781,8 +776,7 @@ export class TasksPlugin {
             }
         }
     }
-
-
+    
     /****************************************
     ***************** KVDB ******************
     ****************************************/
@@ -835,9 +829,6 @@ export class TasksPlugin {
             prom = prom.then(() => {
                 let res = this.addElementFromKvdb(session, id, el.secured, true);
                 let key = el.secured.key;
-                let type = key[0];
-                let typeStr: Watchable = (type == "p" ? "project" : (type == "g" ? "taskGroup" : "task"));
-                let action: Action = el.secured.payload ? "added" : "deleted";
                 key = key.substr(2);
                 return res;
             });
@@ -851,22 +842,17 @@ export class TasksPlugin {
     
     ensureKvdbCExists(id: string, session: mail.session.Session): Q.Promise<void> {
         if (id in this.ensureKvdbCExistsDeferreds[session.hostHash]) {
-            // console.log("returning ensureKvdbCExistsDeferreds promise..")
             return this.ensureKvdbCExistsDeferreds[session.hostHash][id].promise;
         }
         if (id in this.kvdbCs[session.hostHash]) {
-            // console.log("return kvdbCs of session as ready");
             return <any>Q.resolve();
         }
-        // let sectionId = this.projectIdToSectionId(session, id);
-
         let section = session.sectionManager.getSection(id);
         let mod = section.getKvdbModule();
         if (!mod) {
             return Q().thenReject();
         }
         this.ensureKvdbCExistsDeferreds[session.hostHash][id] = Q.defer();
-        // console.log("after add defer");
         return Q().then(() => {
             if (!mod.hasModule() && mod.creatingPromise) {
                 return mod.creatingPromise;
@@ -895,9 +881,8 @@ export class TasksPlugin {
                 delete this.ensureKvdbCExistsDeferreds[session.hostHash][id];
             }
         });
-        return this.ensureKvdbCExistsDeferreds[session.hostHash][id].promise;
     }
-
+    
     getSectionKvdbCollection(section: mail.section.SectionService): Q.Promise<mail.kvdb.KvdbCollection<any>> {
         return Q().then(() => {
             section.getKvdbModule().kvdbPromise = null;
@@ -1672,7 +1657,7 @@ export class TasksPlugin {
         return arr;
     }
     
-    getProjectMembers(session: mail.session.Session, projectId: ProjectId): PeopleMap {
+    getProjectMembers(session: mail.session.Session, _projectId: ProjectId): PeopleMap {
         return this.getAllPeople(session);
     }
     
@@ -1810,7 +1795,7 @@ export class TasksPlugin {
         return this.getLabelClassFor(session, task.getProjectId(), task.getStatus());
     }
 
-    getLabelClassFor(session: mail.session.Session, projectId: ProjectId, status: TaskStatus) {
+    getLabelClassFor(_session: mail.session.Session, _projectId: ProjectId, status: TaskStatus) {
         if (typeof(status) == "number") {
             status = Task.convertStatus(status, false);
         }
@@ -2299,7 +2284,7 @@ export class TasksPlugin {
         this.tasksUnreadCountModel.setWithCheck(this.unreadTasks);
     }
 
-    markTaskAsWatched(session: mail.session.Session, taskId: TaskId, sectionId: string) {
+    markTaskAsWatched(session: mail.session.Session, taskId: TaskId, _sectionId: string) {
         this.markTasksAsWatched(session, [taskId]);
     }
 
@@ -2329,7 +2314,7 @@ export class TasksPlugin {
         return Q();
     }
     
-    markTaskAsNotWatched(session: mail.session.Session, taskId: TaskId, sectionId: string) {
+    markTaskAsNotWatched(session: mail.session.Session, taskId: TaskId, _sectionId: string) {
         this.markTasksAsNotWatched(session, [taskId]);
     }
     
@@ -2541,7 +2526,7 @@ export class TasksPlugin {
         if (this.tasksSectionsCollectionNoPrivate && session.hostHash in this.tasksSectionsCollectionNoPrivate) {
             for (let section of this.tasksSectionsCollectionNoPrivate[session.hostHash].list) {
                 info[session.hostHash][section.getId()] = section.userSettings.mutedModules.tasks;
-            }    
+            }
         }
         return info;
     }
@@ -2560,7 +2545,7 @@ export class TasksPlugin {
             return true;
         }
         return false;
-    }    
+    }
 
     isAssignedToUsers(task: Task, users: string[]): boolean {
         let arr = task.getAssignedTo();
@@ -2935,7 +2920,7 @@ export class TasksPlugin {
         let prom = Q();
 
         // For each task to duplicate
-        for (let [srcTaskGroupId, taskId] of fullTaskIds) {
+        for (let [, taskId] of fullTaskIds) {
             if (!(taskId in this.tasks[session.hostHash])) {
                 continue;
             }
@@ -2981,7 +2966,7 @@ export class TasksPlugin {
             }
             pId = this.taskGroups[session.hostHash][taskGroupId].getProjectId();
         }
-        for (let [tgId, tId] of fullTaskIds) {
+        for (let [, tId] of fullTaskIds) {
             if (!(tId in this.tasks[session.hostHash]) || this.tasks[session.hostHash][tId].getProjectId() != pId) {
                 return false;
             }
@@ -3025,7 +3010,7 @@ export class TasksPlugin {
             let data: { [key: string]: Array<TaskGroupId> } = {};
             if (delAll) {
                 // All taskgroups that contain the task
-                for (let [tgId, tId] of fullTaskIds) {
+                for (let [, tId] of fullTaskIds) {
                     if (!(tId in data) && tId in this.tasks[session.hostHash]) {
                         data[tId] = this.tasks[session.hostHash][tId].getTaskGroupIds(true);
                         nDel++;
@@ -3533,11 +3518,11 @@ export class TasksPlugin {
             }
             return Q();
         }).then(() => {
-            return Mail.Promise.PromiseUtils.oneByOne(tsToSave, (idx, t) => {
+            return Mail.Promise.PromiseUtils.oneByOne(tsToSave, (_idx, t) => {
                 return this.saveTask(session, t);
             });
         }).then(() => {
-            return Mail.Promise.PromiseUtils.oneByOne(tgsToSave, (idx, tg) => {
+            return Mail.Promise.PromiseUtils.oneByOne(tgsToSave, (_idx, tg) => {
                 return this.saveTaskGroup(session, tg);
             });
         });
@@ -3579,7 +3564,7 @@ export class TasksPlugin {
                 let message = item.entry.getMessage();
                 if (message.sender.pub58 == session.userData.identity.pub58) {
                     return true;
-                }    
+                }
             }
         }
         return false;

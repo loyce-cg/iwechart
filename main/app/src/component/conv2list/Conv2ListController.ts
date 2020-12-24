@@ -53,7 +53,7 @@ export class Conv2ListController extends ComponentController {
     @Inject componentFactory: ComponentFactory;
     @Inject conv2Service: Conv2Service;
     @Inject userPreferences: UserPreferences;
-    
+    @Inject authData: privfs.types.core.UserDataEx;
     
     filteredCollection: FilteredCollection<Conv2Section>;
     sortedCollection: SortedCollection<Conv2Section>;
@@ -149,8 +149,8 @@ export class Conv2ListController extends ComponentController {
             return false;
         }
         
-        let hasMessages: boolean = el.getLastTime() > 0;
-        let iAmBasicUser = this.conv2Service.contactService.getContactByHashmail(this.identity.hashmail).basicUser;
+        const hasMessages: boolean = el.getLastTime() > 0;
+        const iAmBasicUser = this.authData.myData.raw.type == "basic";
         if (el.isSingleContact() && !hasMessages && iAmBasicUser) {
             return false;
         }

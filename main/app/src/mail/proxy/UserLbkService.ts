@@ -31,8 +31,8 @@ export class UserLbkService {
         });
     }
     
-    static encryptedLbkFromRegisterData(registerData: privfs.types.core.RegisterData, lbkDataKey: Buffer): Q.Promise<Buffer> {
-        return UserLbkService.encryptedLbk(registerData.privData.key, lbkDataKey)
+    static encryptedLbkFromRegisterData(masterRecordL1Key: Buffer, lbkDataKey: Buffer): Q.Promise<Buffer> {
+        return UserLbkService.encryptedLbk(masterRecordL1Key, lbkDataKey)
     }
     
     static encryptedLbk(lPrivDataKey: Buffer, lbkDataKey: Buffer): Q.Promise<Buffer> {

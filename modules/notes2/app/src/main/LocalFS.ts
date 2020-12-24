@@ -6,7 +6,7 @@ import * as pathUtils from "path";
 import * as os from "os";
 import { app, utils, Q, mail, privfs } from "pmc-mail";
 import { FileEntryBase } from "./Notes2Utils";
-import { DirStats } from "pmc-mail/out/mail/filetree/NewTree";
+import DirStats = mail.filetree.nt.DirStats;
 
 export type LocalEntryType = "file"|"directory";
 

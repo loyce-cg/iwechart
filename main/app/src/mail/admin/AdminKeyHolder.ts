@@ -26,8 +26,8 @@ export class AdminKeyHolder {
             return Q();
         }
         return Q().then(() => {
-            this.authData.privDataL2.data.adminKey = extKey.getPrivatePartAsBase58();
-            return this.srpSecure.setPrivDataL2(this.authData.privDataL2.key, this.authData.privDataL2.data);
+            this.authData.masterRecordLevel2.data.adminKey = extKey.getPrivatePartAsBase58();
+            return this.srpSecure.setMasterRecordLevel2(this.authData.masterRecordLevel2.key, this.authData.masterRecordLevel2.data);
         })
         .then(() => {
             this.setAdminKey(extKey);

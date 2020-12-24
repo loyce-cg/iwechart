@@ -291,7 +291,30 @@ if (file_exists($dir)) {
           login();
         }
       }
-      function login() {
+      function additionalLoginStepCallback(context, data) {
+        if (!data || data.reason != "twofa") {
+          throw new Error("Cannot login. There is no additional login step handler for given data " + JSON.stringify(data));
+        }
+        return new Promise(function(resolve, reject) {
+          var tryCode = function(msg) {
+            var code = prompt(msg).replace(/\s/g, "");
+            if (!code) {
+              reject("additional-login-step-cancel");
+              return;
+            }
+            context.gateway.request("twofaChallenge", {code: code, rememberDeviceId: false}).then(resolve, function(e) {
+              if (e && e.data && e.data.error && e.data.error.code == 0x7007) {
+                tryCode("Invalid 2FA code, please type valid one");
+              }
+              else {
+                reject(e);
+              }
+            });
+          }
+          tryCode("2FA code");
+        });
+      }
+      async function login() {
         var username = usernameField.value;
         if (!username) {
           alert("Username is required");
@@ -309,45 +332,19 @@ if (file_exists($dir)) {
         passwordField.disabled = true;
         loginButton.disabled = true;
         
-        var hashmail = new pmx.identity.Hashmail(username.indexOf("#") == -1 ? username + "#" + location.hostname : username);
-        pmx.core.PrivFsRpcManager.getHttpSrpByHost(hashmail.host).then(function(srp) {
-          srp.additionalLoginStepCallback = function(basicLoginResult, data) {
-            if (!data || data.reason != "twofa") {
-              throw new Error("Cannot login. There is no additional login step handler for given data " + JSON.stringify(data));
-            }
-            return new Promise(function(resolve, reject) {
-              var tryCode = function(msg) {
-                var code = prompt(msg).replace(/\s/g, "");
-                if (!code) {
-                  reject("additional-login-step-cancel");
-                  return;
-                }
-                basicLoginResult.srpSecure.gateway.request("twofaChallenge", {code: code, rememberDeviceId: false}).then(resolve, function(e) {
-                  if (e && e.data && e.data.error && e.data.error.code == 0x7007) {
-                    tryCode("Invalid 2FA code, please type valid one");
-                  }
-                  else {
-                    reject(e);
-                  }
-                });
-              }
-              tryCode("2FA code");
-            });
-          };
-          return srp.login(hashmail.user, hashmail.host, password, false, true);
-        })
-        .then(function(lResult) {
-          return lResult.srpSecure.request("externalAuth", params);
-        })
-        .then(function(aResult) {
-          let url = aResult.url + "?auth=" + jsonToHex({
+        try {
+          const hashmail = new pmx.identity.Hashmail(username.indexOf("#") == -1 ? username + "#" + location.hostname : username);
+          const srp = await pmx.core.PrivFsRpcManager.getHttpSrpByHost({host: hashmail.host, additionalLoginStepCallback: additionalLoginStepCallback});
+          const lResult = await srp.login(hashmail.user, hashmail.host, password, false, true);
+          const aResult = await lResult.srpSecure.request("externalAuth", params);
+          const url = aResult.url + "?auth=" + jsonToHex({
             ticketId: params.ticketId,
             username: aResult.username,
             hash: aResult.hash
           });
           location = url;
-        })
-        .fail(function(e) {
+        }
+        catch (e) {
           console.log("Error", e, e ? e.stack : null);
           if (e == "Connection Broken (processMessage - got ALERT: User doesn't exist)" || e == "Connection Broken (processMessage - got ALERT: Different M1)") {
             error.innerHTML = "Niepoprawne dane logownia";
@@ -359,13 +356,13 @@ if (file_exists($dir)) {
           else {
             error.innerHTML = "Niespodziewany błąd";
           }
-        })
-        .fin(function() {
+        }
+        finally {
           icon.setAttribute("class", "hide");
           usernameField.disabled = false;
           passwordField.disabled = false;
           loginButton.disabled = false;
-        });
+        }
       }
     </script>
   </body>

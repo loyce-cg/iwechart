@@ -1,8 +1,4 @@
 import * as fs from "fs";
-import * as pathUtils from "path";
-import { app, utils, Q, mail, privfs } from "pmc-mail";
-import { DirStats } from "pmc-mail/out/mail/filetree/NewTree";
-
 
 export class LocalFfWatcher {
     

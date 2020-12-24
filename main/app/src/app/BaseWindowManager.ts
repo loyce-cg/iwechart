@@ -210,8 +210,6 @@ export class BaseWindowManager<T extends BaseWindowController> {
         }
         return null;
     }
-
-    
     isOpenedByName(_name: string) {
     }
     
@@ -322,9 +320,7 @@ export class BaseWindowManager<T extends BaseWindowController> {
                     }
                     // console.log("processClosing close", this.getControllerName(), this.uid);
 
-                    this.controller.onClose();
-                    this.onCloseFinished = true;
-                    clearTimeout(this.mainCloseTimer);
+                    this.closeThisWindow();
                 } catch (e) {}
             }
             if(this.parent) {
@@ -338,6 +334,29 @@ export class BaseWindowManager<T extends BaseWindowController> {
             }
         }
         this.scheduleClose(event, force);
+    }
+
+    closeThisWindow() {
+        let parent = this.parent;
+        let uid = this.uid;
+        this.controller.onClose();
+        this.onCloseFinished = true;
+        clearTimeout(this.mainCloseTimer);
+        this.stateListeners = null;
+        this.childrenListener = null;
+        this.controller.app.removeFromObjectMap(this.controller.id);
+
+        if (this.singletonName) {
+            if (this.isSingletonRegistered(this.singletonName)) {
+                this.unregisterSingleton(this.singletonName);
+            }
+        }
+        this.controller.destroy();
+        this.destroy();
+        if(parent) {
+            parent.destroyChild(uid);
+        }
+
     }
     
     closeInner(event: CloseEvent, force?: boolean) {
@@ -413,6 +432,7 @@ export class BaseWindowManager<T extends BaseWindowController> {
             }
             this.controller.nwin = null;
             this.controller.destroy();
+            this.controller = null;
         }
     }
     

@@ -15,7 +15,7 @@ export class ConnectionStatusCheckerElectron {
     srpSecure: privfs.core.PrivFsSrpSecure;
     networkStatusService: NetworkStatusService
     identityProvider: utils.IdentityProvider;
-    reconnectTimer: any = null; 
+    reconnectTimer: any = null;
     utilApi: UtilApi;
     
     intervals: {repeats: number, interval: number}[];
@@ -27,7 +27,7 @@ export class ConnectionStatusCheckerElectron {
 
     onResumeFunc:() => void;
 
-    constructor(public app: ElectronApplication, public userCredentials: app.UserCredentials) {                     
+    constructor(public app: ElectronApplication, public userCredentials: app.UserCredentials) {
         this.onResumeFunc = () => {
             this.resetConnectionCheckIntervals();
             this.app.log("fire reconnectChecker(force) after power resume");
@@ -44,7 +44,7 @@ export class ConnectionStatusCheckerElectron {
     registerPowerEvents(): void {
         if (! this.powerMonitor) {
             this.powerMonitor = this.app.getPowerMonitor();
-            this.powerMonitor.on("resume", this.onResumeFunc);    
+            this.powerMonitor.on("resume", this.onResumeFunc);
         }
     }
 
@@ -148,7 +148,7 @@ export class ConnectionStatusCheckerElectron {
             .then(pingOk => {
                 this.app.log("[SRC  "+ connId +"] ping result:", pingOk.toString());
                 if (pingOk) {
-                    return true;    
+                    return true;
                 }
                 else if (this.relogging) {
                     this.app.log("[SRC "+ connId +"] Relogging already in progress.. aborting")
@@ -227,7 +227,7 @@ export class ConnectionStatusCheckerElectron {
                 this.app.eventDispatcher.dispatchEvent<event.RefreshUsersPresence>({type: "refresh-users-presence"});
 
                 this.utilApi.getDeviceToken().then(deviceToken => {
-                    privfs.core.PrivFsRpcManagerClass.GATEWAY_PROPERTIES["deviceToken"] = deviceToken;
+                    this.srpSecure.gateway.properties["deviceToken"] = deviceToken;
                 })
                 .fail(e => {
                     console.log("Error during getting device token", e);

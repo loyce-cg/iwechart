@@ -98,7 +98,7 @@ export class SectionKeyManager {
     
     processKvdbSettingEntry(entry: KvdbSettingEntry): void {
         let sec = entry.secured;
-        if (Lang.startsWith(sec.key, SectionKeyManager.SETTINGS_PREFIX)) {
+        if (sec && sec.key && Lang.startsWith(sec.key, SectionKeyManager.SETTINGS_PREFIX)) {
             let splitted = sec.key.split("/");
             let key: section.SectionKey = {
                 sectionId: splitted[1],

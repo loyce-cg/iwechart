@@ -29,14 +29,6 @@ export class UnsupportedWindowController extends EditorWindowController {
         this.ipcMode = true;
     }
     
-    getButtonsState(): ButtonsState {
-        let state = super.getButtonsState();
-        state.edit = false;
-        if (this.app.isElectronApp() && this.openableElement) {
-            state.unlock = (<any>this.app).externalFilesService.isElementRegisteredAndLocked(this.openableElement.getElementId());
-        }
-        return state;
-    }
     
     onViewLoad(): void {
         let currentViewId = this.currentViewId;
@@ -49,20 +41,14 @@ export class UnsupportedWindowController extends EditorWindowController {
             systemLabel: this.app.isElectronApp() ? (<any>this.app).getSystemLabel() : undefined,
             localFile: this.openableElement ? this.openableElement.isLocalFile() : false
         };
-        if (this.app.isElectronApp() && this.openableElement) {
-            (<any>this.app).externalFilesService.registerPreview(this.openableElement.getElementId(), (isLockSet: boolean) => {
-                this.callViewMethod("setLockState", isLockSet);
-                this.editorButtons.refreshButtonsState();
-            })
-        }
 
         this.callViewMethod("setData", currentViewId, model, this.getButtonsState());
-        if (this.app.isElectronApp() && this.openableElement) {
-            if((<any>this.app).externalFilesService.isElementRegisteredAndLocked(this.openableElement.getElementId())) {
-                this.callViewMethod("setLockState", true);
-            }
-        }
+    }
 
+    getButtonsState(): ButtonsState {
+        let state = super.getButtonsState();
+        state.edit = false;
+        return state;
     }
     
     onViewExport() {

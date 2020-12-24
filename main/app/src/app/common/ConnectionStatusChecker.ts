@@ -95,7 +95,9 @@ export class ConnectionStatusChecker {
                         }
                         result.hideInputError();
                         result.startProcessing("");
-                        checker.srpSecure.srpRelogin(login, result.value)
+                        Q().then(() => {
+                            return checker.srpSecure.srpRelogin(login, result.value);
+                        })
                         .then(() => {
                             checker.eventProcessing = false;
                             checker.networkStatusService.restoreNetworkActivity();
@@ -105,7 +107,7 @@ export class ConnectionStatusChecker {
                             result.close();
                             let utilApi = new UtilApi(this.srpSecure);
                             utilApi.getDeviceToken().then(deviceToken => {
-                                privfs.core.PrivFsRpcManagerClass.GATEWAY_PROPERTIES["deviceToken"] = deviceToken;
+                                checker.srpSecure.gateway.properties["deviceToken"] = deviceToken;
                             })
                             .fail(e => {
                                 console.log("Error during getting device token", e);
@@ -174,7 +176,9 @@ export class ConnectionStatusChecker {
                                 (<ElectronApplication>this.app).onServerConnectionError();
                                 if (password && this.app.isElectronApp()) {
                                     Logger.error("Autoreconnecting");
-                                    this.srpSecure.srpRelogin(login, password)
+                                    Q().then(() => {
+                                        return this.srpSecure.srpRelogin(login, password);
+                                    })
                                     .then(() => {
                                         Logger.error("Successfully reconnected");
                                         this.eventProcessing = false;

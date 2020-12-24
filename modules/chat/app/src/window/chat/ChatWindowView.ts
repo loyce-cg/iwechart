@@ -1,12 +1,8 @@
 import {component, webUtils, window as wnd, Q, JQuery as $, Types, Logger as RootLogger} from "pmc-web";
 import {ChatMessagesView} from "../../component/chatmessages/ChatMessagesView";
 import {func as mainTemplate} from "./template/main.html";
-import {func as privateConversationsTemplate} from "./template/private-conversations.html";
 import {Model, ActiveElementInfo} from "./ChatWindowController";
 import { PrivateConversationsView } from "../../component/privateconversations/PrivateConversationsView";
-import { GUISettings } from "../../main/ChatPlugin";
-import { HASH_COMMENT_MODE } from "../../../node_modules/@types/highlight.js";
-import { extlist } from "../../../node_modules/pmc-mail/out/component/main";
 import { NoSectionsView } from "../../component/nosections/NoSectionsView";
 let Logger = RootLogger.get("chat-plugin.window.chat.ChatWindowView");
 

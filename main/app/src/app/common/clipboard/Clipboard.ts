@@ -1,5 +1,6 @@
 import { CommonApplication } from "../CommonApplication";
 import { SystemClipboardIntegration } from "../../../mail/UserPreferences";
+import {measure} from "../../../utils/Decorators";
 
 export type ClipboardData = {[format: string]: any};
 export type ClipboardElement = {
@@ -27,16 +28,8 @@ export class Clipboard {
     static CLIPBOARD_CLEANUP_INTRVAL: number = 5 * 60 * 1000;
     static LOGGED_OUT_CLIPBOARD_INTEGRATION_ENABLED: boolean = true;
     storedElements: ClipboardElement[] = [];
-    // protected systemIntegration: boolean = true;
     
-    constructor(public app: CommonApplication) {
-        setInterval(() => {
-            this.populateFromSystem();
-        }, Clipboard.CLIPBOARD_CHECK_INTRVAL);
-        setInterval(() => {
-            this.cleanup();
-        }, Clipboard.CLIPBOARD_CLEANUP_INTRVAL);
-    }
+    constructor(public app: CommonApplication) {}
     
     validateClipboard(data: ClipboardData) {
         let keys = Object.keys(data);
@@ -47,9 +40,6 @@ export class Clipboard {
     }
     
     populateFromSystem(): void {
-        // if (!this.isSystemIntegrationEnabled()) {
-        //     return;
-        // }
         let systemData = this.app.getSystemCliboardData(true);
         if (this.systemClipboardDiffers(systemData)) {
             if (this.validateClipboard(systemData)) {
@@ -67,33 +57,15 @@ export class Clipboard {
         }
     }
     
-    // enableSystemIntegration(): void {
-    //     this.toggleSystemIntegration(true);
-    // }
-    
-    // disableSystemIntegration(): void {
-    //     this.toggleSystemIntegration(false);
-    // }
-    
     isSystemIntegrationEnabled(): boolean {
-        // return this.systemIntegration;
         if (!this.app.userPreferences || !this.app.isLogged()) {
             return Clipboard.LOGGED_OUT_CLIPBOARD_INTEGRATION_ENABLED;
         }
         return this.app.userPreferences.getSystemClipboardIntegration() == SystemClipboardIntegration.ENABLED;
     }
     
-    // toggleSystemIntegration(enabled: boolean): void {
-    //     this.systemIntegration = enabled;
-    //     let mostRecentSystemElement = this.findMatchingElement(null, "system");
-    //     if (mostRecentSystemElement) {
-    //         this.storedElements = this.storedElements.filter(x => this.elementMatches(x, null, "privmx") || x == mostRecentSystemElement);
-    //     }
-    // }
-    
     elementMatches(element: ClipboardElement, format: string = null, source: "system"|"privmx"|"any"|"auto" = "auto"): boolean {
         if (source == "auto") {
-            // source = this.isSystemIntegrationEnabled() ? "any" : "privmx";
             source = "any";
         }
         if (source != "any" && element.source != source) {
@@ -168,9 +140,6 @@ export class Clipboard {
     }
     
     set(element: ClipboardData, addedAt: Date = null, source: "system"|"privmx" = "privmx"): void {
-        // if (source == "system" && !this.isSystemIntegrationEnabled()) {
-        //     return;
-        // }
         if (!addedAt) {
             addedAt = new Date();
         }
@@ -260,13 +229,11 @@ export class Clipboard {
         this.dispachChangeEvent("clear");
     }
     
-    dispachChangeEvent(from: string) {
+    dispachChangeEvent(_from: string) {
         this.app.dispatchEvent({type: Clipboard.CHANGE_EVENT});
     }
     
-    log(...args: any[]): void {
-        return;
-        console.log(...args);
+    log(..._args: any[]): void {
     }
     
     debug(): void {

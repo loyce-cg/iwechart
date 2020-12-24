@@ -6,7 +6,6 @@ export class BatchListener<T extends Types.event.Event = Types.event.Event> {
     
     listener: Types.event.EventsListener<T>;
     events: T[];
-    
     constructor(listener: Types.event.EventsListener<T>) {
         this.listener = listener;
     }
@@ -110,7 +109,7 @@ export class EventDispatcher {
     eventListeners: {[type: string]: EventListenerObject[]};
     parent: EventDispatcher;
     bubbleEventsToParent: boolean;
-    
+
     constructor(parent?: EventDispatcher) {
         this.parent = parent;
         this.eventListeners = {};
@@ -118,13 +117,10 @@ export class EventDispatcher {
     }
     
     addEventListener<T extends Types.event.Event = Types.event.Event>(type: string, eventListener: Types.event.EventListener<T>, referrer?: string, lifeTime?: EventLifeTime) {
-        // console.log("adding app listener ", type, " referrer: ", referrer);
-        // console.log("{type: \"" + type + "\", referrer: " + referrer + ", lifeTime: " + lifeTime + "},");
         if (!(type in this.eventListeners)) {
             this.eventListeners[type] = [];
         }
         this.eventListeners[type].push({listener: eventListener, referrer: referrer, lifeTime: lifeTime});
-        // console.log("listener added. Total ", this.getRegisteredListenersCount());
     }
     
     removeEventListener<T extends Types.event.Event = Types.event.Event>(type: string, eventListener: Types.event.EventListener<T>, referrer?: string) {
@@ -153,8 +149,6 @@ export class EventDispatcher {
             removed += Math.abs(typeListeners.length - filteredList.length);
             this.eventListeners[type] = filteredList;
         }
-        // console.log("removed by referrer", removed, "referrer", referrer);
-        // console.log("left listeners (referrer remove)", this.getRegisteredListenersCount());
     }
 
     removeListenersOnLogout(): void {

@@ -3,7 +3,6 @@ import * as Q from "q";
 import {mail} from "../../Types";
 import { AdminDataCreatorService } from "../admin/AdminDataCreatorService";
 import { PrivmxRegistry } from "../PrivmxRegistry";
-import { MailConst } from "../MailConst";
 import { UserLbkService } from "./UserLbkService";
 import { Lang } from "../../utils/Lang";
 
@@ -43,31 +42,20 @@ export class UserLbkAlterService {
             })
             .then(us => {
                 unregisteredSession = us;
-                return privfs.core.PrivFsRpcManager.getKeyLoginByHost(MailConst.IDENTITY_INDEX, this.identity.host);
+                return privfs.core.PrivFsRpcManager.getHttpGatewayByHost({host: this.identity.host});
             })
-            .then(keyLogin => {
-                let gateway = keyLogin.rpcGateway;
+            .then(gateway => {
                 gateway.properties = Lang.shallowCopy(gateway.properties);
                 gateway.properties.unregisteredSession = unregisteredSession;
-                return keyLogin.loginStep1(recoveryEntropy, true);
-            })
-            .then(info => {
-                return Q().then(() => {
-                    return info.srpSecure.request<privfs.types.core.GetPrivDataResult>("getPrivDataEx", {});
-                })
-                .then(result => {
-                    if (result.version != "2.0" || !result.lbkData) {
-                        throw new Error("Unsupported priv data");
-                    }
-                    return privfs.crypto.service.privmxDecrypt(new Buffer(result.lbkData, "base64"), info.dataKey);
-                });
+                const bip39Authorizer = new privfs.core.login.Bip39Authorizer(gateway);
+                return bip39Authorizer.loginByRecovery(recoveryEntropy);
             });
         })
-        .then(privDataKey => {
+        .then(masterRecord => {
             let lbkDataKey: Buffer;
             return Q().then(() => {
                 lbkDataKey = privfs.crypto.service.randomBytes(32);
-                return UserLbkService.encryptedLbk(privDataKey, lbkDataKey);
+                return UserLbkService.encryptedLbk(masterRecord.l1Key, lbkDataKey);
             })
             .then(encryptedLbk => {
                 return new UserLbkService(this.srpSecure).fetchKeyAndSetUserLbk(remoteHost, encryptedLbk, remoteUsername, localUsername);

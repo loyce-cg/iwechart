@@ -6,11 +6,10 @@ import { FilesListController, FilesInfo, FilesListType, SelectionMode } from "..
 import { FileEntryBase, Notes2Utils } from "../../main/Notes2Utils";
 import {LocalFS} from "../../main/LocalFS";
 import { FsManager, FsManagerEntry, SessionInfo, Notes2WindowController } from "../notes2/Notes2WindowController";
-import {Entry} from "pmc-mail/out/mail/filetree/NewTree";
+import Entry = mail.filetree.nt.Entry;
 import { FilesConst } from "../../main/Common";
 import {Model} from "../notes2/Notes2WindowController";
 import { i18n } from "./i18n";
-import { CollectionFactory } from "pmc-mail/out/mail";
 
 export interface FileChooserOptions {
     singleSelection?: boolean;
@@ -578,7 +577,7 @@ export class FileChooserWindowController extends window.base.BaseWindowControlle
                     return this.filesLists[id];
                 })
             }
-            return this.filesLists[id];    
+            return this.filesLists[id];
         })
     }
     
@@ -668,15 +667,15 @@ export class FileChooserWindowController extends window.base.BaseWindowControlle
                     return section.getChatSinkIndex().then(() => {
                         section.getChatModule().filesMessagesCollection.changeEvent.add(() => {
                             this.sidebar.sectionList.sortedCollection.triggerBaseUpdateElement(section);
-                        }, "multi");                        
+                        }, "multi");
                     })
                     .then(() => {
-                        return this.filesLists[id];  
+                        return this.filesLists[id];
                     })
   
                 })
             }
-            return this.filesLists[id];    
+            return this.filesLists[id];
         })
         .then(() => {
             return this.filesLists[id];
@@ -775,7 +774,7 @@ export class FileChooserWindowController extends window.base.BaseWindowControlle
                 })
             }
             return this.filesLists[id];
-        })        
+        })
     }
     
                 
@@ -823,7 +822,7 @@ export class FileChooserWindowController extends window.base.BaseWindowControlle
                 if (event.element.customElement.id == FilesListController.TRASH_FILES) {
                     return this.openTrash();
                 }
-            }    
+            }
         })
         .then(() => {
             this.deactivateList(prevActive);
@@ -903,7 +902,7 @@ export class FileChooserWindowController extends window.base.BaseWindowControlle
         this.notes2Plugin.activeSinkId = conversation.sinkIndex ? conversation.sinkIndex.sink.id : null;
         this.notes2Plugin.activeSinkHostHash = this.app.sessionManager.getLocalSession().hostHash;
         return Q().then(() => {
-            return this.singletonGetOrCreateFilesList(filesId, () => this.getOrCreateConversation(conversation));    
+            return this.singletonGetOrCreateFilesList(filesId, () => this.getOrCreateConversation(conversation));
         })
         .then(list => {
             this.activeFilesList = list;
@@ -997,7 +996,7 @@ export class FileChooserWindowController extends window.base.BaseWindowControlle
                 if (!conversation) {
                     return;
                 }
-                collectionId = Notes2WindowController.getConversationId(session, conversation); 
+                collectionId = Notes2WindowController.getConversationId(session, conversation);
                 return conversation.prepareFilesCollection().then(() => {
                     if (conversation.section) {
                         this.channelsTrees[collectionId] = manager;
@@ -1009,7 +1008,7 @@ export class FileChooserWindowController extends window.base.BaseWindowControlle
                 });
             }
             else {
-                collectionId = Notes2WindowController.getChannelId(session, section); 
+                collectionId = Notes2WindowController.getChannelId(session, section);
                 this.channelsTrees[collectionId] = manager;
                 // this.sessionsByCollectionName[collectionId] = session;
                 if (this.collections[collectionId]) {
@@ -1044,7 +1043,7 @@ export class FileChooserWindowController extends window.base.BaseWindowControlle
                 return this.app.sessionManager.createRemoteSession(hostEntry.host)
                 .then(() => {
                     return this.app.sessionManager.init(hostHash);
-                })        
+                })
                 .fail(() => {
                     this.sidebar.callViewMethod("showHostLoading", hostHash, false);
                     return this.errorCallback;
@@ -1179,7 +1178,7 @@ export class FileChooserWindowController extends window.base.BaseWindowControlle
 
     getOrCreateRemoteChannel(hostHash: string, id: string, sectionId: string, section: mail.section.SectionService): Q.Promise<FilesListController> {
         let session = this.app.sessionManager.getSessionByHostHash(hostHash);
-        let collectionId = Notes2WindowController.getChannelId(session, section); 
+        let collectionId = Notes2WindowController.getChannelId(session, section);
         
         return Q().then(() => {
             if (!(id in this.filesLists)) {
@@ -1196,7 +1195,7 @@ export class FileChooserWindowController extends window.base.BaseWindowControlle
                         section: section
                     }, this.channelsTrees[collectionId] != null, () => {
                         return this.channelsTrees[collectionId] ? this.channelsTrees[collectionId].refreshDeep(true) : Q();
-                    })        
+                    })
                 })
                 .then(() => {
                     return section.getChatSinkIndex().then(() => {
@@ -1204,13 +1203,13 @@ export class FileChooserWindowController extends window.base.BaseWindowControlle
                             this.sidebar.remoteSectionsLists[hostHash].sortedCollection.triggerBaseUpdateElement(section);
                             this.updateSidebarHostElement(this.app.sessionManager.getSessionByHostHash(hostHash));
                         }, "multi");
-                    });    
+                    });
                 })
                 .then(() => {
                     return this.filesLists[id];
                 })
             }
-            return this.filesLists[id];    
+            return this.filesLists[id];
         })
     }
     
@@ -1258,7 +1257,7 @@ export class FileChooserWindowController extends window.base.BaseWindowControlle
             this.notes2Plugin.activeSinkHostHash = session.hostHash;
             
             return Q().then(() => {
-                return this.singletonGetOrCreateFilesList(filesId, () => this.getOrCreateRemoteConversation(hostHash, conversation));    
+                return this.singletonGetOrCreateFilesList(filesId, () => this.getOrCreateRemoteConversation(hostHash, conversation));
             })
             .then(list => {
                 this.activeFilesList = list;

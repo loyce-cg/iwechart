@@ -8,8 +8,8 @@
     "@types/document-element": "^0.4.6",
     "@types/simplito-spreadsheet": "0.0.1",
     "document-element": "^0.5.1-privmxview",
-    "pmc-mail": "^2.25.0-20201116153854717",
-    "pmc-web": "^2.25.0-20201116153854717",
+    "pmc-mail": "^2.25.0-20201209134741933",
+    "pmc-web": "^2.25.0-20201209134741933",
     "simplito-spreadsheet": "0.0.1-privmxview"
   }
 }

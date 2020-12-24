@@ -3,8 +3,8 @@ import { func as mainTemplate }  from "./template/main.html";
 import { func as iconTemplate }  from "./template/icon.html";
 import { Model } from "./TaskGroupFormWindowController";
 import $ = web.JQuery;
-import { MailClientViewHelper } from "pmc-web/out/web-utils";
-import { Template } from "pmc-mail/out/web-utils/template/Template";
+import MailClientViewHelper = web.webUtils.MailClientViewHelper;
+import Template = web.webUtils.template.Template;
 import Q = web.Q;
 
 interface InitialData {

@@ -5,3 +5,4 @@ out/
 releases/
 *.properties.ts
 *.html.ts
+.vscode

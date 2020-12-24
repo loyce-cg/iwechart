@@ -576,7 +576,17 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
                 this.app.viewContext = "section:" + section.getId();
                 return this.openChannelView(localSession, section.getId());
             }
+            if (lastActiveChat == null) {
+                return this.openAnyChat();
+            }
         });
+    }
+
+    openAnyChat(): void {
+        const firstConv = this.chatPlugin.conv2Service.collection ? this.chatPlugin.conv2Service.collection.get(0): null;
+        if (firstConv) {
+            this.openChatOrConversationView(firstConv.id);
+        }     
     }
     
     reopenChat(): void {
@@ -1740,7 +1750,8 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
 
     areAnySectionsExceptPrivate(): boolean {
         let sectionsCount = this.chatPlugin.chatRootSections[this.app.sessionManager.getLocalSession().hostHash].list.filter(x => !x.isPrivate()).length;
-        return sectionsCount > 0;
+        let conversationsCount = this.chatPlugin.conv2Service.collection.list.length;
+        return sectionsCount > 0 || conversationsCount > 0;
     }
     
 }

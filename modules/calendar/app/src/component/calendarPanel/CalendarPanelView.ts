@@ -161,7 +161,7 @@ export class CalendarPanelView extends component.base.ComponentView {
         this.$container.on("click", ".today-btn", this.onGoToTodayClick.bind(this));
         this.$container.on("click", "[data-action=zoom-in]", this.onZoomInClick.bind(this));
         this.$container.on("click", "[data-action=zoom-out]", this.onZoomOutClick.bind(this));
-        this.$container.on("mousemove", e => {
+        this.$container.on("mousemove", (e: any) => {
             this.mouseX = e.pageX;
             this.mouseY = e.pageY;
         });

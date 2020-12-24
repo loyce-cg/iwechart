@@ -16,7 +16,7 @@ export class UserSettingsService {
     
     saveSharedKvdbKeyInUserSpace(extKey: privfs.crypto.ecc.ExtKey): Q.Promise<void> {
         return Q().then(() => {
-            return this.userSettingsKvdb.set(UserSettingsService.SHARED_KVDB_KEY, KvdbUtils.createKvdbSettingEntry(extKey.getPrivatePartAsBase58()));
+            return this.userSettingsKvdb.set(UserSettingsService.SHARED_KVDB_KEY, UserSettingsService.getInsertValue(extKey));
         })
         .then(() => {
             this.eventDispatcher.dispatchEvent<event.GrantAccessToSharedDbEvent>({
@@ -32,5 +32,13 @@ export class UserSettingsService {
         .then(settingEntry => {
             return settingEntry ? privfs.crypto.ecc.ExtKey.fromBase58(settingEntry.secured.value) : null;
         });
+    }
+    
+    static getInsertValue(sharedKvdbExtKey: privfs.crypto.ecc.ExtKey): KvdbSettingEntry {
+        return KvdbUtils.createKvdbSettingEntry(sharedKvdbExtKey.getPrivatePartAsBase58())
+    }
+    
+    static createInsertion(userSettingsKvdb: privfs.db.KeyValueDb<KvdbSettingEntry>, sharedKvdbExtKey: privfs.crypto.ecc.ExtKey) {
+        return userSettingsKvdb.createSetData(UserSettingsService.SHARED_KVDB_KEY, UserSettingsService.getInsertValue(sharedKvdbExtKey));
     }
 }

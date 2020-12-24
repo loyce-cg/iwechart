@@ -12,7 +12,7 @@ import {WebUtils} from "../../web-utils/WebUtils";
 import { TaskChooserView } from "../../component/taskchooser/web";
 import { TaskTooltipView } from "../../component/tasktooltip/web";
 import { PersonsView } from "../../component/persons/PersonsView";
-const ResizeObserverPolyfill = require("resize-observer-polyfill");
+import * as ResizeObserverPolyfill from "resize-observer-polyfill";
 
 declare var tui: any;
 declare var blackTheme: any;
@@ -145,7 +145,6 @@ export class ImageEditorWindowView extends BaseWindowView<Model> {
         .then(() => {
             this.updateToolbarItemsVisibility();
         });
-        // this.triggerEvent("updateFileName", this.fileName);
     }
     
     onResizeWindow(): void {
@@ -158,18 +157,9 @@ export class ImageEditorWindowView extends BaseWindowView<Model> {
         $toolbar.find(".right-side-buttons").toggleClass("invisible", ! elementsFit);
         $toolbar.parent().find(".more-button").toggleClass("hide", elementsFit);
     }
-
+    
     doInnerElementsFit(element: HTMLElement): boolean {
         return element.clientHeight < 50;
-        if (! element) {
-            return;
-        }
-        let $parent = $(element);
-        let elementsWidth = 0;
-        $parent.children().each((_, x) => {
-            elementsWidth += this.getElementWidth(x);
-        });
-        return (element.offsetWidth - elementsWidth) > 0;
     }
     
     getElementWidth(element: HTMLElement): number {
@@ -454,7 +444,7 @@ export class ImageEditorWindowView extends BaseWindowView<Model> {
         return defer.promise;
     }
     
-    editImage(data: app.BlobData, fileName: string, mimeType: string): void {
+    editImage(data: app.BlobData, _fileName: string, mimeType: string): void {
         this.isReadonly = false;
         this.mimeType = mimeType;
         this.editMode = true;
@@ -642,7 +632,7 @@ export class ImageEditorWindowView extends BaseWindowView<Model> {
         });
     }
     
-    adjustMarginCoords($img: JQuery, x: number, y: number, zoomLevel: number): [number, number] {
+    adjustMarginCoords($img: JQuery, x: number, y: number, _zoomLevel: number): [number, number] {
         let box = { left0: 0, top0: 0, left1: 0, top1: 0 };
         let imgW = $img.width();
         let imgH = $img.height();
@@ -661,11 +651,10 @@ export class ImageEditorWindowView extends BaseWindowView<Model> {
         return [x, y];
     }
     
-    updateFileName(newFileName: string, newFullFileName: string, newTitle: string): void {
+    updateFileName(newFileName: string, _newFullFileName: string, _newTitle: string): void {
         if (this.state && this.state.fileName) {
             this.state.fileName = newFileName;
         }
         this.$toolbar.find(".file-name").text(newFileName);
     }
-    
 }

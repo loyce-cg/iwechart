@@ -380,8 +380,8 @@ export class Initializer {
                 return app.localeService.i18n("index.leavePageAlert.text");
             }
         };
-        privfs.core.PrivFsRpcManagerClass.SERVICE_DISCOVERY_JSON_MODE = window.location.protocol === "https:" ?
-            privfs.serviceDiscovery.JsonMode.HTTPS_ONLY : privfs.serviceDiscovery.JsonMode.HTTP_ONLY;
+        privfs.core.PrivFsRpcManager.setServiceDiscoveryJsonMode(window.location.protocol === "https:" ?
+            privfs.serviceDiscovery.JsonMode.HTTPS_ONLY : privfs.serviceDiscovery.JsonMode.HTTP_ONLY);
         
         privfs.crypto.service.init(this.options.PRIVMX_WORKER_PATH);
         

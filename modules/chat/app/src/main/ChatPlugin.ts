@@ -8,8 +8,6 @@ import { ChatMessage } from "./ChatMessage";
 import { PrivateConversationsController } from "../component/privateconversations/PrivateConversationsController";
 import { i18n } from "../i18n/index";
 import { MessagesMarkerQueue } from "./MessagesMarkerQueue";
-import { ActiveElementInfo } from "../window/chat/ChatWindowController";
-import { mail } from "pmc-mail/out/window/settings/main";
 import { NoSectionsController } from "../component/nosections/NoSectionsController";
 
 let Logger = Mail.Logger.get("privfs-chat-plugin.ChatPlugin");

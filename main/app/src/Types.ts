@@ -120,6 +120,18 @@ export namespace utils {
         getSync(key: string): T;
     }
     
+    export interface IKvdbMap<T> {
+        has(key: string): boolean;
+        get(key: string): T;
+        getEntries(_copy?: boolean): {[key: string]: T};
+        getValues(): T[];
+        set(key: string, value: T): Q.Promise<void>;
+        remove(key: string): Q.Promise<void>;
+        setMany(map: {[key: string]: T}): Q.Promise<boolean>;
+        removeMany(keys: string[]): Q.Promise<void>;
+        forEach(func: (key: string, value: T) => void): void
+    }
+    
     export interface Gateway {
         request(method: string, params: any): Q.Promise<any>;
     }
@@ -364,8 +376,8 @@ export namespace webUtils {
 
     export interface PersonSimpleModel {
         name: string;
-        hashmail: string; 
-        description: string; 
+        hashmail: string;
+        description: string;
         present: boolean;
     }
 
@@ -473,7 +485,7 @@ export namespace event {
     
     export interface AdditionalLoginStepEvent<T = any> extends Event<Q.Promise<void>> {
         type: "additionalloginstep";
-        basicLoginResult: privfs.types.core.BasicLoginResult;
+        basicLoginResult: {srpSecure: privfs.core.PrivFsSrpSecure};
         data: T;
     }
     
@@ -1012,6 +1024,7 @@ export namespace app {
         frame?: boolean;
         backgroundColor?: string;
         keepSpinnerUntilViewLoaded?: boolean;
+        manualSpinnerRemoval?: boolean;
         electronPartition?: string;
     }
     

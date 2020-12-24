@@ -896,8 +896,16 @@ export class ChatMessagesView extends component.base.ComponentView {
     onToggleExpandedClick(e: MouseEvent): void {
         let $el = $(e.currentTarget).prev(".text");
         $el.toggleClass("expanded");
-        let msgNum = $el.closest("[data-msg-num]").data("msg-num");
+        let $container = $el.closest("[data-msg-num]");
+        let msgNum = $container.data("msg-num");
         let isExpanded = $el.hasClass("expanded");
+        if (isExpanded) {
+            $container.find(".privmx-quote.tldr:not(.expanded)").each((_, quoteEl) => {
+                let $quoteEl = $(quoteEl);
+                $quoteEl.addClass("expanded");
+                this.triggerEvent("updateQuoteIsExpanded", msgNum, $quoteEl.data("quote-id"), true);
+            });
+        }
         this.triggerEvent("updateIsExpanded", msgNum, isExpanded);
         this.refreshScrollState();
     }

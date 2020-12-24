@@ -13,7 +13,7 @@ import { PersonsView } from "../../component/persons/PersonsView";
 import { MindmapEditorView } from "../../component/mindmapeditor/MindmapEditorView";
 import { State } from "../../component/mindmapeditor/MindmapEditorController";
 import { EditorButtonsView } from "../../component/editorbuttons/web";
-const ResizeObserverPolyfill = require("resize-observer-polyfill");
+import * as ResizeObserverPolyfill from "resize-observer-polyfill";
 
 declare var html2pdf: any;
 
@@ -136,13 +136,11 @@ export class MindmapEditorWindowView extends BaseWindowView<Model> {
     }
     
     bindKeyPresses(): void {
-        $(document).on("keydown", e => {
-        });
     }
     
-    copyPasteKeydownHandler(e: KeyboardEvent): void {
+    copyPasteKeydownHandler(_e: KeyboardEvent): void {
     }
-        
+    
     setIsDirty(isDirty: boolean) {
         this.isDirty = isDirty;
         this.state.dirty = isDirty;
@@ -617,7 +615,7 @@ export class MindmapEditorWindowView extends BaseWindowView<Model> {
         return this.$main.find(".font-size-switcher");
     }
     
-    updateFileName(newFileName: string, newFullFileName: string, newTitle: string): void {
+    updateFileName(newFileName: string, _newFullFileName: string, _newTitle: string): void {
         if (this.state && this.state.entry && this.state.entry.fileName) {
             this.state.entry.fileName = newFileName;
         }
@@ -627,14 +625,14 @@ export class MindmapEditorWindowView extends BaseWindowView<Model> {
         this.$toolbar.find(".file-name").text(newFileName);
     }
     
-    onLockFileClick(e: MouseEvent): void {
+    onLockFileClick(): void {
         this.triggerEvent("lockFile");
     }
-
-    onUnlockFileClick(e: MouseEvent): void {
+    
+    onUnlockFileClick(): void {
         this.triggerEvent("unlockFile");
     }
-
+    
     updateLockInfoOnActionButtons(locked: boolean, canUnlock: boolean): void {
         let unlockAvail = locked && canUnlock;
         this.$toolbar.find("[data-action=unlock]").toggleClass("hide", !unlockAvail);

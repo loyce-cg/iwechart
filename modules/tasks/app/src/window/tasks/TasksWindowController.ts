@@ -1,15 +1,13 @@
 import { window, component, Types, Q, utils, mail, privfs, app } from "pmc-mail";
 import { TasksPlugin, UpdateSectionBadgeEvent, TasksComponentFactory, TaskPreviewRequestEvent, TaskPanelUpdateRequestEvent, TaskPanelChangeVisibilityRequestEvent, TasksSearchUpdateEvent, BadgesUpdateRequestEvent, UpdatePinnedTaskGroupsEvent, HorizontalTaskWindowLayoutChangeRequestEvent, MarkedTasksAsReadEvent, UpdateTasksSidebarSpinnersEvent } from "../../main/TasksPlugin";
-import { Settings } from "pmc-web/out/utils";
-import { ProjectsMap, ProjectId, TaskId, Watchable, Action, EventHandler, PersonId, SinkInfo, CustomTasksElements, PeopleMap } from "../../main/Types";
+import { ProjectId, Watchable, Action, EventHandler, PersonId, CustomTasksElements, PeopleMap } from "../../main/Types";
 import { TaskPanelController } from "../../component/taskPanel/TaskPanelController";
-import { ContainerWindowController } from "pmc-web/out/window/container/main";
+import ContainerWindowController = window.container.ContainerWindowController;
 import { TaskGroupsPanelController } from "../../component/taskGroupsPanel/TaskGroupsPanelController";
 import Inject = utils.decorators.Inject;
 import Dependencies = utils.decorators.Dependencies;
 import { TasksCountManager } from "./TasksCountManager";
 import { i18n } from "./i18n/index";
-import { session } from "pmc-mail/out/mail";
 
 export interface Model {
     docked: boolean;
@@ -69,7 +67,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
     sidebar: component.sidebar.SidebarController;
     
     tasksPlugin: TasksPlugin;
-    subSettings: { [key: string]: Settings } = {};
+    subSettings: { [key: string]: utils.Settings } = {};
     
     dataChangedListener: EventHandler;
     remoteDataChangedListeners:  { [hostHash: string]: EventHandler } = {};
@@ -185,7 +183,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
         this.disabledSection = this.addComponent("disabled-section", this.componentFactory.createComponent("disabledsection", [this, Types.section.NotificationModule.TASKS]));
         
         
-        this.subSettings["active-project-id"] = this.settings.create("active-project-id");        
+        this.subSettings["active-project-id"] = this.settings.create("active-project-id");
         
         this.initWithProject = this.initWithProject || this.tasksPlugin.getPrivateSectionId();
         this.activeProjectId = this.initWithProject ? this.initWithProject : this.subSettings["active-project-id"].get();
@@ -372,7 +370,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
                 sectionList: {
                     baseCollection: this.tasksPlugin.sidebarSectionsCollection,
                     elementsCountProvider: (section: mail.section.SectionService) => this.tasksCountManager.getSectionElementsCount(section),
-                    unreadProvider: (section: mail.section.SectionService) => this.getUnread(localSession, section), 
+                    unreadProvider: (section: mail.section.SectionService) => this.getUnread(localSession, section),
                     searchCountProvider: (section: mail.section.SectionService) => this.tasksPlugin.getSearchCount(localSession, section),
                     searchAllSearchedProvider: null,
                     withSpinnerProvider: (section: mail.section.SectionService) => this.getWithSpinner(localSession, section),
@@ -832,7 +830,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
                     }, false);
                     this.tasksPlugin.activeSinkId = session.sectionManager.getSection(projectId).getChatSink().id;
                     this.tasksPlugin.activeSinkHostHash = session.hostHash;
-                }    
+                }
             }
             if (session.sessionType == "remote") {
                 if (this.tasksPlugin.isConv2Project(projectId)) {
@@ -858,7 +856,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
                     }, false);
                     this.tasksPlugin.activeSinkId = session.sectionManager.getSection(projectId).getChatSink().id;
                     this.tasksPlugin.activeSinkHostHash = session.hostHash;
-                }    
+                }
             }
     
         }
@@ -1093,7 +1091,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
         //         });
         //     });
         // });
-    }    
+    }
     
     onViewOpenedTaskGroupsPanel(hostHash: string, projectId: string): void {
         // console.log("on openedTaskGroupsPanel - projectId" , projectId);
@@ -1164,7 +1162,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
                 return this.app.sessionManager.createRemoteSession(hostEntry.host)
                 .then(() => {
                     return this.app.sessionManager.init(hostHash);
-                })        
+                })
                 .fail(() => {
                     this.sidebar.callViewMethod("showHostLoading", hostHash, false);
                     return this.errorCallback;
@@ -1290,7 +1288,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
                 return this.getTaskGroupsPanel(session, section, hostHash).then(panel => {
                     if (!panel.wasDataSet) {
                         // console.log("set panel data");
-                        return panel.setSectionData(section).then(() => Q(panel));  
+                        return panel.setSectionData(section).then(() => Q(panel));
                     }
                     return panel;
                 }).then(panel => {

@@ -32,6 +32,11 @@ export interface SavedWindowState extends app.WindowState {
     maximized: boolean;
 }
 
+export interface ContextSection {
+    sectionId: string;
+    sectionType: "section" | "conv2" | "private";
+}
+
 @Dependencies(["statusbar", "progress"])
 export class BaseWindowController extends ComponentController {
     
@@ -143,8 +148,11 @@ export class BaseWindowController extends ComponentController {
     }
     
     onViewComponentViewLoaded(timeoutCall?: boolean): void {
-        if (!timeoutCall && this.app.isElectronApp() && this.nwin && this.openWindowOptions && this.openWindowOptions.keepSpinnerUntilViewLoaded) {
+        if (!timeoutCall && this.app.isElectronApp() && this.nwin && this.openWindowOptions && this.openWindowOptions.keepSpinnerUntilViewLoaded && !this.openWindowOptions.manualSpinnerRemoval) {
             this.nwin.removeSpinner();
+        }
+        if (!this.app) {
+            return;
         }
         if (!this.app.isLogged() || !this.app.userPreferences) {
             setTimeout(() => {
@@ -152,10 +160,13 @@ export class BaseWindowController extends ComponentController {
             }, 1000);
             return;
         }
+          
         this.app.userPreferences.eventDispatcher.addEventListener<event.UserPreferencesChangeEvent>("userpreferenceschange", (event) => {
-            this.callViewMethod("setClipboardIntegration", this.getSystemClipboardIntegration());
-            this.callViewMethod("setTaskPickerEnabled", this.app.userPreferences.getIsAutoTaskPickerEnabled());
-            this.callViewMethod("setFilePickerEnabled", this.app.userPreferences.getIsAutoFilePickerEnabled());
+            if (this.app && this.app.isLogged() && this.app.userPreferences) {
+                this.callViewMethod("setClipboardIntegration", this.getSystemClipboardIntegration());
+                this.callViewMethod("setTaskPickerEnabled", this.app.userPreferences.getIsAutoTaskPickerEnabled());
+                this.callViewMethod("setFilePickerEnabled", this.app.userPreferences.getIsAutoFilePickerEnabled());
+            }
         });
         this.callViewMethod("setClipboardIntegration", this.getSystemClipboardIntegration());
     }
@@ -1387,6 +1398,94 @@ export class BaseWindowController extends ComponentController {
             }
         })
     }
+
+
+    getSectionIdFromContext(): ContextSection {
+        if (this.app.viewContext) {
+            let contextData = this.app.viewContext.split(":");
+
+
+            if (contextData[0] == "section") {
+                return <ContextSection> {
+                    sectionId: contextData[1],
+                    sectionType: "section"    
+                }
+            }
+            else
+            if (contextData[0] == "c2") {
+                return <ContextSection> {
+                    sectionId: this.app.viewContext,
+                    sectionType: "conv2"
+                }
+            }
+            else
+            if (contextData[0] == "custom") {
+                if (contextData[1] == "my") {
+                    return <ContextSection> {
+                        sectionId: null,
+                        sectionType: "private"
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+    onViewShareSection() {
+        let context = this.getSectionIdFromContext();
+        if (! context) {
+            return;
+        }
+
+        let section: SectionService;
+        
+        let session = this.app.sessionManager.getLocalSession();
+        if (context.sectionType == "private") {
+            section = session.sectionManager.getMyPrivateSection();
+        }
+        else if (context.sectionType == "section") {
+            section = session.sectionManager.getSection(context.sectionId);
+        }
+        else if (context.sectionType == "conv2") {
+            let conv2 = session.conv2Service.collection.find(x => x.id == context.sectionId);
+
+            if (! conv2) {
+                return;
+            }
+            section = conv2.section;
+        }
+
+        if (! section) {
+            return;
+        }
+        if (!section.hasAccess()) {
+            this.alert(this.i18n("window.sectionEdit.shareNoAccess"));
+            return;
+        }
+        Q().then(() => {
+            return section.shareSection();
+        })
+        .then(bip39 => {
+            this.app.ioc.create(SubIdWindowController, [this.parent, {
+                mnemonic: bip39.mnemonic,
+                host: session.host
+            }])
+            .then(win => {
+                this.openChildWindow(win);
+            });
+        })
+        .fail(this.errorCallback);
+    }
+
+    destroy(): void {
+        this.app = null;
+        this.ioc = null;
+        this.parent = null;
+        this.msgBoxInstance = null;
+        this.errorLog = null;
+        
+        super.destroy();
+    }
     
 }
 
@@ -1407,4 +1506,6 @@ import { section, filetree } from "../../mail";
 import { OpenableElement, ShellOpenAction } from "../../app/common/shell/ShellTypes";
 import { ContentEditableEditorMetaData } from "../../web-utils/ContentEditableEditorMetaData";
 import { session } from "electron";
+import { SectionService } from "../../mail/section/SectionService";
+import { SubIdWindowController } from "../subid/SubIdWindowController";
 

@@ -2,16 +2,14 @@ import * as web from "pmc-web";
 import { func as mainTemplate } from "./template/main.html";
 import { func as taskGroupsPanelTemplate } from "./template/panel-taskgroups.html";
 import { func as taskPanelTemplate } from "./template/panel-task.html";
-import { Model, ProjectsModel, TaskGroupsModel, TasksWindowController } from "./TasksWindowController";
+import { Model, ProjectsModel, TaskGroupsModel } from "./TasksWindowController";
 import Q = web.Q;
 import $ = web.JQuery;
-import { ProjectId, WatchedTasksMap, ProjectsMap, PersonId, PeopleMap, SinkInfo, CustomTasksElements } from "../../main/Types";
+import { ProjectId, PersonId, PeopleMap } from "../../main/Types";
 import { Task } from "../../main/data/Task";
-import { Project } from "../../main/data/Project";
 import { TaskGroup } from "../../main/data/TaskGroup";
 import { TaskPanelView } from "../../component/taskPanel/TaskPanelView";
 import { TaskGroupsPanelView } from "../../component/taskGroupsPanel/TaskGroupsPanelView";
-import { ConversationsCollection } from "pmc-mail/out/mail/conversation";
 const ResizeObserverPolyfill = require("resize-observer-polyfill");
 
 export interface ActionItemModel {
@@ -844,7 +842,7 @@ export class TasksWindowView extends web.window.base.BaseWindowView<Model> {
                     return Q.all([
                         hostModel.sectionsList.triggerInit(),
                         hostModel.conv2List.triggerInit()
-                    ])        
+                    ])
                 })
             }
         })

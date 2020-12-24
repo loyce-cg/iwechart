@@ -12,6 +12,7 @@ import { InMemoryKvdbCollection } from "../kvdb/InMemoryKvdbCollection";
 import { InMemoryKeyValueFile } from "../../utils/InMemoryKeyValueFile";
 import { FilterMode } from "../FilterMode";
 import { MailFilter } from "../MailFilter";
+import { InMemoryKvdbMap } from "../../utils/InMemoryKvdbMap";
 
 export class SubidentityLoginService {
     
@@ -32,13 +33,13 @@ export class SubidentityLoginService {
         privmxRegistry.registerByValue(x => x.getUserSettingsKvdb(), new InMemoryKvdbCollection("", null, false));
         privmxRegistry.registerByValue(x => x.getAdminSinkReceiver(), null);
         privmxRegistry.registerByValue(x => x.getPublicSectionsKey(), null);
-        privmxRegistry.registerByValue(x => x.getSubidentityService(), null);
+        privmxRegistry.registerByValue(x => x.getSubidentityService(), <any>{getSubidentities: () => Q({})});
         privmxRegistry.registerByValue(x => x.getTagProvider(), new privfs.message.TagStorage(<any>new InMemoryKeyValueFile({})));
         privmxRegistry.registerByFactory(x => x.getMailFilter(), () => {
             return privmxRegistry.getIdentity().then(identity => {
                 let map: {[domain: string]: {mode: FilterMode}} = {};
                 map[identity.host] = {mode: FilterMode.ALLOW};
-                return new MailFilter(<any>new InMemoryKeyValueFile(map));
+                return new MailFilter(new InMemoryKvdbMap(map));
             });
         });
         privmxRegistry.registerServices();
@@ -58,7 +59,7 @@ export class SubidentityLoginService {
         })
         .then(b39 => {
             bip39 = b39;
-            return privfs.core.PrivFsRpcManager.getHttpGatewayByHost(host);
+            return privfs.core.PrivFsRpcManager.getHttpGatewayByHost({host});
         })
         .then(gateway => {
             privmxRegistry.setGateway(gateway);
@@ -71,27 +72,25 @@ export class SubidentityLoginService {
     }
     
     login(host: string, recovery: Buffer|string, deviceId: string, defaultPKI?: boolean): Q.Promise<subidentity.LoginResult> {
-        let keyLogin: privfs.core.PrivFsKeyLogin;
         let bip39: privfs.crypto.crypto.Interfaces.Bip39;
-        let loginResult: privfs.types.core.BasicLoginResult;
+        let srpSecure: privfs.core.PrivFsSrpSecure;
         let subidentityRawData: subidentity.SubidentyRawData;
         let res: subidentity.LoginResult;
         let privmxRegistry = this.getPrivmxRegistry();
         return Q().then(() => {
-            return typeof(recovery) == "string" ? privfs.crypto.service.bip39FromMnemonic(<string>recovery) : privfs.crypto.service.bip39FromEntropy(<Buffer>recovery);
+            return privfs.core.LoginByKeyUtils.getBip39(recovery);
         })
         .then(b39 => {
             bip39 = b39;
-            return privfs.core.PrivFsRpcManager.getKeyLoginByHost(0, host);
+            return privfs.core.PrivFsRpcManager.getHttpGatewayByHost({host});
         })
-        .then(kl => {
-            keyLogin = kl;
-            keyLogin.rpcGateway.properties.deviceId = deviceId;
-            return keyLogin.loginStep1(recovery, defaultPKI);
+        .then(gateway => {
+            gateway.properties.deviceId = deviceId;
+            srpSecure = privfs.core.PrivFsSrpSecure.create(gateway, defaultPKI);
+            privmxRegistry.setSrpSecure(srpSecure);
+            return gateway.rpc.keyHandshake(bip39.extKey.getPrivateKey(), gateway.properties);
         })
-        .then(r => {
-            loginResult = r;
-            privmxRegistry.setSrpSecure(loginResult.srpSecure);
+        .then(() => {
             return privmxRegistry.getSubidentityApi();
         })
         .then(subidentityApi => {
@@ -99,7 +98,8 @@ export class SubidentityLoginService {
         })
         .then(srd => {
             subidentityRawData = srd;
-            return privfs.crypto.service.sha256(Buffer.concat([loginResult.dataKey, Buffer.from(subidentityRawData.key, "base64")]));
+            const dataKey = privfs.core.LoginByKeyUtils.getMasterRecordKeyFromBip39(bip39);
+            return privfs.crypto.service.sha256(Buffer.concat([dataKey, Buffer.from(subidentityRawData.key, "base64")]));
         })
         .then(dataKey => {
             return privfs.crypto.service.privmxDecrypt(privfs.crypto.service.privmxOptSignedCipher(), Buffer.from(subidentityRawData.data, "base64"), dataKey);
@@ -121,7 +121,7 @@ export class SubidentityLoginService {
                 deviceAssigmentDate: subidentityRawData.deviceAssigmentDate,
                 lastLoginDate: subidentityRawData.lastLoginDate,
                 acl: subidentityRawData.acl,
-                srpSecure: loginResult.srpSecure,
+                srpSecure: srpSecure,
                 bip39: bip39,
                 identity: identity,
                 sectionId: data.sectionId,

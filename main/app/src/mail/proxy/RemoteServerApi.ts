@@ -61,7 +61,7 @@ export class RemoteServerApi {
             return this.getUserKeyStore(username, true);
         })
         .then(keyStore => {
-            let usreInfo = this.srpSecure.parseUserInfo(username, this.destination, keyStore, null, null);
+            let usreInfo = privfs.core.MyDataDecoder.parseUserInfo(username, this.destination, keyStore, null, null);
             let keyPair = (<privfs.pki.KeyStore.EccKeyPair>keyStore.getPrimaryKey().keyPair).keyPair;
             return {
                 key: new privfs.crypto.ecc.PublicKey(keyPair),
