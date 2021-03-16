@@ -50,6 +50,11 @@ import * as support from "./support/web";
 import * as error from "./error/web";
 import * as textviewer from "./error/web";
 import * as switchvoicechatconfirm from "./switchvoicechatconfirm/web";
+import * as videorecorder from "./videorecorder/web";
+import * as deviceselector from "./deviceselector/web";
+import * as devconsole from "./devconsole/web";
+import * as videoconferenceinfo from "./videoconferenceinfo/web";
+import * as uploadservice from "./uploadservice/web";
 
 // base 1.8MB (jquery and other base libs)
 // ComposeWindowView - includes 100KB typeahed
@@ -109,4 +114,9 @@ export {
     textviewer,
     mindmapeditor,
     switchvoicechatconfirm,
+    videorecorder,
+    deviceselector,
+    devconsole,
+    videoconferenceinfo,
+    uploadservice
 };

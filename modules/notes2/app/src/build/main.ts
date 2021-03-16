@@ -11,6 +11,7 @@ import { FileConflictResolverWindowController } from "../window/fileconflictreso
 import { FileErrorWindowController } from "../window/fileerror/FileErrorWindowController";
 import { HistoryWindowController } from "../window/history/HistoryWindowController";
 import { RecentFilesWindowController } from "../window/recentfiles/RecentFilesWindowController";
+import { FilesImporterWindowController } from "../window/filesimporter/FilesImporterWindowController";
 
 let Logger = Mail.Logger.get("privfs-notes2-plugin.Plugin");
 
@@ -33,6 +34,7 @@ export class Plugin {
         NewNoteWindowController.registerTexts(app.localeService);
         Notes2WindowController.registerTexts(app.localeService);
         RecentFilesWindowController.registerTexts(app.localeService);
+        FilesImporterWindowController.registerTexts(app.localeService);
         
         app.ioc.registerComponent("notes2filelist", FilesListController);
         

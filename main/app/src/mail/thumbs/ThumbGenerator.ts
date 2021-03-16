@@ -4,15 +4,24 @@ import * as privfs from "privfs-client";
 import { ThumbsManager } from ".";
 import { Entry } from "../filetree/NewTree";
 import { section } from "..";
+import { CommonApplication } from "../../app/common";
 
 export interface GeneratedThumb {
     buffer: Buffer;
     mimeType: string;
 }
 
+export interface ThumbGeneratedEvent {
+    type: "thumb-generated";
+    sectionId: string;
+    fileDid: string;
+}
+
 export abstract class ThumbGenerator {
     
-    constructor() {
+    abstract name: string;
+    
+    constructor(public app: CommonApplication) {
     }
     
     generate(section: SectionService, filePath: string, manager: ThumbsManager): Q.Promise<string> {
@@ -60,13 +69,17 @@ export abstract class ThumbGenerator {
                     });
                 }
             })
-            .then(() => {
-                return section.getChatModule().sendSaveFileMessage(section.getId(), thumbPath);
-            })
             .fail(e => {
                 console.log("Error generating thumbnail:", e);
             })
             .then(() => {
+                if (thumbPath) {
+                    this.app.dispatchEvent<ThumbGeneratedEvent>({
+                        type: "thumb-generated",
+                        sectionId: section.getId(),
+                        fileDid: entry.ref.did,
+                    })
+                }
                 return thumbPath;
             });
         })

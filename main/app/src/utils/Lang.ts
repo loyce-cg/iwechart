@@ -288,4 +288,16 @@ export class Lang {
         });
         return res;
     }
+    
+    static arraysEqual<T>(arr0: T[], arr1: T[]): boolean {
+        if (arr0.length != arr1.length) {
+            return false;
+        }
+        for (let i = 0; i < arr0.length; ++i) {
+            if (arr1.indexOf(arr0[i]) < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

@@ -3,6 +3,7 @@ import {func as mainTemplate} from "./template/main.html";
 import * as $ from "jquery";
 import {Model, RemeberModel} from "./LoginController";
 import {LoginWindowView} from "../LoginWindowView";
+import { webUtils } from "../../../build/view";
 
 export type LoginForm = HTMLFormElement&{hashmail: HTMLInputElement, password: HTMLInputElement};
 
@@ -19,7 +20,7 @@ export class LoginView extends BaseView<Model> {
         this.autoLogin = model.autoLogin;
         this.$main = this.mainTemplate.renderToJQ(model);
         this.$form = this.$main.find("form");
-        this.$form.on("submit", this.onSubmitLogin.bind(this));
+        this.$form.on("click", "[data-action='submit']", this.onSubmitLogin.bind(this));
         this.$error = this.$main.find(".error");
         this.form = <LoginForm>this.$form.get(0);
         this.form.hashmail.value = model.remember.hashmail.value;
@@ -30,8 +31,17 @@ export class LoginView extends BaseView<Model> {
         this.$form.on("click", "[data-action='open-alternative-login']", this.onAlternativeLoginClick.bind(this));
         this.$main.on("click", "[trigger-action=managers-zone]", this.onManagersZoneClick.bind(this));
         // this.toggleLoginInfo(model.isLoginInfoVisible);
+        this.$main.on("keydown", this.onKeydown.bind(this));
     }
     
+
+    onKeydown(e: KeyboardEvent): void {
+        if (e.keyCode === webUtils.KEY_CODES.enter) {
+            if (this.activeView && this.form) {
+                this.onSubmitLogin();
+            }
+        }
+    }
 
     refreshRemember(remember: RemeberModel): void {
         this.$form.find("[data-remember=hashmail]").prop("checked", remember.hashmail.checked);
@@ -48,7 +58,7 @@ export class LoginView extends BaseView<Model> {
             this.$error.html("<span class='error-text'>" + error + "</span>");
             this.form.password.value = "";
         }
-        this.$main.find("button[type=submit] .icon-holder").html("");
+        this.$main.find("[data-action='submit'] .icon-holder").html("");
         this.enableForm();
         this.focus();
     }
@@ -80,7 +90,7 @@ export class LoginView extends BaseView<Model> {
         this.parent.disableLangChooser();
         let hashmail = this.form.hashmail.value.trim().toLowerCase();
         let password = this.form.password.value;
-        this.$main.find("button[type=submit] .icon-holder").html('<i class="fa fa-spin fa-circle-o-notch"></i>');
+        this.$main.find("[data-action='submit'] .icon-holder").html('<i class="fa fa-spin fa-circle-o-notch"></i>');
         this.triggerEvent("login", hashmail, password);
     }
     
@@ -119,7 +129,7 @@ export class LoginView extends BaseView<Model> {
     }
 
     onManagersZoneClick(event: Event): void {
-        this.parent.triggerEvent("openManagersZone");        
+        this.parent.triggerEvent("openManagersZone");
     }
 
     onControlCenterLoad(active: boolean): void {

@@ -1,16 +1,18 @@
 import {BaseView} from "../BaseView";
 import {func as mainTemplate} from "./template/main.html";
 import {AdminWindowView} from "../AdminWindowView";
-import {Model, LoginEntry} from "./LoginsController";
-import {Grid, GridOptions, ModuleRegistry, GridApi} from "@ag-grid-community/all-modules";
-import {ClientSideRowModelModule} from "@ag-grid-community/client-side-row-model";
+import {Model} from "./LoginsController";
+import {ExternalLibs, agGrid} from "../../../web-utils/ExternalLibs";
 
 import * as $ from "jquery";
 
 export class LoginsView extends BaseView<Model> {
     
+    agGrid: agGrid;
+    
     constructor(parent: AdminWindowView) {
         super(parent, mainTemplate);
+        this.agGrid = ExternalLibs.getAgGrid();
         this.menuModel = {
             id: "logins",
             priority: 500,
@@ -22,7 +24,7 @@ export class LoginsView extends BaseView<Model> {
     
     initTab() {
         this.$main.on("click", "[data-action='get-page']", this.onGetPageClick.bind(this));
-        ModuleRegistry.register(ClientSideRowModelModule);
+        this.agGrid.ModuleRegistry.register(this.agGrid.ClientSideRowModelModule);
     }
     
     onGetPageClick(e: MouseEvent) {
@@ -33,19 +35,19 @@ export class LoginsView extends BaseView<Model> {
     renderPage(model: Model) {
         this.$main.empty().append(this.templateManager.createTemplate(mainTemplate).renderToJQ(model));
     }
-
+    
     renderGrid(model: Model) {
         this.renderAgGrid(model);
     }
-
+    
     renderAgGrid(model: Model): void {
         let columnDefs = [
             {headerName: this.helper.i18n("window.admin.logins.table.date"), field: "date", sortable: true,  filter: "agDateColumnFilter"},
             {headerName: this.helper.i18n("window.admin.logins.table.user"), field: "user", sortable: true, filter: "agTextColumnFilter"},
             {
-                headerName: this.helper.i18n("window.admin.logins.table.device"), 
-                field: "device", 
-                sortable: true, 
+                headerName: this.helper.i18n("window.admin.logins.table.device"),
+                field: "device",
+                sortable: true,
                 filter: "agTextColumnFilter",
                 cellClass: ["two-line-row"],
                 cellRenderer: (param: any) => {
@@ -54,34 +56,31 @@ export class LoginsView extends BaseView<Model> {
             },
             {headerName: this.helper.i18n("window.admin.logins.table.ip"), field: "ip", sortable: true, filter: "agTextColumnFilter"},
             {headerName: this.helper.i18n("window.admin.logins.table.loggedIn"), field: "loggedIn", sortable: true, filter: true},
-          ];
-
-          // let the grid know which columns and what data to use
+        ];
+        
+        // let the grid know which columns and what data to use
         let gridOptions = {
-            api: new GridApi(),
+            api: new this.agGrid.GridApi(),
             rowClass: "default-grid-bg",
             rowHeight: 45,
             defaultColDef: {
                 resizable: true,
                 cellClass:["default-grid-row"]
-
             },
             columnDefs: columnDefs,
             rowData: model.logins.map(x => {
                 return {
-                    date: this.helper.dateWithHourLocal(x.time * 1000), 
-                    user: x.username, 
+                    date: this.helper.dateWithHourLocal(x.time * 1000),
+                    user: x.username,
                     device: (<any>x).deviceName + "\n" + x.deviceId,
-                    ip: x.ip, 
-                    loggedIn: x.success ? this.helper.i18n("core.bool.yes") : this.helper.i18n("core.bool.no") 
+                    ip: x.ip,
+                    loggedIn: x.success ? this.helper.i18n("core.bool.yes") : this.helper.i18n("core.bool.no")
                 };
             })
         };
         
-          
         let $eGridDiv:HTMLElement = <HTMLElement>document.querySelector('#myGrid');
-        let grid = new Grid($eGridDiv, gridOptions);
+        new this.agGrid.Grid($eGridDiv, gridOptions);
         gridOptions.api.sizeColumnsToFit();
-        
     }
 }

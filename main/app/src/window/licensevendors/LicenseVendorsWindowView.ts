@@ -228,7 +228,8 @@ export class LicenseVendorsWindowView extends BaseWindowView<Model> {
         
         //pre-parsing
         let isHtml: boolean = false;
-        let dataString = data.buffer.toString();
+        let buff = Buffer.from(data.buffer);
+        let dataString = buff.toString("utf8");
         let header = dataString.substring(0, 30);
         if (header.indexOf("<!doctype") > -1 || header.indexOf("<html") > -1) {
             isHtml = true;

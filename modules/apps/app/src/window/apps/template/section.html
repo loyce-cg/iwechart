@@ -2,7 +2,7 @@
 @import {SectionModel} from "../AppsWindowController";
 @context component.extlist.Context<SectionModel>
 @model SectionModel
-<div class="wi-element" data-section-id="{{@model.id}}" title="{{@model.name}}">
+<div class="wi-element" data-section-id="{{@model.id}}" title="{{@(model.breadcrumb ? model.breadcrumb : '') + model.name}}">
   <div class="wi-element-inner">
     <div class="pin-button {{@model.pinned?'pinned':'not-pinned'}}">
       <i class="fa fa-thumb-tack"></i>
@@ -16,7 +16,7 @@
         <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
       </div>
     }} } }}
-    <div class="wi-element-name {{@model.primary ? 'bold' : ''}}">
+    <div class="wi-element-name {{@model.primary ? 'bold' : ''}}" data-max-lines="2" data-breadcrumb="{{@model.breadcrumb}}" data-section-name="{{@model.name}}">
       {{ if (model.breadcrumb.length > 0) { {{
         <span class="section-breadcrumb">{{#model.breadcrumb}}</span>
       }} } }}

@@ -16,6 +16,7 @@ import { LocaleService } from "../../mail";
 import { i18n } from "./i18n";
 import { Session } from "../../mail/session/SessionManager";
 import { SectionListOptions } from "../sectionlist/SectionListController";
+import { CommonApplication } from "../../app/common/CommonApplication";
 
 export interface RemoteSectionListOptions extends SectionListOptions {
     session: Session;
@@ -128,6 +129,7 @@ export class RemoteSectionListController extends ComponentController {
         return {
             id: model.getId(),
             name: model.getName(),
+            description: model.getDescription(),
             unread: this.getUnread(model),
             elementsCount: this.getElementsCount(model),
             searchCount: this.getSearchCount(model),
@@ -144,7 +146,8 @@ export class RemoteSectionListController extends ComponentController {
                 (this.options.moduleName == Types.section.NotificationModule.TASKS && model.isKvdbModuleEnabled()) ||
                 (this.options.moduleName == Types.section.NotificationModule.CALENDAR && model.isCalendarModuleEnabled())
             ),
-            openOnFirstLogin: false
+            openOnFirstLogin: false,
+            activeVideoConferenceInfo: this.getActiveVideoConferenceInfo(model),
         };
     }
 
@@ -215,6 +218,10 @@ export class RemoteSectionListController extends ComponentController {
 
     getIsPinned(section: SectionService): boolean {
         return false;
+    }
+    
+    getActiveVideoConferenceInfo(section: SectionService): Types.webUtils.ActiveVideoConferenceInfo {
+        return CommonApplication.instance.videoConferencesService.getActiveVideoConferenceInfoForSection(this.options.session.hostHash, section);
     }
     
     updateSidebarSpinners(id: string): void {

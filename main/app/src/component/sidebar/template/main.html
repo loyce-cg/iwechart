@@ -20,9 +20,9 @@
   <div class="conv2-list"></div>
   <div class="sidebar-buttons">
     {{(model.sidebarButtons || []).filter(x => !x.onSectionList).forEach(btn => { {{
-      <div class="section-element wi-element" data-sidebar-button-id="{{@btn.id}}">
+      <div class="section-element wi-element {{@btn.disabled ? 'disabled': ''}}" data-sidebar-button-id="{{@btn.id}}">
         <div class="wi-element-inner">
-          <div class="wi-element-icon fa fa-plus"></div>
+          <div class="wi-element-icon fa fa-plus {{@btn.disabled ? 'disabled': ''}}"></div>
           <div class="wi-element-name" title="{{@btn.title}}">
             <div class="name-wrapper">{{@btn.label}}</div>
           </div>

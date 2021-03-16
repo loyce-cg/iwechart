@@ -1,0 +1,51 @@
+@import { Model } from "../VideoConferenceInfoWindowController";
+@import { func as conversationTemplate } from "../../../component/template/conversation.html";
+@import { func as sectionTemplate } from "../../../component/template/section.html";
+@model Model
+<div class="window-videoconferenceinfo-main {{@model.conferenceTitle ? 'with-conference-title' : 'without-conference-title'}} {{@model.isGong ? 'gong' : 'conference'}} {{@model.gongMessage ? 'with-gong-message' : 'without-gong-message' }} {{@model.isOneOnOne ? 'one-on-one' : 'not-one-on-one' }}">
+  <div class="wrapper">
+    <div class="conference-info">
+      <div class="conference-creator-info">
+        <span class="user-container">
+          <canvas class="not-rendered avatar" data-auto-refresh="true" data-auto-size="true" data-hashmail-image="{{@model.startedBy.hashmail}}"></canvas>
+          <span class="display-name">{{@model.startedBy.displayName}}{{@model.isGong ? ":" : ""}}</span>
+        </span>
+        <span class="created-video-msg">
+          {{ if (model.isGong && !model.gongMessage) { }}
+            {{@Helper.i18n("window.videoconferenceinfo.gongMsg")}}
+          {{ } else if (!model.isGong) { }}
+            {{@Helper.i18n("window.videoconferenceinfo.createdVideoMsg")}}{{@model.conferenceTitle ? ":" : ""}}
+          {{ } }}
+        </span>
+      </div>
+      {{ if (model.isGong && !model.gongMessage) { }}
+        <i class="fa fa-bell gong-icon"></i>
+      {{ } else if (model.isGong && model.gongMessage) { }}
+        <div class="gong-message">
+          <i class="fa fa-bell gong-icon"></i>
+          <div class="gong-message-inner">
+            {{@model.gongMessage}}
+          </div>
+        </div>
+      {{ } else if (model.conferenceTitle) { }}
+        <div class="conference-title">
+          <div class="conference-title-inner">
+            {{@model.conferenceTitle}}
+          </div>
+        </div>
+      {{ } }}
+      <div class="section">{{#model.sectionModel && !model.isOneOnOne ? Helper.createTemplate(sectionTemplate).render(model.sectionModel, { isActive: false, index: 0, listView: null }) : ""}}</div>
+      <div class="conversation">{{#model.conversationModel && !model.isOneOnOne ? Helper.createTemplate(conversationTemplate).render(model.conversationModel, { isActive: false, index: 0, listView: null } ) : ""}}</div>
+      {{ if (model.isOneOnOne && !model.isGong) { }}
+        <div class="one-on-one">{{@Helper.i18n("window.videoconferenceinfo.oneOnOne")}}</div>
+      {{ } }}
+    </div>
+    <div class="buttons">
+      {{ if (!model.isGong) { }}
+        <button class="btn btn-success btn-sm small" data-action="join"><i class="icon privmx-icon privmx-icon-videocall"></i><span class="text">{{@Helper.i18n("window.videoconferenceinfo.button.join")}}</span></button>
+      {{ } }}
+      <button class="btn btn-default btn-sm small" data-action="show-chat"><i class="icon privmx-icon privmx-icon-chat"></i><span class="text">{{@Helper.i18n("window.videoconferenceinfo.button.show-chat")}}</span></button>
+      <button class="btn btn-default btn-sm small" data-action="close"><span class="text">{{@Helper.i18n("window.videoconferenceinfo.button.close")}}</span></button>
+    </div>
+  </div>
+</div>

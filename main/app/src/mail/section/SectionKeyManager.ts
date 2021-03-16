@@ -18,12 +18,24 @@ export interface SectionKeyManagerOptions {
     readAdminSink: boolean;
 }
 
+export interface LoadKeysEvent {
+    type: "load";
+    manager: SectionKeyManager;
+}
+
+export interface AddKeyEvent {
+    type: "add";
+    key: section.SectionKey;
+    timestamp: number;
+    source: string;
+}
+
 export class SectionKeyManager {
     
     static SECTION_MSG_TYPE = "section-msg";
     static SHARE_SECTION_KEY = "share-section-key";
     static SETTINGS_PREFIX = "SectionKey/";
-    keysMap: {[keyMapId: string]: section.SectionKey};
+    keysMap: {[keyMapId: string]: {timestamp: number; key: section.SectionKey;}};
     eventDispatcher: EventDispatcher;
     adminSinkToLoad: boolean;
     
@@ -42,9 +54,9 @@ export class SectionKeyManager {
         this.eventDispatcher = new EventDispatcher();
         this.settingsKvdb.collection.changeEvent.add(event => {
             if (event.element) {
-                this.processKvdbSettingEntry(event.element);
-                if (event.type == "add") {
-                    this.eventDispatcher.dispatchEvent({type: "add", key: event.element, source: "kvdb"});
+                const key = this.processKvdbSettingEntry(event.element);
+                if (event.type == "add" && key) {
+                    this.dispatchAddKeyEvent(key, this.getTimestampFromSettingsEntry(event.element), "kvdb");
                 }
             }
         });
@@ -78,25 +90,26 @@ export class SectionKeyManager {
                 }
                 let eventT = <section.SectionShareKeyMessage>event;
                 return this.createKey(eventT.sectionId, new Buffer(eventT.key, "base64")).then(key => {
-                    return this.storeKey(key, false);
+                    return this.storeKey(key, this.getTimestampOfSinkIndexEntry(entry), false);
                 });
             });
         })
         .then(() => {
-            this.eventDispatcher.dispatchEvent({type: "load", manager: this});
+            this.eventDispatcher.dispatchEvent<LoadKeysEvent>({type: "load", manager: this});
         });
     }
     
     setSectionAdminSink(sectionAdminSink: SectionAdminSink) {
         this.sectionAdminSink = sectionAdminSink;
         if (this.adminSinkToLoad) {
+            Logger.warn("Admin sink assigned, so let's load keys from it");
             this.loadKeys().fail(e => {
                 Logger.error("Error during loading keys from admin sink", e);
             });
         }
     }
     
-    processKvdbSettingEntry(entry: KvdbSettingEntry): void {
+    private processKvdbSettingEntry(entry: KvdbSettingEntry): section.SectionKey {
         let sec = entry.secured;
         if (sec && sec.key && Lang.startsWith(sec.key, SectionKeyManager.SETTINGS_PREFIX)) {
             let splitted = sec.key.split("/");
@@ -105,8 +118,11 @@ export class SectionKeyManager {
                 keyId: splitted[2],
                 key: new Buffer(sec.value, "base64")
             };
-            this.keysMap[SectionKeyManager.getKeyMapId(key)] = key;
+            const timestamp = this.getTimestampFromSettingsEntry(entry);
+            this.keysMap[SectionKeyManager.getKeyMapId(key)] = {key: key, timestamp: timestamp};
+            return key;
         }
+        return null;
     }
     
     //==================
@@ -185,7 +201,7 @@ export class SectionKeyManager {
                 // try read public section key from users keys map
                 let mapId = SectionKeyManager.getKeyMapIdEx(sectionId, SectionUtils.PUBLIC_KEY_ID);
                 if (mapId in this.keysMap) {
-                    return this.keysMap[mapId];
+                    return this.keysMap[mapId].key;
                 }
                 else {
                     return null;
@@ -237,13 +253,12 @@ export class SectionKeyManager {
             };
         });
     }
-
     
     getKey(sectionId: section.SectionId, keyId: section.SectionKeyId): Q.Promise<section.SectionKey> {
         return Q().then(() => {
             let mapId = SectionKeyManager.getKeyMapIdEx(sectionId, keyId);
             if (mapId in this.keysMap) {
-                return this.keysMap[mapId];
+                return this.keysMap[mapId].key;
             }
             if (SectionKeyManager.isPublicKeyId(keyId)) {
                 return this.getPublicKey(sectionId);
@@ -252,14 +267,14 @@ export class SectionKeyManager {
         })
     }
     
-    storeKey(key: section.SectionKey, save?: boolean, source?: string): Q.Promise<void> {
+    storeKey(key: section.SectionKey, timestamp: number, save?: boolean, source?: string): Q.Promise<void> {
         return Q().then(() => {
             let mapId = SectionKeyManager.getKeyMapId(key);
             if (mapId in this.keysMap) {
                 return;
             }
-            this.keysMap[mapId] = key;
-            this.eventDispatcher.dispatchEvent({type: "add", key: key, source: source});
+            this.keysMap[mapId] = {key: key, timestamp: timestamp};
+            this.dispatchAddKeyEvent(key, timestamp, source);
             if (save === false || this.settingsKvdb == null) {
                 return;
             }
@@ -269,6 +284,10 @@ export class SectionKeyManager {
                 }
             });
         });
+    }
+    
+    private dispatchAddKeyEvent(key: section.SectionKey, timestamp: number, source?: string) {
+        this.eventDispatcher.dispatchEvent<AddKeyEvent>({type: "add", key: key, timestamp: timestamp, source: source});
     }
     
     //=====================
@@ -300,18 +319,19 @@ export class SectionKeyManager {
                 return;
             }
             entry.proceeding = true;
+            const timestamp = this.getTimestampOfSinkIndexEntry(entry);
             return Q().then(() => {
                 switch (event.type) {
                     case SectionKeyManager.SHARE_SECTION_KEY: {
                         let eventT = <section.SectionShareKeyMessage>event;
                         if (eventT.isPublic) {
                             return this.createKeyPublic(eventT.sectionId, new Buffer(eventT.key, "base64")).then(key => {
-                                return this.storeKey(key, true, "mail");
+                                return this.storeKey(key, timestamp, true, "mail");
                             });
                         }
                         else {
                             return this.createKey(eventT.sectionId, new Buffer(eventT.key, "base64")).then(key => {
-                                return this.storeKey(key, true, "mail");
+                                return this.storeKey(key, timestamp, true, "mail");
                             });
                         }
                     }
@@ -363,5 +383,13 @@ export class SectionKeyManager {
                 Logger.error("Cannot send section key to '" + username + "'", e);
             });
         });
+    }
+    
+    private getTimestampOfSinkIndexEntry(entry: SinkIndexEntry): any {
+        return entry.source.serverDate;
+    }
+    
+    private getTimestampFromSettingsEntry(entry: KvdbSettingEntry): number {
+        return parseInt(entry.modifyDate) || 0;
     }
 }

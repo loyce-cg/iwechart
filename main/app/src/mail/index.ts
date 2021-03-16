@@ -60,6 +60,7 @@ import * as UserPreferences from "./UserPreferences";
 import {UserPreferencesSynchronizer} from "./UserPreferencesSynchronizer";
 import {UtilApi} from "./UtilApi";
 import {VoiceChatServiceApi} from "./voicechat/VoiceChatServiceApi";
+import * as videoconferences from "./videoconferences/VideoConferencesServiceApi";
 import {WebSocketNotifier} from "./session/WebSocketNotifier";
 
 import * as session from "./session/SessionManager";
@@ -131,6 +132,7 @@ export {
     UserSettingsService,
     UtilApi,
     VoiceChatServiceApi,
+    videoconferences,
     session,
     WebSocketNotifier,
     thumbs,

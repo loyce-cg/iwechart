@@ -106,4 +106,12 @@ export class MindmapPath {
         }
     }
     
+    static sortPaths(paths: string[], mindmap: Mindmap, reverse: boolean = false): string[] {
+        let nodes = paths
+            .map(path => mindmap.getTargetNodeFromPath(path))
+            .filter(node => !!node);
+        let sortedPaths = this.sortNodesByPath(nodes, reverse).map(node => node.getPath());
+        return sortedPaths;
+    }
+    
 }

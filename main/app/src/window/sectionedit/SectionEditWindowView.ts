@@ -44,6 +44,7 @@ export interface ScopeData {
     loading: boolean;
     saving: boolean;
     primary: boolean;
+    description: string;
     isAdmin: boolean;
     removing: boolean;
     parentScope: string;
@@ -163,6 +164,7 @@ export class SectionEditWindowView extends BaseWindowView<Model> {
                 mutedModules: state.userSettings.mutedModules,
             },
             primary: state.primary,
+            description: state.description,
             loading: false,
             saving: false,
             removing: false,
@@ -337,6 +339,7 @@ export class SectionEditWindowView extends BaseWindowView<Model> {
                 }
             },
             primary: this.scope.data.primary,
+            description: this.scope.data.description,
             userSettings: {
                 visible: this.scope.data.userSettings.visible,
                 mutedModules: this.scope.data.userSettings.mutedModules,

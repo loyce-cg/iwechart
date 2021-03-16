@@ -192,4 +192,14 @@ export class DockedWindow extends Window {
     removeSpinner(): void {
     }
     
+    isAlwaysOnTop(): boolean {
+        return false;
+    }
+    
+    setAlwaysOnTop(alwaysOnTop: boolean): void {
+    }
+    
+    center(): void {
+    }
+    
 }

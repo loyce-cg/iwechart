@@ -10,7 +10,6 @@ import { TaskGroupFormWindowController } from "../../window/taskGroupForm/TaskGr
 import { DataMigration } from "../../main/DataMigration";
 import { TaskWindowController } from "../../window/task/TaskWindowController";
 import { TaskGroupSelectorWindowController } from "../../window/taskGroupSelector/TaskGroupSelectorWindowController";
-import { CustomSelectController, CustomSelectItem } from "../customSelect/CustomSelectController";
 import { i18n } from "./i18n/index";
 import { Utils } from "../../main/utils/Utils";
 import * as striptags from "striptags";
@@ -26,7 +25,7 @@ export class Model {
     hostHash: HostHash;
     projectName: string;
     privateSectionId: string;
-    safeProjectId: string;
+    uniqueSafeId: string;
     conv2Model: Types.webUtils.ConversationModel;
     settings: { [name: string]: boolean | string };
     isActive: boolean;
@@ -121,8 +120,8 @@ export interface TasksFilterData {
 }
 
 export class TasksFilterUpdater {
-    static UPDATE_DELAY: number = 200;
-    static MIN_CHARS_NUM: number = 2;
+    static UPDATE_DELAY: number = 500;
+    static MIN_CHARS_NUM: number = 3;
     toUpdate: TasksFilterData;
     filter: TasksFilterData;
     updateTimer: NodeJS.Timer;
@@ -165,7 +164,7 @@ export class TasksFilterUpdater {
     }
 }
 
-@Dependencies(["taskscustomselect", "persons", "notification", "taskpanel"])
+@Dependencies(["customselect", "persons", "notification", "taskpanel"])
 export class TaskGroupsPanelController extends window.base.WindowComponentController<window.base.BaseWindowController> {
 
     static textsPrefix: string = "plugin.tasks.component.taskGroupsPanel.";
@@ -187,7 +186,7 @@ export class TaskGroupsPanelController extends window.base.WindowComponentContro
     previewTaskId: string | false = null;
     componentFactory: TasksComponentFactory;
 
-    customSelectFilter: CustomSelectController;
+    customSelectFilter: component.customselect.CustomSelectController;
     taskTooltip: component.tasktooltip.TaskTooltipController;
     // personsComponent: component.persons.PersonsController;
     notifications: component.notification.NotificationController;
@@ -218,7 +217,13 @@ export class TaskGroupsPanelController extends window.base.WindowComponentContro
 
         this.tasksPlugin = this.app.getComponent("tasks-plugin");
 
-        this.customSelectFilter = this.addComponent("customSelectFilter", this.componentFactory.createComponent("taskscustomselect", [this, [], { multi: false, editable: true, firstItemIsStandalone: false }]));
+        this.customSelectFilter = this.addComponent("customSelectFilter", this.componentFactory.createComponent("customselect", [this, {
+            items: [],
+            size: "small",
+            multi: false,
+            editable: true,
+            firstItemIsStandalone: false,
+        }]));
         // this.personsComponent = this.addComponent("personsComponent", this.componentFactory.createComponent("persons", [this]));
         this.taskTooltip = this.addComponent("tasktooltip", this.componentFactory.createComponent("tasktooltip", [this]));
         this.taskTooltip.getContent = (taskId: string): string => {
@@ -236,7 +241,7 @@ export class TaskGroupsPanelController extends window.base.WindowComponentContro
         }
         this.watchSettingsChanges();
         this.registerChangeEvent(this.app.searchModel.changeEvent, this.onFilterTasks, "multi");
-        this.app.addEventListener<TasksColWidthsChangedEvent>("tasks-col-widths-changed", event => {
+        this.bindEvent<TasksColWidthsChangedEvent>(this.app, "tasks-col-widths-changed", event => {
             if (event.key == this.activeProjectId + "-" + this.context && event.sender != this.uniqueId) {
                 this.getColWidths().then(widths => {
                     this.colWidths = widths;
@@ -244,28 +249,26 @@ export class TaskGroupsPanelController extends window.base.WindowComponentContro
                 });
             }
         });
-        this.app.addEventListener(app.common.clipboard.Clipboard.CHANGE_EVENT, event => {
+        this.bindEvent(this.app, app.common.clipboard.Clipboard.CHANGE_EVENT, event => {
             this.updateFromClipboard();
         });
         this.updateFromClipboard();
-        this.app.addEventListener<Types.event.ActiveAppWindowChangedEvent>("active-app-window-changed", e => {
+        this.bindEvent<Types.event.ActiveAppWindowChangedEvent>(this.app, "active-app-window-changed", e => {
             if (e.appWindowId == "tasks" && this.isActive) {
                 this.callViewMethod("activate");
             }
         });
         this.registerChangeEvent(this.personService.persons.changeEvent, this.onPersonChange.bind(this));
 
-        return <any>this.tasksPlugin.checkInit().then(() => this.tasksPlugin.projectsReady).then(() => {
+        return this.tasksPlugin.checkInit().then(() => this.tasksPlugin.projectsReady).then(() => {
             this.setShowTaskPanel(!!this.getSetting("show-task-panel"));
             this.setTaskPanelLayout(!!this.getSetting("horizontal-task-window-layout"));
 
             this.colWidths = this.getDefaultColWidths();
             return this.getColWidths().then(widths => {
-                (<any>Object).assign(this.colWidths, widths);
+                Object.assign(this.colWidths, widths);
                 this.callViewMethod("setColWidths", JSON.stringify(this.colWidths));
             });
-        }).then(() => {
-            return this.customSelectFilter.init();
         });
     }
 
@@ -317,7 +320,7 @@ export class TaskGroupsPanelController extends window.base.WindowComponentContro
             hostHash: this.session.hostHash,
             projectName: projectName,
             privateSectionId: this.tasksPlugin.getPrivateSectionId(),
-            safeProjectId: projectId.replace(/:/g, "---").replace(/\|/g, "___"),
+            uniqueSafeId: this._getUniqueSafeId(),
             conv2Model: this.isConv2Section() ? utils.Converter.convertConv2(this.getActiveConv2Section(), 0, null, 0, true, 0, false, false, false, null) : null,
             settings: this.getSettings(),
             isActive: this.isActive,
@@ -355,7 +358,11 @@ export class TaskGroupsPanelController extends window.base.WindowComponentContro
         this.currDataModel = model;
         return JSON.stringify(model);
     }
-
+    
+    private _getUniqueSafeId(): string {
+        return `tasks${this.uniqueId}`;
+    }
+    
     updateCollapsedTaskGroupsArray(collapseDetached: boolean = false): void {
         this.collapsedTaskGroups = JSON.parse(<string>this.getSetting("collapsed-taskgroups"));
 
@@ -478,8 +485,8 @@ export class TaskGroupsPanelController extends window.base.WindowComponentContro
         });
     }
 
-    getCustomSelectFilterItems(): CustomSelectItem[] {
-        let arr: CustomSelectItem[] = [];
+    getCustomSelectFilterItems(): component.customselect.CustomSelectItem[] {
+        let arr: component.customselect.CustomSelectItem[] = [];
         let i18nFilters: string[];
         let filters: string[];
         if (this.isKanban()) {
@@ -518,7 +525,8 @@ export class TaskGroupsPanelController extends window.base.WindowComponentContro
         let i = 0;
         for (let filter of filters) {
             arr.push({
-                val: filter,
+                type: "item",
+                value: filter,
                 text: this.i18n("plugin.tasks.component.taskGroupsPanel.filter.show" + i18nFilters[i]),
                 textNoEscape: true,
                 icon: null,
@@ -795,7 +803,7 @@ export class TaskGroupsPanelController extends window.base.WindowComponentContro
         }
     }
     watchSettingsChanges(): void {
-        this.app.addEventListener<TasksSettingChanged>("tasks-setting-changed", event => {
+        this.bindEvent<TasksSettingChanged>(this.app, "tasks-setting-changed", event => {
             if (event.sourceUniqueId != this.uniqueId) {
                 if (event.sourceProjectId != this.activeProjectId && this.tasksPlugin.viewSettings.isSettingProjectIsolated(event.setting)) {
                     return;
@@ -1719,27 +1727,6 @@ export class TaskGroupsPanelController extends window.base.WindowComponentContro
     /****************************************
     ***************** Misc ******************
     *****************************************/
-    onViewOpenChat(): void {
-        let cnt = <window.container.ContainerWindowController>this.app.windows.container;
-        if (this.activeProjectId != CustomTasksElements.TASKS_ASSIGNED_TO_ME_ID && this.activeProjectId != CustomTasksElements.TASKS_CREATED_BY_ME_ID) {
-            cnt.redirectToAppWindow("chat", this.getOtherPluginTarget(this.activeProjectId));
-        }
-    }
-
-    onViewOpenNotes(): void {
-        let cnt = <window.container.ContainerWindowController>this.app.windows.container;
-        if (this.activeProjectId != CustomTasksElements.TASKS_ASSIGNED_TO_ME_ID && this.activeProjectId != CustomTasksElements.TASKS_CREATED_BY_ME_ID) {
-            cnt.redirectToAppWindow("notes2", this.getOtherPluginTarget(this.activeProjectId));
-        }
-    }
-
-    onViewOpenCalendar(): void {
-        let cnt = <window.container.ContainerWindowController>this.app.windows.container;
-        if (this.activeProjectId != CustomTasksElements.TASKS_ASSIGNED_TO_ME_ID && this.activeProjectId != CustomTasksElements.TASKS_CREATED_BY_ME_ID) {
-            cnt.redirectToAppWindow("calendar", this.activeProjectId);
-        }
-    }
-
     getOtherPluginTarget(id: string): string {
         if (id == this.tasksPlugin.getPrivateSectionId()) {
             return "my";
@@ -1887,15 +1874,32 @@ export class TaskGroupsPanelController extends window.base.WindowComponentContro
                 Utils.uniqueArrayMerge(toSave.projects, toSave2.projects);
             }
         }
-        this.saveAll(toSave)
-            .then(() => {
-                return Q.all(toSave.tasks.map(task => this.tasksPlugin.sendTaskMessage(this.session, task, "modify-task")));
-            })
+        Q.all(toSave.tasks.map(task => {
+            return this.tasksPlugin.sendTaskMessage(this.session, task, "modify-task")
+            .then(dt => {
+                if (dt) {
+                    task.updateModifiedServerDateTime(dt);
+                }
+            });
+        }))
+        .then(() => {
+            return this.saveAll(toSave);
+        })
     }
 
     onViewDropTask(taskId: string, status: TaskStatus, newProjectId: string, newTaskGroupId: string, currTaskGroupId: string): void {
         let toSave = this.dropTask(taskId, status, newProjectId, newTaskGroupId, currTaskGroupId);
-        this.saveAll(toSave);
+        Q.all(toSave.tasks.map(task => {
+            return this.tasksPlugin.sendTaskMessage(this.session, task, "modify-task")
+            .then(dt => {
+                if (dt) {
+                    task.updateModifiedServerDateTime(dt);
+                }
+            });
+        }))
+        .then(() => {
+            return this.saveAll(toSave);
+        })
     }
 
     saveAll(toSave: { tasks: Task[], taskGroups: TaskGroup[], projects: Project[] }): Q.Promise<void> {
@@ -2111,76 +2115,76 @@ export class TaskGroupsPanelController extends window.base.WindowComponentContro
             ]
             );
         })
-            .then(element => {
-                if (!element) {
-                    return;
-                }
-                if (app.common.clipboard.Clipboard.FORMAT_PRIVMX_TASKS in element.data) {
-                    this.updateFromClipboard(true);
-                }
-                else if (element.source == "system" || element.source == "privmx") {
-                    let pasteFromOsStr = element.data[app.common.clipboard.Clipboard.FORMAT_SYSTEM_FILES];
-                    let pasteFromOs: { mime: string, path?: string, data?: Buffer }[] = pasteFromOsStr ? JSON.parse(pasteFromOsStr).map((x: { mime: string, path?: string, data?: any }) => {
-                        if (x.data && x.data.type == "Buffer" && x.data.data) {
-                            x.data = new Buffer(x.data.data);
-                        }
-                        return x;
-                    }) : [];
-                    let fileElements = pasteFromOs.filter(x => !!x.path);
-                    let imgElements = pasteFromOs.filter(x => !!x.data);
-                    let pmxFiles: mail.section.OpenableSectionFile[] = [];
-                    if (element.data[app.common.clipboard.Clipboard.FORMAT_PRIVMX_FILE]) {
-                        pmxFiles.push(element.data[app.common.clipboard.Clipboard.FORMAT_PRIVMX_FILE].element);
+        .then(element => {
+            if (!element) {
+                return;
+            }
+            if (app.common.clipboard.Clipboard.FORMAT_PRIVMX_TASKS in element.data) {
+                this.updateFromClipboard(true);
+            }
+            else if (element.source == "system" || element.source == "privmx") {
+                let pasteFromOsStr = element.data[app.common.clipboard.Clipboard.FORMAT_SYSTEM_FILES];
+                let pasteFromOs: { mime: string, path?: string, data?: Buffer }[] = pasteFromOsStr ? JSON.parse(pasteFromOsStr).map((x: { mime: string, path?: string, data?: any }) => {
+                    if (x.data && x.data.type == "Buffer" && x.data.data) {
+                        x.data = new Buffer(x.data.data);
                     }
-                    else if (element.data[app.common.clipboard.Clipboard.FORMAT_PRIVMX_FILES]) {
-                        for (let el of element.data[app.common.clipboard.Clipboard.FORMAT_PRIVMX_FILES]) {
-                            pmxFiles.push(el.element);
+                    return x;
+                }) : [];
+                let fileElements = pasteFromOs.filter(x => !!x.path);
+                let imgElements = pasteFromOs.filter(x => !!x.data);
+                let pmxFiles: mail.section.OpenableSectionFile[] = [];
+                if (element.data[app.common.clipboard.Clipboard.FORMAT_PRIVMX_FILE]) {
+                    pmxFiles.push(element.data[app.common.clipboard.Clipboard.FORMAT_PRIVMX_FILE].element);
+                }
+                else if (element.data[app.common.clipboard.Clipboard.FORMAT_PRIVMX_FILES]) {
+                    for (let el of element.data[app.common.clipboard.Clipboard.FORMAT_PRIVMX_FILES]) {
+                        pmxFiles.push(el.element);
+                    }
+                }
+                Q().then(() => {
+                    let proms: Q.Promise<mail.section.OpenableSectionFile>[] = [];
+                    if (fileElements.length > 0) {
+                        for (let file of fileElements) {
+                            let fileName = file.path;
+                            if (fileName.indexOf("/") >= 0 || fileName.indexOf("\\") >= 0) {
+                                fileName = fileName.substr(fileName.replace(/\\/g, "/").lastIndexOf("/") + 1);
+                            }
+                            let data: Buffer = file.data ? file.data : require("fs").readFileSync(file.path);
+                            proms.push(this.upload(privfs.lazyBuffer.Content.createFromBuffer(data, file.mime, fileName)));
                         }
                     }
-                    Q().then(() => {
-                        let proms: Q.Promise<mail.section.OpenableSectionFile>[] = [];
-                        if (fileElements.length > 0) {
-                            for (let file of fileElements) {
-                                let fileName = file.path;
-                                if (fileName.indexOf("/") >= 0 || fileName.indexOf("\\") >= 0) {
-                                    fileName = fileName.substr(fileName.replace(/\\/g, "/").lastIndexOf("/") + 1);
-                                }
-                                let data: Buffer = file.data ? file.data : require("fs").readFileSync(file.path);
-                                proms.push(this.upload(privfs.lazyBuffer.Content.createFromBuffer(data, file.mime, fileName)));
-                            }
+                    else if (pmxFiles.length > 0) {
+                        for (let osf of pmxFiles) {
+                            proms.push(osf.getBuffer().then(buff => {
+                                return this.upload(privfs.lazyBuffer.Content.createFromBuffer(buff, osf.mimeType, osf.name))
+                            }));
                         }
-                        else if (pmxFiles.length > 0) {
-                            for (let osf of pmxFiles) {
-                                proms.push(osf.getBuffer().then(buff => {
-                                    return this.upload(privfs.lazyBuffer.Content.createFromBuffer(buff, osf.mimeType, osf.name))
-                                }));
-                            }
-                        }
-                        else {
-                            let file = imgElements[0];
-                            let formatNum = (x: number) => {
-                                let p = x < 10 ? "0" : "";
-                                return `${p}${x}`;
-                            };
-                            let now = new Date();
-                            let y = now.getFullYear();
-                            let m = formatNum(now.getMonth() + 1);
-                            let d = formatNum(now.getDate());
-                            let h = formatNum(now.getHours());
-                            let i = formatNum(now.getMinutes());
-                            let s = formatNum(now.getSeconds());
-                            let r = Math.floor(Math.random() * 10000);
-                            let ext = file.mime.split("/")[1];
-                            let fileName = `${y}${m}${d}-${h}${i}${s}-${r}.${ext}`;
-                            proms.push(this.upload(privfs.lazyBuffer.Content.createFromBuffer(file.data, file.mime, fileName)));
-                        }
-                        return Q.all(proms);
-                    })
-                        .then((osfs: mail.section.OpenableSectionFile[]) => {
-                            return this.tasksPlugin.openNewTaskWindow(this.session, this.getActiveSection(), osfs);
-                        });
-                }
-            });
+                    }
+                    else {
+                        let file = imgElements[0];
+                        let formatNum = (x: number) => {
+                            let p = x < 10 ? "0" : "";
+                            return `${p}${x}`;
+                        };
+                        let now = new Date();
+                        let y = now.getFullYear();
+                        let m = formatNum(now.getMonth() + 1);
+                        let d = formatNum(now.getDate());
+                        let h = formatNum(now.getHours());
+                        let i = formatNum(now.getMinutes());
+                        let s = formatNum(now.getSeconds());
+                        let r = Math.floor(Math.random() * 10000);
+                        let ext = file.mime.split("/")[1];
+                        let fileName = `${y}${m}${d}-${h}${i}${s}-${r}.${ext}`;
+                        proms.push(this.upload(privfs.lazyBuffer.Content.createFromBuffer(file.data, file.mime, fileName)));
+                    }
+                    return Q.all(proms);
+                })
+                    .then((osfs: mail.section.OpenableSectionFile[]) => {
+                        return this.tasksPlugin.openNewTaskWindow(this.session, this.getActiveSection(), osfs);
+                    });
+            }
+        });
     }
 
     upload(content: privfs.lazyBuffer.IContent): Q.Promise<mail.section.OpenableSectionFile> {

@@ -3,6 +3,7 @@ import * as PmxApi from "privmx-server-api";
 import { UserCreationService } from "./UserCreationService";
 import { UserGroupCreatorService } from "../../section/UserGroupCreatorService";
 import { AdminRightService } from "../AdminRightService";
+import { UserCreationContext } from "./Types";
 
 export interface CreateNormalUserParams {
     username: string;
@@ -31,6 +32,13 @@ export interface CreateManagableUserParams {
     privateSectionAllowed: boolean;
     type: PmxApi.api.admin.AddUser;
     shareCommonKvdb: boolean;
+}
+
+export interface CreateManagableUserResult extends UserCreationContext {
+    language: string;
+    username: string;
+    password: string;
+    host: string;
 }
 
 export class ManagableUserCreator {
@@ -83,7 +91,7 @@ export class ManagableUserCreator {
         };
     }
     
-    private async createManagableUser(params: CreateManagableUserParams) {
+    private async createManagableUser(params: CreateManagableUserParams): Promise<CreateManagableUserResult> {
         const password = this.generatedPassword();
         
         const context = await this.userCreationService.createUser({

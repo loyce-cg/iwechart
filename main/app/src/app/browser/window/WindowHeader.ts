@@ -4,6 +4,7 @@ export class WindowHeader {
     
     domElement: HTMLElement;
     buttons: {
+        toggleAlwaysOnTop: HTMLElement;
         maximize: HTMLElement;
         minimize: HTMLElement;
         close: HTMLElement;
@@ -13,6 +14,7 @@ export class WindowHeader {
     
     constructor() {
         let wrapper = document.createElement("div");
+        let toggleAlwaysOnTopBtn = document.createElement("a");
         let maxBtn = document.createElement("a");
         let minBtn = document.createElement("a");
         let closeBtn = document.createElement("a");
@@ -22,6 +24,7 @@ export class WindowHeader {
         let buttonsWrapper = document.createElement("div");
         wrapper.classList.add("window-header");
         buttonsWrapper.classList.add("window-header-buttons");
+        toggleAlwaysOnTopBtn.classList.add("window-header-button", "window-header-button-toggle-always-on-top", "fa", "fa-thumb-tack");
         maxBtn.classList.add("window-header-button", "window-header-button-maximize", 'ico-maximize');
         minBtn.classList.add("window-header-button", "window-header-button-minimize", 'ico-minimize');
         closeBtn.classList.add("window-header-button", "window-header-button-close", 'ico-x');
@@ -32,10 +35,12 @@ export class WindowHeader {
         buttonsWrapper.appendChild(closeBtn);
         buttonsWrapper.appendChild(maxBtn);
         buttonsWrapper.appendChild(minBtn);
+        buttonsWrapper.appendChild(toggleAlwaysOnTopBtn);
         titleHolder.appendChild(dirtyMarker);
         titleHolder.appendChild(titleSpan);
         this.domElement = wrapper;
         this.buttons = {
+            toggleAlwaysOnTop: toggleAlwaysOnTopBtn,
             maximize: maxBtn,
             minimize: minBtn,
             close: closeBtn

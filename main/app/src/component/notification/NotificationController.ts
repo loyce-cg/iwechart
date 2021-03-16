@@ -7,6 +7,7 @@ export interface NotificationEntryOptions {
     autoHide?: boolean;
     progress?: boolean;
     duration?: number;
+    extraCssClass?: string;
 }
 
 export class NotificationController extends ComponentController {

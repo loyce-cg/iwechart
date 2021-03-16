@@ -154,8 +154,45 @@
 }
 
 
+
+
 @font-face {
   font-family: "privmx-icons";
   src: url("../fonts/privmx-icons.ttf");
 }
- 
+
+.privmx-icon,
+.privmx-icon.fa {
+  font-family: "privmx-icons";
+  font-style: normal;
+}
+.privmx-icon.privmx-icon-pdf:before {
+  content: "0";
+}
+.privmx-icon.privmx-icon-chat:before {
+  content: "A";
+}
+.privmx-icon.privmx-icon-notes2:before {
+  content: "B";
+}
+.privmx-icon.privmx-icon-tasks:before {
+  content: "C";
+}
+.privmx-icon.privmx-icon-calendar:before {
+  content: "D";
+}
+.privmx-icon.privmx-icon-mindmap:before {
+  content: "M";
+}
+.privmx-icon.privmx-icon-logo:before {
+  content: "P";
+}
+.privmx-icon.privmx-icon-video:before {
+  content: "V";
+}
+.privmx-icon.privmx-icon-videocall:before {
+  content: "V";
+}
+.privmx-icon.privmx-icon-videocall-ended:before {
+  content: "W";
+}

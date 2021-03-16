@@ -179,6 +179,8 @@ body {
   .activate-link {
     line-height: 30px;
     font-weight: bold;
+    text-align: center;
+    display: inline-block;
     i {
       color:#000;
     }
@@ -275,8 +277,8 @@ body {
 
               &[type=checkbox] {
                 height: inherit !important;
-                margin: 0;
-                width: 10px;
+                margin: -3px 2px 0 0;
+                width: 12px;
               }
 
               &[type=text], &[type=password] {
@@ -439,13 +441,11 @@ body {
 
         .error {
           color: @colorError;
-          position: absolute;
           margin-top: -35px;
           overflow-y: auto;
-          float: left;
           display: block;
           z-index: 100;
-          width: 540px;
+          width: 100%;
           font-size: var(--font-size-s);
           left: 0;
           height: 40px;
@@ -484,6 +484,11 @@ body {
             text-align: right;
             font-size: var(--font-size);
             margin: 10px 0;
+          }
+        }
+        .host-input {
+          .form-group {
+            margin-bottom: 10px;
           }
         }
         section {
@@ -732,13 +737,30 @@ body {
         }
       }
       &.window-login-activate {
+        text-align: center;
+        width: 478px;
+        position: absolute;
+        transform: translate(-50%, -50%);
+        top: 50%;
+        left: 50%;
+
+        .flex-row {
+          order: 1;
+        }
+
+        &.active {
+          display: block;
+        }
+
         .pre-info-box {
-            width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-            color: #fff;
-            font-weight: normal;
-            font-size: var(--font-size);
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          padding: 20px;
+          color: #fff;
+          font-weight: normal;
+          font-size: var( --font-size);
+          white-space: nowrap;
             
             a {
               color: #fff;
@@ -757,9 +779,15 @@ body {
           margin-bottom: 30px;
           position: relative;
           line-height: 40px;
+          height: 30px;
         }
         .inner {
-          height: 470px;
+          // height: 470px;
+          height: auto;
+          display: flex;
+          flex-direction: column;
+          flex-wrap: nowrap;
+          justify-content: space-evenly;
         }
         
         .btn {
@@ -779,11 +807,11 @@ body {
           margin-right: 3px;
         }
         button[data-action=go-next] {
-          right: 0;
+          left: 0;
         }
         
         button[data-action=open-login] {
-          left: 0;
+          right: 0;
         }
         
         .key-info {
@@ -964,7 +992,7 @@ body {
             
             i {
               font-size: 50px;
-              color: #0fdf39;
+              color: #28a745;
             }
           }
           

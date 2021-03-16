@@ -1,10 +1,7 @@
-import { component, window as wnd, JQuery as $, Q, Starter, Types, webUtils } from "pmc-web";
+import { component, window as wnd, JQuery as $, Q, Types, webUtils } from "pmc-web";
 import { Model } from "./DateTimePickerController";
 import { func as mainTemplate } from "./template/main.html";
-import { RequestCustomSelectViewEvent } from "privfs-mail-client-tasks-plugin/src/main/Types";
-import { CustomSelectView } from "privfs-mail-client-tasks-plugin/src/component/customSelect/CustomSelectView";
 import { DateUtils } from "../../main/DateUtils";
-import { CustomSelectItem } from "privfs-mail-client-tasks-plugin/src/component/customSelect/CustomSelectController";
 
 export class DateTimePickerView extends component.base.ComponentView {
     
@@ -12,8 +9,8 @@ export class DateTimePickerView extends component.base.ComponentView {
     $main: JQuery;
     parent: wnd.base.BaseWindowView<any>;
     model: Model;
-    customSelectMonth: CustomSelectView;
-    customSelectYear: CustomSelectView;
+    customSelectMonth: component.customselect.CustomSelectView;
+    customSelectYear: component.customselect.CustomSelectView;
     dragStartLeft: number = null;
     dragStartTop: number = null;
     dragStartMouseX: number = null;
@@ -24,13 +21,8 @@ export class DateTimePickerView extends component.base.ComponentView {
     constructor(parent: Types.app.ViewParent) {
         super(parent);
         
-        for (let csName of ["customSelectMonth", "customSelectYear"]) {
-            Starter.dispatchEvent<RequestCustomSelectViewEvent>({
-                type: "request-custom-select-view",
-                parent: this,
-                name: csName,
-            });
-        }
+        this.customSelectMonth = this.addComponent("customSelectMonth", new component.customselect.CustomSelectView(this, {}));
+        this.customSelectYear = this.addComponent("customSelectYear", new component.customselect.CustomSelectView(this, {}));
         
         this.documentMouseDownBound = this.onDocumentMouseDown.bind(this);
         this.documentKeyDownBound = this.onDocumentKeyDown.bind(this);
@@ -76,15 +68,6 @@ export class DateTimePickerView extends component.base.ComponentView {
         this.$container.on("mousewheel", this.onMouseWheel.bind(this));
         this.$container.on("mousedown", ".popup", this.onPopupMouseDown.bind(this));
         this.$container.data("events-bound", "1");
-    }
-    
-    registerCustomSelectView(csName: string, view: CustomSelectView): void {
-        if (csName == "customSelectMonth") {
-            this.customSelectMonth = this.addComponent("customSelectMonth", view);
-        }
-        else if (csName == "customSelectYear") {
-            this.customSelectYear = this.addComponent("customSelectYear", view);
-        }
     }
     
     setModel(model: Model) {
@@ -381,7 +364,7 @@ export class DateTimePickerView extends component.base.ComponentView {
     }
     
     updateTimeItems(itemsStr: string): void {
-        let items: CustomSelectItem[] = JSON.parse(itemsStr);
+        let items: component.customselect.CustomSelectItem[] = JSON.parse(itemsStr);
         let $tc = this.$container.find(".time-container");
         if ($tc.find(".pf-content").length == 0) {
             (<any>$tc).pfScroll();
@@ -389,7 +372,7 @@ export class DateTimePickerView extends component.base.ComponentView {
         let $cont = $tc.find(".pf-content");
         $cont.html("");
         for (let item of items) {
-            $cont.append("<div class='time-item item" + (item.selected ? " selected" : "") + "' data-val='" + item.val + "'>" + item.text + "</div>");
+            $cont.append("<div class='time-item item" + (item.selected ? " selected" : "") + "' data-val='" + item.value + "'>" + item.text + "</div>");
         }
         let $selected = $cont.find(".item.selected");
         if ($selected.length > 0) {

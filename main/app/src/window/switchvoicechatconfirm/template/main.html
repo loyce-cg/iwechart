@@ -13,13 +13,12 @@
       {{@Helper.i18n("core.button.ok.label")}}
     </button>
     <button class="btn btn-default" data-action="close" tabindex="1">
-      <i class="fa fa-times"></i>
       {{@Helper.i18n("core.button.cancel.label")}}</button>
     <div class="input checkbox">
-    <label>
-      <input type="checkbox" name="window.switchvoicechatconfirm.dontshow" data-action="check" {{#model.warningDisabled ? 'checked="checked"' : '' }} tabindex="2"/>
-      {{@Helper.i18n("window.switchVoiceChatConfirm.checkbox.dontshow.label")}}
-    </label>
+      <label>
+        <input type="checkbox" name="window.switchvoicechatconfirm.dontshow" data-action="check" {{#model.warningDisabled ? 'checked="checked"' : '' }} tabindex="2"/>
+        {{@Helper.i18n("window.switchVoiceChatConfirm.checkbox.dontshow.label")}}
+      </label>
     </div>
   </div>
 </div>

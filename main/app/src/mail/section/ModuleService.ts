@@ -15,6 +15,7 @@ import { FilteredCollection } from "../../utils/collection/FilteredCollection";
 import { ZipPack, ZipHelper } from "../../utils/ZipHelper";
 import { FileStyleResolver } from "../../app/common/FileStyleResolver";
 import { IContent } from "simplito-lazybuffer";
+import { ConferenceInfo } from "../../app/common/videoconferences/VideoConferencesService";
 let Logger = RootLogger.get("privfs-mail-client.mail.section.ModuleService");
 
 export type ModuleFactory<T extends ModuleService = ModuleService> = (section: SectionService) => T;
@@ -406,6 +407,48 @@ export class ChatModuleService implements ModuleService {
             who: who,
             moduleName: section.NotificationModule.CHAT,
         }});
+    }
+    
+    sendVideoConferenceDataMessage(conference: ConferenceInfo): Q.Promise<privfs.types.message.ReceiverData> {
+        return this.sendJsonMessage({
+            data: {
+                type: "video-conference-data",
+                conference: conference,
+                moduleName: section.NotificationModule.CHAT,
+            },
+        });
+    }
+    
+    sendVideoConferenceStartMessage(conferenceId: string, conferenceTitle: string): Q.Promise<privfs.types.message.ReceiverData> {
+        return this.sendJsonMessage({
+            data: {
+                type: "video-conference-start",
+                conferenceId: conferenceId,
+                conferenceTitle: conferenceTitle,
+                moduleName: section.NotificationModule.CHAT,
+            },
+        });
+    }
+    
+    sendVideoConferenceEndMessage(conferenceId: string): Q.Promise<privfs.types.message.ReceiverData> {
+        return this.sendJsonMessage({
+            data: {
+                type: "video-conference-end",
+                conferenceId: conferenceId,
+                moduleName: section.NotificationModule.CHAT,
+            },
+        });
+    }
+    
+    sendVideoConferenceGongMessage(conferenceId: string, message: string): Q.Promise<privfs.types.message.ReceiverData> {
+        return this.sendJsonMessage({
+            data: {
+                type: "video-conference-gong",
+                conferenceId: conferenceId,
+                message: message,
+                moduleName: section.NotificationModule.CHAT,
+            },
+        });
     }
     
 

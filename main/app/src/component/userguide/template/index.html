@@ -11,10 +11,10 @@
         <div class="text">
           {{$model.options.text}}
         </div>
-        {{ if (model.options.actionButton) { {{
+        {{ if (model.hasActionButton) { {{
         <button class="btn btn-success" trigger-action="button-action">
           <i class="fa fa-check"></i>
-          {{$model.options.actionButton.text}}
+          {{$model.options.actionButtonText}}
         </button>
         }} } }}
       </div>

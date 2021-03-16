@@ -3,6 +3,7 @@ import {utils} from "../../../Types";
 import { AdminDataCreatorService } from "../AdminDataCreatorService";
 
 export interface CreatePrivateUserParams {
+    activationTokenPrefix: string;
     creator: string;
     host: string;
     username: string;
@@ -46,7 +47,7 @@ export class PrivateUserCreator {
             params.shareCommonKvdb ? "" : linkPattern,
             "private"
         );
-        const activationToken = await this.createActivationToken(params.username, params.host, addUserResult.token, linkPattern, params.shareCommonKvdb);
+        const activationToken = await this.createActivationToken(params.activationTokenPrefix, params.username, params.host, addUserResult.token, linkPattern, params.shareCommonKvdb);
         return {
             activationToken: activationToken,
             token: addUserResult.token,
@@ -57,11 +58,11 @@ export class PrivateUserCreator {
         };
     }
     
-    private async createActivationToken(username: string, host: string, token: string, linkPattern: string, shareCommonKvdb: boolean) {
+    private async createActivationToken(activationTokenPrefix: string, username: string, host: string, token: string, linkPattern: string, shareCommonKvdb: boolean) {
         if (shareCommonKvdb) {
-            return await this.shareCommonKvdb(username, host, token, linkPattern);
+            return await this.shareCommonKvdb(activationTokenPrefix, username, host, token, linkPattern);
         }
-        return this.createActivationTokenFromInfo({
+        return this.createActivationTokenFromInfo(activationTokenPrefix, {
             domain: host,
             token: token,
             isAdmin: false,
@@ -69,7 +70,7 @@ export class PrivateUserCreator {
         });
     }
     
-    private async shareCommonKvdb(username: string, host: string, token: string, linkPattern: string) {
+    private async shareCommonKvdb(activationTokenPrefix: string, username: string, host: string, token: string, linkPattern: string) {
         const adminDataForUser = await this.adminDataCreatorService.encryptSharedKeyInAdminDataForUser(this.sharedKvdbExtKey);
         const tokenInfo: utils.RegisterTokenInfo = {
             domain: host,
@@ -78,7 +79,7 @@ export class PrivateUserCreator {
             username: username,
             key: adminDataForUser.key
         };
-        const activationToken = this.createActivationTokenFromInfo(tokenInfo);
+        const activationToken = this.createActivationTokenFromInfo(activationTokenPrefix, tokenInfo);
         const userIdentifier = username || token;
         const link = linkPattern.replace("{token}", token) + "&k=" + adminDataForUser.key;
         const adminDataBuffer = await this.adminDataCreatorService.encryptAdminData(userIdentifier, {
@@ -102,8 +103,9 @@ export class PrivateUserCreator {
         return username ? linkPattern.replace("{token}", "{token}&u=" + username) : linkPattern;
     }
     
-    private createActivationTokenFromInfo(tokenInfo: utils.RegisterTokenInfo): string {
+    private createActivationTokenFromInfo(prefix: string, tokenInfo: utils.RegisterTokenInfo): string {
+        const prePart = prefix ? (prefix.endsWith(":") ? prefix : prefix + ":") : "";
         const buffer = Buffer.from(JSON.stringify(tokenInfo), "utf-8");
-        return "activate:" + privfs.bs58.encode(buffer);
+        return prePart + privfs.bs58.encode(buffer);
     }
 }

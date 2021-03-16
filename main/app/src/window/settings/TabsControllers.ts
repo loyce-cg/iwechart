@@ -1,31 +1,26 @@
-import {WindowComponentController} from "../base/WindowComponentController";
-import {SettingsWindowController} from "./SettingsWindowController";
-import {AccountController} from "./account/AccountController";
-// import {ContactFormController} from "./contactform/ContactFormController";
-// import {MailController} from "./mail/MailController";
-import {NotificationsController} from "./notifications/NotificationsController";
-import {PublicProfileController} from "./publicprofile/PublicProfileController";
-// import {SecureFormsController} from "./secureforms/SecureFormsController";
-// import {SubidentitiesController} from "./subidentities/SubidentitiesController";
-import {SysInfoController} from "./sysinfo/SysInfoController";
-import {UserInterfaceController} from "./userinterface/UserInterfaceController";
-// import {WhitelistController} from "./whitelist/WhitelistController";
-import {HotkeysController} from "./hotkeys/HotkeysController";
-import { SysInfoExtController } from "./sysinfoext/SysInfoExtController";
-import { AudioConfigController } from "./audioconfig/AudioConfigController";
+import { WindowComponentController } from "../base/WindowComponentController";
+import { SettingsWindowController } from "./SettingsWindowController";
+import { AlternativeLoginController } from "./alternativeLogin/AlternativeLoginController";
+import { ChangePasswordController } from "./changePassword/ChangePasswordController";
+import { NotificationsController } from "./notifications/NotificationsController";
+import { PublicProfileController } from "./publicprofile/PublicProfileController";
+import { SysInfoController } from "./sysinfo/SysInfoController";
+import { UserInterfaceController } from "./userinterface/UserInterfaceController";
 import { TextController } from "./text/TextController";
+import { DevicesController } from "./devices/DevicesController";
 
-export type TabController = WindowComponentController<SettingsWindowController>&{
+export type TabController = WindowComponentController<SettingsWindowController> & {
     prepare(): Q.IWhenable<void>;
 };
 
 export type TabControllerClass = {
-    new(parentWindow: SettingsWindowController): TabController;
+    new (parentWindow: SettingsWindowController): TabController;
     tabId: string;
-}
+};
 
 export let TabsControllers: TabControllerClass[] = [
-    AccountController,
+    AlternativeLoginController,
+    ChangePasswordController,
     // ContactFormController,
     // MailController,
     NotificationsController,
@@ -39,4 +34,5 @@ export let TabsControllers: TabControllerClass[] = [
     // HotkeysController,
     // AudioConfigController,
     TextController,
+    DevicesController,
 ];

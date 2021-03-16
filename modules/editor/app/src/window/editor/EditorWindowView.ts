@@ -263,7 +263,9 @@ export class EditorWindowView extends wnd.base.BaseWindowView<Model> {
             this.addButtonsOverlay();
         }
         if (!this.previewMode) {
-            this.editor.focus();
+            if (this.editor) {
+                this.editor.focus();
+            }
         }
         
         this.refreshPreviewMode();
@@ -297,13 +299,17 @@ export class EditorWindowView extends wnd.base.BaseWindowView<Model> {
             }
             if (this.editor instanceof HtmlEdit) {
                 setTimeout(() => {
-                    this.editor.focus();
+                    if (this.editor) {
+                        this.editor.focus();
+                    }
                 }, 1);
             }
         }
         this.state.editMode = true;
         this.renderEditMode();
-        this.editor.focus();
+        if (this.editor) {
+            this.editor.focus();
+        }
     }
     
     setContent(currentViewId: number, text: string): void {
@@ -313,7 +319,9 @@ export class EditorWindowView extends wnd.base.BaseWindowView<Model> {
         this.editor.initState = text;
         this.editor.backToInitState();
         if (!this.previewMode) {
-            this.editor.focus();
+            if (this.editor) {
+                this.editor.focus();
+            }
         }
     }
     
@@ -327,41 +335,51 @@ export class EditorWindowView extends wnd.base.BaseWindowView<Model> {
     }
     
     reset(): void {
-        this.editor.backToInitState();
-        this.editor.focus();
+        if (this.editor) {
+            this.editor.backToInitState();
+            this.editor.focus();
+        }
     }
     
     switchToEditModeAndChangeContent(text: string): void {
-        this.editor.initState = text;
-        this.editor.backToInitState();
-        this.editor.setEditMode(true);
-        this.showEditModeBanner();
-        this.state.editMode = true;
-        this.renderEditMode();
-        this.editor.focus();
+        if (this.editor) {
+            this.editor.initState = text;
+            this.editor.backToInitState();
+            this.editor.setEditMode(true);
+            this.showEditModeBanner();
+            this.state.editMode = true;
+            this.renderEditMode();
+            this.editor.focus();
+        }
     }
     
     exitEditModeWithoutChange(): void {
-        this.editor.setEditMode(false);
-        this.state.editMode = false;
-        this.renderEditMode();
-        this.editor.focus();
+        if (this.editor) {
+            this.editor.setEditMode(false);
+            this.state.editMode = false;
+            this.renderEditMode();
+            this.editor.focus();
+        }
     }
     
     exitEditModeWithConfirm(text: string): void {
-        this.editor.confirmSave(text);
-        this.editor.setEditMode(false);
-        this.state.editMode = false;
-        this.renderEditMode();
-        this.editor.focus();
+        if (this.editor) {
+            this.editor.confirmSave(text);
+            this.editor.setEditMode(false);
+            this.state.editMode = false;
+            this.renderEditMode();
+            this.editor.focus();
+        }
     }
     
     exitEditModeWithRevert(): void {
-        this.editor.backToInitState();
-        this.editor.setEditMode(false);
-        this.state.editMode = false;
-        this.renderEditMode();
-        this.editor.focus();
+        if (this.editor) {
+            this.editor.backToInitState();
+            this.editor.setEditMode(false);
+            this.state.editMode = false;
+            this.renderEditMode();
+            this.editor.focus();
+        }
     }
     
     canGetState(): boolean {
@@ -390,8 +408,10 @@ export class EditorWindowView extends wnd.base.BaseWindowView<Model> {
     }
     
     confirmSave(text: string): void {
-        this.editor.confirmSave(text);
-        this.editor.focus();
+        if (this.editor) {
+            this.editor.confirmSave(text);
+            this.editor.focus();
+        }
     }
     
     focus(): void {
@@ -625,6 +645,7 @@ export class EditorWindowView extends wnd.base.BaseWindowView<Model> {
     
     refreshPreviewMode() {
         this.$mainContent.toggleClass("preview-mode", this.previewMode);
+        this.$mainContent.toggleClass("pf-scrollable", this.previewMode);
         this.$mainContent.removeClass("released");
         this.$buttonsOverlay = null;
         
@@ -642,7 +663,7 @@ export class EditorWindowView extends wnd.base.BaseWindowView<Model> {
     
     reopen(currentViewId: number, alwaysTriggerLoad: boolean = false) {
         this.currentViewId = currentViewId;
-        if (this.loaded || alwaysTriggerLoad) {
+        if (this.isViewLoaded() || alwaysTriggerLoad) {
             this.triggerEvent("load");
         }
     }

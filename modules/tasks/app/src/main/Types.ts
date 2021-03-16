@@ -144,12 +144,6 @@ export interface TasksPluginLoadedEvent {
     type: "tasks-plugin-loaded";
 }
 
-export interface RequestCustomSelectViewEvent {
-    type: "request-custom-select-view";
-    name: string;
-    parent: Web.Types.app.ViewParent;
-}
-
 export interface TaskGroupIcon {
     type: "shape" | "fa";
     color: string;

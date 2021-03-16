@@ -1,6 +1,6 @@
 import {BaseWindowController} from "../base/BaseWindowController";
 import * as Q from "q";
-import {app, section, utils, event} from "../../Types";
+import {app, utils, event} from "../../Types";
 import { TreeController } from "../../component/tree/TreeController";
 import { SectionEditWindowController, RemoveEvent, AddSectionEvent, SectionChangeLockEvent } from "../sectionedit/SectionEditWindowController";
 import { SectionNewWindowController } from "../sectionnew/SectionNewWindowController";
@@ -16,28 +16,8 @@ import { LocaleService } from "../../mail";
 import { i18n } from "./i18n";
 import { MsgBoxResult } from "../msgbox/MsgBoxWindowController";
 import { BaseWindowManager } from "../../app";
-
-export interface State {
-    canAdd: boolean;
-    sectionsLimitReached: boolean;
-}
-
-export interface Model {
-    state: State;
-    server: string;
-}
-
-export interface SectionEntry {
-    id: section.SectionId;
-    parentId: section.SectionId;
-    name: string;
-    scope: string;
-    isRoot: boolean;
-    enabled: boolean;
-    visible: boolean;
-    enabledModules?: string[];
-    breadcrumb?: string;
-}
+import { SectionEntry, Model, State } from "./SectionUITypes";
+export * from "./SectionUITypes";
 
 @Dependencies(["tree"])
 export class SectionsWindowController extends BaseWindowController {
@@ -72,12 +52,12 @@ export class SectionsWindowController extends BaseWindowController {
             height: 620,
             minWidth: 900,
             minHeight: 450,
-            icon: "icon fa fa-cubes",
+            icon: "icon privmx-icon privmx-icon-logo",
             title: this.i18n("window.sections.title")
         };
         
-        this.addEventListener<SectionChangeLockEvent>("section-change-lock", this.onSectionChangeLock.bind(this));
-        this.app.addEventListener<event.SectionsLimitReachedEvent>("sectionsLimitReached", event => {
+        this.bindEvent<SectionChangeLockEvent>(this, "section-change-lock", this.onSectionChangeLock.bind(this));
+        this.bindEvent<event.SectionsLimitReachedEvent>(this.app, "sectionsLimitReached", event => {
             this.sectionsLimitReached = event.reached;
             this.callViewMethod("setButtonsState", this.getActiveState());
         })
@@ -266,7 +246,8 @@ export class SectionsWindowController extends BaseWindowController {
         let active = this.activeCollection ? this.activeCollection.getActive(): null;
         return {
             canAdd: active ? active.canCreateSubsection() : this.identityProvider.isAdmin(),
-            sectionsLimitReached: this.sectionsLimitReached
+            sectionsLimitReached: this.sectionsLimitReached,
+            isAdmin: this.identityProvider.isAdmin()
         };
     }
     

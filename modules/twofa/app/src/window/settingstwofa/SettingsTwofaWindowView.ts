@@ -83,14 +83,36 @@ export class SettingsTwofaWindowView extends window.settings.BaseView<Model> {
         this.triggerEvent("generateGoogleAuthenticatorKey");
     }
     
+    getData() {
+        let type = this.scope.data.type;
+        if (type == "googleAuthenticator") {
+            return {
+                type: type,
+                googleAuthenticatorKey: this.scope.data.googleAuthenticatorKey
+            };
+        }
+        if (type == "email") {
+            return {
+                type: type,
+                email: this.scope.data.email
+            };
+        }
+        if (type == "sms") {
+            return {
+                type: type,
+                mobile: this.scope.data.mobile
+            };
+        }
+        if (type == "u2f") {
+            return {
+                type: type
+            };
+        }
+        throw new Error("Invalid 2FA type '" + type + "'");
+    }
+    
     saveData() {
-        let data: TwofaEnableData = {
-            type: this.scope.data.type,
-            googleAuthenticatorKey: this.scope.data.googleAuthenticatorKey,
-            email: this.scope.data.type == "email" ? this.scope.data.email : "",
-            mobile: this.scope.data.type == "sms" ? this.scope.data.mobile : ""
-        };
-        this.triggerEvent("enable", data);
+        this.triggerEvent("enable", this.getData());
     }
     
     finishSaving(resetDirty: boolean = false): void {
@@ -115,13 +137,9 @@ export class SettingsTwofaWindowView extends window.settings.BaseView<Model> {
     }
     
     getState(): string {
-        return JSON.stringify({
-            enabled: this.scope.data.enabled,
-            type: this.scope.data.type,
-            googleAuthenticatorKey: this.scope.data.googleAuthenticatorKey,
-            email: this.scope.data.type == "email" ? this.scope.data.email : "",
-            mobile: this.scope.data.type == "sms" ? this.scope.data.mobile : "",
-        });
+        let data = <any>this.getData();
+        data.enabled = this.scope.data.enabled;
+        return JSON.stringify(data);
     }
     
     isDirty(): boolean {

@@ -1,0 +1,10 @@
+@import {Model} from "../ChangePasswordController";
+@model Model
+@import {func as changePasswordTemplate} from "./change-password.html";
+<div class="section changePassword-section">
+    {{ if (Helper.isDemo()) { {{
+      {{@Helper.i18n("core.demo.featureNotAvailable")}}
+    }} } else { {{
+      {{#Helper.createTemplate(changePasswordTemplate).render(model)}}
+    }} } }}
+</div>

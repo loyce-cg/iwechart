@@ -49,6 +49,7 @@ export interface Model {
     updateReadyToInstall: boolean;
     forceUpdate: boolean;
     appVersion: string;
+    isElectron: boolean;
 }
 
 export class LoginWindowController extends BaseWindowController {
@@ -70,6 +71,8 @@ export class LoginWindowController extends BaseWindowController {
     activateNewWay: ActivateNewWayController;
     afterRegister: AfterRegisterController;
     activateKeyCorrect: boolean = false;
+    mnemonicWasEntered: boolean = false;
+    mnemonicString: string = null;
     webCCApi: WebCCApi;
     domainSuffix: string;
     registerNewWay: RegisterNewWayController;
@@ -111,7 +114,7 @@ export class LoginWindowController extends BaseWindowController {
         this.activateNewWay = this.addComponent("activateNewWay", new ActivateNewWayController(this));
 
         // this.wayChooser = this.addComponent("wayChooser", new WayChooserController(this));
-        this.app.addEventListener<KeepLoginEvent>("keep-login", event => {
+        this.bindEvent<KeepLoginEvent>(this.app, "keep-login", event => {
             if (this.settings.objectGet("remember-hashmail")) {
                 this.settings.objectSet("remember-hashmail-value", event.login);
             }
@@ -120,16 +123,16 @@ export class LoginWindowController extends BaseWindowController {
             }
         });
 
-        this.app.addEventListener<FillInLoginFieldsEvent>("fill-in-login-fields", event => {
+        this.bindEvent<FillInLoginFieldsEvent>(this.app, "fill-in-login-fields", event => {
             this.settings.objectSet("remember-hashmail-value", event.hashmail);
             this.login.setLoginField(event.hashmail);
         })
 
-        this.app.addEventListener<ResetCreateTeamServerButtonStateEvent>("reset-state", () => {
+        this.bindEvent<ResetCreateTeamServerButtonStateEvent>(this.app, "reset-state", () => {
             this.login.callViewMethod("onControlCenterLoad", false);
         })
 
-        this.app.addEventListener<StartFirstUserRegistrationFromCCEvent>("start-first-user-registration-from-cc", event => {
+        this.bindEvent<StartFirstUserRegistrationFromCCEvent>(this.app, "start-first-user-registration-from-cc", event => {
             let correct = this.registerUtils.checkAndSetTokenInfo(event.token);
             if (!correct) {
                 throw new Exception("Incorrect token from server");
@@ -162,7 +165,7 @@ export class LoginWindowController extends BaseWindowController {
             adminRegistration: info.isAdmin,
             predefinedUsername: info.username,
             domain: info.domain,
-            originalUrl: this.app.getOriginalUrl(),
+            originalUrl: null, //this.app.getOriginalUrl(),
             noInfoBox: true,
             noTerms: true,
             termsUrl: this.app.getTermsUrl(),
@@ -203,7 +206,8 @@ export class LoginWindowController extends BaseWindowController {
             updateAvailable: updateAvail,
             updateReadyToInstall: updateReadyToInstall,
             forceUpdate: forceUpdate,
-            appVersion: this.app.getVersion().ver
+            appVersion: this.app.getVersion().ver,
+            isElectron: this.app.isElectronApp()
         };
     }
     
@@ -312,37 +316,112 @@ export class LoginWindowController extends BaseWindowController {
         this.callViewMethod("setActive", "activate");
     }
     
-    testEncodeToken(): string {
-        let domain = "kamil4";
-        let tokenInfo: utils.RegisterTokenInfo = {
-            domain: domain,
-            token: "a3758a49a0d2284fec0b",
-            isAdmin: true
-        }
-        let buffer = Buffer.from(JSON.stringify(tokenInfo), "utf-8");
-        return "activate:" + privfs.bs58.encode(buffer);
-    }
-    
 
     // Called when a private user paste his/her token to register account
     onViewKeyInputChange(enteredKey: string): void {
         Q().then(() => {
             return this.addTaskEx("", true, () => {
-                this.activateKeyCorrect = this.registerUtils.checkAndSetTokenInfo(enteredKey)
-                this.activate.callViewMethod("updateKeyInfo", this.activateKeyCorrect, this.app.getRegisterTokenInfo().isAdmin, this.app.getRegisterTokenInfo().domain);
-                return;
+                if (!enteredKey) {
+                    return;
+                }
+                const enteredKeyTrimmed = enteredKey.trim();
+                if (this.registerUtils.isTextLookLikeMnemonic(enteredKeyTrimmed)) {
+                    // probably mnemonic
+                    this.setMnemonic(enteredKeyTrimmed);
+                    this.activate.callViewMethod("onMnemonicEntered", this.app.isElectronApp());
+                }
+                else {
+                    this.activateKeyCorrect = this.registerUtils.checkAndSetTokenInfo(enteredKeyTrimmed)
+                    this.activate.callViewMethod("updateKeyInfo", this.activateKeyCorrect, this.app.getRegisterTokenInfo().isAdmin, this.app.getRegisterTokenInfo().domain);    
+                }
             });
         });
     }
     
+    setMnemonic(text: string): void {
+        this.mnemonicWasEntered = true;
+        this.mnemonicString = text;
+    }
+
+    resetMnemonic(): void {
+        this.mnemonicWasEntered = false;
+        this.mnemonicString = null;
+    }
+
     onViewActivateNextClick(): void {
-        if (!this.activateKeyCorrect) {
-            return;
+        if (this.activateKeyCorrect) {
+            this.token = this.app.getRegisterTokenInfo().token;
+            let model = this.getRegisterModel();
+            this.register.updateModel(model);
+            this.callViewMethod("setActive", "register");
         }
-        this.token = this.app.getRegisterTokenInfo().token;
-        let model = this.getRegisterModel();
-        this.register.updateModel(model);
-        this.callViewMethod("setActive", "register");
+        else if (this.mnemonicWasEntered) {
+            new Promise<void>(async() => {
+                const host = this.app.isElectronApp() ? await this.activate.getHostInputFromView() : this.app.getDefaultHost();
+                await this.loginUsingMnemonic(this.mnemonicString, host);                    
+            })
+        }
+    }
+
+    async loginUsingMnemonic(mnemonic: string, host: string): Promise<void> {
+        return new Promise<void>(async () => {
+            if (!mnemonic || !host) {
+                await this.alert(this.i18n("window.login.submit.error.emptyWords"));
+                this.callViewMethod("showError", null);
+            }
+            await this.addTaskEx(this.i18n("window.login.task.alternativeLogin.text"), true, async () => {
+                try {
+                    const mca = await this.app.mcaFactory.alternativeLogin(host, mnemonic);
+                    const identity = await mca.privmxRegistry.getIdentity()
+                    await this.app.onLogin(mca, {
+                        type: app.LoginType.MNEMONIC,
+                        hashmail: identity,
+                        mnemonic: mnemonic
+                    });    
+                }
+                catch(e) {
+                    await this.alert(this.i18n("window.login.submit.error.mnemonic.loginFailed"));
+                    this.callViewMethod("showError", null);
+                }                
+            });
+    
+        })
+    }
+
+    showLoginError(e: any): void {
+        let msg = this.prepareErrorMessage(e, error => {
+            if (e === "additional-login-step-cancel") {
+                error.code = 9001;
+                error.message = this.i18n("window.login.submit.error.additionalLoginStepCancel");
+                return error;
+            }
+            if (e === "additional-login-step-fail") {
+                error.code = 9002;
+                error.message = this.i18n("window.login.submit.error.additionalLoginStepFail");
+                return error;
+            }
+            if (privfs.core.ApiErrorCodes.is(e, "USER_DOESNT_EXIST")) {
+                error.code = e.data.error.code;
+                error.message = this.i18n("window.login.submitAlternativeLogin.error.invalidWords");
+                return error;
+            }
+            if (privfs.core.ApiErrorCodes.is(e, "LOGIN_BLOCKED")) {
+                error.code = e.data.error.code;
+                error.message = this.i18n("window.login.submit.error.loginBlocked");
+                return error;
+            }
+            if (e == "AssertionError: Invalid mnemonic" || e == "AssertionError: Invalid mnemonic checksum" || privfs.core.ApiErrorCodes.is(e, "INVALID_SIGNATURE")) {
+                error.message = this.i18n("window.login.submitAlternativeLogin.error.invalidWords");
+                if (privfs.core.ApiErrorCodes.is(e, "INVALID_SIGNATURE")) {
+                    error.code = e.data.error.code;
+                }
+                else {
+                    error.code = 0x9000;
+                }
+                return error;
+            }
+        });
+        this.callViewMethod("showError", msg);
     }
 
     onViewActivateNewWayNextClick(applicationCode: string): void {

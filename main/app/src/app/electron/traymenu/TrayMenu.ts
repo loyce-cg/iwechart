@@ -74,9 +74,8 @@ export class TrayMenu {
             // this.refreshTrayMenu();
         }
         else {
-            this.trayIcon.on("click", (event: Electron.Event, bounds: Electron.Rectangle, pos: Electron.Point) => {
+            this.trayIcon.on("click", (event: Electron.KeyboardEvent, bounds: Electron.Rectangle, pos: Electron.Point) => {
                 try {
-                    event.preventDefault();
                     if (process.platform == "win32") {
 
                         this.globalOnShowWindow();
@@ -92,7 +91,6 @@ export class TrayMenu {
                 catch (e) {}
             });
             this.trayIcon.on("right-click", (event) => {
-                event.preventDefault();
                 if (process.platform == "win32") {
                     if (this.lastMainAppFocusLostTime + 10 > new Date().getTime()) {
                         // windows hack naprawiajacy problem tracenia focusu przez glowne okno w momencie, jak klikamy na ikone w tray-u
@@ -111,7 +109,6 @@ export class TrayMenu {
                 } catch(e) {}
             });
             this.trayIcon.on("double-click", (event) => {
-                event.preventDefault();
                 try {
                     this.globalOnShowWindow();
                 }

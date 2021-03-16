@@ -5,8 +5,8 @@
   "license": "PrivMX Source Code License",
   "private": true,
   "dependencies": {
-    "pmc-mail": "^2.25.0-20201209134741933",
-    "pmc-web": "^2.25.0-20201209134741933",
+    "pmc-mail": "^2.25.0-20210316084316946",
+    "pmc-web": "^2.25.0-20210316084316946",
     "resize-observer-polyfill": "^1.5.1",
     "striptags": "^3.1.1"
   }

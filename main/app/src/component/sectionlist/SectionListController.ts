@@ -14,6 +14,7 @@ import { UserPreferences } from "../../mail/UserPreferences";
 import { FilteredCollection } from "../../utils/collection/FilteredCollection";
 import { LocaleService, section } from "../../mail";
 import { i18n } from "./i18n";
+import { CommonApplication } from "../../app/common/CommonApplication";
 
 export interface SectionListOptions {
     baseCollection: BaseCollection<SectionService>;
@@ -95,7 +96,7 @@ export class SectionListController extends ComponentController {
         this.ipcMode = true;
         this.userPreferences.eventDispatcher.addEventListener<Types.event.UserPreferencesChangeEvent>("userpreferenceschange", (event) => {
             this.onUserPreferencesChange(event);
-        });
+        }, this.getEventsReferer(), "normal");
         if (this.options.checkShowAllAvailSections) {
             this.userPreferences.load()
             .then(() => {
@@ -136,11 +137,16 @@ export class SectionListController extends ComponentController {
         return this.ringingBellsInSectionIds.indexOf(section.getId()) >= 0;
     }
     
-    convertSection(model: SectionService): Types.webUtils.SectionListElementModel {
-        return SectionListController.convertSection(model, this.getUnread(model), this.getElementsCount(model), this.getSearchCount(model), this.getAllSearched(model), this.getWithSpinner(model), this.getIsPinned(model), this.options.moduleName, this.getActiveVoiceChatInfo(model), true, this.getIsBellRinging(model));
+    getActiveVideoConferenceInfo(section: SectionService): Types.webUtils.ActiveVideoConferenceInfo {
+        let hostHash = CommonApplication.instance.sessionManager.getLocalSession().hostHash;
+        return CommonApplication.instance.videoConferencesService.getActiveVideoConferenceInfoForSection(hostHash, section);
     }
     
-    static convertSection(model: SectionService, unread: number, elementsCount: number, searchCount: number, allSearched: boolean, withSpinner: boolean, isPinned: boolean, moduleName: Types.section.NotificationModule, activeVoiceChatInfo: Types.webUtils.ActiveVoiceChatInfo, fullSectionName: boolean = true, isBellRinging: boolean = false): Types.webUtils.SectionListElementModel {
+    convertSection(model: SectionService): Types.webUtils.SectionListElementModel {
+        return SectionListController.convertSection(model, this.getUnread(model), this.getElementsCount(model), this.getSearchCount(model), this.getAllSearched(model), this.getWithSpinner(model), this.getIsPinned(model), this.options.moduleName, this.getActiveVoiceChatInfo(model), true, this.getIsBellRinging(model), this.getActiveVideoConferenceInfo(model));
+    }
+    
+    static convertSection(model: SectionService, unread: number, elementsCount: number, searchCount: number, allSearched: boolean, withSpinner: boolean, isPinned: boolean, moduleName: Types.section.NotificationModule, activeVoiceChatInfo: Types.webUtils.ActiveVoiceChatInfo, fullSectionName: boolean = true, isBellRinging: boolean = false, activeVideoConferenceInfo: Types.webUtils.ActiveVideoConferenceInfo = null): Types.webUtils.SectionListElementModel {
         let parents: SectionService[] = [];
         let lastParent = model.getParent();
         while (lastParent) {
@@ -154,8 +160,8 @@ export class SectionListController extends ComponentController {
 
         return {
             id: model.getId(),
-            
             name: model.getName(),
+            description: model.getDescription(),
             unread: unread,
             elementsCount: elementsCount,
             searchCount: searchCount,
@@ -164,7 +170,7 @@ export class SectionListController extends ComponentController {
             scope: model.getScope(),
             breadcrumb: fullSectionName ? breadcrumb : "",
             primary: model.sectionData.primary,
-            openOnFirstLogin: model.sectionData.extraOptions ? model.sectionData.extraOptions.openOnFirstLogin : false,
+            openOnFirstLogin: model.secured.extraOptions ? model.secured.extraOptions.openOnFirstLogin : false,
             muted: model.userSettings.mutedModules[moduleName],
             disabled:  !(
                 (moduleName == Types.section.NotificationModule.CHAT && model.isChatModuleEnabled()) ||
@@ -174,7 +180,8 @@ export class SectionListController extends ComponentController {
             ),
             pinned: isPinned,
             isBellRinging: isBellRinging,
-            activeVoiceChatInfo: activeVoiceChatInfo
+            activeVoiceChatInfo: activeVoiceChatInfo,
+            activeVideoConferenceInfo: activeVideoConferenceInfo,
         };
     }
     

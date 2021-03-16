@@ -1,4 +1,5 @@
 @import {UserModel} from "../NavBarController";
+@import {func as userNameTemplate} from "./user-name.html";
 @model UserModel
 {{
   var data = model;
@@ -6,15 +7,9 @@
 }}
 <div class="login-data">
   <p class="image">
-    <img src="{{#person.avatar ? person.avatar : Helper.getAssetByName('DEFAULT_USER_AVATAR')}}" alt="" />
+    <canvas class="not-rendered" data-hashmail-image="{{@person.hashmail}}" data-width="30" data-height="30" data-auto-size="true" data-auto-refresh="true"></canvas>
   </p>
-  {{ var description = Helper.shortDescription(person.description); }}
-  <div class="text-col {{@description ? 'with-description' : 'without-description'}}">
-    <p class="name">{{@Helper.truncate(person.name, 25)}}{{ if (model.isAdmin) { }}<span class="user-is-admin-info"> <i class="fa fa-users"></i><i class="fa fa-cog"></i></span>{{ } }}</p>
-    {{if (description) { {{
-      <p class="desc">{{@Helper.truncate(description, 25)}}</p>
-    }} } }}
-  </div>
+  {{#Helper.createTemplate(userNameTemplate).render(model)}}
   <div class="menu">
     <div class="dropdown">
       <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">

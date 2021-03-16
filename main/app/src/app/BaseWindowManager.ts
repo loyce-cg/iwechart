@@ -2,7 +2,6 @@ import {CloseEvent, WindowStateListener, ChangeState} from "./Types";
 import {Window} from "./common/window/Window";
 import {BaseWindowController} from "../window/base/BaseWindowController";
 import * as RootLogger from "simplito-logger";
-import { CssVariables } from "./common/customization/CssParser";
 import { CustomizationData } from "./common/customization/CustomizationData";
 import { ElectronWindow } from "./electron/window/ElectronWindow";
 import * as Q from "q";
@@ -52,7 +51,6 @@ export class BaseWindowManager<T extends BaseWindowController> {
     afterChildWindowsCloseFinished: boolean = false;
     onCloseFinished: boolean = false;
     killWindowsDefer: Q.Deferred<void>;
-    
     
     constructor(controller: BaseWindowController, parent: BaseWindowManager<T>) {
         this.children = {};
@@ -344,14 +342,14 @@ export class BaseWindowManager<T extends BaseWindowController> {
         clearTimeout(this.mainCloseTimer);
         this.stateListeners = null;
         this.childrenListener = null;
-        this.controller.app.removeFromObjectMap(this.controller.id);
+
 
         if (this.singletonName) {
             if (this.isSingletonRegistered(this.singletonName)) {
                 this.unregisterSingleton(this.singletonName);
             }
         }
-        this.controller.destroy();
+
         this.destroy();
         if(parent) {
             parent.destroyChild(uid);
@@ -429,8 +427,8 @@ export class BaseWindowManager<T extends BaseWindowController> {
         if (this.controller) {
             if (this.controller.nwin) {
                 this.controller.nwin.close(true);
+                this.controller.nwin = null;
             }
-            this.controller.nwin = null;
             this.controller.destroy();
             this.controller = null;
         }

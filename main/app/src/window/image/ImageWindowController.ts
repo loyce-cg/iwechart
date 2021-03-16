@@ -21,8 +21,12 @@ export class ImageWindowController extends EditorWindowController {
     constructor(parent: app.WindowParent, public session: Session, options: Options) {
         super(parent, session, __filename, __dirname, options);
         this.ipcMode = true;
-        this.openWindowOptions.width = 800;
-        this.openWindowOptions.height = 600;
+        const initialWindowSize = this.calculateAdaptiveWindowSize();
+        this.openWindowOptions.width = initialWindowSize.width;
+        this.openWindowOptions.height = initialWindowSize.height;
+        this.openWindowOptions.position = "center";
+        this.openWindowOptions.minWidth = 300;
+        this.openWindowOptions.minHeight = 200;
         this.thumbs = this.addComponent("thumbs", this.componentFactory.createComponent("thumbs", [this, this.app, {
             missingThumbAction: MissingThumbAction.DO_NOTHING,
         }]));
@@ -43,6 +47,12 @@ export class ImageWindowController extends EditorWindowController {
             height: height
         };
         this.refreshTitle();
+        
+        if (this.nwin) {
+            const windowSize = this.calculateAdaptiveWindowSize(width, height, undefined, undefined, true);
+            this.nwin.setInnerSize(windowSize.width + 22, windowSize.height + 32);
+            this.nwin.center();
+        }
     }
     
     refreshTitle(): void {
@@ -66,7 +76,7 @@ export class ImageWindowController extends EditorWindowController {
         return Q().then(() => {
             if (this.openableElement instanceof section.OpenableSectionFile) {
                 let did = this.openableElement.handle.ref.did;
-                this.callViewMethod("setThumb", did, this.openableElement.section.getId(), this.currentViewId);
+                this.callViewMethod("updateFileData", did, this.openableElement.section.getId(), this.currentViewId);
             }
         });
     }

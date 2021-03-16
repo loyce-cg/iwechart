@@ -12,6 +12,7 @@ import {MailFilter} from "../../mail/MailFilter";
 import {PersonService} from "../../mail/person/PersonService";
 import { LocaleService } from "../../mail";
 import { i18n } from "./i18n";
+import { ElectronPartitions } from "../../app";
 
 export type PreferencesToSave = {[name: string]: any};
 
@@ -19,6 +20,7 @@ export interface Model {
     supportWhitelist: boolean;
     supportsSecureForms: boolean;
     isElectron: boolean;
+    isMnemonicEnabled: boolean;
 }
 
 @Dependencies(["extlist"])
@@ -62,6 +64,7 @@ export class SettingsWindowController extends BaseWindowController {
         this.openWindowOptions.minHeight = 500;
         this.openWindowOptions.title = this.i18n("window.settings.title");
         this.openWindowOptions.icon = "icon ico-settings";
+        this.openWindowOptions.electronPartition = ElectronPartitions.HTTPS_SECURE_CONTEXT;
         this.tabs = {};
         this.supportWhitelist = this.identityProvider.isAdmin();
         this.supportSecureForms = true; //this.app.supportsSecureForms() && this.authData.myData.raw.secureFormsEnabled;
@@ -73,6 +76,9 @@ export class SettingsWindowController extends BaseWindowController {
                 return;
             }
             if (tabClass.tabId == "hotkeys" && !this.app.isElectronApp()) {
+                return;
+            }
+            if (tabClass.tabId == "alternativeLogin" && !this.app.isMnemonicEnabled) {
                 return;
             }
             this.registerTab({id: tabClass.tabId, tab: new tabClass(this)});
@@ -89,6 +95,7 @@ export class SettingsWindowController extends BaseWindowController {
             supportWhitelist: this.supportWhitelist,
             supportsSecureForms: this.supportSecureForms,
             isElectron: this.app.isElectronApp(),
+            isMnemonicEnabled: this.app.isMnemonicEnabled,
         };
     }
     
@@ -167,4 +174,11 @@ export class SettingsWindowController extends BaseWindowController {
             (<any>this.app).setAutostartEnabled(checked);
         }
     }
+
+    onViewErrorsLoggingChecked(checked: boolean): void {
+        if (this.app.isElectronApp()) {
+            (<any>this.app).setErrorsLoggingEnabled(checked);
+        }
+    }
+
 }

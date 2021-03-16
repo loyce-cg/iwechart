@@ -144,6 +144,10 @@
     }
   }
   
+  .removed-middle {
+    display: none;
+  }
+  
   .section {
     width: 75px;
     height: 75px;
@@ -394,6 +398,22 @@
       font-size: 24px;
       vertical-align: middle;
     }
+  }
+  .stats-container {
+    height: 18px;
+    margin-bottom: 25px;
+
+    .modules-statistics {
+      font-size: var(--font-size);
+      color: var(--wi-element-fg);
+      display: none;
+      .item {
+        margin: 0 5px;
+        .count {
+          margin-left: 5px;
+        }
+      }
+    }  
   }
 
   .version-info {

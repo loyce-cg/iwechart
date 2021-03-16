@@ -4,7 +4,7 @@ import {Conv2ListView, Conv2ListOptions} from "../conv2list/Conv2ListView";
 import {SectionListView, SectionListOptions} from "../sectionlist/SectionListView";
 import * as Q from "q";
 import {CustomElementListView, CustomElementListOptions} from "../customelementlist/CustomElementListView";
-import {Model} from "./SidebarController";
+import {Model, ActiveVideoConferencesInfo} from "./SidebarController";
 import {SplitterView, Options as SplitterOptions} from "../splitter/SplitterView";
 import {func as mainTemplate} from "./template/main.html";
 import * as $ from "jquery";
@@ -17,7 +17,11 @@ import { TooltipView } from "../tooltip/web";
 import { RemoteSectionListView } from "../remotesectionlist/web";
 import { RemoteConv2ListView } from "../remoteconv2list/web";
 import { UsersListTooltipView } from "../userslisttooltip/web";
-import { SidebarElementType } from "./SidebarController"; 
+import { SidebarElementType } from "./Types";
+import { PfScrollExperimental } from "../../web-utils/PfScrollExperimental";
+import { VisibilityObserver } from "../../web-utils/VisibilityObserver";
+import { Debouncer } from "../../web-utils/Debouncer";
+export * from "./Types";
 
 export interface SidebarOptions {
     conv2List: Conv2ListOptions;
@@ -41,6 +45,7 @@ export interface SidebarComponent {
 interface BubbleElement {
     $sidebarElement: JQuery;
     at: number;
+    isMuted: boolean;
 }
 
 export class SidebarView extends ComponentView {
@@ -73,7 +78,10 @@ export class SidebarView extends ComponentView {
     conv2ScrollableBubbleElements: BubbleElement[] = [];
     $sectionScrollable: JQuery = null;
     $conv2Scrollable: JQuery = null;
-    updateScrollableBubbleElementsTimeout: number = null;
+    sectionPfScroll: PfScrollExperimental = null;
+    conv2PfScroll: PfScrollExperimental = null;
+    sectionVisibilityObserver: VisibilityObserver = null;
+    conv2VisibilityObserver: VisibilityObserver = null;
     
     constructor(
         parent: Types.app.ViewParent,
@@ -89,6 +97,7 @@ export class SidebarView extends ComponentView {
             if (origFuncSectionList) {
                 origFuncSectionList(view);
             }
+            this.updateSectionScrollableBubbleElementsCache();
             this.updateSectionScrollableBubbleElements();
         };
         this.sectionList = this.addComponent("sectionList", new SectionListView(this, this.options.sectionList));
@@ -100,6 +109,7 @@ export class SidebarView extends ComponentView {
             if (origFuncCustomSectionList) {
                 origFuncCustomSectionList(view);
             }
+            this.updateSectionScrollableBubbleElementsCache();
             this.updateSectionScrollableBubbleElements();
         };
         this.customSectionList = this.addComponent("customSectionList", new SectionListView(this, this.options.customSectionList));
@@ -109,6 +119,7 @@ export class SidebarView extends ComponentView {
             if (origFuncCustomElementList) {
                 origFuncCustomElementList(view);
             }
+            this.updateSectionScrollableBubbleElementsCache();
             this.updateSectionScrollableBubbleElements();
         };
         this.customElementList = this.addComponent("customElementList", new CustomElementListView(this, this.options.customElementList));
@@ -145,6 +156,7 @@ export class SidebarView extends ComponentView {
                         origFunc(view);
                     }
                     this.updateSortByOnlineButtonDisabledState();
+                    this.updateConv2ScrollableBubbleElementsCache();
                     this.updateConv2ScrollableBubbleElements();
                 }
             }
@@ -218,7 +230,7 @@ export class SidebarView extends ComponentView {
             this.moveSelectionToActive();
             let $verticalSplitters = this.$container.find(".component-splitter-panel-top, .component-splitter-panel-bottom");
             $verticalSplitters.each((_i, el) => {
-                $(el).pfScroll();
+                $(el).pfScrollExperimental();
             });
             let $splitterTopContent = $verticalSplitters.filter(".component-splitter-panel-top").children(".pf-content");
             this.$splitterTopContent = $splitterTopContent;
@@ -248,6 +260,10 @@ export class SidebarView extends ComponentView {
             };
             this.$sectionScrollable = this.$container.find(".section-list").closest(".pf-content");
             this.$conv2Scrollable = this.$container.find(".conv2-list").closest(".pf-content");
+            this.sectionPfScroll = this.$sectionScrollable.parent().pfScrollExperimental() as PfScrollExperimental;
+            this.conv2PfScroll = this.$conv2Scrollable.parent().pfScrollExperimental() as PfScrollExperimental;
+            this.sectionVisibilityObserver = new VisibilityObserver(this.$sectionScrollable.parent()[0] as HTMLElement);
+            this.conv2VisibilityObserver = new VisibilityObserver(this.$conv2Scrollable.parent()[0] as HTMLElement);
             this.attachBubblesHint(this.$sectionScrollable, "section");
             this.attachBubblesHint(this.$conv2Scrollable, "conv2");
             return this.basicTooltip.triggerInit();
@@ -257,9 +273,13 @@ export class SidebarView extends ComponentView {
             return this.usersListTooltip.triggerInit();
         })
         .then(() => {
+            this.updateSectionScrollableBubbleElementsCache();
+            this.updateConv2ScrollableBubbleElementsCache();
             this.updateSectionScrollableBubbleElements();
             this.updateConv2ScrollableBubbleElements();
             setTimeout(() => {
+                this.updateSectionScrollableBubbleElementsCache();
+                this.updateConv2ScrollableBubbleElementsCache();
                 this.updateSectionScrollableBubbleElements();
                 this.updateConv2ScrollableBubbleElements();
             }, 500);
@@ -367,7 +387,7 @@ export class SidebarView extends ComponentView {
             }
             this.triggerEvent("sectionOrConversationDoubleClick", "section", sectionId, hostId);
         }
-        else if (conversationId) { 
+        else if (conversationId) {
             let unreadBadgeClickAction = $(document.body).attr("data-unread-badge-click-action");
             let unreadBadgeUseDoubleClick = $(document.body).attr("data-unread-badge-use-double-click") == "true";
             if (unreadBadgeClickAction != "ignore" && $(event.target).closest(".unread-count.number").length > 0) {
@@ -376,7 +396,7 @@ export class SidebarView extends ComponentView {
 
             this.triggerEvent("sectionOrConversationDoubleClick", "conversation", conversationId, hostId);
         }
-    }    
+    }
     
     onBadgeMouseEnter(e: MouseEvent): void {
         this.toggleBadgeParentHover(e, true);
@@ -573,7 +593,7 @@ export class SidebarView extends ComponentView {
         }
 
         $activeElement.addClass("pre-deactivate");
-        $clickedElement.addClass("pre-activate");    
+        $clickedElement.addClass("pre-activate");
     }
     
     refreshInfoTooltips(): void {
@@ -593,19 +613,22 @@ export class SidebarView extends ComponentView {
         $hintUp.on("click", () => this.onBubblesHintClick($el, "up"));
         $hintDown.on("click", () => this.onBubblesHintClick($el, "down"));
         if (area == "section") {
-            $el.on("scroll", () => this.updateSectionScrollableBubbleElements(false));
+            $el.on("scroll", () => this.updateSectionScrollableBubbleElements());
         }
         else {
-            $el.on("scroll", () => this.updateConv2ScrollableBubbleElements(true));
+            $el.on("scroll", () => this.updateConv2ScrollableBubbleElements());
         }
         if ((<any>window).ResizeObserver) {
-            let resizeObserver = new (<any>window).ResizeObserver((entries: any) => {
+            const debouncer = new Debouncer(() => {
                 if (area == "section") {
-                    this.updateSectionScrollableBubbleElements(true);
+                    this.updateSectionScrollableBubbleElements();
                 }
                 else {
-                    this.updateConv2ScrollableBubbleElements(true);
+                    this.updateConv2ScrollableBubbleElements();
                 }
+            }, 100);
+            let resizeObserver = new (<any>window).ResizeObserver((entries: any) => {
+                debouncer.trigger();
             });
             resizeObserver.observe($el[0]);
         }
@@ -613,18 +636,20 @@ export class SidebarView extends ComponentView {
         $el.prepend($hintUp).append($hintDown);
     }
     
-    updateBubblesHint($el: JQuery): void {
+    updateBubblesHint($el: JQuery, pfScroll: PfScrollExperimental): void {
         let $hintUp = $el.children(".bubbles-hint-up");
         let $hintDown = $el.children(".bubbles-hint-down");
         let showHintUp = false;
         let showHintDown = false;
-        let hasBubblesInView = this.hasBubbles($el, "visible");
+        let hasBubblesInView = this.hasBubbles($el, "visible", pfScroll);
         if (!hasBubblesInView) {
-            showHintUp = this.hasBubbles($el, "up");
-            showHintDown = this.hasBubbles($el, "down");
+            showHintUp = this.hasBubbles($el, "up", pfScroll);
+            showHintDown = this.hasBubbles($el, "down", pfScroll);
         }
-        $hintUp.toggleClass("visible", showHintUp);
-        $hintDown.toggleClass("visible", showHintDown);
+        $hintUp[0].style.opacity = showHintUp ? "1" : "0";
+        $hintUp[0].style.pointerEvents = showHintUp ? "auto" : "none";
+        $hintDown[0].style.opacity = showHintDown ? "1" : "0";
+        $hintDown[0].style.pointerEvents = showHintDown ? "auto" : "none";
     }
     
     onBubblesHintClick($el: JQuery, dir: "up"|"down"): void {
@@ -633,7 +658,7 @@ export class SidebarView extends ComponentView {
         arr = dir == "up" ? arr.slice().reverse() : arr.slice();
         let el: BubbleElement = null;
         for (let it of arr) {
-            if (!it.$sidebarElement.hasClass("muted")) {
+            if (!it.isMuted) {
                 el = it;
                 break;
             }
@@ -647,17 +672,17 @@ export class SidebarView extends ComponentView {
         }
     }
     
-    hasBubbles($el: JQuery, area: "up"|"down"|"visible"): boolean {
-        return !!this.findClosestBubbleElement($el, area);
+    hasBubbles($el: JQuery, area: "up"|"down"|"visible", pfScroll: PfScrollExperimental): boolean {
+        return !!this.findClosestBubbleElement($el, area, pfScroll);
     }
     
-    findClosestBubbleElement($el: JQuery, area: "up"|"down"|"visible"): BubbleElement {
+    findClosestBubbleElement($el: JQuery, area: "up"|"down"|"visible", pfScroll: PfScrollExperimental): BubbleElement {
         let scrollArea = $el.data("scroll-area");
         let els = scrollArea == "conv2" ? this.conv2ScrollableBubbleElements : this.sectionScrollableBubbleElements;
         if (area == "down") {
             els = els.slice().reverse();
         }
-        let visibleRange = this.getVisibleRange($el);
+        let visibleRange = pfScroll.visibleRange;
         let range: number[] = [];
         if (area == "up") {
             range = [-9999999, visibleRange[0]];
@@ -669,7 +694,7 @@ export class SidebarView extends ComponentView {
             range = visibleRange;
         }
         for (let el of els) {
-            if (el.$sidebarElement.hasClass("muted")) {
+            if (el.isMuted) {
                 continue;
             }
             if (el.at >= (range[0] - 8) && el.at <= (range[1] + 8)) {
@@ -679,55 +704,70 @@ export class SidebarView extends ComponentView {
         return null;
     }
     
-    getVisibleRange($el: JQuery): [number, number] {
-        return [$el[0].scrollTop, $el[0].scrollTop + $el[0].clientHeight];
+    updateSectionScrollableBubbleElements(): void {
+        this.updateScrollableBubbleElements(this.$sectionScrollable, this.sectionPfScroll, this.sectionVisibilityObserver);
     }
     
-    updateSectionScrollableBubbleElements(updateElements: boolean = true): void {
-        this.updateScrollableBubbleElements(this.$sectionScrollable, updateElements);
+    updateConv2ScrollableBubbleElements(): void {
+        this.updateScrollableBubbleElements(this.$conv2Scrollable, this.conv2PfScroll, this.conv2VisibilityObserver);
     }
     
-    updateConv2ScrollableBubbleElements(updateElements: boolean = true): void {
-        this.updateScrollableBubbleElements(this.$conv2Scrollable, updateElements);
-    }
-    
-    updateScrollableBubbleElements($el: JQuery, updateElements: boolean): void {
-        if (!$el || this.updateScrollableBubbleElementsTimeout) {
+    updateScrollableBubbleElements($el: JQuery, pfScroll: PfScrollExperimental, visibilityObserver: VisibilityObserver): void {
+        if (!$el) {
             return;
         }
-        if (!$el.is(":visible")) {
-            if (this.updateScrollableBubbleElementsTimeout) {
-                clearTimeout(this.updateScrollableBubbleElementsTimeout);
-                this.updateScrollableBubbleElementsTimeout = <any>setTimeout(() => {
-                    this.updateScrollableBubbleElementsTimeout = null;
-                    this.updateScrollableBubbleElements($el, updateElements);
-                }, 1000);
-            }
-            return;
-        }
-        if (updateElements) {
-            let arr: BubbleElement[] = [];
-            let $els = $el.find(".wi-element.with-badge, .conversation-element.unread");
-            $els.each((_, el) => {
-                let $el = $(el);
-                let badgeEl = $el.find(".wi-element-badge.number, .unread-count.number")[0];
-                if (badgeEl) {
-                    arr.push({
-                        $sidebarElement: $el,
-                        at: el.offsetTop + badgeEl.offsetTop + badgeEl.clientHeight / 2,
-                    });
+        if (!visibilityObserver.isTargetVisible) {
+            visibilityObserver.addSingleShotCallback((visible: boolean) => {
+                if (visible) {
+                    this.updateScrollableBubbleElements($el, pfScroll, visibilityObserver);
                 }
             });
-            
-            let scrollArea = $el.data("scroll-area");
-            if (scrollArea == "conv2") {
-                this.conv2ScrollableBubbleElements = arr;
-            }
-            else {
-                this.sectionScrollableBubbleElements = arr;
-            }
+            return;
         }
-        this.updateBubblesHint($el);
+        this.updateBubblesHint($el, pfScroll);
+    }
+    
+    updateSectionScrollableBubbleElementsCache(): void {
+        this.updateScrollableBubbleElementsCache(this.$sectionScrollable, this.sectionPfScroll, this.sectionVisibilityObserver);
+    }
+    
+    updateConv2ScrollableBubbleElementsCache(): void {
+        this.updateScrollableBubbleElementsCache(this.$conv2Scrollable, this.conv2PfScroll, this.conv2VisibilityObserver);
+    }
+    
+    updateScrollableBubbleElementsCache($el: JQuery, pfScroll: PfScrollExperimental, visibilityObserver: VisibilityObserver): void {
+        if (!$el) {
+            return;
+        }
+        if (!visibilityObserver.isTargetVisible) {
+            visibilityObserver.addSingleShotCallback((visible: boolean) => {
+                if (visible) {
+                    this.updateScrollableBubbleElements($el, pfScroll, visibilityObserver);
+                }
+            });
+            return;
+        }
+        let arr: BubbleElement[] = [];
+        let $els = $el.find(".wi-element.with-badge, .conversation-element.unread");
+        $els.each((_, el) => {
+            let $el = $(el);
+            let badgeEl = $el.find(".wi-element-badge.number, .unread-count.number")[0];
+            if (badgeEl) {
+                arr.push({
+                    $sidebarElement: $el,
+                    at: el.offsetTop + badgeEl.offsetTop + badgeEl.clientHeight / 2,
+                    isMuted: $el.hasClass("muted"),
+                });
+            }
+        });
+        
+        let scrollArea = $el.data("scroll-area");
+        if (scrollArea == "conv2") {
+            this.conv2ScrollableBubbleElements = arr;
+        }
+        else {
+            this.sectionScrollableBubbleElements = arr;
+        }
     }
 
     setSectionsLimitReached(value: boolean) {
@@ -750,6 +790,40 @@ export class SidebarView extends ComponentView {
             $el = this.$container.find(`[data-conversation-id="${converationId}"]`);
         }
         $el.toggleClass("ringing", isRinging);
+    }
+    
+    updateActiveConferences(conferencesStr: string, localHostHash: string): void {
+        let conferences: ActiveVideoConferencesInfo = JSON.parse(conferencesStr);
+        
+        this.$container.find(".with-active-video-conference").removeClass("with-active-video-conference");
+        
+        for (let hostHash in conferences) {
+            let conference = conferences[hostHash];
+            let isLocal = hostHash == localHostHash;
+            for (let sectId of conference.sectionIds) {
+                if (isLocal) {
+                    this.sectionList.sections.$container.find(`.section-element[data-section-id="${sectId}"]`).addClass("with-active-video-conference");
+                    this.customSectionList.sections.$container.find(`.section-element[data-section-id="${sectId}"]`).addClass("with-active-video-conference");
+                }
+                else {
+                    let sectionList = this.remoteSectionLists[hostHash];
+                    if (sectionList) {
+                        sectionList.sections.$container.find(`.section-element[data-section-id="${sectId}"]`).addClass("with-active-video-conference");
+                    }
+                }
+            }
+            for (let convId of conference.conversationIds) {
+                if (isLocal) {
+                    this.conv2List.conversations.$container.find(`.conversation-element[data-conversation-id="${convId}"]`).addClass("with-active-video-conference");
+                }
+                else {
+                    let conv2List = this.remoteConv2Lists[hostHash];
+                    if (conv2List) {
+                        conv2List.conversations.$container.find(`.conversation-element[data-conversation-id="${convId}"]`).addClass("with-active-video-conference");
+                    }
+                }
+            }
+        }
     }
     
 }

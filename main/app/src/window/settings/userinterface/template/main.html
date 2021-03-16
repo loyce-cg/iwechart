@@ -2,14 +2,6 @@
 @import {func as sectionInterfaceIconsPreviewTemplate} from "./section-interface-icons-preview.html";
 @model Model
 <div class="section interface-section">
-  <div class="section-header">
-    <i class="fa fa-laptop"></i>
-    {{ if (model.systemLabel) { {{
-      {{@Helper.i18n("window.settings.section.interface.header.osSpecific", model.systemLabel)}}
-    }} } else { {{
-      {{@Helper.i18n("window.settings.section.interface.header")}}
-    }} } }}
-  </div>
   
   <div class="base-form">
     <div class="fields">
@@ -220,10 +212,33 @@
                 </label>
               </div>
             </div>
-      
+
           }}
         }
       }}
+      
+      
+      <div class="field field-customSuccessColor">
+        <div class="info">
+          Color:
+        </div>
+        <div class="input color-selector">
+          {{
+            const availableColors = [
+              "default",
+              "hsla(193, 40%, 67%, 1.0)",
+              "hsla(193, 73%, 53%, 1.0)",
+            ];
+            const colorSuccess = model.ui && model.ui.customSuccessColor && availableColors.indexOf(model.ui.customSuccessColor) ? model.ui.customSuccessColor : "default";
+          }}
+          {{ for (let color of availableColors) { }}
+            <label style="background:{{@color == 'default' ? 'var(--color-success-default)' : color}};">
+              <input type="radio" name="ui.customSuccessColor" value="{{@color}}" {{@colorSuccess == color ? "checked" : ""}} />
+              <span><i class="fa fa-square check-marker check-marker-off"></i><i class="fa fa-check-square check-marker check-marker-on"></i> {{@color == "default" ? "Default" : color}}</span>
+            </label>
+          {{ } }}
+        </div>
+      </div>
 
       <div class="field buttons">
         <div class="info">

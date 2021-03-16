@@ -10,7 +10,7 @@
       <span class="btn btn-sm refresh" data-action="refresh" tabindex="2">
         <i class="fa fa-refresh"></i>
       </span>
-      {{ if (model.state.canAdd ) { }}
+      {{ if (model.state.isAdmin ) { }}
       <button class="btn btn-success btn-sm small" data-action="add" tabindex="1" {{@model.state.sectionsLimitReached ? "disabled": ""}}>
         <i class="fa fa-plus"></i>
         {{@Helper.i18n("window.sections.actions.add")}}

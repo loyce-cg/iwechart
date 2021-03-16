@@ -7,11 +7,11 @@ import * as $ from "jquery";
 import {ObjectFactory} from "../../utils/ObjectFactory";
 import {Container} from "../../utils/Container";
 import {ViewManager} from "../../app/common/ViewManager";
-import {CommonApplication} from "../../app/common/CommonApplication";
 import {BaseWindowView} from "./BaseWindowView";
 import * as RootLogger from "simplito-logger";
+import { WebUtils } from "../../web-utils";
 let Logger = RootLogger.get("privfs-mail-client.window.base.Starter");
-RootLogger.setLevel(RootLogger.ERROR);
+RootLogger.setLevel(RootLogger.WARN);
 
 export interface Holder {
     initView: () => void;
@@ -261,12 +261,13 @@ export class Starter extends Container {
     
     registerDockedWindow(id: number, load: Types.app.WindowLoadOptions, parent: HTMLElement): HTMLIFrameElement {
         let iframe = document.createElement("iframe");
+        let htmlURL: string;
         if (parent) {
             parent.appendChild(iframe);
         }
         if (load.type == "html") {
             iframe.setAttribute("data-name", load.name);
-            let url = URL.createObjectURL(new Blob([load.html], {type : "text/html"}));
+            let url = WebUtils.createNamedObjectURLFromBlob("view-id:" + id, new Blob([load.html], {type : "text/html"}));
             iframe.setAttribute("src", url);
         }
         else if (load.type == "url") {
@@ -277,7 +278,12 @@ export class Starter extends Container {
         }
         let idStr = id.toString();
         this.docked[idStr] = {load: load, iframe: iframe};
-        iframe.onload = () => this.onDockedLoad(idStr);
+        iframe.onload = () => {
+            if (load.type == "html") {
+                WebUtils.revokeNamedObjectURL("view-id:" + id);
+            }
+            this.onDockedLoad(idStr);
+        }
         return iframe;
     }
     

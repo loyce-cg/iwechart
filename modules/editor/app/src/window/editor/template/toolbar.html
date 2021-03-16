@@ -43,14 +43,6 @@
       {{@Helper.i18n("plugin.editor.window.editor.toolbar.button.save.label")}}
     </button>
     
-    <!-- Print -->
-    {{ if (model.canPrint) { }}
-    <button class="btn" data-action="print">
-      <i class="fa left fa-print"></i>
-      {{@Helper.i18n("plugin.editor.window.editor.toolbar.button.print.label")}}
-    </button>
-    {{ } }}
-    
     <!-- History -->
     <button class="btn" data-action="history">
       <i class="fa fa-book"></i>
@@ -60,7 +52,6 @@
     <!-- Exit edit mode -->
     {{ if (model.previewMode==false && model.editModeFromPreview) { {{
     <button class="btn exit-btn" data-action="exit-edit-mode">
-      <i class="fa fa-times"></i>
       {{@Helper.i18n("plugin.editor.window.editor.toolbar.button.exitEditMode.label")}}
     </button>
     }} } }}
@@ -141,14 +132,6 @@
       {{@Helper.i18n("plugin.editor.window.editor.toolbar.button.startEditMode.label")}}
     </button>
     }} } }}
-    
-    <!-- Print -->
-    {{ if (model.canPrint) { }}
-    <button class="btn" data-action="print">
-      <i class="fa left fa-print"></i>
-      {{@Helper.i18n("plugin.editor.window.editor.toolbar.button.print.label")}}
-    </button>
-    {{ } }}
   
     <span class="toolbar-separator"></span>
     

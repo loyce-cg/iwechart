@@ -387,7 +387,23 @@ export class SinkIndex {
         });
         return sum;
     }
-    
+
+    getReadableMessagesCount(): number {
+        let sum = 0;
+        this.baseEntries.forEach(x => {
+            if (x instanceof SinkIndexEntry || (<SinkIndexEntryInfo>x).mode == BaseEntryMode.NOT_LOADED) {
+                if (x instanceof SinkIndexEntry) {
+                    if (x.source && x.source.data && x.source.data.type == "chat-message" && x.source.data.contentType == "application/json") {
+                        return;
+                    }
+                }
+                sum++;
+            }
+        });
+        return sum;
+    }
+
+
     getBaseEntry(id: number): BaseEntry {
         return this.baseEntries.list[id - 1];
     }

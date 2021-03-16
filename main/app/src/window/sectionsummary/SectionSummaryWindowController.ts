@@ -50,7 +50,7 @@ export class SectionSummaryWindowController extends BaseWindowController {
                 "enter-sends": {defaultValue: true}
             }
         });
-        this.addViewScript({path: "build/twemoji/twemoji/2/twemoji.min.js"});
+        this.addViewScript({path: "build/twemoji/twemoji.min.js"});
         this.parent = parent;
         let windowWidth: number = 1200;
         if (loadSingleModule) {
@@ -71,9 +71,13 @@ export class SectionSummaryWindowController extends BaseWindowController {
             height: 715,
             resizable: true,
             title: this.getNameWithBreadcrumb(this.section),
-            icon: ""
+            icon: loadSingleModule ? SectionSummaryWindowController.getIconForSingleModule(loadSingleModule): ""
         };
         this.modules = {};
+    }
+
+    static getIconForSingleModule(module: string): string {
+        return "privmx-icon privmx-icon-" + module;
     }
     
     getModel(): Model {

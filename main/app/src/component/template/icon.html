@@ -1,0 +1,29 @@
+@import { webUtils } from "../../Types";
+@model webUtils.Icon
+<span class="icon {{@model.noBackground?'no-background':''}} {{@model.withBorder?'with-border':''}} {{@model.noFixedSize?'no-fixed-size':''}}" data-type="{{@model.type}}">
+  {{ if (model.type == "fontAwesome") { }}
+    <i class="fa fa-{{@(model as webUtils.IconFont).iconName}}"></i>
+  {{ } else if (model.type == "fontIco") { }}
+    <i class="ico-{{@(model as webUtils.IconFont).iconName}}"></i>
+  {{ } else if (model.type == "fontPrivMX") { }}
+    <i class="privmx-icon privmx-icon-{{@(model as webUtils.IconFont).iconName}}"></i>
+  {{ } else if (model.type == "asset") { }}
+    <img src="{{@Helper.getAssetByName((model as webUtils.IconAsset).assetName)}}" />
+  {{ } else if (model.type == "img") { }}
+    <img src="{{@(model as webUtils.IconImg).src}}" />
+  {{ } else if (model.type == "badgeIcon") { }}
+    {{ if ((model as webUtils.IconBadgeIcon).modelJsonStr) { }}
+      {{ let badgeIconModel = JSON.parse((model as webUtils.IconBadgeIcon).modelJsonStr); }}
+      {{ if (badgeIconModel.type == "shape") { }}
+        <i class="icon--shape shape-{{@badgeIconModel.shape}}" style="color:{{@badgeIconModel.color}}"></i>
+      {{ } else if (badgeIconModel.type == "fa") { }}
+        <i class="icon--fa fa fa-{{@badgeIconModel.fa}}" style="color:{{@badgeIconModel.color}}"></i>
+      {{ } }}
+    {{ } else { }}
+      <span class="icon--none">{{@Helper.i18n("component.customselect.icon.none")}}</span>
+    {{ } }}
+  {{ } else if (model.type == "avatar") { }}
+    <span class="avatar-container"><canvas class="not-rendered" data-auto-refresh="true" data-auto-size="true" data-hashmail-image="{{@(model as webUtils.IconAvatar).hashmail}}"></canvas></span>
+  {{ } else if (model.type == "none") { }}
+  {{ } }}
+</span>

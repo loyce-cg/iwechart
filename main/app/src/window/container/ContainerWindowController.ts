@@ -17,6 +17,8 @@ import { UpdateWindowController } from "../update/UpdateWindowController";
 import { UpdateNotificationController } from "../../component/updatenotification/UpdateNotificationController";
 import { LocaleService } from "../../mail";
 import { i18n } from "./i18n";
+import { ElectronPartitions } from "../../app/electron/ElectronPartitions";
+import { IContext } from "../../app/common/contexthistory/Context";
 
 export interface Model {
     showStatusBar: boolean;
@@ -92,6 +94,7 @@ export class ContainerWindowController extends BaseWindowController {
         this.openWindowOptions.cssClass = "app-window";
         this.openWindowOptions.title = "PrivMX";
         this.openWindowOptions.showLoadingScreen = true;
+        this.openWindowOptions.electronPartition = ElectronPartitions.HTTPS_SECURE_CONTEXT;
         this.mainTaskStream = new MultiTaskStream();
         this.mainTaskStream.addStream(this.taskStream);
         this.mainTaskStream.addStream(this.app.taskStream);
@@ -258,7 +261,7 @@ export class ContainerWindowController extends BaseWindowController {
     onViewLoad(): void {
         this.selectWindowToLoad();
         if (this.app.isElectronApp()) {
-            this.app.addEventListener<Types.event.UpdateStatusChangeEvent>("update-status-change", this.onUpdateAvailable.bind(this), this.manager.uid, "normal");
+            this.bindEvent<Types.event.UpdateStatusChangeEvent>(this.app, "update-status-change", this.onUpdateAvailable.bind(this));
             this.onUpdateAvailable();
         }
     }
@@ -285,7 +288,7 @@ export class ContainerWindowController extends BaseWindowController {
         return this.redirectToAppWindow(this.activateLogoAction);
     }
 
-    redirectToAppWindow(id: string, state?: string, replace?: boolean): void {
+    redirectToAppWindow(id: string, state?: IContext, replace?: boolean): void {
         let appWindow = Lang.find(this.appWindows, x => x.id == id);
         if (appWindow) {
             this.app.setContainerWindowHistoryEntry({
@@ -294,8 +297,19 @@ export class ContainerWindowController extends BaseWindowController {
             }, replace);
         }
     }
-    
+
+    redirectToAppWindowFromHistory(state: IContext): void {
+        let appWindow = Lang.find(this.appWindows, x => x.id == state.moduleName);
+        if (appWindow) {
+            this.onHistoryChange({
+                pathname: appWindow.historyPath,
+                state: state
+            });
+        }
+    }
+
     onHistoryChange(historyEntry: app.HistoryEntry): void {
+        let context = historyEntry.state;
         let appWindow = Lang.find(this.appWindows, x => x.historyPath == historyEntry.pathname);
         if (!appWindow) {
             return;
@@ -310,7 +324,7 @@ export class ContainerWindowController extends BaseWindowController {
             active.whenReady().then(() => {
                 if (active instanceof BaseAppWindowController) {
                     active.onActivate();
-                    active.applyHistoryState(processed, historyEntry.state);
+                    active.applyHistoryState(processed, context ? context.contextId: undefined);
                 }
             });
         });

@@ -25,13 +25,13 @@
         </div>
         <div class="step-body">
           <input class="form-control" type="password" value="{{@model.password}}" data-input="password" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');" placeholder="{{@Helper.i18n('window.emailpassword.password.placeholder')}}" />
-          <button class="btn btn-link" data-trigger="show-password" tabindex="-1">
+          <button class="btn btn-link link" data-trigger="show-password" tabindex="-1">
             {{@Helper.i18n("window.emailpassword.showPassword")}}
           </button>
-          <button class="btn btn-link hide" data-trigger="hide-password" tabindex="-1">
+          <button class="btn btn-link link hide" data-trigger="hide-password" tabindex="-1">
             {{@Helper.i18n("window.emailpassword.hidePassword")}}
           </button>
-          <button class="btn btn-link" data-trigger="generate-password" tabindex="-1">
+          <button class="btn btn-link link" data-trigger="generate-password" tabindex="-1">
             {{@Helper.i18n("window.emailpassword.generatePassword")}}
           </button>
         </div>

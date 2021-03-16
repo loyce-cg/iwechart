@@ -6,6 +6,8 @@ import * as Jimp from "jimp";
 
 export class ImgGenerator extends ThumbGenerator {
     
+    name: string = "ImgGenerator";
+    
     protected generateCore(srcBuff: Buffer, entry: Entry): Q.Promise<GeneratedThumb> {
         let mimeType = entry.meta.mimeType ? entry.meta.mimeType : "image/jpeg";
         let jimp: typeof Jimp;
@@ -26,7 +28,7 @@ export class ImgGenerator extends ThumbGenerator {
     }
     
     canGenerate(mimeType: string): boolean {
-        return (<any>mimeType).startsWith("image/");
+        return (<any>mimeType).startsWith("image/") && ! mimeType.startsWith("image/svg");
     }
     
 }

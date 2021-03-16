@@ -1,0 +1,13 @@
+@import { ItemModel } from "../DesktopPickerController";
+@model ItemModel
+<li class="desktop-picker-item" data-source-id="{{@model.sourceId}}" data-source-type="{{@model.sourceType}}">
+  <span class="header">
+    {{ if (model.icon) { }}
+      <img class="icon" src="{{@model.icon}}" />
+    {{ } }}
+    <span class="name" title="{{@model.label}}">{{@model.label}}</span>
+  </span>
+  <span class="thumbnail-wrapper">
+    <img class="thumbnail-img" src="{{@model.thumbnail}}" />
+  </span>
+</li>

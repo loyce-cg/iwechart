@@ -1,7 +1,6 @@
 import * as Q from "q";
 import {app} from "../Types";
 import * as RootLogger from "simplito-logger";
-import * as $ from "jquery";
 let Logger = RootLogger.get("privfs-mail-client.webUtils.AvatarService");
 
 export interface Options {
@@ -32,22 +31,24 @@ export class AvatarService {
         this.defaultInfo = {};
     }
     
-    draw(canvas: HTMLCanvasElement, hashmail: string, options: Options): void {
+    draw(canvas: HTMLCanvasElement, hashmail: string, options: Options, forceDraw: boolean): void {
         let info = this.getInfoSync(hashmail);
         if (info) {
             try {
-                info.image.drawTo(canvas, options);
+                info.image.drawToWithRevision(canvas, options, info.revision, forceDraw);
+                return;
             }
             catch (e) {
                 Logger.error("AvatarService error", e);
             }
         }
+        
         Q().then(() => {
             return this.getInfo(hashmail);
         })
         .then(info => {
             canvas.classList.toggle("default-avatar", info.isDefaultAvatar);
-            return info.image.drawTo(canvas, options);
+            return info.image.drawToWithRevision(canvas, options, info.revision, forceDraw);
         })
         .fail(e => {
             Logger.error("AvatarService error", e);
@@ -56,11 +57,8 @@ export class AvatarService {
     
     getInfoSync(hashmail: string): Info {
         let person = this.personProvider.getPersonAvatarByHashmail(hashmail);
-        // if (person && person.avatar && person.avatar.length > 0) {
-        //     person.avatar = this.convertAvatarDataURLToReference(person.avatar);
-        // }
         let info = this.map[hashmail];
-        if (info != null && info.lastUpdate == person.lastUpdate && info.image) {
+        if (info != null && info.revision == person.avatar.revision && info.image) {
             return info;
         }
         return null;
@@ -69,23 +67,16 @@ export class AvatarService {
     getInfo(hashmail: string): Q.Promise<Info> {
         return Q().then(() => {
             let person = this.personProvider.getPersonAvatarByHashmail(hashmail);
-            // if (person && person.avatar && person.avatar.length > 0) {
-            //     person.avatar = this.convertAvatarDataURLToReference(person.avatar);
-            // }
+
             let info = this.map[hashmail];
-            if (info == null) {
-                info = new Info(person.lastUpdate);
-                this.map[hashmail] = info;
-            }
-            else if (info.lastUpdate == person.lastUpdate) {
+            if (info && info.revision == person.avatar.revision) {
                 return info.whenReady();
             }
-            else {
-                info.reset(person.lastUpdate);
-            }
-            info.isDefaultAvatar = !person.avatar;
+            info = new Info(person.avatar.revision);
+            this.map[hashmail] = info;
+            info.isDefaultAvatar = !person.avatar.avatar;
             return Q().then(() => {
-                return person.avatar ? this.createImageFromDataUrl(person.avatar)
+                return person.avatar.avatar ? this.createImageFromDataUrl(person.avatar.avatar)
                     : this.getDefaultImage(this.assetsProvider.getAssetByName(
                         person.isEmail ? "DEFAULT_EMAIL_AVATAR_INVERSE" : "DEFAULT_USER_AVATAR"));
             })
@@ -131,66 +122,18 @@ export class AvatarService {
         };
         return defer.promise;
     }
-    
-    // convertAvatarDataURLToReference(dataURI: string): string {
-    //     if (dataURI.substr(0, 4) == "blob") {
-    //         return dataURI;
-    //     }
-    //     return URL.createObjectURL(this.getBlobFromDataURL2(dataURI));
-    // }
-    
-    // getBlobFromDataURL2(dataURI: string) {
-    //   let byteString = atob(dataURI.split(',')[1]);
-    //   let mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
-    //   let ab = new ArrayBuffer(byteString.length);
-    //   let ia = new Uint8Array(ab);
-    //
-    //   // set the bytes of the buffer to the correct values
-    //   for (var i = 0; i < byteString.length; i++) {
-    //       ia[i] = byteString.charCodeAt(i);
-    //   }
-    //   return new Blob([ab], {type: mimeString});
-    // }
-    
-    // getBlobFromDataURL(dataURI: string): Blob {
-    //           // convert base64/URLEncoded data component to raw binary data held in a string
-    //           var byteString;
-    //           // if (dataURI.split(',')[0].indexOf('base64') >= 0)
-    //           //     byteString = window.atob(dataURI.split(',')[1]);
-    //           //     // byteString = new Buffer(dataURI.split(',')[1], 'base64').toString('binary');
-    //           // else
-    //           //     byteString = unescape(dataURI.split(',')[1]);
-    //
-    //               byteString = new Buffer(dataURI.split(',')[1], 'base64').toString('binary');
-    //
-    //           // separate out the mime component
-    //           var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-    //
-    //           // write the bytes of the string to a typed array
-    //           var ia = new Uint8Array(byteString.length);
-    //           for (var i = 0; i < byteString.length; i++) {
-    //               ia[i] = byteString.charCodeAt(i);
-    //           }
-    //
-    //           return new Blob([ia], {type:mimeString});
-    // }
 }
 
 export class Info {
     
-    lastUpdate: number;
+    revision: string;
     image: Image;
     defer: Q.Deferred<Info>;
     isDefaultAvatar: boolean;
     
-    constructor(lastUpdate?: number) {
-        this.reset(lastUpdate);
-    }
-    
-    reset(lastUpdate: number): void {
-        this.lastUpdate = lastUpdate;
-        this.image = null;
-        this.defer = Q.defer<Info>();
+    constructor(revision?: string) {
+        this.revision = revision;
+        this.defer = Q.defer();
     }
     
     whenReady(): Q.Promise<Info> {
@@ -231,6 +174,15 @@ export class Image {
         this.highDpi = highDpi;
     }
     
+    drawToWithRevision(canvas: HTMLCanvasElement, options: Options, revision: string, forceDraw: boolean) {
+        const revisionStr = revision + "-" + options.width + "x" + options.height + "-as" + (!!options.autoSize) + "-hdpi" + this.highDpi;
+        if (!forceDraw && revisionStr == canvas.getAttribute("revision")) {
+            return;
+        }
+        this.drawTo(canvas, options)
+        canvas.setAttribute("revision", revisionStr);
+    }
+    
     drawTo(canvas: HTMLCanvasElement, options: Options) {
         let ctx = canvas.getContext("2d");
         if (this.highDpi) {
@@ -253,7 +205,6 @@ export class Image {
             }
             let info = targetWidth >= this.image.naturalWidth ? Image.scaleImage(this.image, targetWidth, targetHeight) :
                 Image.downScaleCanvas(Image.convertImageToCanvas(this.image), targetWidth / this.image.naturalWidth);
-            //let info = Image.scaleImage(this.image, targetWidth, targetHeight);
             if (options.autoSize) {
                 canvas.width = targetWidth;
                 canvas.height = targetHeight;
@@ -270,8 +221,8 @@ export class Image {
                 imageData: ctx.getImageData(0, 0, canvas.width, canvas.height)
             };
             if (this.highDpi) {
-                $(canvas).css("width", (canvas.width / 2) + "px");
-                $(canvas).css("height", (canvas.height / 2) + "px");
+                canvas.style.width = (canvas.width / 2) + "px";
+                canvas.style.height = (canvas.height / 2) + "px";
             }
         }
         else {
@@ -279,8 +230,8 @@ export class Image {
             canvas.height = resized.height;
             ctx.putImageData(resized.imageData, 0, 0);
             if (this.highDpi) {
-                $(canvas).css("width", (canvas.width / 2) + "px");
-                $(canvas).css("height", (canvas.height / 2) + "px");
+                canvas.style.width = (canvas.width / 2) + "px";
+                canvas.style.height = (canvas.height / 2) + "px";
             }
         }
     }
@@ -353,7 +304,7 @@ export class Image {
         var sR = 0, sG = 0,  sB = 0; // source's current point r,g,b
         // untested !
         var sA = 0;  //source alpha
-
+        
         for (sy = 0; sy < sh; sy++) {
             ty = sy * scale; // y src position within target
             tY = 0 | ty;     // rounded : target pixel's y

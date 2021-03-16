@@ -1,32 +1,33 @@
 @import {Model} from "../ErrorWindowController";
 @model Model
 <div class="window-error-main {{@model.error.helpCenterCode?'with-help-center-link':'no-help-center-link'}} {{@model.error.askToReport?'with-ask-to-report':'no-ask-to-report'}}">
-  <div class="explanation">
-    <h3><i class="fa fa-exclamation-triangle"></i> {{@Helper.i18n("window.error.explanation.header")}}</h3>
-    <p>
-      {{ if (model.helpCenterUrl) { }}
-        <span class="help-center-link">{{#Helper.i18n("window.error.explanation.text.helpCenterLink", model.helpCenterUrl)}}</span>
-      {{ } }}
-      {{ if (model.error.askToReport) { }}
+  <div class="flex-row max-height">
+    <div class="explanation">
+      <h3><i class="fa fa-exclamation-triangle"></i> {{@Helper.i18n("window.error.explanation.header")}}</h3>
+      <div class="flex-row error-message">
+        <div class="entry-value custom">
+          <textarea id="user-info-area" class="form-control" type="text" rows="2" readonly>{{@model.error.message.trim()}}</textarea>
+          <button class="btn btn-default" data-copy-textarea-id="user-info-area">          
+            <i class="fa fa-copy"></i>
+            <span class="txt">{{@Helper.i18n("core.copy")}}</span>
+          </button>
+        </div>
+      </div>
+      <div class="flex-row additional-info">
+        {{ if (model.helpCenterUrl) { }}
+          <span class="help-center-link">{{#Helper.i18n("window.error.explanation.text.helpCenterLink", model.helpCenterUrl)}}</span>
+        {{ } }}
         <span class="ask-to-report-text">{{@Helper.i18n("window.error.explanation.text.report")}}</span>
-      {{ } }}
-    </p>
+        <span class="link" data-action="show-full-report">{{@Helper.i18n("window.error.fullReport.link")}}</span>  
+      </div>
+      <div class="flex-row why">
+        {{@Helper.i18n("window.error.explanation.text.why")}}
+      </div>
+    </div>  
   </div>
-  {{ if (model.error.askToReport) { }}
-    <div class="report-options">
-      <ul>
-        <li data-report-option="include-error-log">
-          <span class="switch active" data-action="toggle-report-option"></span>
-          <label data-action="toggle-report-option">{{@Helper.i18n("window.error.reportOption.includeErrorLog.label")}}</label>
-          <span class="link" data-action="show-error-log">{{@Helper.i18n("window.error.reportOption.includeErrorLog.showInformation")}}</span>
-        </li>
-        <li data-report-option="include-system-information">
-          <span class="switch active" data-action="toggle-report-option"></span>
-          <label data-action="toggle-report-option">{{@Helper.i18n("window.error.reportOption.includeSystemInformation.label")}}</label>
-          <span class="link" data-action="show-system-information">{{@Helper.i18n("window.error.reportOption.includeSystemInformation.showInformation")}}</span>
-        </li>
-      </ul>
-    </div>
+
+
+  {{ if (! model.errorsLoggingEnabled) { }}
     <div class="buttons">
       <button class="btn btn-success save" data-action="send">
         <i class="fa fa-send"></i>

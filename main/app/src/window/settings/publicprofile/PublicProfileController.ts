@@ -8,6 +8,7 @@ import * as privfs from "privfs-client";
 import {Inject} from "../../../utils/Decorators"
 import { LocaleService } from "../../../mail";
 import { i18n } from "../i18n";
+import { VideoRecorderOptions, VideoRecorderCustomHandlerSaveModel, RecordedMediaModel, VideoRecorderMode, VideoRecorderWindowController } from "../../videorecorder/main";
 
 export interface Model {
     profile: Profile;
@@ -56,4 +57,24 @@ export class PublicProfileController extends BaseController {
         };
         this.callViewMethod("renderContent", model);
     }
+    
+    onViewNewPhoto(): void {
+        let videoRecorderOptions: VideoRecorderOptions = {
+            saveModel: <VideoRecorderCustomHandlerSaveModel>{
+                type: "customHandler",
+                handler: (recordedMediaModel: RecordedMediaModel) => this.usePhoto(recordedMediaModel),
+            },
+            mode: VideoRecorderMode.PHOTO,
+            closeAfterSaved: true,
+        };
+        this.app.ioc.create(VideoRecorderWindowController, [this.app, videoRecorderOptions]).then(win => {
+            const winName = "photo-recorder";
+            this.app.openSingletonWindow(winName, win);
+        });
+    }
+    
+    async usePhoto(recordedMediaModel: RecordedMediaModel): Promise<void> {
+        this.callViewMethod("usePhoto", recordedMediaModel.dataUrl);
+    }
+    
 }

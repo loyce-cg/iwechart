@@ -5,7 +5,6 @@ import { Project } from "privfs-mail-client-tasks-plugin/src/main/data/Project";
 import { TasksFilterUpdater, TasksFilterData } from "privfs-mail-client-tasks-plugin/src/component/taskGroupsPanel/TaskGroupsPanelController";
 import { CustomTasksElements, ViewContext, Modes } from "../../main/Types";
 import { Task, TaskStatus } from "privfs-mail-client-tasks-plugin/src/main/data/Task";
-import { CustomSelectController, CustomSelectItem } from "privfs-mail-client-tasks-plugin/src/component/customSelect/CustomSelectController";
 import { DatePickerController, DatePickerOptions } from "../datePicker/DatePickerController";
 import { i18n } from "./i18n/index";
 import Dependencies = utils.decorators.Dependencies;
@@ -15,7 +14,7 @@ export interface Model {
     projectId: string;
     projectName: string;
     privateSectionId: string;
-    safeProjectId: string;
+    uniqueSafeId: string;
     conv2Model: Types.webUtils.ConversationModel;
     settings: { [name: string]: boolean|string };
     taskStatuses: string[];
@@ -73,7 +72,7 @@ export interface FileModel {
     trashed: boolean;
 }
 
-@Dependencies(["persons", "notification", "taskscustomselect"])
+@Dependencies(["persons", "notification", "customselect"])
 export class CalendarPanelController extends window.base.WindowComponentController<window.base.BaseWindowController> {
     
     static textsPrefix: string = "plugin.calendar.component.calendarPanel.";
@@ -97,10 +96,10 @@ export class CalendarPanelController extends window.base.WindowComponentControll
     afterViewLoaded: Q.Deferred<void> = Q.defer();
     tasksFilterUpdater: TasksFilterUpdater;
     context: ViewContext = ViewContext.CalendarWindow;
-    customSelectMode: CustomSelectController;
-    customSelectFilter: CustomSelectController;
+    customSelectMode: component.customselect.CustomSelectController;
+    customSelectFilter: component.customselect.CustomSelectController;
+    customSelectExtraCalendars: component.customselect.CustomSelectController;
     datePicker: DatePickerController;
-    customSelectExtraCalendars: CustomSelectController;
     // personsComponent: component.persons.PersonsController;
     notifications: component.notification.NotificationController;
     taskTooltip: component.tasktooltip.TaskTooltipController;
@@ -122,9 +121,25 @@ export class CalendarPanelController extends window.base.WindowComponentControll
         this.uniqueId = this.calendarPlugin.tasksPlugin.nextUniqueId();
         this.session = this.app.sessionManager.getLocalSession();
         
-        this.customSelectMode = this.addComponent("customSelectMode", this.componentFactory.createComponent("taskscustomselect", [this, [], { multi:false, editable:true, firstItemIsStandalone:false }]));
-        this.customSelectFilter = this.addComponent("customSelectFilter", this.componentFactory.createComponent("taskscustomselect", [this, [], { multi:false, editable:true, firstItemIsStandalone:false }]));
-        this.customSelectExtraCalendars = this.addComponent("customSelectExtraCalendars", this.componentFactory.createComponent("taskscustomselect", [this, [], { multi:true, editable:true, firstItemIsStandalone:false, headerText: this.i18n("plugin.calendar.component.calendarPanel.extraCalendars.dropdown.header") }]));
+        this.customSelectMode = this.addComponent("customSelectMode", this.componentFactory.createComponent("customselect", [this, {
+            multi: false,
+            editable: true,
+            firstItemIsStandalone: false,
+            items: [],
+        }]));
+        this.customSelectFilter = this.addComponent("customSelectFilter", this.componentFactory.createComponent("customselect", [this, {
+            multi: false,
+            editable: true,
+            firstItemIsStandalone: false,
+            items: [],
+        }]));
+        this.customSelectExtraCalendars = this.addComponent("customSelectExtraCalendars", this.componentFactory.createComponent("customselect", [this, {
+            multi: true,
+            editable: true,
+            firstItemIsStandalone: false,
+            headerText: this.i18n("plugin.calendar.component.calendarPanel.extraCalendars.dropdown.header"),
+            items: [],
+        }]));
         this.datePicker = this.addComponent("datePicker", this.componentFactory.createComponent("datePicker", [this, { }]));
         // this.personsComponent = this.addComponent("personsComponent", this.componentFactory.createComponent("persons", [this]));
         this.notifications = this.addComponent("notifications", this.componentFactory.createComponent("notification", [this]));
@@ -140,13 +155,13 @@ export class CalendarPanelController extends window.base.WindowComponentControll
             return !!this.getSetting("show-task-tooltip");
         };
         this.datePicker.onValueChanged(this.onDatePickerValueChanged.bind(this));
-        this.app.addEventListener<CalendarsRefresh>("calendars-refresh", event => {
+        this.bindEvent<CalendarsRefresh>(this.app, "calendars-refresh", event => {
             if (this.isActive) {
                 this.refresh(event.hard, event.showNotifications);
             }
         });
         
-        this.app.addEventListener<CalendarsFileAdded>("calendars-file-added", e => {
+        this.bindEvent<CalendarsFileAdded>(this.app, "calendars-file-added", e => {
             if (e.hostHash != this.session.hostHash) {
                 return;
             }
@@ -159,18 +174,18 @@ export class CalendarPanelController extends window.base.WindowComponentControll
                 this.sendFileToView(model.identifier);
             }
         });
-        this.app.addEventListener<CalendarsFileRemoved>("calendars-file-removed", e => {
+        this.bindEvent<CalendarsFileRemoved>(this.app, "calendars-file-removed", e => {
             if (e.hostHash != this.session.hostHash) {
                 return;
             }
             this.delFileFromView(e.identifier);
         });
-        this.app.addEventListener<ExtraCalendarsChanged>("extra-calendars-changed", e => {
+        this.bindEvent<ExtraCalendarsChanged>(this.app, "extra-calendars-changed", e => {
             if (e.hostHash != this.session.hostHash) {
                 return;
             }
-            if (this.uniqueId != e.senderId) {
-                this.customSelectExtraCalendars.setItems(this.getCustomSelectExtraCalendarsItems());
+            if (this.uniqueId != e.senderId && this.activeProjectId == e.mainProjectId) {
+                (this.customSelectExtraCalendars as any).setItems(this.getCustomSelectExtraCalendarsItems(), true);
                 this.resendTasksToView();
                 this.resendFilesToView();
             }
@@ -237,7 +252,7 @@ export class CalendarPanelController extends window.base.WindowComponentControll
             projectId: projectId,
             projectName: projectName,
             privateSectionId: this.calendarPlugin.getPrivateSectionId(),
-            safeProjectId: projectId.replace(/:/g, "---").replace(/\|/g, "___"),
+            uniqueSafeId: this._getUniqueSafeId(),
             conv2Model: this.isConv2Section() ? utils.Converter.convertConv2(this.getActiveConv2Section(), 0, null, 0, true, 0, false, false, false, null) : null,
             settings: this.getSettings(),
             taskStatuses: this.calendarPlugin.tasksPlugin.getTaskStatuses(),
@@ -274,8 +289,12 @@ export class CalendarPanelController extends window.base.WindowComponentControll
         return JSON.stringify(model);
     }
     
-    getCustomSelectModeItems(): CustomSelectItem[] {
-        let arr: CustomSelectItem[] = [];
+    private _getUniqueSafeId(): string {
+        return `calendar${this.uniqueId}`;
+    }
+    
+    getCustomSelectModeItems(): component.customselect.CustomSelectItem[] {
+        let arr: component.customselect.CustomSelectItem[] = [];
         let modes = [
             Modes.MONTH,
             // Modes.WEEK,
@@ -285,7 +304,8 @@ export class CalendarPanelController extends window.base.WindowComponentControll
         let curr = this.getSetting("mode");
         for (let mode of modes) {
             arr.push({
-                val: mode,
+                type: "item",
+                value: mode,
                 text: this.i18n("plugin.calendar.component.calendarPanel.mode." + mode),
                 textNoEscape: true,
                 icon: null,
@@ -648,6 +668,9 @@ export class CalendarPanelController extends window.base.WindowComponentControll
     }
     
     resendTasksToView(): void {
+        if (!this.currDataModel) {
+            return;
+        }
         let relevantTasks = this.getRelevantTasks();
         let tasksModels = this.convertTasks(relevantTasks);
         this.currDataModel.tasks = tasksModels;
@@ -879,7 +902,7 @@ export class CalendarPanelController extends window.base.WindowComponentControll
         }
     }
     watchSettingsChanges(): void {
-        this.app.addEventListener<CalendarSettingChanged>("calendar-setting-changed", event => {
+        this.bindEvent<CalendarSettingChanged>(this.app, "calendar-setting-changed", event => {
             if (event.sourceUniqueId != this.uniqueId) {
                 if (event.sourceProjectId != this.activeProjectId && this.calendarPlugin.viewSettings.isSettingProjectIsolated(event.setting)) {
                     return;
@@ -1037,27 +1060,6 @@ export class CalendarPanelController extends window.base.WindowComponentControll
     /****************************************
     *********** Misc view events ************
     *****************************************/
-    onViewOpenChat(): void {
-        let cnt = <window.container.ContainerWindowController>this.app.windows.container;
-        if (this.activeProjectId != CustomTasksElements.TASKS_ASSIGNED_TO_ME_ID && this.activeProjectId != CustomTasksElements.TASKS_CREATED_BY_ME_ID) {
-            cnt.redirectToAppWindow("chat", this.getOtherPluginTarget(this.activeProjectId));
-        }
-    }
-    
-    onViewOpenNotes(): void {
-        let cnt = <window.container.ContainerWindowController>this.app.windows.container;
-        if (this.activeProjectId != CustomTasksElements.TASKS_ASSIGNED_TO_ME_ID && this.activeProjectId != CustomTasksElements.TASKS_CREATED_BY_ME_ID) {
-            cnt.redirectToAppWindow("notes2", this.getOtherPluginTarget(this.activeProjectId));
-        }
-    }
-    
-    onViewOpenTasks(): void {
-        let cnt = <window.container.ContainerWindowController>this.app.windows.container;
-        if (this.activeProjectId != CustomTasksElements.TASKS_ASSIGNED_TO_ME_ID && this.activeProjectId != CustomTasksElements.TASKS_CREATED_BY_ME_ID) {
-            cnt.redirectToAppWindow("tasks", this.activeProjectId);
-        }
-    }
-    
     getOtherPluginTarget(id: string): string {
         if (id == this.calendarPlugin.getPrivateSectionId()) {
             return "my";
@@ -1129,7 +1131,7 @@ export class CalendarPanelController extends window.base.WindowComponentControll
     *****************************************/
     currMode: Modes = null;
     _overrideMode: Modes = null;
-    modeChanged: (mode: Modes) => void = null;
+    modeChanged: (mode: Modes) => Promise<void> = null;
     overrideMode(mode: Modes): void {
         this._overrideMode = mode;
         this.afterViewLoaded.promise.then(() => {
@@ -1156,8 +1158,8 @@ export class CalendarPanelController extends window.base.WindowComponentControll
     /****************************************
     **************** Filters ****************
     *****************************************/
-    getCustomSelectFilterItems(): CustomSelectItem[] {
-        let arr: CustomSelectItem[] = [];
+    getCustomSelectFilterItems(): component.customselect.CustomSelectItem[] {
+        let arr: component.customselect.CustomSelectItem[] = [];
         let filters = [
             "all-tasks",
             "only-idea",
@@ -1169,7 +1171,8 @@ export class CalendarPanelController extends window.base.WindowComponentControll
         let curr = this.getSetting("filter");
         for (let filter of filters) {
             arr.push({
-                val: filter,
+                type: "item",
+                value: filter,
                 text: this.i18n("plugin.calendar.component.calendarPanel.filter.show-" + filter),
                 textNoEscape: true,
                 icon: null,
@@ -1188,8 +1191,8 @@ export class CalendarPanelController extends window.base.WindowComponentControll
     /****************************************
     ************ Extra calendars ************
     *****************************************/
-    getCustomSelectExtraCalendarsItems(): CustomSelectItem[] {
-        let arr: CustomSelectItem[] = [];
+    getCustomSelectExtraCalendarsItems(): component.customselect.CustomSelectItem[] {
+        let arr: component.customselect.CustomSelectItem[] = [];
         let extraCalendars = this.calendarPlugin.getExtraCalendars(this.session, this.activeProjectId);
         for (let section of this.calendarPlugin.mergableSections[this.session.hostHash].list) {
             let project = this.calendarPlugin.tasksPlugin.getProject(this.session, section.getId());
@@ -1197,7 +1200,8 @@ export class CalendarPanelController extends window.base.WindowComponentControll
                 continue;
             }
             arr.push({
-                val: project.getId(),
+                type: "item",
+                value: project.getId(),
                 text: this.getFullProjectName(project),
                 icon: null,
                 selected: extraCalendars.indexOf(project.getId()) >= 0,
@@ -1307,6 +1311,9 @@ export class CalendarPanelController extends window.base.WindowComponentControll
     }
     
     resendFilesToView(): void {
+        if (!this.currDataModel) {
+            return;
+        }
         let relevantFileModels = this.getRelevantFileModels();
         this.currDataModel.files = relevantFileModels;
         this.callViewMethod("setFileModels", JSON.stringify(relevantFileModels), true);
@@ -1315,6 +1322,9 @@ export class CalendarPanelController extends window.base.WindowComponentControll
     sendFileToView(identifier: string): void {
         if (!this.calendarPlugin.fileModels[this.session.hostHash]) {
             this.calendarPlugin.fileModels[this.session.hostHash] = {};
+        }
+        if (!this.currDataModel) {
+            return;
         }
         if (this.isFileRelevant(identifier)) {
             let m = this.calendarPlugin.fileModels[this.session.hostHash][identifier];
@@ -1327,6 +1337,9 @@ export class CalendarPanelController extends window.base.WindowComponentControll
     }
     
     delFileFromView(identifier: string): void {
+        if (!this.currDataModel) {
+            return;
+        }
         delete this.currDataModel.files[identifier];
         this.callViewMethod("delFileModel", identifier);
     }

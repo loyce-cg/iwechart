@@ -1,4 +1,4 @@
-import * as privfs from "privfs-client";
+import { Lang } from "./Lang";
 
 export class Utils {
     
@@ -41,11 +41,6 @@ export class Utils {
         }
     }
     
-    static generateUUID(): string {
-        let uuid = privfs.crypto.service.randomBits(128).toString("hex").match(/.{4}/g);
-        return [uuid.slice(0, 2).join(''), uuid.slice(2, 5).join('-'), uuid.slice(5).join('')].join('-');
-    }
-    
     static getStringUtf8Length(str: string): number {
         let s = str.length;
         for (let i = str.length - 1; i >= 0; i--) {
@@ -78,17 +73,8 @@ export class Utils {
     }
     
     static arraysEqual<T>(arr0: T[], arr1: T[]): boolean {
-        if (arr0.length != arr1.length) {
-            return false;
-        }
-        for (let i = 0; i < arr0.length; ++i) {
-            if (arr1.indexOf(arr0[i]) < 0) {
-                return false;
-            }
-        }
-        return true;
+        return Lang.arraysEqual(arr0, arr1);
     }
-    
 }
 
 export class MultiProvider<I, T, P> {
@@ -111,5 +97,16 @@ export class MultiProvider<I, T, P> {
             }
         }
         return null;
+    }
+
+}
+export class Debouncer {
+    private idsMap: {[id: string]: NodeJS.Timeout} = {};
+    debounceById(func: (...args: any[]) => any, id: string, timeout: number) {
+        if (id in this.idsMap) {
+            clearTimeout(this.idsMap[id]);
+            delete this.idsMap[id];
+        }
+        this.idsMap[id] = setTimeout(func, timeout);
     }
 }

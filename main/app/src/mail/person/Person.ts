@@ -3,6 +3,11 @@ import {Contact} from "../contact/Contact";
 import {Lang} from "../../utils/Lang";
 import * as PmxApi from "privmx-server-api";
 
+
+export interface AvatarWithVersion {
+    avatar: string;
+    revision: string;
+}
 export class Person {
     
     usernameCore: string;
@@ -11,6 +16,7 @@ export class Person {
     hashmailIsEmail: boolean;
     contact: Contact;
     lastUpdate: Date;
+    changeSeq: number = 0;
     extraInfo?: PmxApi.api.user.UsernameEx;
     isMe?: boolean;
 
@@ -87,6 +93,13 @@ export class Person {
     
     getAvatar(): string {
         return this.hasAvatar() ? this.contact.profile.image : "";
+    }
+    
+    getAvatarWithVersion(): AvatarWithVersion {
+        return  {
+            avatar: this.getAvatar(),
+            revision: this.contact ? this.contact.revision : ""
+        };
     }
     
     isStarred(): boolean {

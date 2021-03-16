@@ -18,6 +18,7 @@ div:focus {
 }
 
 .window-section-new {
+  background: var(--main-panel-bg);
   .wi-element {
     margin: 0;
     padding: 0;
@@ -27,6 +28,30 @@ div:focus {
       display: none;
     }
   }
+
+  .user {
+    display: inline-block;
+    i.fa-group {
+      color: #ccc;
+    }
+  }
+  .space:after {
+    content: " ";
+    letter-spacing: 4px;
+  }
+  .user:first-child {
+    margin-left: 0px;
+  }
+  canvas {
+    max-width: 16px;
+    max-height: 16px;
+    border-radius: 4px;
+    vertical-align: middle;
+  }
+  .preview .btn {
+    float: right;
+  }
+
   .wi-element:hover {
     background-color: transparent;
   }
@@ -71,7 +96,7 @@ div:focus {
         }
         .preview {
           line-height: 18px;
-          margin-right: 50px;
+          margin-right: 10px;
         }
         .field-value {
           position: relative;

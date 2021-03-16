@@ -3,7 +3,7 @@
 @helper Formatter
 @model app.WindowLoadOptionsRender
 <!DOCTYPE html>
-<html lang="{{@model.lang || 'en'}}">
+<html lang="{{@model.lang || 'en'}}" class="{{@model.docked ? 'docked' : ''}}">
   <head>
     <meta charset="utf-8">
     <title>{{@model.title || ''}}</title>

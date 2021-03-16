@@ -1,4 +1,4 @@
-export type SoundsCategoryName = "notification" | "screenshot" | "unreadBadgeClick";
+export type SoundsCategoryName = "notification" | "screenshot" | "unreadBadgeClick" | "audioOutputTest" | "gong";
 
 export interface SoundsCategory {
     name: SoundsCategoryName;
@@ -13,9 +13,13 @@ export interface Sound {
 
 export class SoundsLibrary {
     
+    static readonly SOUNDS_ASSET_PATH = "sounds/";
+    
     categories: SoundsCategory[] = [
         { name: "notification", defaultSound: "sound1.wav" },
         { name: "unreadBadgeClick", defaultSound: "sound2.wav" },
+        { name: "audioOutputTest", defaultSound: "sound5.wav" },
+        { name: "gong", defaultSound: "doorbell.wav" },
         // { name: "screenshot", defaultSound: "screenshot.mp3" },
     ];
     sounds: Sound[] = [
@@ -28,6 +32,7 @@ export class SoundsLibrary {
         { fileName: "sound3.wav", i18nKey: "sound3", categories: ["notification"] },
         { fileName: "sound4.wav", i18nKey: "sound4", categories: ["notification"] },
         { fileName: "sound5.wav", i18nKey: "sound5", categories: ["notification"] },
+        { fileName: "doorbell.wav", i18nKey: "doorbell", categories: ["gong"] },
     ];
     
     constructor() {

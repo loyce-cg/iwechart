@@ -13,9 +13,9 @@ import { MailClientViewHelper, WebUtils } from "../../web-utils";
 import { NodeRenderer } from "./NodeRenderer";
 import { Rect } from "./Rect";
 import { MindmapOperation, ComplexNodeOperation, SwapNodesOperation, KeyOfOperationResult, CreateNewParentOperation, MoveNodeOperation, ChangeNodePropertyOperation, CreateNodeOperation, MindmapOperationResult, DeleteNodeOperation, ChangeMindmapPropertyOperation } from "./MindmapOperation";
-import { Utils } from "../../utils";
 import { MindmapPath } from "./MindmapPath";
 import { ContentEditableEditorMetaData } from "../../web-utils/ContentEditableEditorMetaData";
+import { Lang } from "../../utils/Lang";
 
 type KeyOfMindmapNode = Extract<keyof MindmapNode, string>;
 
@@ -186,7 +186,7 @@ export class MindmapEditorView extends ComponentView {
         }
     }
     
-    onKeyDown(e: KeyboardEvent): void {
+    async onKeyDown(e: KeyboardEvent): Promise<void> {
         let ctrlModifier = WebUtils.hasCtrlModifier(e);
         let shiftModifier = WebUtils.hasShiftModifier(e);
         let altModifier = WebUtils.hasAltModifier(e);
@@ -295,11 +295,11 @@ export class MindmapEditorView extends ComponentView {
             this.copySelectedNodes();
         }
         else if (e.key.toUpperCase() == "V" && ctrlModifier && !shiftModifier && !this.isInNodeLabelEditMode() && this.isInMindmapEditMode()) {
-            this.pasteNodesFromClipboard();
+            await this.pasteNodesFromClipboard();
             this.scrollToPointerNode();
         }
         else if (e.key.toUpperCase() == "V" && ctrlModifier && shiftModifier && !this.isInNodeLabelEditMode() && this.isInMindmapEditMode()) {
-            this.pasteNodesFromClipboard(true);
+            await this.pasteNodesFromClipboard(true);
             this.scrollToPointerNode();
         }
         else if (e.key.toUpperCase() == "Z" && ctrlModifier && !this.isInNodeLabelEditMode() && this.isInMindmapEditMode()) {
@@ -367,18 +367,21 @@ export class MindmapEditorView extends ComponentView {
         if (!this.$component.is(":visible")) {
             return;
         }
-        if (this.mindmap) {
-            for (let element of this.mindmap.elements) {
-                element.spec.getRenderer().delete();
-            }
-        }
+        this.deleteNodeRenderers();
         this.render();
     }
     
     release(): void {
+        this.deleteNodeRenderers();
+    }
+    
+    private deleteNodeRenderers(): void {
         if (this.mindmap) {
             for (let element of this.mindmap.elements) {
-                element.spec.getRenderer().delete();
+                const nodeRenderer = element.spec.getRenderer();
+                if (nodeRenderer) {
+                    nodeRenderer.delete();
+                }
             }
         }
     }
@@ -903,7 +906,9 @@ export class MindmapEditorView extends ComponentView {
                 paths.splice(j, 1);
             }
         }
+        
         paths = paths.map(x => x.substr(0, x.length - 1));
+        paths = MindmapPath.sortPaths(paths, this.mindmap, true);
         
         let operations: DeleteNodeOperation[] = [];
         for (let path of paths) {
@@ -1303,11 +1308,18 @@ export class MindmapEditorView extends ComponentView {
         return str;
     }
     
-    pasteNodesFromClipboard(alternativeTarget: boolean = null): void {
-        if (this.clipboard.length == 0 || this.selectedNodes.length == 0) {
-            if (this.clipboardString) {
+    async pasteNodesFromClipboard(alternativeTarget: boolean = null): Promise<void> {
+        this.clipboardString = null;
+        if (this.selectedNodes.length > 0) {
+            let clipboardString = await this.channelPromise<string | null>("getClipboardString");
+            if (clipboardString) {
+                this.clipboardString = clipboardString;
                 this.pasteFromClipboardString();
+                return;
             }
+        }
+        
+        if (this.clipboard.length == 0 || this.selectedNodes.length == 0) {
             return;
         }
         
@@ -1338,7 +1350,7 @@ export class MindmapEditorView extends ComponentView {
         //     }
         // }
         // else {
-            if (Utils.arraysEqual(clipboard, selectedNodes)) {
+            if (Lang.arraysEqual(clipboard, selectedNodes)) {
                 // clipboard == selected nodes => duplicate each node
                 for (let node of clipboard) {
                     let destinationPath = this.getPasteDestinationPath(node, !alternativeTarget);
@@ -1433,10 +1445,14 @@ export class MindmapEditorView extends ComponentView {
                     x = x.substr(4);
                 }
             }
+            if (x.trim().length == 0) {
+                return null;
+            }
             let node = new MindmapNode(this.mindmap);
             node.label = x;
             return [level, node];
-        });
+        })
+        .filter(x => !!x);
         let clipboard: MindmapNode[] = [];
         let parent: MindmapNode = null;
         let parentLevel: number = 0;
@@ -1479,11 +1495,12 @@ export class MindmapEditorView extends ComponentView {
         
         let operations: MindmapOperation[] = [];
         let selectedNodes = MindmapPath.sortNodesByPath(this.selectedNodes);
-        let targetNode = selectedNodes[0];
-        for (let node of clipboard) {
-            let destinationPath = this.getPasteDestinationPath(targetNode, false);
-            let nodeCopy: MindmapNode = MindmapNode.fromObject(node, this.mindmap);
-            operations.push(new CreateNodeOperation(this.mindmap, destinationPath, nodeCopy));
+        for (let targetNode of selectedNodes) {
+            for (let node of clipboard) {
+                let destinationPath = this.getPasteDestinationPath(targetNode, false);
+                let nodeCopy: MindmapNode = MindmapNode.fromObject(node, this.mindmap);
+                operations.push(new CreateNodeOperation(this.mindmap, destinationPath, nodeCopy));
+            }
         }
         MindmapPath.fixTargetPathsForConsecutiveOperations(operations);
         if (operations.length > 0) {

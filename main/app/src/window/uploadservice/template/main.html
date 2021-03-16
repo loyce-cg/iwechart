@@ -1,0 +1,20 @@
+@import {UploadServiceOptions} from "../UploadServiceWindowController";
+@model UploadServiceOptions
+<div class="uploadservice-window-main">
+    <div class="content">
+        <div class="files"></div>
+        <div class="total-progress-container">
+            <div class="progress-indicator">
+                <span class="imported">{{@Helper.i18n("window.uploadservice.imported")}}</span><span class="percent"></span>
+            </div>
+            <div class="buttons">
+
+                <span class="completed">{{@Helper.i18n("window.uploadservice.completed")}}</span>
+                <button class="btn btn-default gray" data-action="close">
+                    {{@Helper.i18n("core.button.close.label")}}
+                </button>
+                  
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,48 @@
+.desktop-picker-item {
+  display: inline-flex;
+  flex-direction: column;
+  padding: 10px;
+  margin: 10px;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.0);
+  transition: background-color 0.3s ease;
+  border-radius: 0;
+  text-align: left;
+  width: 300px;
+  height: 200px;
+  
+  &:hover {
+    background: rgba(0, 0, 0, 0.25);
+  }
+  
+  .header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    font-size: var(--font-size);
+    color: var(--body-extra-info-fg);
+    line-height: 1;
+    .icon {
+      max-width: 16px;
+      max-height: 16px;
+      margin-right: 5px;
+    }
+    .name {
+      display: inline-block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+  .thumbnail-wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    img.thumbnail-img {
+      max-height: 100%;
+      max-width: 100%;
+    }
+  }
+}

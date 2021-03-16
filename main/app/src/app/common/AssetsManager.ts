@@ -56,7 +56,7 @@ export class AssetsManager {
         
         this.setDefaultAssetByName("ADMIN_MENU_LOGO", "themes/default/images/logo-wh.svg", true);
         this.setDefaultAssetByName("SYSINFO_LOGO", "themes/default/images/logotype-wh.svg", true);
-        this.setDefaultAssetByName("ABOUT_LOGO", "themes/default/images/logotype-wh.svg", true);
+        this.setDefaultAssetByName("ABOUT_LOGO", "themes/default/images/logotype.svg", true);
         
         this.setDefaultAssetByName("LICENCE", "assets/licence.pdf", true);
         

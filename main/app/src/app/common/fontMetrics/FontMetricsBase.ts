@@ -88,6 +88,10 @@ export abstract class FontMetricsBase {
         return lineWidth;
     }
     
+    getCharWidth(char: string): number {
+        return this.widths[char.charCodeAt(0)];
+    }
+    
     getMaxTextLength(str: string, width: number, fullWords: boolean): number {
         let lineWidth = 0;
         str = (<any>str).trimEnd();

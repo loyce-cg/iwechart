@@ -1,0 +1,10 @@
+@import {Model} from "../AlternativeLoginController";
+@model Model
+@import {func as alternativeLoginTemplate} from "./alternative-login.html";
+<div class="section alternativeLogin-section">
+    {{ if (Helper.isDemo()) { {{
+      {{@Helper.i18n("core.demo.featureNotAvailable")}}
+    }} } else { {{
+      {{#Helper.createTemplate(alternativeLoginTemplate).render()}}
+    }} } }}
+</div>

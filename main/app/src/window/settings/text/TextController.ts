@@ -11,6 +11,11 @@ export interface NotesPreferences {
     style?: string;
 }
 
+export interface SpellCheckerLanguage {
+    code: string;
+    spellCheckerCode: string;
+}
+
 export interface Model {
     ui: UI;
     isElectron: boolean;
@@ -18,9 +23,12 @@ export interface Model {
     osSuffix: string;
     isEncryptionEffectFeatureEnabled?: boolean;
     availablePasteAsFileActions: PasteAsFileAction[];
+    availableSpellCheckerLanguages: SpellCheckerLanguage[];
+    spellCheckerLanguages: string[];
     notes: NotesPreferences;
     availableNotesStyles: { [name: string]: string };
     contentEditableEditor:ContentEditableEditorSettings;
+    platform: string;
 }
 
 export class TextController extends BaseController {
@@ -49,6 +57,18 @@ export class TextController extends BaseController {
                     (<any>cedPrefs)[key] = (<any>UserPreferences.DEFAULTS.contentEditableEditor)[key];
                 }
             })
+            let availableSpellCheckerLanguages: SpellCheckerLanguage[] = [];
+            if (this.app.isElectronApp()) {
+                let tmpAvailableSpellCheckerLanguages = this.parent.nwin.getAvailableSpellCheckerLangauges();
+                availableSpellCheckerLanguages = this.app.localeService.availableLangs
+                    .map(x => LocaleService.AVAILABLE_LANGS.find(y => y.code == x))
+                    .filter(x => !!x)
+                    .map(x => ({
+                        code: x.code,
+                        spellCheckerCode: x.spellCheckerCode,
+                    }))
+                    .filter(x => tmpAvailableSpellCheckerLanguages.indexOf(x.spellCheckerCode) >= 0);
+            }
             let model: Model = {
                 ui: this.userPreferences.data.ui,
                 isElectron: this.app.isElectronApp(),
@@ -56,9 +76,12 @@ export class TextController extends BaseController {
                 osSuffix: this.app.isElectronApp() ? "." + process.platform : "",
                 isEncryptionEffectFeatureEnabled: EncryptionEffectController.FEATURE_ENABLED,
                 availablePasteAsFileActions: [PasteAsFileAction.ASK, PasteAsFileAction.PASTE_AS_TEXT, PasteAsFileAction.PASTE_AS_FILE],
+                availableSpellCheckerLanguages: availableSpellCheckerLanguages,
+                spellCheckerLanguages: this.app.userPreferences.getSpellCheckerLanguages(true),
                 notes: notes,
                 availableNotesStyles: this.getAvailableNotesStyles(),
                 contentEditableEditor: cedPrefs,
+                platform: process.platform,
             };
             this.callViewMethod("renderContent", model);
         });

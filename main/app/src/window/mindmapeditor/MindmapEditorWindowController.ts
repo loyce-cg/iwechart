@@ -152,7 +152,7 @@ export class MindmapEditorWindowController extends BaseWindowController {
             this.watcher = new LocalFfWatcher();
             this.watcher.watch(this.openableElement.getElementId(), this.onChangeContent.bind(this));
         }
-        this.app.addEventListener<event.ActiveAppWindowChangedEvent>("active-app-window-changed", e => {
+        this.bindEvent<event.ActiveAppWindowChangedEvent>(this.app, "active-app-window-changed", e => {
             if (e.appWindowId == "notes2") {
                 if (this.reloadOnNotes2Open) {
                     this.reloadOnNotes2Open = false;
@@ -160,16 +160,17 @@ export class MindmapEditorWindowController extends BaseWindowController {
                 }
             }
         });
-        this.app.addEventListener<event.FileOpenedEvent>("file-opened", e => {
+        this.bindEvent<event.FileOpenedEvent>(this.app, "file-opened", e => {
             if (e.element == this.openableElement && e.action == ShellOpenAction.OPEN && !this.mindmapEditor.editMode && e.hostHash == this.session.hostHash) {
                 this.onViewEnterEditMode();
             }
         });
-        this.app.addEventListener<event.FileLockChangedEvent>("file-lock-changed", () => {
+        
+        this.bindEvent<event.FileLockChangedEvent>(this.app, "file-lock-changed", () => {
             this.updateLockUnlockButtons();
         });
-        
-        this.app.addEventListener<event.FileRenamedEvent>("fileRenamed", event => {
+
+        this.bindEvent<event.FileRenamedEvent>(this.app, "fileRenamed", event => {
             if (!this.openableElement) {
                 return;
             }
@@ -256,6 +257,7 @@ export class MindmapEditorWindowController extends BaseWindowController {
             if (wasNoElement) {
                 this.updatePreTitleIcon();
             }
+            this.updateLockUnlockButtons();
         })
         .fin(() => {
             this.lockRerender = false;
@@ -431,6 +433,7 @@ export class MindmapEditorWindowController extends BaseWindowController {
             .then(needSave => {
                 if (!needSave) {
                     this.manager.stateChanged(BaseWindowManager.STATE_IDLE);
+                    this.freePmxEvents();
                     if (this.mindmapEditor) {
                         this.mindmapEditor.beforeClose();
                     }
@@ -443,6 +446,11 @@ export class MindmapEditorWindowController extends BaseWindowController {
             })
         });
         return defer.promise;
+    }
+
+    freePmxEvents(): void {
+        let client = this.session.sectionManager.client;
+        this.unregisterPmxEvent(client.storageProviderManager.event, this.onStorageEvent);
     }
     
     onStorageEvent(event: privfs.types.descriptor.DescriptorNewVersionEvent): void {
@@ -568,9 +576,33 @@ export class MindmapEditorWindowController extends BaseWindowController {
             });
         }
     }
+
+    async confirmSaveBeforeSend(): Promise<void> {
+        try {
+            const hasChanges = this.isDirty;
+            if (hasChanges) {
+                const confirmResult = await this.confirmEx({
+                    message: this.i18n("window.mindmapeditor.confirm.save.beforeSend.text", [this.openableElement.getName()]),
+                    yes: {label: this.i18n("core.button.yes.label")},
+                    no: {label: this.i18n("core.button.no.label")},
+                    cancel: {visible: true},
+                });
+                if (confirmResult.result == "yes") {
+                    await this.mindmapEditor.save();  
+                }
+            }    
+        }
+        catch (e) {
+            this.logError(e);
+        }
+    }
+
     
     onViewSend(): void {
-        this.editorButtons.onViewSend();
+        new Promise(async() => {
+            await this.confirmSaveBeforeSend();
+            this.editorButtons.onViewSend();
+        })
     }
     
     onViewDownload(): void {
@@ -912,7 +944,9 @@ export class MindmapEditorWindowController extends BaseWindowController {
     }
     
     updateLockInfoOnActionButtons(locked: boolean, canUnlock: boolean) {
-        this.callViewMethod("updateLockInfoOnActionButtons", locked, canUnlock);
+        this.afterViewLoaded.promise.then(() => {
+            this.callViewMethod("updateLockInfoOnActionButtons", locked, canUnlock);
+        });
     }
     
     onViewLockFile(): void {

@@ -1,0 +1,87 @@
+@import { Model } from "../VideoRecorderWindowController";
+@import { VideoRecorderMode } from "../Types";
+@model Model
+{{
+  const hasVideo = model.mode == VideoRecorderMode.VIDEO || model.mode == VideoRecorderMode.AUDIO_AND_VIDEO || model.mode == VideoRecorderMode.PHOTO;
+  const hasAudio = model.mode == VideoRecorderMode.AUDIO || model.mode == VideoRecorderMode.AUDIO_AND_VIDEO;
+  const isPhoto = model.mode == VideoRecorderMode.PHOTO;
+}}
+<div class="window-videorecorder-main" data-mode="{{@model.mode}}" data-state="before-recording">
+  <div class="video-and-constraints-container">
+    <div class="preview">
+      {{ if (hasVideo) { }}
+        <div class="preview--video">
+          <video></video>
+        </div>
+      {{ } else { }}
+        <div class="preview--no-video">
+          <i class="fa fa-music audio-player-placeholder"></i>
+          <span class="audio-level-indicator-container"></span>
+          <div class="audio-player-container"></div>
+        </div>
+      {{ } }}
+      {{ if (isPhoto) { }}
+        <div class="preview--photo">
+          <img />
+        </div>
+      {{ } }}
+    </div>
+    <div class="constraints">
+    </div>
+  </div>
+  <div class="controls">
+    <div class="controls--before-recording">
+      <div class="controls--left">
+        <button class="btn btn-default btn-sm small" data-action="change-devices" title="{{@Helper.i18n("window.videorecorder.button.changeDevices")}}"><i class="ico-settings"></i></button>
+        <div class="resolution-custom-select-container"></div>
+      </div>
+      <div class="controls--center">
+        <button class="btn btn-success btn-sm small" data-action="start-recording"><i class="{{@isPhoto ? 'fa fa-file-photo-o' : (hasVideo ? 'fa fa-file-video-o' : 'fa fa-file-audio-o')}}"></i><span>{{@Helper.i18n("window.videorecorder.button.start." + (isPhoto ? "photo" : "audioVideo"))}}</span></button>
+        <button class="btn btn-default btn-sm small" data-action="cancel">{{@Helper.i18n("core.button.cancel.label")}}</button>
+      </div>
+      <div class="controls--right">
+        <span class="switch-container" data-switch-container-for="grayscale" style="{{@hasVideo ? '' : 'display: none;'}}">
+          <span class="switch" data-switch-for="grayscale"></span>
+          <span>{{@Helper.i18n("window.videorecorder.button.grayscale")}}</span>
+        </span>
+      </div>
+    </div>
+    <div class="controls--recording">
+      <div class="controls--left">
+        <span class="timer">
+          <span class="timer--current-time"></span>
+          <span class="timer--separator">/</span>
+          <span class="timer--limit"></span>
+        </span>
+      </div>
+      <div class="controls--center">
+        <button class="btn btn-default btn-sm small" data-action="stop-recording"><i class="fa fa-stop-circle"></i><span>{{@Helper.i18n("window.videorecorder.button.stop.audioVideo")}}</span></button>
+      </div>
+      <div class="controls--right">
+        <span class="switch-container" data-switch-container-for="grayscale"  style="{{@hasVideo ? '' : 'display: none;'}}">
+          <span class="switch" data-switch-for="grayscale"></span>
+          <span>{{@Helper.i18n("window.videorecorder.button.grayscale")}}</span>
+        </span>
+      </div>
+    </div>
+    <div class="controls--after-recording">
+      <div class="controls--left">
+      </div>
+      <div class="controls--center">
+        <button class="btn btn-default btn-sm small" data-action="restart-recording"><i class="ico-bin"></i><span>{{@Helper.i18n("window.videorecorder.button.restartRecording." + (isPhoto ? "photo" : "audioVideo"))}}</span></button>
+        <button class="btn btn-success btn-sm small" data-action="save"><i class="fa fa-save"></i><span>{{@Helper.i18n("window.videorecorder.button.save." + (isPhoto ? "photo" : hasVideo ? "video" : "audio"))}}</span></button>
+      </div>
+      <div class="controls--right">
+        <span class="switch-container" data-switch-container-for="grayscale" style="{{@hasVideo ? '' : 'display: none;'}}">
+          <span class="switch" data-switch-for="grayscale"></span>
+          <span>{{@Helper.i18n("window.videorecorder.button.grayscale")}}</span>
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="loading-container visible">
+    <div class="loading-spinner">
+      <i class="fa fa-spin fa-circle-o-notch"></i>
+    </div>
+  </div>
+</div>

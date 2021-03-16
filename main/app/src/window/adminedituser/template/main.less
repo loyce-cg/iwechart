@@ -4,7 +4,16 @@ body {
   min-height: 0;
   height: auto;
 }
-
+.base-form .fields .field.buttons {
+  button {
+    margin: 2px 2px;
+    text-align: center;
+  }
+  
+  &[data-action=close] {
+    margin-left: 8px;
+  }
+}
 .base-form .fields .field .input input[type=text] {
   display: inline-block;
   vertical-align: middle;

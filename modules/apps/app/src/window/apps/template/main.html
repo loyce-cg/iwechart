@@ -31,11 +31,20 @@
             </div>
           }} }); }}
         </div>
+        <div class="stats-container">
+          <div class="modules-statistics">
+            <span class="item chat">{{@Helper.i18n("plugin.apps.window.apps.statistics.chat")}}:<span class="count chat-count"></span></span>
+            <span class="item notes2">{{@Helper.i18n("plugin.apps.window.apps.statistics.notes2")}}:<span class="count notes2-count"></span></span>
+            <span class="item tasks">{{@Helper.i18n("plugin.apps.window.apps.statistics.tasks")}}:<span class="count tasks-count"></span></span>
+          </div>  
+        </div>
         <div class="sections">
           <div class="sections-inner"></div>
         </div>
       </div>
     </div>
   </div>
-  <div class="version-info">PrivMX Desktop version: {{@model.appVersion}}</div>
+  {{ if (model.isElectron) { {{
+    <div class="version-info">PrivMX Desktop version: {{@model.appVersion}}</div>
+  }} } }}
 </div>

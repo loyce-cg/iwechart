@@ -4,6 +4,7 @@ import * as Q from "q";
 import {UserPreferences} from "../../mail/UserPreferences";
 import {Inject} from "../../utils/Decorators";
 import {utils} from "../../Types";
+import { MailConst } from "../../mail";
 
 export abstract class BaseController extends WindowComponentController<SettingsWindowController> {
     
@@ -35,8 +36,26 @@ export abstract class BaseController extends WindowComponentController<SettingsW
     }
 
     getAutostartSetting(): boolean {
-        let isSetEnabled: boolean = (<any>this.app).isAutostartEnabled();
+        let isSetEnabled: boolean = this.app.isElectronApp() && (<any>this.app).isAutostartEnabled();
+        return isSetEnabled;
+    }
+
+    getErrorsLoggingSetting(): boolean {
+        let isSetEnabled: boolean = this.app.isElectronApp() && (<any>this.app).isErrorsLoggingEnabled();
         return isSetEnabled;        
+    }
+
+    updateErrorsLoggingSetting(enabled: boolean): Q.Promise<void> {
+        return Q().then(() => {
+            if (! this.app.isElectronApp()) {
+                return;
+            }
+            let isSetEnabled: boolean = (<any>this.app).isErrorsLoggingEnabled();
+            if (isSetEnabled == enabled) {
+                return;
+            }
+            (<any>this.app).setErrorsLoggingEnabled(enabled);
+        })
     }
 
     onViewSave(settingsMapStr: string): void {
@@ -45,11 +64,20 @@ export abstract class BaseController extends WindowComponentController<SettingsW
         let notifyOnLangChange = "ui.lang" in settingsToSave && this.userPreferences.data.ui.lang != settingsToSave["ui.lang"];
         
         let autostartEnabled: boolean = this.getAutostartSetting();
-        if ("ui.autostartEnabled" in settingsToSave) {
-            autostartEnabled = settingsToSave["ui.autostartEnabled"];
+        let errorsLoggingEnabled: boolean = this.getErrorsLoggingSetting();
+
+        if (MailConst.AUTOSTART_ENABLED in settingsToSave) {
+            autostartEnabled = settingsToSave[MailConst.AUTOSTART_ENABLED];
             
             // ustawienie trzymamy tylko w pliku profilu
-            delete settingsToSave["ui.autostartEnabled"];
+            delete settingsToSave[MailConst.AUTOSTART_ENABLED];
+        }
+
+        if (MailConst.ERRORS_LOGGING_ENABLED in settingsToSave) {
+            errorsLoggingEnabled = settingsToSave[MailConst.ERRORS_LOGGING_ENABLED];
+            
+            // ustawienie trzymamy tylko w pliku profilu
+            delete settingsToSave[MailConst.ERRORS_LOGGING_ENABLED];
         }
 
 
@@ -67,7 +95,10 @@ export abstract class BaseController extends WindowComponentController<SettingsW
                 }
             })
             .then(() => {
-                return this.updateAutostartSetting(autostartEnabled)
+                return this.updateAutostartSetting(autostartEnabled);
+            })
+            .then(() => {
+                return this.updateErrorsLoggingSetting(errorsLoggingEnabled);
             })
             .fin(() => {
                 Q.delay(500)

@@ -1,6 +1,6 @@
 @import {NotificationEntryOptions} from "../NotificationController";
 @model {id: number, label: string, options: NotificationEntryOptions}
-<div class="notification-entry" data-notification-id="{{@model.id}}">
+<div class="notification-entry {{@model.options && model.options.extraCssClass ? model.options.extraCssClass : ''}}" data-notification-id="{{@model.id}}">
   <div>
     {{ if (model.options && model.options.progress) { {{
       <i class="fa fa-circle-o-notch fa-spin"></i>

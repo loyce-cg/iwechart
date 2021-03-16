@@ -1,0 +1,14 @@
+@model {sectionName: string, sectionType: string, currentDir: string}
+<div class="current-path">{{@model.currentDir}}</div>
+<div class="inner">
+  <div class="wi-element">
+    <div class="wi-element-inner">
+      <div class="wi-element-icon bckg-icon bckg-icon-inverse2{{@model.sectionType == ' private' ? ' private': ''}}">
+        <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+      </div>
+      <div class="wi-element-name">
+        <span class="name">{{@model.sectionName}}</span>
+      </div>
+    </div>
+  </div>
+</div>

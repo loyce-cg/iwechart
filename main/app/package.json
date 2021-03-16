@@ -6,17 +6,20 @@
   "license": "PrivMX Source Code License",
   "private": true,
   "scripts": {
-    "postinstall": "./postinstall.sh"
+    "ci-quick": "QUICK_POST_INSTALL=true npm ci",
+    "postinstall": "node postinstall.js"
   },
   "dependencies": {
     "@ag-grid-community/all-modules": "^23.1.1",
+    "@sentry/electron": "^2.0.4",
     "@simplito/libopus": "^1.0.0",
     "@types/auto-launch": "^5.0.0",
     "@types/bytebuffer": "^5.0.41",
-    "@types/electron": "^3.0.0",
+    "@types/electron": "^11.0.1",
     "@types/eligrey-filesaver": "^1.0.0",
     "@types/extract-zip": "^1.6.2",
     "@types/fs-extra": "^5.0.4",
+    "@types/he": "^1.1.1",
     "@types/highlight.js": "^9.9.0",
     "@types/history": "^3.0.0",
     "@types/is_js": "^0.8.0",
@@ -29,7 +32,7 @@
     "@types/lodash.get": "^4.3.0",
     "@types/lodash.set": "^4.2.0",
     "@types/mime-types": "^2.1.0",
-    "@types/node": "^6.0.0",
+    "@types/node": "^10.11.7",
     "@types/node-ipc": "^9.1.2",
     "@types/pdfjs-dist": "^2.0.0-simplito",
     "@types/pitch-shift": "0.0.0",
@@ -51,7 +54,6 @@
     "bytebuffer": "^3.5.5",
     "clipboard": "^1.5.16",
     "clipboard-files": "git+https://git@github.com/wp777/clipboard-files.git",
-    "electron-spell-check-provider": "^1.1.1",
     "electron-unhandled": "^1.1.0",
     "eligrey-filesaver": "^1.0.0",
     "extract-zip": "^1.6.7",
@@ -69,33 +71,33 @@
     "jquery-ui": "1.11.4-simplito",
     "jquery.easing": "^1.4.1",
     "jszip": "^3.2.2",
-    "linkifyjs": "^2.1.4",
+    "linkifyjs": "^2.1.9",
     "localforage": "^1.4.2",
     "lodash": "^4.17.20",
     "lodash.get": "^4.3.0",
     "lodash.set": "^4.2.0",
     "mime-types": "^2.1.10",
     "moment": "^2.24.0",
-    "node-abi": "^2.10.0",
+    "node-abi": "^2.19.3",
     "node-ipc": "^9.1.1",
     "node-localstorage": "^1.1.2",
     "pdfjs-dist": "^2.0.943",
     "pitch-shift": "0.0.0",
     "platform": "^1.3.1",
     "privfs-client": "^1.69.3",
-    "privmx-crypto": "^1.2.3",
+    "privmx-crypto": "^1.2.6",
     "privmx-exception": "^1.0.0",
-    "privmx-rpc": "^1.5.5",
+    "privmx-rpc": "^1.5.12",
     "q": "^1.4.3",
     "qrious": "^4.0.2",
     "request": "^2.88.0",
     "resize-observer-polyfill": "^1.5.1",
     "screenshot-desktop": "^1.5.4-simplito",
-    "simplito-logger": "^1.0.0",
+    "simplito-logger": "^1.0.1",
     "simplito-net": "^1.1.1",
     "simplito-promise": "^1.1.0",
     "simplito-utils": "^1.0.0",
-    "sqlite3": "^4.0.9",
+    "sqlite3": "^4.2.0",
     "striptags": "^3.1.1",
     "sudo-prompt": "^9.1.1",
     "systeminformation": "^4.14.4",
@@ -112,7 +114,7 @@
       "web",
       "main"
     ],
-    "version": "2.25.0-20201209134741933",
+    "version": "2.25.0-20210316084316946",
     "versionGen": true,
     "core": {
       "name": "pmc-core",
@@ -126,7 +128,11 @@
         "lodash.get",
         "lodash.set",
         "systeminformation",
-        "sudo-prompt"
+        "sudo-prompt",
+        "a-color-picker",
+        "jimp",
+        "@sentry/electron",
+        "resize-observer-polyfill"
       ],
       "explicitDepVersion": true
     },
@@ -171,7 +177,9 @@
         "src/component/emojiviewbar/index.less",
         "src/component/disabledsection/index.less",
         "src/component/userguide/index.less",
-        "src/component/loading/index.less"
+        "src/component/loading/index.less",
+        "src/component/customselect/template/main.less",
+        "src/component/simplepopup/template/main.less"
       ]
     },
     "main": {
@@ -204,7 +212,8 @@
     }
   },
   "devDependencies": {
+    "@types/dom-mediacapture-record": "^1.0.7",
     "@types/jszip": "^3.1.6",
-    "electron-rebuild": "^1.8.6"
+    "electron-rebuild": "^1.11.0"
   }
 }

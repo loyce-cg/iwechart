@@ -2,7 +2,6 @@ import { window, Q, component, Logger as RootLogger, mail, utils, app, privfs, P
 import { TasksPlugin, TasksComponentFactory, UpdatePinnedTaskGroupsEvent, TasksSettingChanged, HorizontalTaskWindowLayoutChangeRequestEvent, BadgesUpdateRequestEvent } from "../../main/TasksPlugin";
 import { EventHandler, Action, Watchable, TaskId, AttachmentId, ProjectId, TaskGroupId, TaskHistoryEntry, PersonId, Person, PeopleMap, ProjectsMap, TaskGroupsMap, TaskCommentTag, CommentBody, WatchedTaskItem, HostHash } from "../../main/Types";
 import { Task, TaskStatus } from "../../main/data/Task";
-import { CustomSelectController, CustomSelectItem } from "../customSelect/CustomSelectController";
 import { TaskWindowController } from "../../window/task/TaskWindowController";
 import { Project } from "../../main/data/Project";
 import MsgBoxResult = window.msgbox.MsgBoxResult;
@@ -16,6 +15,7 @@ import { i18n } from "./i18n/index";
 import { AttachmentsManager } from "../../main/AttachmentsManager";
 import { HistoryManager } from "../../main/HistoryManager";
 import { Utils } from "../../main/utils/Utils";
+import { CREATE_NEW_TASKGROUP_ACTION, CUSTOM_SELECT_CUSTOM_TEMPLATE_TASK_STATUS } from "./Types";
 
 const Logger = RootLogger.get("privfs-tasks-plugin.TaskPanelController");
 
@@ -170,7 +170,7 @@ export interface TaskOutOfSync {
     isTrashed: boolean;
 }
 
-@Dependencies(["taskscustomselect", "persons", "notification"])
+@Dependencies(["customselect", "persons", "notification"])
 export class TaskPanelController<T extends window.base.BaseWindowController = window.base.BaseWindowController> extends window.base.WindowComponentController<T> {
     
     static textsPrefix: string = "plugin.tasks.component.taskPanel.";
@@ -195,12 +195,12 @@ export class TaskPanelController<T extends window.base.BaseWindowController = wi
     taskId: TaskId|false;
     obtainedTaskId: TaskId = null;
     
-    customSelectProject: CustomSelectController;
-    customSelectTaskGroup: CustomSelectController;
-    customSelectAssignedTo: CustomSelectController;
-    customSelectType: CustomSelectController;
-    customSelectStatus: CustomSelectController;
-    customSelectPriority: CustomSelectController;
+    customSelectProject: component.customselect.CustomSelectController;
+    customSelectTaskGroup: component.customselect.CustomSelectController;
+    customSelectAssignedTo: component.customselect.CustomSelectController;
+    customSelectType: component.customselect.CustomSelectController;
+    customSelectStatus: component.customselect.CustomSelectController;
+    customSelectPriority: component.customselect.CustomSelectController;
     dateTimePicker: any;
     dateTimePicker2: any;
     
@@ -254,7 +254,7 @@ export class TaskPanelController<T extends window.base.BaseWindowController = wi
         attachments: mail.section.OpenableSectionFile[] = []
     ) {
         super(parent);
-        this.app.userPreferences.eventDispatcher.addEventListener<Types.event.UserPreferencesChangeEvent>("userpreferenceschange", (event) => {
+        this.bindEvent<Types.event.UserPreferencesChangeEvent>(this.app.userPreferences.eventDispatcher, "userpreferenceschange", (event) => {
             this.onUserPreferencesChange(event);
         });
         this.initialAttachments = attachments && attachments.length > 0 ? attachments : null;
@@ -276,13 +276,73 @@ export class TaskPanelController<T extends window.base.BaseWindowController = wi
         this.dataChangedListener = this.onDataChanged.bind(this);
         this.onTaskGroupChangedListener = this.onTaskGroupChanged.bind(this);
         this.onTaskChangedListener = this.onTaskChanged.bind(this);
-        let items: Array<CustomSelectItem> = [];
-        this.customSelectProject = this.addComponent("customSelectProject", this.componentFactory.createComponent("taskscustomselect", [this, items, { multi:false, editable:editable, firstItemIsStandalone:false }]));
-        this.customSelectTaskGroup = this.addComponent("customSelectTaskGroup", this.componentFactory.createComponent("taskscustomselect", [this, items, { multi:true, editable:editable, firstItemIsStandalone:false, noSelectionText:this.i18n("plugin.tasks.component.taskPanel.task.taskGroup.noneSelected"), taskGroupCreator:this.newTaskGroup.bind(this) }]));
-        this.customSelectAssignedTo = this.addComponent("customSelectAssignedTo", this.componentFactory.createComponent("taskscustomselect", [this, items, { multi:true, editable:editable, firstItemIsStandalone:false, noSelectionText:this.i18n("plugin.tasks.component.taskPanel.task.assignedTo.nooneSelected"), noSelectionPersonCanvas:true, collapseCanvases:true }]));
-        this.customSelectType = this.addComponent("customSelectType", this.componentFactory.createComponent("taskscustomselect", [this, items, { multi:false, editable:editable, firstItemIsStandalone:false }]));
-        this.customSelectStatus = this.addComponent("customSelectStatus", this.componentFactory.createComponent("taskscustomselect", [this, items, { multi:false, editable:editable, firstItemIsStandalone:false }]));
-        this.customSelectPriority = this.addComponent("customSelectPriority", this.componentFactory.createComponent("taskscustomselect", [this, items, { multi:false, editable:editable, firstItemIsStandalone:false }]));
+        this.customSelectProject = this.addComponent("customSelectProject", this.componentFactory.createComponent("customselect", [this, {
+            multi: false,
+            editable: editable,
+            firstItemIsStandalone: false,
+            items: [],
+        }]));
+        this.customSelectTaskGroup = this.addComponent("customSelectTaskGroup", this.componentFactory.createComponent("customselect", [this, {
+            multi: true,
+            editable: editable,
+            noSelectionItem: {
+                type: "item",
+                icon: null,
+                text: this.i18n("plugin.tasks.component.taskPanel.task.taskGroup.noneSelected"),
+                value: null,
+                selected: false,
+            },
+            firstItemIsStandalone: false,
+            mergeStrategy: <component.customselect.TakeAllMergeStrategy>{
+                strategyType: "take-all",
+                separator: null,
+            },
+            items: [],
+            actionHandler: (actionId: string) => {
+                if (actionId == CREATE_NEW_TASKGROUP_ACTION) {
+                    this.createNewTaskGroup();
+                }
+            },
+        }]));
+        this.customSelectAssignedTo = this.addComponent("customSelectAssignedTo", this.componentFactory.createComponent("customselect", [this, {
+            multi: true,
+            editable: editable,
+            firstItemIsStandalone: false,
+            noSelectionItem: {
+                type: "item",
+                icon: <Types.webUtils.IconAvatar>{
+                    type: "avatar",
+                    hashmail: "",
+                },
+                text: this.i18n("plugin.tasks.component.taskPanel.task.assignedTo.nooneSelected"),
+                value: null,
+                selected: false,
+            },
+            mergeStrategy: <component.customselect.TakePartsMergeStrategy>{
+                strategyType: "take-parts",
+                icons: "take-all",
+                texts: "take-none",
+            },
+            items: [],
+        }]));
+        this.customSelectType = this.addComponent("customSelectType", this.componentFactory.createComponent("customselect", [this, {
+            multi: false,
+            editable: editable,
+            firstItemIsStandalone: false,
+            items: [],
+        }]));
+        this.customSelectStatus = this.addComponent("customSelectStatus", this.componentFactory.createComponent("customselect", [this, {
+            multi: false,
+            editable: editable,
+            firstItemIsStandalone: false,
+            items: [],
+        }]));
+        this.customSelectPriority = this.addComponent("customSelectPriority", this.componentFactory.createComponent("customselect", [this, {
+            multi: false,
+            editable: editable,
+            firstItemIsStandalone: false,
+            items: [],
+        }]));
         this.dateTimePicker = this.addComponent("dateTimePicker", this.componentFactory.createComponent(<any>"dateTimePicker", [this, <any>{
             popup: true,
             week: false,
@@ -364,7 +424,7 @@ export class TaskPanelController<T extends window.base.BaseWindowController = wi
         
         this.resetAttachmentsUsingInitial();
         
-        this.app.addEventListener<UpdatePinnedTaskGroupsEvent>("update-pinned-taskgroups", event => {
+        this.bindEvent<UpdatePinnedTaskGroupsEvent>(this.app, "update-pinned-taskgroups", event => {
             if (this.internalModel.projectId == event.sectionId && this.internalModel.taskGroupIds && this.internalModel.taskGroupIds.indexOf(event.listId) >= 0) {
                 let tgp = this.internalModel.taskGroupsPinned;
                 let wasPinned = tgp.indexOf(event.listId) >= 0;
@@ -381,7 +441,7 @@ export class TaskPanelController<T extends window.base.BaseWindowController = wi
                 this.callViewMethod("updatePinnedBadges", event.listId, event.pinned);
             }
         });
-        this.app.addEventListener<TasksSettingChanged>("tasks-setting-changed", event => {
+        this.bindEvent<TasksSettingChanged>(this.app, "tasks-setting-changed", event => {
             if (event.setting == "enter-saves-task") {
                 this.setEnterSavesTask(<boolean>event.value);
             }
@@ -570,7 +630,7 @@ export class TaskPanelController<T extends window.base.BaseWindowController = wi
             let data: TaskOutOfSync = {
                 isTrashed: this.tasksPlugin.tasks[this.session.hostHash][<string>this.taskId] && this.tasksPlugin.tasks[this.session.hostHash][<string>this.taskId].getIsTrashed(),
             };
-            if (!(this.taskId in this.tasksPlugin.tasks[this.session.hostHash])) {
+            if (!(<any>this.taskId in this.tasksPlugin.tasks[this.session.hostHash])) {
                 this.updateView(false, true, null, false, dataChanged);
                 return;
             }
@@ -881,11 +941,11 @@ comment: ""
         }
         let proj = this.tasksPlugin.projects[this.session.hostHash][projectId];
         let tgs = proj.getTaskGroupIds();
-        let taskGroupIds: Array<TaskGroupId> = this.customSelectTaskGroup.items.filter(it => it.selected && tgs.indexOf(it.val) >= 0).map(it => it.val);
-        let assignedTo: Array<PersonId> = this.customSelectAssignedTo.items.filter(it => it.selected).map(it => it.val);
-        let type: number = parseInt(this.customSelectType.items.filter(it => it.selected).map(it => it.val)[0]);
-        let status: number = parseInt(this.customSelectStatus.items.filter(it => it.selected).map(it => it.val)[0]);
-        let priority: number = parseInt(this.customSelectPriority.items.filter(it => it.selected).map(it => it.val)[0]);
+        let taskGroupIds: Array<TaskGroupId> = this.customSelectTaskGroup.items.filter(it => it.type == "item" && it.selected && tgs.indexOf(it.value) >= 0).map(it => (it as component.customselect.CustomSelectItem).value);
+        let assignedTo: Array<PersonId> = this.customSelectAssignedTo.items.filter(it => it.type == "item" && it.selected).map(it => (it as component.customselect.CustomSelectItem).value);
+        let type: number = parseInt(this.customSelectType.items.filter(it => it.type == "item" && it.selected).map(it => (it as component.customselect.CustomSelectItem).value)[0]);
+        let status: number = parseInt(this.customSelectStatus.items.filter(it => it.type == "item" && it.selected).map(it => (it as component.customselect.CustomSelectItem).value)[0]);
+        let priority: number = parseInt(this.customSelectPriority.items.filter(it => it.type == "item" && it.selected).map(it => (it as component.customselect.CustomSelectItem).value)[0]);
         
         this.updateCustomSelects(projectId, taskGroupIds, assignedTo, type, status, priority);
     }
@@ -908,14 +968,23 @@ comment: ""
     
     updateCustomSelectProjectItems(selectedProjectId: ProjectId): void {
         // console.log("on updateCustomSelectItems");
-        let items: Array<CustomSelectItem> = [];
+        let items: Array<component.customselect.CustomSelectItem> = [];
         let availProjects = this.tasksPlugin.getAvailableProjects(this.session);
         for (let k in availProjects) {
             let proj = availProjects[k];
-            let icon = "@asset-DEFAULT_PRIVMX_ICON";
+            let icon: Types.webUtils.Icon;
             if (proj.getId().substr(0, 8) == "private:") {
                 let id = this.tasksPlugin.getMyId(this.session);
-                icon = "!" + id;
+                icon = <Types.webUtils.IconAvatar>{
+                    type: "avatar",
+                    hashmail: id,
+                };
+            }
+            else {
+                icon = <Types.webUtils.IconAsset>{
+                    type: "asset",
+                    assetName: "DEFAULT_PRIVMX_ICON",
+                };
             }
             let pubSection = false;
             let section: mail.section.SectionService = null;
@@ -929,7 +998,8 @@ comment: ""
             let extraClasses: string[] = [];
             let extraAttributes: { [key: string]: string } = {};
             if (!pubSection) {
-                extraClasses.push("tr-icon");
+                icon.noBackground = true;
+                icon.withBorder = true;
             }
             if (section && !section.isPrivateOrUserGroup()) {
                 extraAttributes["data-section-id"] = section.getId();
@@ -942,8 +1012,9 @@ comment: ""
             }
             // console.log("create item")
             items.push({
+                type: "item",
                 icon: icon,
-                val: k,
+                value: k,
                 text: projectPrefix ? ("<span class='project-full-name'><span class='project-prefix'>" + projectPrefix + "</span><span class='project-name'>" + projectName + "</span></span>") : projectName,
                 selected: k == selectedProjectId,
                 extraClass: extraClasses.join(" "),
@@ -962,7 +1033,7 @@ comment: ""
         }
         let taskGroups = taskGroupsIds.map(id => this.tasksPlugin.taskGroups[this.session.hostHash][id]);
         let project = this.tasksPlugin.projects[this.session.hostHash][projectId];
-        let items: Array<CustomSelectItem> = [];
+        let items: Array<component.customselect.CustomSelectItem> = [];
         let isOrph = taskGroups.length == 0 || (taskGroups.length == 1 && taskGroups[0].getId() == "__orphans__");
         if (isOrph) {
             this.customSelectTaskGroup.value = "__orphans__";
@@ -985,10 +1056,39 @@ comment: ""
             if (tg && (!noDetachedTgs || !tg.getDetached())) {
                 let proj = this.tasksPlugin.projects[this.session.hostHash][tg.getProjectId()];
                 let pinned = (proj ? proj.getPinnedTaskGroupIds().indexOf(tg.getId()) >= 0 : false);
-                items.push({icon:tg.getIcon()?"@json-"+tg.getIcon():null, val:tgId, text:tg.getName(), selected:taskGroupsIds.indexOf(tgId) >= 0, extraClass:"taskgroup-label" + (pinned ? " pinned" : "")});
+                let icon: Types.webUtils.IconBadgeIcon | null = null;
+                let iconRaw = tg.getIcon();
+                if (iconRaw) {
+                    icon = {
+                        type: "badgeIcon",
+                        modelJsonStr: iconRaw,
+                        noFixedSize: true,
+                        noBackground: true,
+                    };
+                }
+                items.push({
+                    type: "item",
+                    icon: icon,
+                    value: tgId,
+                    text: tg.getName(),
+                    selected: taskGroupsIds.indexOf(tgId) >= 0,
+                    extraClass: "taskgroup-label" + (pinned ? " pinned" : ""),
+                });
             }
         }
-        items.push({icon:null, val:"__new_taskgroup__", text:null, selected:null, isTaskGroupCreator:true});
+        items.push({
+            type: "item",
+            icon: <Types.webUtils.IconFont>{
+                type: "fontAwesome",
+                iconName: "plus",
+                noBackground: true,
+                noFixedSize: true,
+            },
+            value: "__new_taskgroup__",
+            text: this.i18n("plugin.tasks.component.taskPanel.newTaskGroup"),
+            selected: null,
+            actionId: CREATE_NEW_TASKGROUP_ACTION,
+        });
         this.customSelectTaskGroup.setItems(items);
     }
     
@@ -1057,7 +1157,7 @@ comment: ""
     
     updateCustomSelectAssignedToItems(projectId: ProjectId, assignedTo: Array<PersonId>): void {
         // console.log("on updateCusotomSelectToItems")
-        let items: Array<CustomSelectItem> = [];
+        let items: Array<component.customselect.CustomSelectItem> = [];
         let members = this.tasksPlugin.getProjectMembers(this.session, projectId);
         let section = this.session.sectionManager.getSection(projectId);
         let limitToUsers: string[] = null;
@@ -1099,18 +1199,38 @@ comment: ""
             if (limitToUsers && limitToUsers.indexOf(p.id.split("#")[0]) < 0) {
                 continue;
             }
-            items.push({icon:"!"+p.id, val:k, text:p.name, selected:assignedTo.indexOf(p.id) >= 0});
+            items.push({
+                type: "item",
+                icon: <Types.webUtils.IconAvatar>{ type: "avatar", hashmail: p.id },
+                value: k,
+                text: p.name,
+                selected: assignedTo.indexOf(p.id) >= 0,
+            });
         }
         this.customSelectAssignedTo.setItems(items);
     }
     
-    updateCustomSelectSimpleItems(cs: CustomSelectController, data: Array<string>, selectedIdx: number, extraClass: string = ""): void {
-        let items: Array<CustomSelectItem> = [];
+    updateCustomSelectSimpleItems(cs: component.customselect.CustomSelectController, data: Array<string>, selectedIdx: number, extraClass: string = ""): void {
+        let items: Array<component.customselect.CustomSelectItem> = [];
         let taskId = this.taskId ? this.taskId : "";
         let isStatus = cs == this.customSelectStatus;
         for (let k in data) {
-            let extraArg = extraClass == "task-label" ? [Task.getLabelClass(<TaskStatus>data[k]), taskId] : null;
-            items.push({icon:null, val:k, text:isStatus?Task.getStatusText(<TaskStatus>data[k]):data[k], selected:<any>k == selectedIdx, extraClass:extraClass, extraArg:extraArg});
+            let item: component.customselect.CustomSelectItem = {
+                type: "item",
+                icon: null,
+                value: k,
+                text: isStatus ? Task.getStatusText(<TaskStatus>data[k]) : data[k],
+                selected: (<any>k) == selectedIdx,
+                extraClass: extraClass,
+            };
+            if (extraClass == "task-label") {
+                item.extraArg = {
+                    labelClass: Task.getLabelClass(<TaskStatus>data[k]),
+                    taskId: taskId,
+                };
+                item.customTemplateName = CUSTOM_SELECT_CUSTOM_TEMPLATE_TASK_STATUS;
+            }
+            items.push(item);
         }
         cs.setItems(items);
     }
@@ -1646,7 +1766,7 @@ comment: ""
     
     onViewOpenAttachment(did: string, editable: boolean): void {
         let section: mail.section.SectionService;
-        if (!(this.taskId in this.tasksPlugin.tasks[this.session.hostHash]) || this.taskId == false) {
+        if (!(<any>this.taskId in this.tasksPlugin.tasks[this.session.hostHash]) || this.taskId == false) {
             let att = this.attachmentsManager.find(did);
             section = this.session.sectionManager.getSection(att.currentSectionId);
             if (!section) {
@@ -1915,7 +2035,7 @@ comment: ""
                 })
                 .then(id => {
                     let prom = Q();
-                    this.tasksPlugin.addTask(this.session, t);
+                    prom = prom.then(() => this.tasksPlugin.addTask(this.session, t));
                     let added = false;
                     for (let k of result.taskGroupIds) {
                         if (k != "__orphans__") {
@@ -2009,17 +2129,23 @@ comment: ""
                     
                     let prom = this.commitAttachments(destinationSection, task);
                     if (oldProject) {
-                        prom = prom.then(() => <any>this.tasksPlugin.saveProject(this.session, oldProject));
+                        prom = prom.then(() => this.tasksPlugin.saveProject(this.session, oldProject));
                     }
                     if (saveProject) {
-                        prom = prom.then(() => <any>this.tasksPlugin.saveProject(this.session, project));
+                        prom = prom.then(() => this.tasksPlugin.saveProject(this.session, project));
                     }
                     for (let tg of saveTgs) {
-                        prom = prom.then(() => <any>this.tasksPlugin.saveTaskGroup(this.session, tg));
+                        prom = prom.then(() => this.tasksPlugin.saveTaskGroup(this.session, tg));
                     }
-                    prom = prom.then(() => <any>this.tasksPlugin.saveTask(this.session, task, taskVersion, origTask))
-                    .then(() => {
+                    
+                    prom = prom.then(() => {
                         return this.tasksPlugin.sendTaskMessage(this.session, task, "modify-task");
+                    })
+                    .then(dt => {
+                        if (dt) {
+                            task.updateModifiedServerDateTime(dt);
+                        }
+                        return this.tasksPlugin.saveTask(this.session, task, taskVersion, origTask);
                     }).fail(e => {
                         console.log(e);
                     });
@@ -2294,25 +2420,28 @@ comment: ""
         return added;
     }
     
-    addCommentPreVersion18BackCompat(text: string): Q.Promise<string> {
+    addCommentPreVersion18BackCompat(text: string): Q.Promise<{ commentTag: string, dt: number | null } | null> {
         if (this.taskId == false || text.replace(/&nbsp;/g, "").replace(/\<br\>/g, "").trim().length == 0) {
             return Q().thenResolve(null);
         }
         else {
             let t = this.tasksPlugin.tasks[this.session.hostHash][this.taskId];
-            let commentTag: string = null;
+            let commentTag: string | null = null;
+            let dt: number | null = null;
             return this.tasksPlugin.sendTaskCommentMessage(this.session, t, text)
             .then(result => {
                 commentTag = result.message.mainReceiver.sink.id + "/" + result.message.id;
                 t.addCommentTag(commentTag);
-                //t.setModifiedDateTime(new Date().getTime());
-                //t.setModifiedBy(this.tasksPlugin.getMyId(this.session));
-                //return <any>this.tasksPlugin.saveTask(this.session, t, version, origTask);
-                return commentTag;
+                if (result.source && result.source.serverDate) {
+                    dt = result.source.serverDate;
+                }
             })
             .fail(e => {
                 Logger.error("Error during saving task comment", e);
                 return null;
+            })
+            .then(() => {
+                return { commentTag, dt };
             });
         }
     }
@@ -2397,9 +2526,9 @@ comment: ""
                 return Q().then(() => {
                     return this.addCommentPreVersion18BackCompat(text);
                 })
-                .then(commentTag => {
+                .then(({ commentTag, dt }) => {
                     // t.addCommentTag(result.message.mainReceiver.sink.id + "/" + result.message.id);
-                    let currTime = Date.now();
+                    let currTime = dt ? dt : Date.now();
                     t.setModifiedDateTime(currTime);
                     t.setModifiedBy(this.tasksPlugin.getMyId(this.session));
                     let comments = t.getComments();
@@ -2627,7 +2756,7 @@ comment: ""
         this.setEnterAddsComment(value);
     }
     
-    newTaskGroup(): void {
+    createNewTaskGroup(): void {
         let projectId = this.result.projectId;
         let project = this.tasksPlugin.projects[this.session.hostHash][projectId];
         if (!project) {

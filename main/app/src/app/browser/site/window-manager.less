@@ -70,6 +70,10 @@
   position: absolute;
   
   border: 1px solid var(--window-border);
+    
+  &.always-on-top {
+    z-index: 99999999 !important;
+  }
   
   &.focused {
     -webkit-box-shadow: 0 0 30px var(--window-shadow);
@@ -206,6 +210,14 @@
   &:hover {
       color: @colorIconsOnDark_l_20;
   }
+  &.window-header-button-toggle-always-on-top {
+    transform: rotate(45deg);
+    position: relative;
+    top: 2px;
+    .window-wrapper.always-on-top & {
+      transform: none;
+    }
+  }
 }
 
 #windows-container.header-buttons-to-left {
@@ -221,6 +233,9 @@
     float: right;
   }
   .window-header-button-minimize {
+    float: left;
+  }
+  .window-header-button-toggle-always-on-top {
     float: left;
   }
 }

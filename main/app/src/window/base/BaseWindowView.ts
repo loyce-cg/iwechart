@@ -9,14 +9,15 @@ import {MsgBoxViewService} from "./MsgBoxViewService";
 import * as RootLogger from "simplito-logger";
 import {MsgBoxResult} from "../msgbox/MsgBoxWindowController";
 import { CustomizationData } from "../../app/common/customization/CustomizationData";
-import { SpellCheckerView } from "../../app/electron/SpellCheckerView";
+// import { SpellCheckerView } from "../../app/electron/SpellCheckerView";
 import { PerformanceLogger } from "../../app/common/PerformanceLogger";
 import { FontMetricsView } from "../../app/common/fontMetrics/FontMetricsView";
 import { WebUtils, ContentEditableEditor } from "../../web-utils";
 import { FilePickerData } from "../../web-utils/ContentEditableEditorMetaData";
-import { titletooltip } from "../../component/web";
+import { TitleTooltipView } from "../../component/titletooltip/TitleTooltipView";
 export type Logger = typeof RootLogger;
 require("../../web-utils/PfScroll");
+require("../../web-utils/PfScrollExperimental");
 require("../../web-utils/JQueryExt");
 
 export function WindowView(constructor: any) {
@@ -45,7 +46,7 @@ export class BaseWindowView<M, C = any> extends ComponentView {
     clipboardIntegration: "ask"|"enabled"|"disabled" = "enabled";
     taskPickerResultHandler: (taskId: string) => void = null;
     filePickerResultHandler: (data: FilePickerData) => void = null;
-    titleTooltip: titletooltip.TitleTooltipView;
+    titleTooltip: TitleTooltipView;
     
     constructor(parent: app.ViewParent, template: webUtils.MailTemplateDefinition<M, C>, i18nPrefix?: string) {
         super(parent);
@@ -100,10 +101,12 @@ export class BaseWindowView<M, C = any> extends ComponentView {
         };
         PerformanceLogger.log("openingWindows.BaseWindowView.constructor().end", this.className);
         this.fontMetrics = new FontMetricsView();
-        this.titleTooltip = this.addComponent("titleTooltip", new titletooltip.TitleTooltipView(this));
+        this.titleTooltip = this.addComponent("titleTooltip", new  TitleTooltipView(this));
         this.handleCopyPaste();
+        this.bindDevConsoleShortcut();
     }
-    
+
+
     getControllerId(): number {
         return this.parent.viewManager.controllerId;
     }
@@ -304,7 +307,7 @@ export class BaseWindowView<M, C = any> extends ComponentView {
     
     onBodyKeydown(event: KeyboardEvent): void {
         if (event.which == 122) {
-            this.triggerEvent("toogleDevTools");
+            this.triggerEvent("toggleDevTools");
         }
         if (event.ctrlKey && event.which == KEY_CODES.key8) {
             this.triggerEvent("shareSection");
@@ -407,17 +410,6 @@ export class BaseWindowView<M, C = any> extends ComponentView {
         this.$html.find(".logo-87x22-container.wh").find("img").attr("src", src);
         src = theme.logoLoginScreen ? theme.logoLoginScreen : this.helper.getAssetByName("CUSTOM_LOGO_127X112");
         this.$html.find(".logo-127x112-container").find("img").attr("src", src);
-    }
-    
-    initSpellChecker(lang: string): void {
-        SpellCheckerView.isSpellCheckerEnabled = true;
-        SpellCheckerView.init(lang, this.channelPromise.bind(this));
-        this.triggerSpellCheckerUpdate();
-    }
-    
-    stopSpellChecker(): void {
-        SpellCheckerView.isSpellCheckerEnabled = false;
-        this.triggerSpellCheckerUpdate();
     }
     
     triggerSpellCheckerUpdate(): void {
@@ -523,7 +515,11 @@ export class BaseWindowView<M, C = any> extends ComponentView {
         let fontMetrics: FontMetricsView = $el.data("fontmetrics");
         if (!fontMetrics) {
             fontMetrics = new FontMetricsView();
-            fontMetrics.setFont(12, true, false);
+            fontMetrics.setFont({
+                family: FontMetricsView.FONT_FAMILY,
+                sizePx: 12,
+                weight: FontMetricsView.FONT_WEIGHT_BOLD,
+            });
             $el.data("fontmetrics", fontMetrics);
         }
         $el.css("display", "block");
@@ -557,7 +553,7 @@ export class BaseWindowView<M, C = any> extends ComponentView {
                 fn();
             });
             try {
-                resizeObserver.observe($el[0]);                
+                resizeObserver.observe($el[0]);
             } catch (e) {}
         }
         
@@ -627,11 +623,21 @@ export class BaseWindowView<M, C = any> extends ComponentView {
         this.$body.attr("data-unread-badge-use-double-click", "" + unreadBadgeUseDoubleClick);
     }
     
+    bindDevConsoleShortcut(): void {
+        $(document).on("keydown", e => {
+            if (e.keyCode == 192 && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                this.triggerEvent("openDevConsole");
+            }
+        });
+    }
+
     handleCopyPaste(): void {
         if (this.isElectron()) {
             $(document).on("keydown", this.copyPasteKeydownHandler.bind(this));
         }
     }
+
     
     copyPasteKeydownHandler(e: KeyboardEvent): void {
         if (this.clipboardIntegration == "enabled" && (e.ctrlKey || e.metaKey) && (e.keyCode == KEY_CODES.c || e.keyCode == KEY_CODES.x)) {
@@ -730,6 +736,10 @@ export class BaseWindowView<M, C = any> extends ComponentView {
             return null;
         }
         let $tmp = this.cloneRangeContents(rng);
+        let commonAncestorContainer = rng.commonAncestorContainer;
+        if ((commonAncestorContainer instanceof HTMLElement) && commonAncestorContainer.classList.contains("selectable")) {
+            $tmp.addClass("selectable");
+        }
         this.recursiveRemoveNonSelectable($tmp);
         let $selectionParent: JQuery = rng.startContainer == rng.endContainer ? <JQuery>$(rng.startContainer) : <JQuery>$(rng.startContainer).parents().has(<Element>rng.endContainer).first();
         if (cut) {
@@ -750,8 +760,8 @@ export class BaseWindowView<M, C = any> extends ComponentView {
         }
         let $tmp2 = $tmp.clone();
         if (
-            ! $selectionParent.hasClass("selectable") 
-            && !($selectionParent.attr("contenteditable") == "true") 
+            ! $selectionParent.hasClass("selectable")
+            && !($selectionParent.attr("contenteditable") == "true")
             && !($selectionParent instanceof HTMLInputElement)
             && !($selectionParent instanceof HTMLTextAreaElement)
         ) {
@@ -774,7 +784,7 @@ export class BaseWindowView<M, C = any> extends ComponentView {
         else {
             $el.find(".selectable").each((i, child) => {
                 copied = this.addTextToCopied(copied, child);
-            })    
+            })
         }
         return this.mergeCopiedContents(copied);
     }
@@ -784,7 +794,7 @@ export class BaseWindowView<M, C = any> extends ComponentView {
         ret.push(el.innerHTML);
         if (el instanceof HTMLDivElement || el instanceof HTMLParagraphElement) {
             if ($(el).css("display").indexOf("inline") == -1 ) {
-                ret.push("\n");                    
+                ret.push("\n");
             }
         }
         else
@@ -797,14 +807,14 @@ export class BaseWindowView<M, C = any> extends ComponentView {
     mergeCopiedContents(copied: string[]): JQuery {
         let toMerge = this.removeNewLineFromCopiedIfAtEnd(copied);
         let $ret = $("<div>"+toMerge.join("")+"</div>");
-        return $ret; 
+        return $ret;
     }
 
     removeNewLineFromCopiedIfAtEnd(copied: string[]): string [] {
         if (copied[copied.length-1] == "\n") {
             return copied.slice(0, -1);
         }
-
+        return copied;
     }
 
     cloneRangeContents(rng: Range): JQuery {
@@ -908,6 +918,60 @@ export class BaseWindowView<M, C = any> extends ComponentView {
             return;
         }
         this.triggerEvent("openFileFromMetaData", ContentEditableEditor.base64ToUtf8(metaDataStr));
+    }
+    
+    async getMediaDevices(types: { videoInput?: boolean, audioInput?: boolean, audioOutput?: boolean }, showDeviceSelector: boolean) {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const defaultVideoInputDevice = devices.filter(device => device.kind == "videoinput")[0];
+        const defaultAudioInputDevice = devices.filter(device => device.kind == "audioinput")[0];
+        const defaultAudioOutputDevice = devices.filter(device => device.kind == "audiooutput")[0];
+        const defaultVideoInput = defaultVideoInputDevice ? defaultVideoInputDevice.deviceId : null;
+        const defaultAudioInput = defaultAudioInputDevice ? defaultAudioInputDevice.deviceId : null;
+        const defaultAudioOutput = defaultAudioOutputDevice ? defaultAudioOutputDevice.deviceId : null;
+        
+        let resultStr = await this.channelPromise<string>("getMediaDevicesStr", types, showDeviceSelector);
+        let result = JSON.parse(resultStr);
+        let mediaDevices = result.selectedDevices;
+        let rawResult = result.rawResult;
+        mediaDevices.videoInput = mediaDevices.videoInput || defaultVideoInput;
+        mediaDevices.audioInput = mediaDevices.audioInput || defaultAudioInput;
+        mediaDevices.audioOutput = mediaDevices.audioOutput || defaultAudioOutput;
+        
+        let ret: {
+            videoInput?: string | null;
+            audioInput?: string | null;
+            audioOutput?: string | null;
+            rawResult?: {
+                selected: boolean;
+                videoInput?: string | false | null;
+                audioInput?: string | false | null;
+                audioOutput?: string | false | null;
+            };
+        } = {
+            ...mediaDevices,
+            rawResult,
+        };
+        return ret;
+    }
+    
+    updateUserCustomSuccessColor(customSuccessColor: string | null): void {
+        if (!customSuccessColor) {
+            customSuccessColor = "default";
+        }
+        let style = document.querySelector("style#customSuccessColorStyle") as HTMLStyleElement | null;
+        if (!style) {
+            style = document.createElement("style");
+            style.setAttribute("id", "customSuccessColorStyle");
+            document.head.appendChild(style);
+        }
+        const str = customSuccessColor.substr(5, customSuccessColor.length - 6);
+        const [h, s, l, a] = str.split(",");
+        style.innerHTML = customSuccessColor == "default" ? "" : `:root {
+            --color-success-h: ${h};
+            --color-success-s: ${s};
+            --color-success-l: ${l};
+            --color-success-a: ${a};
+        }`;
     }
     
 }

@@ -158,13 +158,18 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
             this.watcher.watch(this.openableElement.getElementId(), this.onChangeLocalContent.bind(this));
         }
         
-        this.app.addEventListener<Types.event.FileLockChangedEvent>("file-lock-changed", event => {
-            this.updateLockUnlockButtons();
-        })
+        this.bindEvent<Types.event.FileLockChangedEvent>(this.app, "file-lock-changed", event => {
+            if (this.openableFileElement) {
+                const did = this.openableFileElement.handle.descriptor.ref.did;
+                if (did == event.did) {
+                    this.updateLockUnlockButtons();
+                }
+            }
+        });
 
         this.enableTaskBadgeAutoUpdater();
         this.prepareBeforeShowing();
-        this.app.addEventListener<Types.event.FileRenamedEvent>("fileRenamed", event => {
+        this.bindEvent<Types.event.FileRenamedEvent>(this.app, "fileRenamed", event => {
             if (!this.openableElement) {
                 return;
             }
@@ -418,7 +423,7 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
                 this.nwin.removeSpinner();
             });
         });
-        this.initSpellChecker(this.editorPlugin.userPreferences);
+        this.initSpellChecker();
     }
     
     onViewReload(): void {
@@ -621,6 +626,28 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
         });
     }
     
+    async confirmSaveBeforeSend(): Promise<void> {
+        try {
+            const hasChanges = await this.hasChangesToSave();
+            if (hasChanges) {
+                const confirmResult = await this.confirmEx({
+                    message: this.i18n("plugin.editor.window.editor.task.beforeSend.unsavedWarning.text", [this.openableElement.getName()]),
+                    yes: {label: this.i18n("plugin.editor.window.editor.save.confirm.yes.label")},
+                    no: {label: this.i18n("plugin.editor.window.editor.save.confirm.no.label")},
+                    cancel: {visible: true},
+                });
+                if (confirmResult.result == "yes") {
+                    const textToSave = await this.retrieveFromView<string>("getState");
+                    await this.save(textToSave);
+                    this.callViewMethod("confirmSave", textToSave);  
+                }
+            }    
+        }
+        catch (e) {
+            this.logError(e);
+        }
+    }
+
     exitEditMode(repaintView?: boolean): Q.Promise<boolean> {
         this.manager.refreshState();
         let text: string;
@@ -1244,6 +1271,9 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
         //         this.editorButtons.refreshButtonsState();
         //     })
         // }
+
+        let client = this.session.sectionManager.client;
+        this.registerPmxEvent(client.storageProviderManager.event, this.onStorageEvent);
         this.currentViewId++;
         this.openableElement = openableElement;
         this.openableEditableElement = this.openableElement && this.openableElement.isEditable() ?  this.openableElement : null;
@@ -1312,6 +1342,9 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
     }
     
     release() {
+        let client = this.session.sectionManager.client;
+        this.unregisterPmxEvent(client.storageProviderManager.event, this.onStorageEvent);
+
         if (!this.previewMode) {
             throw new Error("Cannot release when not in preview mode");
         }
@@ -1354,7 +1387,10 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
     }
     
     onViewSend(): void {
-        this.editorButtons.onViewSend();
+        new Promise(async () => {
+            await this.confirmSaveBeforeSend();
+            this.editorButtons.onViewSend();
+        })
     }
     
     saveBeforePrinting(): Q.Promise<void> {

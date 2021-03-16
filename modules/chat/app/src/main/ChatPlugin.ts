@@ -8,7 +8,11 @@ import { ChatMessage } from "./ChatMessage";
 import { PrivateConversationsController } from "../component/privateconversations/PrivateConversationsController";
 import { i18n } from "../i18n/index";
 import { MessagesMarkerQueue } from "./MessagesMarkerQueue";
+import { VideoConferenceController } from "../component/videoconference/VideoConferenceController";
+import { VideoConferenceWindowController } from "../window/videoConference/VideoConferenceWindowController";
 import { NoSectionsController } from "../component/nosections/NoSectionsController";
+import { DesktopPickerController } from "../component/desktoppicker/DesktopPickerController";
+import { mail } from "pmc-mail";
 
 let Logger = Mail.Logger.get("privfs-chat-plugin.ChatPlugin");
 
@@ -132,7 +136,9 @@ export interface ChatChannel {
 export type ChatComponentFactory = Mail.component.ComponentFactory&{
     createComponent(componentName: "chatmessages", args: [Mail.window.base.BaseWindowController]): ChatMessagesController;
     createComponent(componentName: "privateconversations", args: [Mail.window.base.BaseWindowController]): PrivateConversationsController;
+    createComponent(componentName: "videoconference", args: [Mail.window.base.BaseWindowController, Mail.app.common.videoconferences.RoomMetadata]): VideoConferenceController;
     createComponent(componentName: "nosections", args: [Mail.window.base.BaseWindowController]): NoSectionsController;
+    createComponent(componentName: "desktoppicker", args: [Mail.window.base.WindowComponentController<Mail.window.base.BaseWindowController>]): DesktopPickerController;
 }
 
 export interface ChatValidMessageTypeForDisplayChangeEvent extends Mail.Types.event.Event {
@@ -211,6 +217,7 @@ export class ChatPlugin {
     validMessageTypesForUnread: string[];
     validMessageJsonTypesForUnread: string[];
     sectionsWithSpinner: { [hostHash: string]: { [id: string]: boolean } } = {};
+    currentVideoConferenceWindowController: VideoConferenceWindowController = null;
 
     constructor(public app: Mail.app.common.CommonApplication) {
         this.chatUnreadCountModel = new Mail.utils.Model(0);
@@ -223,13 +230,17 @@ export class ChatPlugin {
             "create-file",
             "task-comment",
             "joined-voicechat",
-            "left-voicechat"
+            "left-voicechat",
+            "video-conference-start",
+            "video-conference-end",
+            "video-conference-gong",
         ];
         this.validMessageTypesForUnread = [
             Mail.mail.section.ChatModuleService.CHAT_MESSAGE_TYPE
         ];
         this.validMessageJsonTypesForUnread = [
-            ""
+            "",
+            "video-conference-gong",
         ];
     }
     
@@ -487,11 +498,12 @@ export class ChatPlugin {
             return 0;
         }
         let count = 0;
+        let validMessageJsonTypesForUnread = this.validMessageJsonTypesForUnread.filter(x => x == "" || this.validMessageJsonTypesForDisplay.indexOf(x) >= 0);
         this.validMessageTypesForUnread.forEach(type => {
             if (!stats.byType[type]) {
                 return;
             }
-            this.validMessageJsonTypesForUnread.forEach(jsonType => {
+            validMessageJsonTypesForUnread.forEach(jsonType => {
                 count += stats.byType[type].byJsonType[jsonType] ? stats.byType[type].byJsonType[jsonType].unread : 0;
             });
         });
@@ -678,6 +690,9 @@ export class ChatPlugin {
                             hostHash: e.scope.hostHash || undefined,
                         });
                     });
+                    this.app.addEventListener<Mail.Types.event.JoinVideoConferenceEvent>("join-video-conference", event => {
+                        this.openVideoConferenceWindow(event);
+                    });
                 });
             }
             this.loadChannelsPromise.then(() => {
@@ -719,6 +734,7 @@ export class ChatPlugin {
         if (! settings) {
           settings = {};
         }
+        settings = { ...this.getDefaultGUISettings(), ...settings };
         return settings;
     }
     
@@ -728,6 +744,7 @@ export class ChatPlugin {
             settings[x] = false;
         });
         settings["create-file"] = true;
+        settings["video-conference-gong"] = true;
         return settings;
     }
     
@@ -866,7 +883,7 @@ export class ChatPlugin {
     }
     
     getValidMessagesTypesFromGUISettings(settings: GUISettings): string[] {
-        let arr: string[] = ["joined-voicechat", "left-voicechat"];
+        let arr: string[] = ["joined-voicechat", "left-voicechat", "video-conference-start", "video-conference-end"];
         for (let key in settings) {
             if (settings[key] == true) {
                 arr.push(key);
@@ -939,20 +956,27 @@ export class ChatPlugin {
         if (data.length == 0) {
             return;
         }
-        let allowedMessages = data.filter(x => x.entry.source.data.contentType == "html" || x.entry.source.data.contentType == "text" || (x.entry.source.data.contentType == "application/json") && x.newStickers && x.newStickers.length > 0);
+        let allowedMessages = data.filter(x =>
+                   x.entry.source.data.contentType == "html"
+                || x.entry.source.data.contentType == "text"
+                || (x.entry.source.data.contentType == "application/json") && x.newStickers && x.newStickers.length > 0
+                || this.isVideoConferenceGongMessage(x)
+                || this.isVideoConferenceStartMessage(x));
         if (allowedMessages) {
             allowedMessages.forEach(x => {
                 if (!this.app.sessionManager.isSessionExistsByHost(x.entry.host)) {
                     return;
                 }
+                let isVideoConferenceGongMessage = this.isVideoConferenceGongMessage(x);
+                let isVideoConferenceStartMessage = this.isVideoConferenceStartMessage(x);
                 let session: Mail.mail.session.Session = this.app.sessionManager.getSession(x.entry.host);
-                if (this.isChannelFiltered(session, x.entry.index.sink.id, x.entry.getModule()) || this.isChannelMuted(session, x.entry.index.sink.id, x.entry.getModule())) {
+                if (!isVideoConferenceGongMessage && (this.isChannelFiltered(session, x.entry.index.sink.id, x.entry.getModule()) || this.isChannelMuted(session, x.entry.index.sink.id, x.entry.getModule()))) {
                     return;
                 }
                 let message = x.entry.getMessage();
                 let isEmojiMessage: boolean = x.newStickers && x.newStickers.length > 0;
                 let isJsonMessage = message.contentType == "application/json";
-                if (isJsonMessage && !isEmojiMessage) {
+                if (isJsonMessage && !isEmojiMessage && !isVideoConferenceGongMessage && !isVideoConferenceStartMessage) {
                     return;
                 }
                 let context: string = this.getContextFromSinkId(session, x.entry.sink.id);
@@ -996,14 +1020,34 @@ export class ChatPlugin {
                     if (this.isPollingItemComingFromMe(x)) {
                         return;
                     }
+                    let tooltipText: string;
+                    if (isVideoConferenceGongMessage) {
+                        let section = session.sectionManager.getSectionBySinkId(x.entry.index.sink.id);
+                        tooltipText = this.app.localeService.i18n("plugin.chat.notifications.videoConferenceGong", section.getFullSectionName(true, false, false));
+                        tooltipText = this.notificationTextEllipsis(tooltipText);
+                    }
+                    else if (isVideoConferenceStartMessage) {
+                        const videoConferenceTitle = JSON.parse(message.text).conferenceTitle;
+                        if (videoConferenceTitle) {
+                            tooltipText = this.app.localeService.i18n("plugin.chat.notifications.videoConferenceStart.withTitle", videoConferenceTitle);
+                        }
+                        else {
+                            tooltipText = this.app.localeService.i18n("plugin.chat.notifications.videoConferenceStart.withoutTitle");
+                        }
+                        tooltipText = this.notificationTextEllipsis(tooltipText);
+                    }
+                    else {
+                        tooltipText = this.prepareMessageForNotification(message.text);
+                    }
                     let event: Mail.Types.event.NotificationServiceEvent = {type: "notifyUser", options: {
                         sender: message.sender.hashmail,
                         tray: true,
                         sound: true,
                         tooltip: true,
+                        ignoreSilentMode: false,
                         tooltipOptions: {
                             title: "", //this.app.localeService.i18n("plugin.chat.notifications.wrote_message"),
-                            text: this.prepareMessageForNotification(message.text),
+                            text: tooltipText,
                             sender: message.sender.hashmail,
                             withAvatar: true,
                             withUserName: true
@@ -1013,11 +1057,37 @@ export class ChatPlugin {
                             sinkId: context,
                             hostHash: session.hostHash,
                         },
+                        overrideSoundCategoryName: isVideoConferenceGongMessage || isVideoConferenceStartMessage ? "gong" : null,
                     }};
                     this.app.dispatchEvent<Mail.Types.event.NotificationServiceEvent>(event);
                 }
             });
         }
+    }
+    
+    notificationTextEllipsis(text: string): string {
+        const maxLength = this.app.getNotificationTitleMaxLength();
+        if (text.length > maxLength) {
+            let ellipsis = this.app.getNotificationTitleEllipsis().trim();
+            text = text.substr(0, maxLength - ellipsis.length) + ellipsis;
+        }
+        return text;
+    }
+    
+    isVideoConferenceGongMessage(msg: mail.PollingItem): boolean {
+        if (msg.entry.source.data.contentType != "application/json") {
+            return false;
+        }
+        let content = msg.entry.getContentAsJson();
+        return content && content.type == "video-conference-gong";
+    }
+    
+    isVideoConferenceStartMessage(msg: mail.PollingItem): boolean {
+        if (msg.entry.source.data.contentType != "application/json") {
+            return false;
+        }
+        let content = msg.entry.getContentAsJson();
+        return content && content.type == "video-conference-start";
     }
     
     getMarkedNotificationText(msgText: string): string {
@@ -1054,7 +1124,7 @@ export class ChatPlugin {
             }
         }
         let newText = newLines.join(" ").replace(/<[^>]*>/g, "").trim();
-        if (newText.length == 0) {
+        if (newText.length == 0) { 
             newText = text;
         }
         return newText;
@@ -1065,4 +1135,187 @@ export class ChatPlugin {
             return this.messagesMarkerQueue[session.hostHash].add(messages, 0);
         });
     }
+    
+    async openVideoConferenceWindow(event: Mail.Types.event.JoinVideoConferenceEvent): Promise<void> {
+        const hasMicRights = await this.app.askForMicrophoneAccess();
+        const hasCameraRights = await this.app.askForCameraAccess();
+
+        if (! hasMicRights || ! hasCameraRights) {
+            await this.openNoMediaAlert();
+        }
+        else {
+            await this.app.openSingletonWindow("videoconference", VideoConferenceWindowController, event);
+        }
+    }
+
+    async openNoMediaAlert(): Promise<void> {
+        const confirmResult = await this.app.msgBox.confirmEx({
+            message: this.app.localeService.i18n("plugin.chat.videoconf.media.access.refused.darwin"),
+            yes: {
+                faIcon: "",
+                btnClass: "btn-success",
+                label: this.app.localeService.i18n("plugin.chat.videoconf.media.access.goprefs")
+            },
+            no: {
+                faIcon: "",
+                btnClass: "btn-default",
+                label: this.app.localeService.i18n("core.button.cancel.label")
+            }
+        });
+        if (confirmResult.result == "yes") {
+            await this.app.openMacOSSystemPreferencesWindow("security");
+        }               
+    }
+    
+    bringVideoConferenceWindowToFront(): void {
+        let wnd = this.currentVideoConferenceWindowController;
+        if (!wnd || !wnd.nwin) {
+            return;
+        }
+        if (wnd.nwin.isMinimized()) {
+            wnd.nwin.minimizeToggle();
+        }
+        
+        wnd.nwin.focus();
+        
+    }
+    
+    switchVideoConference(session: Mail.mail.session.Session, section: Mail.mail.section.SectionService, conversation: Mail.mail.section.Conv2Section, title: string): Q.Promise<void> {
+        let wnd = this.currentVideoConferenceWindowController;
+        let def = Q.defer<void>();
+        wnd.closeDeferred.promise.then(() => {
+            // console.log("@@@ wnd.closeDeferred.promise.then");
+            
+            this.app.dispatchEvent<Mail.Types.event.JoinVideoConferenceEvent>({
+                type: "join-video-conference",
+                hostHash: session.hostHash,
+                section: section,
+                conversation: conversation,
+                roomMetadata: {
+                    creatorHashmail: session.conv2Service.identity.hashmail,
+                    title: title,
+                },
+            });
+            
+            def.resolve();
+        });
+        // console.log("@@@ before dispatch")
+        wnd.leaveVideoConference();
+        // console.log("@@@ after dispatch")
+        return def.promise;
+    }
+    
+    isInVideoConference(session: Mail.mail.session.Session, section: Mail.mail.section.SectionService, conversation: Mail.mail.section.Conv2Section): boolean {
+        if (!this.isVideoConferenceActive(session, section, conversation)) {
+            return false;
+        }
+        const conferenceData = this.getVideoConferenceData(session, section, conversation);
+        return !!conferenceData.users.find(hashmail => hashmail == this.identity.hashmail);
+    }
+    
+    getVideoConferenceData(session: Mail.mail.session.Session, section: Mail.mail.section.SectionService, conversation: Mail.mail.section.Conv2Section): mail.videoconferences.ConferenceData | null {
+        const recentPollingResults = this.app.videoConferencesService.polling.recentPollingResults[session.hostHash];
+        if (!recentPollingResults || !recentPollingResults.conferencesData) {
+            return null;
+        }
+        const sectionId = conversation && conversation.section ? conversation.section.getId() : (section ? section.getId() : null);
+        if (!sectionId) {
+            return null;
+        }
+        const conferenceData = recentPollingResults.conferencesData.filter(conferenceData => conferenceData.sectionId == sectionId)[0];
+        return conferenceData;
+    }
+    
+    isVideoConferenceActive(session: Mail.mail.session.Session, section: Mail.mail.section.SectionService, conversation: Mail.mail.section.Conv2Section): boolean {
+        return !!this.getVideoConferenceData(session, section, conversation);
+    }
+    
+    getVideoConferenceParticipantHashmails(session: Mail.mail.session.Session, section: Mail.mail.section.SectionService, conversation: Mail.mail.section.Conv2Section): string[] {
+        if (!this.isVideoConferenceActive(session, section, conversation)) {
+            return [];
+        }
+        const conferenceData = this.getVideoConferenceData(session, section, conversation);
+        return conferenceData.users.slice();
+    }
+    
+    isUserInAnyVideoConference(): boolean {
+        return this.app.videoConferencesService.isUserInAnyConference();
+    }
+    
+    async tryJoinExistingVideoConference(session: mail.session.Session, section: mail.section.SectionService | null, conv2section: mail.section.Conv2Section | null): Promise<void> {
+        const polling = this.app.videoConferencesService.polling.recentPollingResults;
+        let conferenceExists: boolean = false;
+        if (polling && polling[session.hostHash] && polling[session.hostHash].conferencesData) {
+            const sectionId = section.getId();
+            const conferenceData = polling[session.hostHash].conferencesData.filter(conferenceData => conferenceData.sectionId == sectionId)[0];
+            conferenceExists = !!conferenceData;
+        }
+        if (!conferenceExists) {
+            return;
+        }
+        
+        if (this.isUserInAnyVideoConference() && this.currentVideoConferenceWindowController) {
+            if (this.isInVideoConference(session, section.isUserGroup() ? null : section, conv2section)) {
+                this.bringVideoConferenceWindowToFront();
+            }
+            else {
+                const result = await this.app.msgBox.msgBox({
+                    message: this.app.localeService.i18n("plugin.chat.switchVideoConferenceMsgBox.message"),
+                    
+                    yes: {
+                        faIcon: "",
+                        btnClass: "btn-success",
+                        label: this.app.localeService.i18n("plugin.chat.switchVideoConferenceMsgBox.switch"),
+                        visible: true,
+                    },
+                    // no: {
+                    //     faIcon: "",
+                    //     btnClass: "btn-default",
+                    //     label: this.app.localeService.i18n("plugin.chat.switchVideoConferenceMsgBox.bringToFront"),
+                    //     visible: true,
+                    // },
+                    cancel: {
+                        faIcon: "",
+                        btnClass: "btn-default",
+                        label: this.app.localeService.i18n("plugin.chat.switchVideoConferenceMsgBox.cancel"),
+                        visible: true,
+                    },
+                });
+                if (result.result == "yes") {
+                    this.switchVideoConference(
+                        session,
+                        section.isUserGroup() ? null : section,
+                        conv2section,
+                        "",
+                    );
+                }
+                else if (result.result == "no") {
+                    setTimeout(() => {
+                        this.bringVideoConferenceWindowToFront();
+                    }, 500);
+                }
+                else if (result.result == "cancel") {
+                    // Do nothing
+                }
+            }
+        }
+        else {
+            this.app.dispatchEvent<Mail.Types.event.JoinVideoConferenceEvent>({
+                type: "join-video-conference",
+                hostHash: session.hostHash,
+                section: section.isUserGroup() ? null : section,
+                conversation: conv2section,
+                roomMetadata: {
+                    creatorHashmail: session.conv2Service.identity.hashmail,
+                    title: "",
+                },
+            });
+        }
+    }
+    
+    gong(session: Mail.mail.session.Session, section: Mail.mail.section.SectionService, message: string): void {
+        this.app.videoConferencesService.gong(session, section, message);
+        this.app.playAudio("gong");
+    }
+    
 }

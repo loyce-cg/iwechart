@@ -1,6 +1,5 @@
-import { utils, window, Q, mail } from "pmc-mail";
+import { utils, window, Q, mail, component } from "pmc-mail";
 import { CalendarPlugin, CalendarComponentFactory } from "../../main/CalendarPlugin";
-import { CustomSelectController, CustomSelectItem } from "privfs-mail-client-tasks-plugin/src/component/customSelect/CustomSelectController";
 import Dependencies = utils.decorators.Dependencies;
 import { i18n } from "./i18n/index";
 
@@ -20,7 +19,7 @@ export interface Model {
     selectedTime: number;
 }
 
-@Dependencies(["taskscustomselect"])
+@Dependencies(["customselect"])
 export class DateTimePickerController extends window.base.WindowComponentController<window.base.BaseWindowController> {
     
     static textsPrefix: string = "plugin.calendar.component.dateTimePicker.";
@@ -31,8 +30,8 @@ export class DateTimePickerController extends window.base.WindowComponentControl
     
     calendarPlugin: CalendarPlugin;
     afterViewLoaded: Q.Deferred<void> = Q.defer();
-    customSelectMonth: CustomSelectController;
-    customSelectYear: CustomSelectController;
+    customSelectMonth: component.customselect.CustomSelectController;
+    customSelectYear: component.customselect.CustomSelectController;
     componentFactory: CalendarComponentFactory;
     currDataModel: Model;
     _valueChangedHandler: () => void = null;
@@ -47,8 +46,22 @@ export class DateTimePickerController extends window.base.WindowComponentControl
         this.calendarPlugin = this.app.getComponent("calendar-plugin");
         this.correctOptions(options);
         
-        this.customSelectMonth = this.addComponent("customSelectMonth", this.componentFactory.createComponent("taskscustomselect", [this, [], { multi:false, editable:true, firstItemIsStandalone:false, scrollToFirstSelected:true, gridColsCount:3 }]));
-        this.customSelectYear = this.addComponent("customSelectYear", this.componentFactory.createComponent("taskscustomselect", [this, [], { multi:false, editable:true, firstItemIsStandalone:false, scrollToFirstSelected:true, gridColsCount:5 }]));
+        this.customSelectMonth = this.addComponent("customSelectMonth", this.componentFactory.createComponent("customselect", [this, {
+            multi: false,
+            editable: true,
+            firstItemIsStandalone: false,
+            scrollToFirstSelected: true,
+            gridColsCount: 3,
+            items: [],
+        }]));
+        this.customSelectYear = this.addComponent("customSelectYear", this.componentFactory.createComponent("customselect", [this, {
+            multi: false,
+            editable: true,
+            firstItemIsStandalone: false,
+            scrollToFirstSelected: true,
+            gridColsCount: 5,
+            items: [],
+        }]));
     }
     
     init() {
@@ -218,16 +231,17 @@ export class DateTimePickerController extends window.base.WindowComponentControl
         this.triggerValueChanged();
     }
 
-    getCustomSelectMonthItems(): CustomSelectItem[] {
+    getCustomSelectMonthItems(): component.customselect.CustomSelectItem[] {
         let nowM = new Date().getMonth();
-        let arr: CustomSelectItem[] = [];
+        let arr: component.customselect.CustomSelectItem[] = [];
         let months: number[] = [];
         for (let i = 0; i < 12; ++i) {
             months.push(i);
         }
         for (let month of months) {
             arr.push({
-                val: month.toString(),
+                type: "item",
+                value: month.toString(),
                 text: this.i18n("plugin.calendar.component.dateTimePicker.month." + month),
                 textNoEscape: true,
                 icon: null,
@@ -238,17 +252,18 @@ export class DateTimePickerController extends window.base.WindowComponentControl
         return arr;
     }
 
-    getCustomSelectYearItems(): CustomSelectItem[] {
+    getCustomSelectYearItems(): component.customselect.CustomSelectItem[] {
         let nowY = new Date().getFullYear();
         let diff = 10;
-        let arr: CustomSelectItem[] = [];
+        let arr: component.customselect.CustomSelectItem[] = [];
         let years: number[] = [];
         for (let i = nowY - diff; i < nowY + diff; ++i) {
             years.push(i);
         }
         for (let year of years) {
             arr.push({
-                val: year.toString(),
+                type: "item",
+                value: year.toString(),
                 text: year.toString(),
                 textNoEscape: true,
                 icon: null,
@@ -259,9 +274,9 @@ export class DateTimePickerController extends window.base.WindowComponentControl
         return arr;
     }
 
-    getCustomSelectTimeItems(): CustomSelectItem[] {
+    getCustomSelectTimeItems(): component.customselect.CustomSelectItem[] {
         let pad0s = (x: number) => (x < 10 ? "0" : "") + x;
-        let arr: CustomSelectItem[] = [];
+        let arr: component.customselect.CustomSelectItem[] = [];
         for (let hs = 0; hs <= 24; hs++) {
             for (let ms = 0; ms <= 45; ms += 15) {
                 if ((hs == 24 && ms > 0)) {
@@ -270,7 +285,8 @@ export class DateTimePickerController extends window.base.WindowComponentControl
                 let str = pad0s(hs) + ":" + pad0s(ms);
                 let msecs = (hs * 3600 + ms * 60) * 1000;
                 arr.push({
-                    val: str,
+                    type: "item",
+                    value: str,
                     text: str,
                     icon: null,
                     selected: this.currDataModel.selectedTime == msecs,

@@ -222,6 +222,7 @@ export class AdminAddUserWindowController extends BaseWindowController {
     
     private async createRegularPrivateUser(model: AddUserModel) {
         const result = await this.privateUserCreator.createPrivateUser({
+            activationTokenPrefix: this.getActivationTokenPrefix(),
             creator: this.identity.user,
             username: model.username,
             host: this.getHost(),
@@ -264,6 +265,10 @@ export class AdminAddUserWindowController extends BaseWindowController {
         return privfs.core.ApiErrorCodes.is(e, "FORBIDDEN_USERNAME") || privfs.core.ApiErrorCodes.is(e, "INVALID_USERNAME");
     }
     
+    private getActivationTokenPrefix() {
+        return "registerTokenPrefix" in this.serverConfig ? (<any>this.serverConfig).registerTokenPrefix : "activate";
+    }
+    
     // ====================
     //       JOBS
     // ====================
@@ -280,6 +285,10 @@ export class AdminAddUserWindowController extends BaseWindowController {
         });
     }
     
+    private async unlockForm(): Promise<void> {
+        await this.retrieveFromView("unlockForm")
+    }
+
     private setLockAgainstClosing(): void {
         this.nwin.setClosable(false);
     }
@@ -312,6 +321,7 @@ export class AdminAddUserWindowController extends BaseWindowController {
             this.logErrorCallback(e);
         }
         finally {
+            await this.unlockForm();
             this.close();
         }
     }

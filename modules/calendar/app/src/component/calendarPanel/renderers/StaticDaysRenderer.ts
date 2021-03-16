@@ -167,7 +167,7 @@ export abstract class StaticDaysRenderer extends Renderer<EntryModel> {
                 }
                 let dt0 = new Date(dayTaskStart + dayStartTimestamp);
                 let taskData: TaskData = {
-                    text: (task.startTimestamp >= dayStartTimestamp && !wholeDays ? pad0s(dt0.getHours()) + ":" + pad0s(dt0.getMinutes()) + " " : "") + task.title,
+                    text: task.title + (task.startTimestamp >= dayStartTimestamp && !wholeDays ? " (" + pad0s(dt0.getHours()) + ":" + pad0s(dt0.getMinutes()) + ")" : ""),
                     model: task,
                     fileModel: null,
                     width: 100,
@@ -289,6 +289,39 @@ export abstract class StaticDaysRenderer extends Renderer<EntryModel> {
             }
         }
         
+        // Increase simult tasks count for tasks that are affected by non-overlapping tasks (via an intermediary task)
+        // Fixes following scenario:
+        //     Task 1: 08:00 - 12:00
+        //     Task 2: 12:00 - 16:00
+        //     Task 3: 08:00 - 16:00
+        //     Task 4: 12:00 - 16:00
+        // Algorithm: find groups of tasks that are overlapping (inc. via intermediary tasks) and set their simultTasksCount to the same max value
+        nSimultTasks = 0;
+        let overlappingTaskGroups: TaskData[][] = [];
+        let currentGroup: TaskData[] = [];
+        for (let pt of points) {
+            if (pt.start) {
+                ++nSimultTasks;
+                currentGroup.push(pt.task);
+            }
+            else {
+                --nSimultTasks;
+            }
+            if (nSimultTasks == 0 && currentGroup.length > 0) {
+                overlappingTaskGroups.push(currentGroup);
+                currentGroup = [];
+            }
+        }
+        for (let group of overlappingTaskGroups) {
+            let maxSimultTasks = 0;
+            for (let taskData of group) {
+                maxSimultTasks = Math.max(maxSimultTasks, taskData.maxNumOfSimultTasks);
+            }
+            for (let taskData of group) {
+                taskData.maxNumOfSimultTasks = maxSimultTasks;
+            }
+        }
+        
         // Set task sizes
         for (let task of tasks) {
             if (task.wholeDay) {
@@ -355,6 +388,9 @@ export abstract class StaticDaysRenderer extends Renderer<EntryModel> {
                 }
                 if (task.bottomContinues) {
                     el.className += " bottom-continues";
+                }
+                if (!task.wholeDay && task.dayTaskEnd - task.dayTaskStart <= 15 * 60 * 1000) {
+                    el.className += " compact";
                 }
                 
                 if (!task.wholeDay) {

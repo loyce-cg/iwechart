@@ -20,6 +20,8 @@ export class SqlStorage {
     saveId: number = 1;
     userLevel: boolean;
 
+    inMemoryCacheSize: number = 0;
+
     constructor(dirPath: string) {
         this.dirPath = this.workingPath = dirPath;
         if (!fs.existsSync(this.dirPath)) {
@@ -128,6 +130,8 @@ export class SqlStorage {
                 return this.getItemFromDb(key)
                 .then(value => {
                     this.inMemoryDb[key] = value;
+                    this.inMemoryCacheSize += value.length;
+                    
                     return value;
                 })
             }                
@@ -251,6 +255,10 @@ export class SqlStorage {
                 return;
             })
         });
+    }
+
+    getInMemorySize(): number {
+        return this.inMemoryCacheSize;
     }
 }
 

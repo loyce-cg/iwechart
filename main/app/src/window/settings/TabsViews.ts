@@ -1,26 +1,21 @@
-import {SettingsWindowView} from "./SettingsWindowView";
-import {BaseView} from "./BaseView";
-import {AccountView} from "./account/AccountView";
-// import {ContactFormView} from "./contactform/ContactFormView";
-// import {MailView} from "./mail/MailView";
-import {NotificationsView} from "./notifications/NotificationsView";
-import {PublicProfileView} from "./publicprofile/PublicProfileView";
-// import {SecureFormsView} from "./secureforms/SecureFormsView";
-// import {SubidentitiesView} from "./subidentities/SubidentitiesView";
-import {SysInfoView} from "./sysinfo/SysInfoView";
-import {UserInterfaceView} from "./userinterface/UserInterfaceView";
-// import {WhitelistView} from "./whitelist/WhitelistView";
-import {HotkeysView} from "./hotkeys/HotkeysView";
-import { SysInfoExtView } from "./sysinfoext/SysInfoExtView";
-import { AudioConfigView } from "./audioconfig/AudioConfigView";
+import { SettingsWindowView } from "./SettingsWindowView";
+import { BaseView } from "./BaseView";
+import { AlternativeLoginView } from "./alternativeLogin/AlternativeLoginView";
+import { ChangePasswordView } from "./changePassword/ChangePasswordView";
+import { NotificationsView } from "./notifications/NotificationsView";
+import { PublicProfileView } from "./publicprofile/PublicProfileView";
+import { SysInfoView } from "./sysinfo/SysInfoView";
+import { UserInterfaceView } from "./userinterface/UserInterfaceView";
 import { TextView } from "./text/TextView";
+import { DevicesView } from "./devices/DevicesView";
 
 export type TabsViewClass = {
-    new(parent: SettingsWindowView): BaseView<any>;
-}
+    new (parent: SettingsWindowView): BaseView<any>;
+};
 
 export let TabsViews: TabsViewClass[] = [
-    AccountView,
+    AlternativeLoginView,
+    ChangePasswordView,
     // ContactFormView,
     // MailView,
     NotificationsView,
@@ -34,4 +29,5 @@ export let TabsViews: TabsViewClass[] = [
     // HotkeysView,
     // AudioConfigView,
     TextView,
+    DevicesView,
 ];

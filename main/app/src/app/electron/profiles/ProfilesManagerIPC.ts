@@ -44,17 +44,13 @@ export class ProfilesManagerIPC {
     
     connectInstanceOrServe(): void {
         Q().then(() => {
-            return this.connectTo()
-            .then(() => {
-                return;
-            })
+            return this.connectTo();
         })
         .catch(() => {
             return this.serve()
             .then(() => {
                 this.serving = true;
                 this.pingClients();
-                return;
             });
         })
         .fail(err => {
@@ -259,16 +255,13 @@ export class ProfilesManagerIPC {
     
     checkServer(): void {
         if (this.pingTimer) {
-            clearTimeout(this.pingTimer);
+            clearInterval(this.pingTimer);
         }
-        this.pingTimer = setTimeout(() => {
+        this.pingTimer = setInterval(() => {
             if (this.serverLastSeen + 3000 <= new Date().getTime() || !this.connected) {
                 this.onClientClose();
             }
-            else {
-                this.checkServer();
-            }
-        }, 1000);
+        }, 10000);
     }
     
     clearConnectionEvents(): void {
@@ -285,15 +278,14 @@ export class ProfilesManagerIPC {
     pingClients(): void {
 
         if (this.pingTimer) {
-            clearTimeout(this.pingTimer);
+            clearInterval(this.pingTimer);
         }
 
-        this.pingTimer = setTimeout(() => {
+        this.pingTimer = setInterval(() => {
             if (this.connectedClients.length > 0) {
                 (<any>nodeIpc.server).broadcast("ping");
             }
-            this.pingClients();
-        }, 1000);
+        }, 10000);
     }
     
     setPromiseTimeout(defer: Q.Deferred<any>) {

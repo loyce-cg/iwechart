@@ -241,11 +241,21 @@ export class UI {
     static scrollViewIfNeeded(parent: HTMLElement, ele: HTMLElement) {
         let parentBB = parent.getBoundingClientRect();
         let eleBB = ele.getBoundingClientRect();
+        let newScrollTop: number | null = null;
         if (eleBB.top < parentBB.top) {
-            parent.scrollTop += eleBB.top - parentBB.top;
+            newScrollTop += eleBB.top - parentBB.top;
         }
         else if (eleBB.bottom > parentBB.bottom) {
-            parent.scrollTop += eleBB.bottom - parentBB.bottom;
+            newScrollTop += eleBB.bottom - parentBB.bottom;
+        }
+        if (newScrollTop !== null) {
+            if (parent.classList.contains("pf-content-2")) {
+                newScrollTop += parent.scrollTop;
+                $(parent.parentElement).pfScrollExperimental().scrollTo(newScrollTop);
+            }
+            else {
+                parent.scrollTop = newScrollTop;
+            }
         }
     }
     
@@ -315,4 +325,20 @@ export class UI {
         $container.on("mouseleave", hideButtonsOverlay);
         $container.on("mousemove", setMousePos);
     }
+    
+    static cloneElementWithCanvases($element: JQuery): JQuery {
+        const $clone = $element.clone();
+        const $srcCanvases = $element.find("canvas");
+        const $dstCanvases = $clone.find("canvas");
+        for (let idx = 0; idx < $srcCanvases.length; ++idx) {
+            const srcCnv = $srcCanvases.get(idx) as HTMLCanvasElement;
+            const dstCnv = $dstCanvases.get(idx) as HTMLCanvasElement;
+            const dstCtx = dstCnv.getContext("2d");
+            dstCnv.width = srcCnv.width;
+            dstCnv.height = srcCnv.height;
+            dstCtx.drawImage(srcCnv, 0, 0);
+        }
+        return $clone;
+    }
+    
 }

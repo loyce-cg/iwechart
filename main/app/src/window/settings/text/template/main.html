@@ -1,10 +1,6 @@
 @import {Model} from "../TextController";
 @model Model
 <div class="section text-section">
-  <div class="section-header">
-    <i class="fa fa-align-justify"></i>
-    {{@Helper.i18n("window.settings.section.text.header")}}
-  </div>
   <div class="base-form">
     <div class="fields">
       {{ if (model.isElectron) { }}
@@ -17,6 +13,20 @@
             <input type="checkbox" name="ui.spellchecker2" {{if(model.ui && model.ui.spellchecker2) { }}checked="checked"{{ } }}>
             {{@Helper.i18n("window.settings.section.interface.spellchecker.checkbox.label")}}
           </label>
+          {{ if (model.platform != "darwin") { }}
+            <select name="ui.spellCheckerLanguages" multiple>
+              {{ { }}
+                {{
+                  let availableLangs = model.availableSpellCheckerLanguages;
+                  let selectedCodesStr = model.ui && model.ui.spellCheckerLanguages ? model.ui.spellCheckerLanguages : "[]";
+                  let selectedCodes = model.spellCheckerLanguages || [];
+                  for (let lang of availableLangs) {
+                }}
+                  <option value="{{@lang.spellCheckerCode}}" {{if (selectedCodes.indexOf(lang.spellCheckerCode) >= 0) { }}selected{{ } }}>{{@Helper.i18n("core.langs." + lang.code)}}</option>
+                {{ } }}
+              {{ } }}
+            </select>
+          {{ } }}
         </div>
       </div>
       {{ } }}

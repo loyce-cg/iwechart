@@ -2,7 +2,9 @@
 @import {PersonModel, GUISettings} from "../../../main/ChatPlugin";
 @import {func as chatReplyProfileTemplate} from "./chat-reply-profile.html";
 @import {ChannelModel} from "../ChatMessagesController";
-@model {chatType: ChatType, persons: PersonModel[], channel: ChannelModel, hasNotes2:boolean, hasTasks:boolean, usersWithAccess: PersonModel[] }
+@model {chatType: ChatType, persons: PersonModel[], channel: ChannelModel, hasNotes2:boolean, hasTasks:boolean, usersWithAccess: PersonModel[], userType: string }
+
+
 <div class="single-contact without-description channel-avatar compact-summary-view">
   <div class="image-with-data">
     <div class="bckg-icon">
@@ -46,12 +48,20 @@
     }} }); }}
   </div>
   }} }
-  {{
-    <!-- <div class="add-person-button" data-action="add-person" title="{{@Helper.i18n('plugin.chat.component.chatMessages.add-user.title')}}"><i class="fa fa-plus"></i></div> -->
-    <button class="btn btn-success btn-sm small in-summary-as-icon" data-action="add-person" title="{{@Helper.i18n('plugin.chat.component.chatMessages.add-user.title')}}">
-      <i class="fa fa-user-plus"></i>
-    </button>
-  }}
+  if (model.userType == "basic") {
+    {{
+      <button class="btn test btn-success btn-sm small in-summary-as-icon disabled" data-action="" title="{{@Helper.i18n('plugin.chat.component.chatMessages.add-user.title' + model.userType == 'basic' ? 'ForBasic': '')}}">
+        <i class="fa fa-user-plus"></i>
+      </button>
+    }}  
+  } else {
+    {{
+      <button class="btn test btn-success btn-sm small in-summary-as-icon" data-action="add-person" title="{{@Helper.i18n('plugin.chat.component.chatMessages.add-user.title' + model.userType == 'basic' ? 'ForBasic': '')}}">
+        <i class="fa fa-user-plus"></i>
+      </button>
+    }}
+  }
+
 } }}
 <div class="go-to-modules" style="display: none;">
   {{ if (model.hasNotes2) { {{

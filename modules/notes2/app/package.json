@@ -5,11 +5,15 @@
   "license": "PrivMX Source Code License",
   "private": true,
   "dependencies": {
-    "@types/ncp": "^2.0.1",
     "drivelist": "^8.0.6",
+    "hidefile": "^3.0.0",
     "ncp": "^2.0.0",
-    "pmc-mail": "^2.25.0-20201209134741933",
-    "pmc-web": "^2.25.0-20201209134741933",
+    "original-fs": "^1.1.0",
+    "pmc-mail": "^2.25.0-20210316084316946",
+    "pmc-web": "^2.25.0-20210316084316946",
     "trash": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/ncp": "^2.0.1"
   }
 }

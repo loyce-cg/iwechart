@@ -9,6 +9,8 @@ import { Contact } from "../../../mail/contact/Contact";
 import { Person } from "../../../mail/person/Person";
 import { EmojiViewBarController } from "../../../component/emojiviewbar/EmojiViewBarController";
 import { Session } from "../../../mail/session/SessionManager";
+import * as unescape from "he";
+import * as striptags from "striptags";
 
 
 export class NotificationsService {
@@ -36,8 +38,6 @@ export class NotificationsService {
     }
     
     onHandleTooltipNotification(event: event.ElectronNotificationServiceEvent) {
-        const unescape = require("he");
-        const striptags = require("striptags");
         const maxMsgLength = NotificationsService.APP_MAX_NOTIFICATION_MESSAGE_LEN;
         const elipsis = NotificationsService.APP_NOTIFICATION_ELIPSIS;
         
@@ -80,7 +80,7 @@ export class NotificationsService {
                 text = textFiltered;
             }
             
-            this.app.showBaloonNotification(title, [text.length < maxLength ? text : text.substr(0, maxLength - currEllipsis.length) + currEllipsis], avatar ? avatar : undefined, event.context);
+            this.app.showBaloonNotification(title, [text.length < maxLength ? text : text.substr(0, maxLength - currEllipsis.length) + currEllipsis], avatar ? avatar : undefined, event.context, event.ignoreSilentMode);
 
             
         })

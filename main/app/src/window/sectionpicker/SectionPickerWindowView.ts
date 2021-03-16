@@ -5,7 +5,7 @@ import * as $ from "jquery";
 import {app} from "../../Types";
 import {KEY_CODES} from "../../web-utils/UI";
 import { TreeView } from "../../component/tree/TreeView";
-import { SectionEntry, Model, State } from "../sections/SectionsWindowController";
+import { SectionEntry, Model, State } from "../sections/SectionUITypes";
 import { ExtListView } from "../../component/extlist/ExtListView";
 
 
@@ -22,15 +22,19 @@ export class SectionPickerWindowView extends BaseWindowView<Model> {
         this.sections.addEventListener("change", this.onTreeChange.bind(this));
     }
     
-    initWindow(): Q.IWhenable<void> {
+    initWindow(model: Model): Q.IWhenable<void> {
         this.$main.on("click", "[data-action=select]", this.onSelectClick.bind(this));
         this.$main.on("click", "[data-action=close]", this.onCloseClick.bind(this));
         this.$main.on("click", "[data-action=refresh]", this.onRefreshClick.bind(this));
         this.$main.on("click", "[data-tree-id]", this.onSectionClick.bind(this));
+        this.$main.find("input[type=radio][name=level]").change(this.onRadioSelectorChange.bind(this));
         this.bindKeyPresses();
         
         this.sections.$container = this.$main.find(".sections-list");
-        return this.sections.triggerInit();
+        return this.sections.triggerInit()
+        .then(() => {
+            this.setGUIInitialState(model.state);
+        })
     }
 
     
@@ -46,6 +50,32 @@ export class SectionPickerWindowView extends BaseWindowView<Model> {
         this.triggerEvent("close");
     }
     
+    onRadioSelectorChange(event: Event): void {
+        const valFromEvent = $(event.target).closest("input").val();
+        const topLevelSelected = valFromEvent == "top-level";
+        this.setSectionsChangeLock(topLevelSelected);
+        this.triggerEvent("topLevelSelected", topLevelSelected);
+    }
+
+    setGUIInitialState(state: State): void {
+        const $topInput = this.$main.find("input#top-level");
+        const $subInput = this.$main.find("input#sub-section");
+        if (state.isAdmin) {
+            $topInput.prop("checked", true);
+            this.setSectionsChangeLock(true);
+        } else {
+            $topInput.prop("disabled", true);
+            $subInput.prop("checked", true);
+            this.setSectionsChangeLock(false);
+        }
+    }
+
+    setSectionsChangeLock(lock: boolean): void {
+        // this.$main.find("[data-action=add]").prop("disabled", lock);
+        this.$main.find(".sections-list-lock-overlay").css("display", lock ? "block" : "none");
+    }
+
+
     onRefreshClick(): void {
         this.triggerEvent("refresh");
     }

@@ -5,7 +5,7 @@ import * as $ from "jquery";
 import {app} from "../../Types";
 import {KEY_CODES} from "../../web-utils/UI";
 import { TreeView } from "../../component/tree/TreeView";
-import {Model, State, SectionEntry} from "./SectionsWindowController";
+import {Model, State, SectionEntry} from "./SectionUITypes";
 
 @WindowView
 export class SectionsWindowView extends BaseWindowView<Model> {
@@ -42,7 +42,7 @@ export class SectionsWindowView extends BaseWindowView<Model> {
     
     setButtonsState(state: State): void {
         this.$main.find("[data-action=add]").prop("disabled", state.sectionsLimitReached);
-        this.$main.find("[data-action=add]").css("visibility", state.canAdd ? "visible": "hidden");
+        this.$main.find("[data-action=add]").css("visibility", state.canAdd || state.isAdmin ? "visible": "hidden");
     }
     
     onEditClick(): void {

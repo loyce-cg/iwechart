@@ -41,6 +41,8 @@ import * as tree from "./tree/main";
 import * as loading from "./loading/main";
 import * as thumbs from "./thumbs/main";
 import * as voicechatcontrols from "./voicechatcontrols/main";
+import * as audioplayer from "./audioplayer/main";
+import * as customselect from "./customselect/main";
 import {app} from "../Types";
 import {BaseAppWindowController} from "../window/base/BaseAppWindowController";
 import {BaseCollection} from "../utils/collection/BaseCollection";
@@ -93,6 +95,8 @@ interface ComponentFactory {
     createComponent(componentName: "loading", args: [app.IpcContainer]): loading.LoadingController;
     createComponent(componentName: "thumbs", args: [app.IpcContainer, CommonApplication, thumbs.ThumbsOptions]): thumbs.ThumbsController;
     createComponent(componentName: "voicechatcontrols", args: [app.IpcContainer, CommonApplication]): voicechatcontrols.VoiceChatControlsController;
+    createComponent(componentName: "audioplayer", args: [app.IpcContainer, CommonApplication]): audioplayer.AudioPlayerController;
+    createComponent(componentName: "customselect", args: [app.IpcContainer, customselect.CustomSelectOptions]): customselect.CustomSelectController;
 }
 
 export {
@@ -140,4 +144,6 @@ export {
     loading,
     thumbs,
     voicechatcontrols,
+    audioplayer,
+    customselect,
 }

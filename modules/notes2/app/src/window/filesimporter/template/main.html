@@ -1,0 +1,62 @@
+@import {Model} from "../FilesImporterWindowController";
+@import {func as sectionTemplate} from "./dest-section.html";
+@import {func as sourceHeaderTemplate} from "./source-header.html";
+@import {component} from "pmc-web"
+@import conversationTemplate = component.template.conversation;
+@model Model
+<div class="window-filesimporter-main" tabindex="-1">
+  <div class="top-bar">
+    <div class="top-bar-panel left">
+      {{#Helper.createTemplate(sourceHeaderTemplate).render({computerName: model.computerName, currentPath: model.currentPath})}}
+    </div>
+    <div class="top-bar-panel right with-path">
+      <div class="dest">
+        {{ if (model.sectionName) { }}
+        <div class="talking-section--section-container">
+          {{#Helper.createTemplate(sectionTemplate).render({sectionName: model.sectionName, sectionType: model.sectionType, currentDir: model.destDirectory})}}
+            <div class="visible-avatars-list" data-action="toggle-listening-users-dropdown"></div>
+        </div>
+      {{ } }}
+      {{ if (model.conversationModel) { }}
+        <div class="talking-section--conversation-container">
+          {{#Helper.createTemplate(conversationTemplate).render(model.conversationModel, <any>{isActive:false})}}
+            <div class="visible-avatars-list" data-action="toggle-listening-users-dropdown"></div>
+        </div>
+      {{ } }}
+  
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="files">
+      <ul class="clt">
+        
+      </ul>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <div class="bottom-bar-panel left">
+      <div class="show-hidden">
+        <input type="checkbox" name="hidden-files" {{@model.showHiddenFiles ? 'checked' : ''}}/>
+        <label for="hidden-files">Show hidden files</label>
+      </div>  
+    </div>
+    <div class="bottom-bar-panel right">
+      <div class="info">
+        <span class="size-label">{{@Helper.i18n("plugin.notes2.window.filesimporter.totalSize.label")}}:</span>
+        <span class="count"></span> (<span class="totalSize"></span>)
+      </div>  
+    </div>  
+    <div class="buttons">
+      <button class="btn btn-success" data-action="import">
+        <i class="fa fa-upload"></i>
+        {{@Helper.i18n("plugin.notes2.window.filesimporter.button.import.label")}}
+      </button>
+      <button class="btn btn-default gray" data-action="close">
+        {{@Helper.i18n("core.button.cancel.label")}}
+      </button>
+    </div>
+
+  </div>
+</div>

@@ -7,9 +7,12 @@
   "dependencies": {
     "@types/qrious": "^4.0.2",
     "@types/thirty-two": "^1.0.2",
-    "pmc-mail": "^2.25.0-20201209134741933",
-    "pmc-web": "^2.25.0-20201209134741933",
+    "pmc-mail": "^2.25.0-20210202103408885",
+    "pmc-web": "^2.25.0-20210202103408885",
     "qrious": "^4.0.2",
     "thirty-two": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/webauthn-js": "^1.0.2"
   }
 }

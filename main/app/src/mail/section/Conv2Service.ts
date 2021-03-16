@@ -391,6 +391,7 @@ export class Conv2Service {
             data: {
                 name: "<usergroup:" + usernames.join(",") + ">",
                 modules: {},
+                description: null,
                 extraOptions: null
             },
             state: "enabled",

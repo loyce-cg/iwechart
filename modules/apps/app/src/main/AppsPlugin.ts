@@ -1,5 +1,6 @@
 import { app, mail, Types } from "pmc-mail";
 import { i18n } from "../i18n/index";
+import { UsageStatisticsService } from "../usagestatistics/UsageStatisticsService";
 
 
 export interface UpdateAppsSpinnersEvent extends Types.event.Event {
@@ -28,7 +29,7 @@ export class AppsPlugin {
             });
         }, "apps", "ethernal");
     }
-    
+
     registerTexts(localeService: mail.LocaleService): void {
         localeService.registerTexts(i18n, "plugin.apps.");
     }

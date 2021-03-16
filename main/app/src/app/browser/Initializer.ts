@@ -363,7 +363,7 @@ export class Initializer {
         });
         privmxCore.privfs.core.PrivFsRpcManager.setMaxMessagesNumber(10);
         Logger.setLevel((<any>Logger)[logLevel]);
-        let subLogLevel = Logger.WARN.value >= Logger.level.value ? Logger.WARN : Logger.level;
+        let subLogLevel = Logger.WARN.value >= Logger.getLevel().value ? Logger.WARN : Logger.getLevel();
         Logger.get("privfs-mail-client.utils.Event").setLevel(subLogLevel);
         Logger.get("privfs-mail-client.utils.EncryptedPromiseMap").setLevel(subLogLevel);
         Logger.get("privfs-mail-client.utils.WebStorage").setLevel(subLogLevel);
@@ -386,6 +386,7 @@ export class Initializer {
         privfs.crypto.service.init(this.options.PRIVMX_WORKER_PATH);
         
         let app = new WebApplication(this);
+        app.deviceId = deviceId;
         if (devMode) {
             app.viewLogLevel = "WARN";
         }

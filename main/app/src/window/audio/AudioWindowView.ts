@@ -6,17 +6,18 @@ import {func as fileInfoTemplate} from "./template/file-info.html";
 import { PlayerControlsView } from "../../component/playercontrols/web";
 import {WebUtils} from "../../web-utils/WebUtils";
 import Q = require("q");
+import { AudioPlayerView } from "../../component/audioplayer/web";
 
 @WindowView
 export class AudioWindowView extends EditorWindowView<Model> {
-        
-    playerControls: PlayerControlsView;
-    audio: HTMLAudioElement;
+    
     data: string;
+    audioPlayer: AudioPlayerView;
+    private _initialized: boolean = false;
     
     constructor(parent: app.ViewParent) {
         super(parent);
-        this.playerControls = this.addComponent("playerControls", new PlayerControlsView(this));
+        this.audioPlayer = this.addComponent("audioplayer", new AudioPlayerView(this));
     }
     
     initWindow(model: any): Q.Promise<void> {
@@ -24,8 +25,11 @@ export class AudioWindowView extends EditorWindowView<Model> {
             return super.initWindow(model);
         })
         .then(() => {
-            this.playerControls.$container = this.$main.find(".independent-player-container");
-            return this.playerControls.triggerInit();
+            this.audioPlayer.$container = this.$main.find(".independent-player-container");
+            return this.audioPlayer.triggerInit();
+        })
+        .then(() => {
+            this._initialized = true;
         });
     }
     
@@ -38,27 +42,30 @@ export class AudioWindowView extends EditorWindowView<Model> {
     }
     
     clearState(addLoading: boolean) {
+        if (this._initialized) {
+            this.audioPlayer.beforeContainerDetach();
+        }
+        this.detachAudioPlayerContainer();
         this.$inner.find(".file-info").remove();
         super.clearState(addLoading);
     }
     
     setDataCore(_currentViewId: number, model: Model): void {
-        this.playerControls.$container.detach();
+        this.audioPlayer.$container.detach();
+        this.audioPlayer.beforeContainerDetach();
+        this.detachAudioPlayerContainer();
         this.$inner.find(".file-info").remove();
         this.$inner.append(this.templateManager.createTemplate(fileInfoTemplate).renderToJQ(model));
-        if (this.audio) {
-            this.$inner.find("audio").replaceWith(this.audio);
-        }
-        else {
-            this.audio = <HTMLAudioElement>this.$inner.find("audio")[0];
-        }
-        this.audio.onended = this.onAudioEnded.bind(this);
-        this.audio.ondurationchange = this.onAudioDurationChanged.bind(this);
-        this.$inner.find(".file-info").append(this.playerControls.$container);
+        this.$inner.find(".file-info").append(this.audioPlayer.$container);
         this.clearLoading();
         this.$inner.find(".audio-buttons").css("display", model.canPlay ? "block" : "none");
-        this.triggerEvent("pause");
-        this.playerControls.bindEvents();
+        this.audioPlayer.afterContainerReattach();
+    }
+    
+    detachAudioPlayerContainer(): void {
+        if (this.audioPlayer && this.audioPlayer.$container) {
+            this.audioPlayer.$container.detach();
+        }
     }
     
     setInPlaylist(inPlaylist: boolean) {
@@ -91,35 +98,7 @@ export class AudioWindowView extends EditorWindowView<Model> {
             URL.revokeObjectURL(this.data);
         }
         this.data = WebUtils.createObjectURL(data);
-        this.audio.src = this.data;
-    }
-    
-    onAudioEnded(): void {
-        this.triggerEvent("audioEnded");
-    }
-    
-    onAudioDurationChanged(): void {
-        this.triggerEvent("audioDurationChanged", this.currentViewId, this.audio.duration, this.audio.currentTime);
-    }
-    
-    play(): void {
-        this.audio.play();
-    }
-    
-    pause(): void {
-        this.audio.pause();
-    }
-    
-    setVolume(volume: number): void {
-        this.audio.volume = volume;
-    }
-    
-    setMuted(muted: boolean): void {
-        this.audio.muted = muted;
-    }
-    
-    setTime(time: number): void {
-        this.audio.currentTime = time;
+        this.audioPlayer.setSrc(this.data);
     }
     
 }

@@ -2,6 +2,7 @@ import * as Q from "q";
 import {Container, IComponent} from "../../utils/Container";
 import {app} from "../../Types";
 import * as RootLogger from "simplito-logger";
+import { NonReportableError } from "../../utils/error/NonReportableError";
 let Logger = RootLogger.get("privfs-mail-client.component.base.ComponentController");
 
 export class ComponentController extends Container {
@@ -41,6 +42,9 @@ export class ComponentController extends Container {
     }
     
     createIpcSender(channelName: string): app.IpcSender {
+        if (this.isDestroyed()) {
+            throw new NonReportableError("Cannot create IpcSender on destroyed component");
+        }
         return this.parent.createIpcSender(channelName);
     }
     
@@ -61,6 +65,10 @@ export class ComponentController extends Container {
     }
     
     callViewMethod(method: string, ...args: any[]): void {
+        if (this.isDestroyed()) {
+            Logger.warn("Cannot call view method (" + method + ") on destroyed component");
+            return;
+        }
         let call = Array.prototype.slice.call(arguments);
         if (this.ipcSendPromise == null) {
             this.ipcQueue = [];
@@ -69,13 +77,13 @@ export class ComponentController extends Container {
         this.ipcQueue.push(call);
     }
     
-    flushIpcQueue() {
+    private flushIpcQueue() {
         try {
             this.ipcSendPromise = null;
             if (this.ipcSender) {
-                this.ipcSender.send(this.ipcQueue);                
+                this.ipcSender.send(this.ipcQueue);
+                this.ipcQueue = null;
             }
-            this.ipcQueue = null;
         }
         catch (e) {
             Logger.error("flushIpcQueue error", e, e ? e.stack : null);
@@ -87,6 +95,11 @@ export class ComponentController extends Container {
     }
     
     retrieveFromView<T>(method: string, ...argss: any[]): Q.Promise<T> {
+        if (this.isDestroyed()) {
+            return Q().then(() => {
+                throw new NonReportableError("Cannot retrieveFromView (" + method + ") from destroyed component");
+            });
+        }
         let request = {
             id: ++this.requestId,
             defer: Q.defer<any>()
@@ -143,6 +156,9 @@ export class ComponentController extends Container {
     }
     
     setIpcChannelId(ipcChannelId: string): void {
+        if (this.isDestroyed()) {
+            throw new NonReportableError("Cannot setIpcChannelId on destroyed component");
+        }
         this.ipcChannelName = ipcChannelId;
         this.ipcSender = this.createIpcSender(this.getIpcChannelName());
         this.ipcSender.addListener(this.onIpcMessage.bind(this));
@@ -154,15 +170,13 @@ export class ComponentController extends Container {
     }
     
     destroy() {
-        super.removeComponentsAndEvents();
-
         try {
-            this.ipcSender.destroy();
-            this.ipcSender = null;
-    
+            if (this.ipcSender) {
+                this.ipcSender.destroy();
+                this.ipcSender = null;
+            }
         } catch (e) {}
-        super.destroy();    
-
+        super.destroy();
     }
     
     
@@ -175,7 +189,7 @@ export class ComponentController extends Container {
     // * log file will be overwritten after restarting app
     // * use tail -fn 100 (or similar)
     // * make sure that this code is commented out before commiting
-    // 
+    //
     // static isFirstLogToFileCall: boolean = true;
     // isLogToFileEnabled: boolean = false;
     // logToFile(...args: any[]): void {

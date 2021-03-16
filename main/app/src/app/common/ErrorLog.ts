@@ -108,14 +108,14 @@ export class ErrorLog {
     onError(e: any): Q.IWhenable<any> {
         this.logError(e);
         if (this.checkConnectionLost(e)) {
-            return this.msgBox.alert(this.prepareErrorMessage(e));
+            this.app.reportToSentry(e);
         }
     }
     
     onErrorCustom(text: string, e: any, noConnectionLostCheck?: boolean): Q.IWhenable<any> {
         this.logError(e);
         if (noConnectionLostCheck || this.checkConnectionLost(e)) {
-            return this.msgBox.alert(text);
+            this.app.reportToSentry(e);
         }
     }
     

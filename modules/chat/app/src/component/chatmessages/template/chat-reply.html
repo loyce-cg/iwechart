@@ -1,4 +1,4 @@
-@model {messagesCount: number, hasNotes2: boolean, hasTasks: boolean}
+@model {messagesCount: number, hasNotes2: boolean, hasTasks: boolean, inAnyVideoConference: boolean, canCreateTask: boolean, inVideoConferenceInThisSection:boolean}
 <div class="chat-reply">
   <div class="textarea-wrapper">
     <div placeholder="{{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.input.placeholder')}}" class="form-control reply-field" data-role="reply-field"></div>
@@ -24,21 +24,39 @@
       </div>
       <div class="additional-buttons">
         <span class="std-buttons">
-          <button class="btn btn-default btn-sm small gray" data-action="new-file">
-            <span class="left privmx-icon privmx-icon-notes2" style="vertical-align:middle"></span>
-            {{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.button.file.label')}}
+          <button class="btn btn-default btn-sm small gray multiple-icons" data-action="new-file">
+            <span class="icon fa fa-file-video-o"></span>
+            <span class="icon fa fa-file-audio-o"></span>
+            <span class="icon fa fa-file-photo-o"></span>
+            <span class="icon fa fa-upload"></span>
+            <span class="text ellipsis">…</span>
           </button>
-          <button class="btn btn-default btn-sm small gray {{@model.hasTasks?'':'hidden'}}" data-action="new-task">
-            <span class="left privmx-icon privmx-icon-tasks" style="vertical-align:middle"></span>
-            {{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.button.task.label')}}
-          </button>  
         </span>
         <span class="buttons-when-not-in-voice-chat">
           <button class="btn btn-default btn-success btn-sm small" data-action="join-voice-chat">
             <span class="left fa fa-phone" style="vertical-align:middle"></span>
             {{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.button.joinVoiceChat.label')}}
           </button>
-        </span>  
+        </span>
+        <span class="buttons-for-video-conferences">
+          <button class="btn btn-sm small btn-default gray visible" data-action="video-conference-gong">
+            <span class="left fa fa-bell"></span>
+          </button>
+          <button class="btn btn-sm small btn-default gray" data-action="join-video-conference">
+            <span class="left privmx-icon privmx-icon-videocall" style="vertical-align:middle"></span>
+            {{
+              let joinVideoConferenceBtnType = "default";
+              if (model.inAnyVideoConference) {
+                joinVideoConferenceBtnType = model.inVideoConferenceInThisSection ? "bringToFront" : "switch";
+              }
+            }}
+            <span class="btn-text">{{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.button.joinVideoConference.' + joinVideoConferenceBtnType + '.label')}}</span>
+          </button>
+          <button class="btn btn-sm small btn-default gray {{@model.inAnyVideoConference && model.inVideoConferenceInThisSection ? 'visible' : ''}}" data-action="video-conference-disconnect">
+            <span class="left fa fa-phone" style="vertical-align: middle;"></span>
+            <span class="btn-text">{{@Helper.i18n("plugin.chat.component.chatMessages.chatReply.button.leaveVideoConference.label")}}</span>
+          </button>
+        </span>
       </div>
     </div>
   </div>
@@ -55,10 +73,6 @@
               <span class="left fa fa-phone" style="vertical-align:middle"></span>
               {{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.button.leaveVoiceChat.label')}}
             </button>
-            <!-- <button class="btn btn-default btn-sm small gray" data-action="ring-the-bell">
-              <span class="left fa fa-bell" style="vertical-align:middle"></span>
-              {{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.button.ringTheBell.label')}}
-            </button> -->
           </span>
           <span class="buttons-when-voice-chat-active">
             <i class="fa fa-microphone"></i>
@@ -66,13 +80,14 @@
               <span class="left fa fa-phone" style="vertical-align:middle"></span>
               {{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.button.joinVoiceChat.label')}}
             </button>
-            <!-- <button class="btn btn-default btn-sm small gray" data-action="ring-the-bell">
-              <span class="left fa fa-bell" style="vertical-align:middle"></span>
-              {{@Helper.i18n('plugin.chat.component.chatMessages.chatReply.button.ringTheBell.label')}}
-            </button> -->
           </span>
         </div>
       </div>
+    </div>
+  </div>
+  <div class="video-conference-people">
+    <div class="inner">
+      <div class="list"></div>
     </div>
   </div>
 </div>

@@ -1,0 +1,44 @@
+@import { ItemModelEx } from "../CustomSelectView";
+@import { func as iconTemplate } from "../../template/icon.html";
+@model ItemModelEx
+{{
+  let checkedStr = "";
+  let cls = "";
+  let cls2 = "";
+  let tooltipStr = "";
+  if (model.item.selected) {
+    cls = "selected";
+    checkedStr = "checked";
+  }
+  let extraAttributesStr = "";
+  if (model.item.extraAttributes) {
+    for (let k in model.item.extraAttributes) {
+      let v = model.item.extraAttributes[k];
+      extraAttributesStr += Helper.escapeHtml(k) + "=\"" + Helper.escapeHtml(v) + "\" ";
+      if (k == "data-section-id") {
+        cls2 += " has-section-tooltip";
+        tooltipStr += Helper.escapeHtml(k) + "=\"" + Helper.escapeHtml(v) + "\" ";
+      }
+    }
+  }
+  let iconStr = "";
+}}
+<li class="item {{@cls}}" data-val="{{@model.item.value}}" {{#extraAttributesStr}}>
+  <span class="item-content-wrapper">
+    {{ if (model.multi) { }}
+      <input type="checkbox" {{@checkedStr}} />
+    {{ } }}
+    {{
+      if (model.item.icon) {
+        iconStr = Helper.createTemplate(iconTemplate).render(model.item.icon);
+      }
+    }}
+    {{ if (model.customTemplate) { }}
+      <span class="item-content {{@model.extraClass}}" style="{{@model.extraStyle}}">{{#model.customTemplate.render(model.item)}}</span>
+    {{ } else if (model.textNoEscape) { }}
+      <span class="item-content {{@model.extraClass}}" style="{{@model.extraStyle}}">{{#iconStr}}<span class="text">{{#model.item.text}}</span></span>
+    {{ } else { }}
+      <span class="item-content {{@model.extraClass}}" style="{{@model.extraStyle}}">{{#iconStr}}<span class="text">{{@model.item.text}}</span></span>
+    {{ } }}
+  </span>
+</li>

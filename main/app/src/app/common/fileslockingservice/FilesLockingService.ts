@@ -74,8 +74,14 @@ export class FilesLockingService {
         if (openableFile.isLocalFile()) {
             return Q(true);
         } 
-        let element = openableFile instanceof OpenableElement ? <OpenableFile>openableFile : openableFile;
-        return element.fileSystem.isLocked(element.path)                
+        else
+        if (openableFile instanceof OpenableFile) {
+            return openableFile.fileSystem.isLocked(openableFile.path)                
+        }
+        else {
+            return Q.reject("FilesLockingService: unrecognized openableElement type");
+            
+        }
     }
 
     showConfirm(): Q.Promise<boolean> {

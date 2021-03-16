@@ -243,8 +243,8 @@ export class PlayerHelperWindowController extends BaseWindowController implement
     }
     
     onViewToggleDevTools() {
-        if ((<ElectronWindow>this.nwin).toogleDevTools) {
-            (<ElectronWindow>this.nwin).toogleDevTools();
+        if ((<ElectronWindow>this.nwin).toggleDevTools) {
+            (<ElectronWindow>this.nwin).toggleDevTools();
         }
     }
     

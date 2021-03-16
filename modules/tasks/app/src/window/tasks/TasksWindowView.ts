@@ -132,32 +132,32 @@ export class TasksWindowView extends web.window.base.BaseWindowView<Model> {
             firstPanelMinSize: TasksWindowView.TGP_MIN_HEIGHT,
             secondPanelMinSize: TasksWindowView.PREVIEW_MIN_HEIGHT,
         }));
-        this.verticalSplitter.addEventListener("handleUp", event => {
+        this.bindEvent(this.verticalSplitter, "handleUp", event => {
             for (let id in this.taskGroupsPanels) {
                 this.taskGroupsPanels[id].onContainerWidthChanged();
             }
         });
-        this.verticalSplitter2.addEventListener("handleUp", event => {
+        this.bindEvent(this.verticalSplitter2, "handleUp", event => {
             for (let id in this.taskGroupsPanels) {
                 this.taskGroupsPanels[id].onContainerWidthChanged();
             }
         });
-        this.horizontalSplitter.addEventListener("handleUp", event => {
+        this.bindEvent(this.horizontalSplitter, "handleUp", event => {
             for (let id in this.taskGroupsPanels) {
                 this.taskGroupsPanels[id].onContainerHeightChanged();
             }
         });
-        this.verticalSplitter.addEventListener("handleMove", event => {
+        this.bindEvent(this.verticalSplitter, "handleMove", event => {
             for (let id in this.taskGroupsPanels) {
                 this.taskGroupsPanels[id].onContainerWidthChangedStep();
             }
         });
-        this.verticalSplitter2.addEventListener("handleMove", event => {
+        this.bindEvent(this.verticalSplitter2, "handleMove", event => {
             for (let id in this.taskGroupsPanels) {
                 this.taskGroupsPanels[id].onContainerWidthChangedStep();
             }
         });
-        this.horizontalSplitter.addEventListener("handleMove", event => {
+        this.bindEvent(this.horizontalSplitter, "handleMove", event => {
             for (let id in this.taskGroupsPanels) {
                 this.taskGroupsPanels[id].onContainerHeightChangedStep();
             }
@@ -197,8 +197,8 @@ export class TasksWindowView extends web.window.base.BaseWindowView<Model> {
             },
 
         }));
-        this.sidebar.customElementList.customElements.addEventListener("ext-list-change", this.refreshAvatars.bind(this));
-        this.sidebar.customElementList.customElementsA.addEventListener("ext-list-change", this.refreshAvatars.bind(this));
+        this.bindEvent(this.sidebar.customElementList.customElements, "ext-list-change", this.refreshAvatars.bind(this));
+        this.bindEvent(this.sidebar.customElementList.customElementsA, "ext-list-change", this.refreshAvatars.bind(this));
         this.turnTimeAgoRefresher(5 * 60 * 1000);
     }
     
@@ -499,6 +499,11 @@ export class TasksWindowView extends web.window.base.BaseWindowView<Model> {
     }
     
     keyboardHandler(e: KeyboardEvent): void {
+        if ((e.key == "ArrowLeft" || e.key == "ArrowRight") && (e.altKey && (e.ctrlKey || e.metaKey))) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            this.triggerEvent("history" + e.key);
+        }
         if (e.key == "Tab") {
             if (!e.ctrlKey && !e.metaKey) {
                 e.preventDefault();
@@ -542,12 +547,6 @@ export class TasksWindowView extends web.window.base.BaseWindowView<Model> {
             $elem.offsetParent().scrollTop($elem.offsetParent().scrollTop() - elemOffset );
         }
     }
-    
-    // onSelectTab(projectId: string, rootProjectId: string): void {
-    //     this.setActiveProjectId(projectId);
-    //     this.triggerEvent("settingChanged", "active-project-id", projectId);
-    //     this.$main.find(".section-tasks").toggleClass("hidden", this.$main.find(".taskgroupspanel-container.active").length == 0);
-    // }
     
     
     

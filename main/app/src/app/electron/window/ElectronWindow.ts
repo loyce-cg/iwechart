@@ -8,8 +8,10 @@ import {Formatter} from "../../../utils/Formatter";
 import * as Utils from "simplito-utils";
 import * as RootLogger from "simplito-logger";
 import { PerformanceLogger } from "../../common/PerformanceLogger";
-import { WindowUrl } from "../WindowUrl";
 import { ElectronPartitions } from "../ElectronPartitions";
+import { CommonApplication } from "../../common";
+import { LocaleService } from "../../../mail/LocaleService";
+import * as url from "url";
 const os = require("os");
 
 let Logger = RootLogger.get("privfs-mail-client.app.electron.window.ElectronWindow");
@@ -23,7 +25,7 @@ export interface CopyPasteHandler {
 export class ElectronWindow extends Window {
     static readonly TOP_BAR_HEIGHT: number = 24 + 1; //topbar height + bottom border height
     static readonly USE_LINUX_WINDOW_OPEN_HACK: boolean = true; // Electron hack: fixes 1s delay before showing windows
-    
+
     manager: WindowManager;
     options: app.WindowOptions;
     controllerId: number;
@@ -38,10 +40,10 @@ export class ElectronWindow extends Window {
     ipcChannelName: string;
     isModal: boolean;
     openOpt: Electron.BrowserWindowConstructorOptions;
-    
+    private _savedAlwaysOnTopState: boolean | null = null;
+
     constructor(manager: WindowManager, dataOrUrl: app.WindowLoadOptions, options: app.WindowOptions, controllerId: number, ipcChannelName: string, parent: ElectronWindow, public copyPasteHandler: CopyPasteHandler) {
         super();
-
         PerformanceLogger.log("openingWindows.ElectronWindow.constructor().start");
         this.ipcChannelName = ipcChannelName;
         options = Utils.fillByDefaults(options, {
@@ -59,6 +61,9 @@ export class ElectronWindow extends Window {
         if (options.maximizable === undefined) {
             options.maximizable = options.resizable;
         }
+        if (options.canSetAlwaysOnTop === undefined) {
+            options.canSetAlwaysOnTop = !this.isModal;
+        }
         if (this.isModal) {
             options.minimizable = false;
             options.maximizable = false;
@@ -66,10 +71,6 @@ export class ElectronWindow extends Window {
         this.windowId = ObjectMapModule.add(this);
         this.manager = manager;
         this.options = options;
-
-        let webPreferences = {
-
-        }
 
         this.controllerId = controllerId;
         this.parent = parent;
@@ -89,7 +90,10 @@ export class ElectronWindow extends Window {
                 allowRunningInsecureContent: dataOrUrl.type == "url" && dataOrUrl.secureContent ? false : true,
                 webSecurity: dataOrUrl.type == "url" && dataOrUrl.secureContent ? true : false,
                 nodeIntegration: true,
-            }
+                experimentalFeatures: true,
+                contextIsolation: false,
+                spellcheck: true,
+            },
         };
         let partition = this.options.electronPartition;
         if (partition) {
@@ -132,6 +136,9 @@ export class ElectronWindow extends Window {
         if (options.positionY != null) {
             openOpt.y = options.positionY;
         }
+        if (options.alwaysOnTop != null) {
+            openOpt.alwaysOnTop = options.alwaysOnTop;
+        }
         // console.log(4);
 
         if (this.isModal) {
@@ -165,8 +172,9 @@ export class ElectronWindow extends Window {
         this.window = new electron.BrowserWindow(openOpt);
         // console.log("creating window - after");
         PerformanceLogger.log("openingWindows.ElectronWindow.constructor().newBrowserWindow.end");
+        this.updateSpellCheckerLanguages();
         
-        // this.toogleDevTools();
+        // this.toggleDevTools();
 
         if (options.maximized) {
             this.manager.center(this);
@@ -191,9 +199,7 @@ export class ElectronWindow extends Window {
             this.window.setMaximizable(false);
         }
         if (dataOrUrl.type === "url") {
-            // console.log("load window data as url");
-            // this.window.loadURL('file://' + dataOrUrl.url.substring(1).replace("/window/", "/dist/window/"));
-            this.window.loadURL(dataOrUrl.url);
+            this.loadWindowURL(dataOrUrl.url, null, this.options.usePrivMXUserAgent);
         }
         else if (dataOrUrl.type === "html") {
             // console.log("load window data as html")
@@ -212,8 +218,10 @@ export class ElectronWindow extends Window {
                 icon: options.icon,
                 keepSpinnerUntilViewLoaded: !!options.keepSpinnerUntilViewLoaded,
                 hideLoadingSpinner: options.hideLoadingSpinner,
+                canSetAlwaysOnTop: options.canSetAlwaysOnTop,
+                alwaysOnTop: options.alwaysOnTop,
             }, null, new Formatter());
-            this.window.loadURL(ElectronPartitions.getUrlFromHtml(partition, host, iframeHtml));
+            this.loadWindowURL(ElectronPartitions.getUrlFromHtml(partition, host, iframeHtml), null, this.options.usePrivMXUserAgent);
         }
         this.window.webContents.on("did-finish-load", this.onDidFinishLoad.bind(this));
         this.window.webContents.on("new-window", this.onNewWindow.bind(this));
@@ -232,11 +240,29 @@ export class ElectronWindow extends Window {
         this.window.webContents.on("context-menu", this.onContextMenu.bind(this));
         PerformanceLogger.log("openingWindows.ElectronWindow.constructor().end");
     }
+
+    private async loadWindowURL(url: string, options?: Electron.LoadURLOptions, usePrivMXUserAgent?: boolean): Promise<void> {
+        const extOptions = Object.assign({}, options);
+        if (usePrivMXUserAgent) {
+            extOptions.userAgent = this.getElectronWindowUserAgent();
+        }
+        return this.window.loadURL(url, extOptions);
+    }
     
     onMaximizeToggle(): void {
         if (this.windowId == this.manager.getMainAppWindowId()) {
             this.manager.onMaximizeToggle();
         }
+        
+        const isMaximized = this.window.isMaximized();
+        if (isMaximized) {
+            this._handleAlwaysOnTopBeforeMaximize();
+        }
+        else {
+            this._handleAlwaysOnTopBeforeUnmaximize();
+        }
+        
+        this.sendMaximizedStateToView();
     }
     
     onShow() {
@@ -318,6 +344,8 @@ export class ElectronWindow extends Window {
         try {
             if (this && this.window) {
                 this.window.close();
+                this.window.destroy();
+                this.window = null;
             }
         } catch (e) {
             Logger.debug("Trying to close non-existant window..");
@@ -368,6 +396,9 @@ export class ElectronWindow extends Window {
             else if (data == "minimize") {
                 this.minimize();
             }
+            else if (data == "setAlwaysOnTop") {
+                this.setAlwaysOnTop(extra[0]);
+            }
             else if (data == "performanceLog") {
                 PerformanceLogger.getInstance().log(extra[0], extra[1], extra[2]);
             }
@@ -404,7 +435,7 @@ export class ElectronWindow extends Window {
         });
     }
     
-    toogleDevTools(): void {
+    toggleDevTools(): void {
         if (this.window && this.window.webContents) {
             if (this.window.webContents.isDevToolsOpened()) {
                 this.window.webContents.closeDevTools();
@@ -686,7 +717,7 @@ export class ElectronWindow extends Window {
         setTimeout(() => { this.clearCache(); }, 10000);
         this.manager.windows.forEach(w => {
                 w.window.webContents.clearHistory();
-                w.window.webContents.session.clearCache(() => {});
+                w.window.webContents.session.clearCache();
                 w.window.webContents.session.clearStorageData();
         })
     }
@@ -746,5 +777,95 @@ export class ElectronWindow extends Window {
     setZoomLevel(zoomLevel: number): void {
         this.window.webContents.setZoomFactor(zoomLevel);
     }
+
+    destroy(): void {
+
+        this.window.destroy();
+        this.window = null;
+        this.events.clear();
+        this.events.map = {};
+    }
     
+    updateSpellCheckerLanguages(): void {
+        // console.log("updateSpellCheckerLanguages", this.getAvailableSpellCheckerLangauges());
+        if (CommonApplication.instance && CommonApplication.instance.localeService && CommonApplication.instance.localeService.availableLangs && CommonApplication.instance.userPreferences) {
+            let privmxAvailableLangs = CommonApplication.instance.localeService.availableLangs
+                .map(x => LocaleService.AVAILABLE_LANGS.find(y => y.code == x))
+                .filter(x => !!x);
+            let userSpellCheckerCodes = CommonApplication.instance.userPreferences.getSpellCheckerLanguages();
+            let spellCheckerCodes = privmxAvailableLangs
+                .map(x => x.spellCheckerCode)
+                .filter(x => userSpellCheckerCodes.indexOf(x) >= 0);
+            if (process.platform == "darwin" && CommonApplication.instance.userPreferences.isSpellCheckerEnabled()) {
+                spellCheckerCodes = privmxAvailableLangs.map(x => x.spellCheckerCode);
+            }
+            // console.log(spellCheckerCodes)
+            this.window.webContents.session.setSpellCheckerLanguages(spellCheckerCodes);
+        }
+        // console.log("end upSpelLan")
+    }
+    
+    getSpellCheckerLanguages(): string[] {
+        return this.window.webContents.session.getSpellCheckerLanguages();
+    }
+    
+    getAvailableSpellCheckerLangauges(): string[] {
+        return this.window.webContents.session.availableSpellCheckerLanguages;
+    }
+    
+    sendMaximizedStateToView(): void {
+        this.window.webContents.send("window-maximized-state-changed", this.window.isMaximized());
+    }
+    
+    isAlwaysOnTop(): boolean {
+        return this.window.isAlwaysOnTop();
+    }
+    
+    setAlwaysOnTop(alwaysOnTop: boolean): void {
+        this.window.setAlwaysOnTop(alwaysOnTop);
+        this.window.webContents.send("set-always-on-top", alwaysOnTop);
+    }
+    
+    private _setAlwaysOnTopStateIfNotSaved(): void {
+        if (this._savedAlwaysOnTopState === null) {
+            this._savedAlwaysOnTopState = this.isAlwaysOnTop();
+        }
+    }
+    
+    private _restoreAlwaysOnTopStateIfSaved(): void {
+        if (this._savedAlwaysOnTopState !== null) {
+            this.setAlwaysOnTop(this._savedAlwaysOnTopState);
+        }
+    }
+    
+    private _clearAlwaysOnTopState(): void {
+        this._savedAlwaysOnTopState = null;
+    }
+    
+    private _handleAlwaysOnTopBeforeMaximize(): void {
+        const isAlwaysOnTop = this.isAlwaysOnTop();
+        this._setAlwaysOnTopStateIfNotSaved();
+        if (isAlwaysOnTop) {
+            this.setAlwaysOnTop(false);
+        }
+    }
+    
+    private _handleAlwaysOnTopBeforeUnmaximize(): void {
+        this._restoreAlwaysOnTopStateIfSaved();
+        this._clearAlwaysOnTopState();
+    }
+    
+    getElectronWindowUserAgent(): string {
+        return "PrivMX/" + this.manager.app.getVersion().ver +" "+ process.platform
+    }
+    
+
+    openChromePageWindow(chromeUrl: string): void {
+        const win = new electron.BrowserWindow({ width: 800, height: 600 })
+        win.loadURL(url.format({
+            pathname: chromeUrl,
+            protocol: 'chrome:',
+            slashes: true
+        }))
+    } 
 }

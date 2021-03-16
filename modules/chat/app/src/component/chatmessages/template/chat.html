@@ -11,7 +11,7 @@
       </div>
       <div class="profiles" data-container="chat-header-profiles-contact"></div>
     </div>
-    <div class="chat-inner" tabindex="-1">
+    <div class="chat-inner rendering-layer-container" tabindex="-1">
       <div class="search-info hidden">
         <button class="btn btn-default" data-action="search-historical-data">
           <i class="fa fa-search"></i>
@@ -69,6 +69,12 @@
           <span>
             <input type="checkbox" id="chat-settings-show-new-files-{{@model.sectionId}}" data-setting="create-file" {{@model.guiSettings["create-file"] ? 'checked' : ''}} />
             <label for="chat-settings-show-new-files-{{@model.sectionId}}">{{@Helper.i18n("plugin.chat.component.chatMessages.settings.shownewfiles")}}</label>
+          </span>
+        </li>
+        <li>
+          <span>
+            <input type="checkbox" id="chat-settings-show-video-conference-gong-{{@model.sectionId}}" data-setting="video-conference-gong" {{@model.guiSettings["video-conference-gong"] ? 'checked' : ''}} />
+            <label for="chat-settings-show-video-conference-gong-{{@model.sectionId}}">{{@Helper.i18n("plugin.chat.component.chatMessages.settings.showvideoconferencegong")}}</label>
           </span>
         </li>
       </ul>

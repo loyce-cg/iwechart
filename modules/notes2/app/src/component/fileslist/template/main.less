@@ -44,6 +44,8 @@
   }
   .ico {
     margin-right: 6px;
+    width: 16px;
+    text-align: center;
     
     &:before {
       vertical-align: top;
@@ -164,7 +166,7 @@
       }
       .many-profiles {
         .user-profile.present .image-with-data {
-          border-left: 3px solid var(--color-success);
+          border-left: 3px solid var(--color-online);
         }
       }
       .single-contact {
@@ -438,7 +440,7 @@
       left: 0;
       right: 0;
       background-color: var(--preview-panel-bg);
-      padding: 0px 5px 5px 5px;
+      padding: 10px 10px 15px 10px;
       
       .buttons-columns {
         display: flex;
@@ -766,6 +768,11 @@
       
       i.fa {
         font-size: var(--font-size-xxxxl);
+        
+        &.privmx-icon-videocall {
+          position: relative;
+          top: 3px;
+        }
 
         &.fa-ellipsis-h {
           position: relative;

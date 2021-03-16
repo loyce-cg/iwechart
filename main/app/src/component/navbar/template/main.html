@@ -9,6 +9,14 @@
   </h1>
   
   <ul class="action-panel">
+    {{
+      if (model.showNavigation) { 
+        {{
+          <li class="navigation" data-trigger="history-prev"><span class="action-link"><i class="fa fa-arrow-left main-icon"></i></span></li>
+          <li class="navigation" data-trigger="history-next"><span class="action-link"><i class="fa fa-arrow-right main-icon"></i></span></li>      
+        }}
+      }
+    }}
     {{ model.appWindows.forEach(x => { {{
     <li>
       <span class="{{@x.icon.indexOf('ico') == 0 ? x.icon : ''}} action-link {{@model.activeApp == x.id ? 'active' : ''}}" data-trigger="{{@x.action || 'launch-app-window'}}" data-app-window="{{@x.id}}">
@@ -25,7 +33,7 @@
     }} }); }}
     {{ if (model.searchEnabled) { {{
     <li class="search-item">
-      <span class="action-link {{@model.searchVisible ? 'active' : ''}}" data-trigger="toogle-search">
+      <span class="action-link {{@model.searchVisible ? 'active' : ''}}" data-trigger="toggle-search">
         <i class="main-icon fa fa-search"></i>
       </span>
     </li>
@@ -49,13 +57,25 @@
     <span class="fa {{@model.inFullscreen ? 'fa-compress' : 'fa-expand'}}" data-trigger="toggle-fullscreen" title="{{@Helper.i18n('component.navbar.fullscreen.title')}}"></span>
   </p>
   }} } }}
-  <div class="right-side">
+  <div class="right-side {{@model.showWindowControls ? '' : 'with-extra-space'}}">
     <div class="profile-panel">
       {{#Helper.createTemplate(userTemplate).render(model)}}
     </div>
     <div class="player-container">
     </div>
     <div class="voice-chat-controls-container"></div>
+    <div class="video-conference-controls-container">
+      <div class="video-conference-info">
+        <div class="video-conference-section"></div>
+        <div class="video-conference-conversation"></div>
+      </div>
+      <div class="video-conference-controls">
+        <button class="btn btn-default btn-sm small" data-action="open-video-conference">
+          <span class="left privmx-icon privmx-icon-videocall" style="vertical-align:middle"></span>
+          <span>{{@Helper.i18n("component.navbar.videoConferences.openButton.label")}}</span>
+        </button>
+      </div>
+    </div>
   </div>
   
 </header>

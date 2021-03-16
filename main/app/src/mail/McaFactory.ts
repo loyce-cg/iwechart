@@ -161,7 +161,7 @@ export class McaFactory {
     async resolveAdditionalLoginStep(context: privfs.types.core.AdditionalLoginContext, data?: any): Promise<void> {
         const result = this.eventDispatcher.dispatchEventResult(<event.AdditionalLoginStepEvent>{
             type: "additionalloginstep",
-            basicLoginResult: {srpSecure: new privfs.core.PrivFsSrpSecure(context.gateway, null)},
+            basicLoginResult: context,
             data: data
         });
         if (result == null) {

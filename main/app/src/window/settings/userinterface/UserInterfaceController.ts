@@ -15,7 +15,8 @@ export interface Model {
     availableUnreadBadgeClickActions: UnreadBadgeClickAction[],
     availablePasteAsFileActions: PasteAsFileAction[],
     availableSystemClipboardIntegrations: SystemClipboardIntegration[],
-    autostartEnabled?: boolean
+    autostartEnabled?: boolean,
+    errorsLoggingEnabled?: boolean
 }
 
 export class UserInterfaceController extends BaseController {
@@ -51,6 +52,12 @@ export class UserInterfaceController extends BaseController {
             uiPrefs.autostartEnabled = autostartEnabled;
         }
 
+        // override errorsLoggingEnabled option read from user profile whilst in electron app
+        if (this.app.isElectronApp()) {
+            let errorsLoggingEnabled = this.getErrorsLoggingSetting();
+            uiPrefs.errorsLoggingEnabled = errorsLoggingEnabled;
+        }
+
         let model: Model = {
             ui: uiPrefs,
             isElectron: this.app.isElectronApp(),
@@ -60,7 +67,8 @@ export class UserInterfaceController extends BaseController {
             availableUnreadBadgeClickActions: [UnreadBadgeClickAction.ASK, UnreadBadgeClickAction.IGNORE, UnreadBadgeClickAction.MARK_AS_READ],
             availablePasteAsFileActions: [PasteAsFileAction.ASK, PasteAsFileAction.PASTE_AS_TEXT, PasteAsFileAction.PASTE_AS_FILE],
             availableSystemClipboardIntegrations: [SystemClipboardIntegration.ASK, SystemClipboardIntegration.ENABLED, SystemClipboardIntegration.DISABLED],
-            autostartEnabled: this.app.isElectronApp() ? (<any>this.app).isAutostartEnabled() : undefined
+            autostartEnabled: this.app.isElectronApp() ? (<any>this.app).isAutostartEnabled() : undefined,
+            errorsLoggingEnabled: this.app.isElectronApp() ? (<any>this.app).profile.isErrorsLoggingEnabled(): undefined
         };
         this.callViewMethod("renderContent", model);
     }

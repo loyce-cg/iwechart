@@ -26,6 +26,7 @@ export interface Model {
     autoLogin: boolean;
     isMnemonicEnabled: boolean;
     isLoginInfoVisible: boolean;
+    isElectron: boolean;
 }
 
 export class LoginController extends WindowComponentController<LoginWindowController> {
@@ -59,7 +60,8 @@ export class LoginController extends WindowComponentController<LoginWindowContro
             remember: remember,
             autoLogin: autoLogin,
             isMnemonicEnabled: this.app.isMnemonicEnabled,
-            isLoginInfoVisible: this.app.isLoginInfoVisible()
+            isLoginInfoVisible: this.app.isLoginInfoVisible(),
+            isElectron: this.app.isElectronApp()
         };
     }
     

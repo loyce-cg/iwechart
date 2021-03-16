@@ -2,49 +2,29 @@ import electron = require("electron");
 import path = require("path");
 import fs = require("fs");
 import fse = require("fs-extra");
-import * as privfs from "privfs-client";
 import * as LoggerModule from "simplito-logger";
 import AutoLaunch = require("auto-launch");
 import os = require("os");
 import * as Q from "q";
 import { HddStorage } from "../../../utils/HddStorage";
 import { SqlStorage } from "../../../utils/SqlStorage";
-import * as systeminformation from "systeminformation";
-import { ElectronApplication, ProfileEx } from "../ElectronApplication";
-//import i18nifyModule = require("../../../gulp/i18nify");
+import { ElectronApplication } from "../ElectronApplication";
 import * as RootLogger from "simplito-logger";
-import { KeyboardShortcuts } from "../../common/KeyboardShortcuts";
 import { Updater } from "../updater/Updater";
-import { LocaleService } from "../../../mail";
 import { WindowUrl } from "../WindowUrl";
 import { ElectronPartitions } from "../ElectronPartitions";
 import * as PrivmxCrypto from "privmx-crypto";
 import { WorkerManager } from "../crypto/WorkerManager";
 import { CryptoService } from "../crypto/CryptoService";
+import { ProfileEx } from "../profiles/Types";
+import { ProfilesManager } from "../profiles/ProfilesManager";
+import { SentryService } from "../sentry/SentryService";
 
 (<any>global).privmxCoreModulePath = path.resolve(__dirname, "../../../build/core-electron.js");
 
 export interface Logger {
     level: string;
     log: (level: string, ...args: any[]) => void;
-}
-
-export interface Profile {
-    name: string;
-    path: string;
-    pathIsRelative: boolean;
-    lang?: string;
-    licenceAccepted?: boolean;
-    loginInfoVisible?: boolean;
-    ccApiEndpoint?: string;
-    autostartEnabled?: boolean;
-}
-
-export interface Profiles {
-    initProfile: string;
-    devInitProfile: string;
-    deviceIdSeed: string;
-    profiles: { [name: string]: Profile }
 }
 
 export interface BaseConfig {
@@ -65,6 +45,9 @@ export interface ErrorEvent {
     action: Function;
 }
 
+export interface IUnhandledErrorsCatcher {
+    updatePath(p: string): void
+}
 export class Starter {
 
     static readonly BASE_CONFIG_FILE: string = "devmode.json";
@@ -76,18 +59,22 @@ export class Starter {
     quitting: boolean;
     baseConfig: BaseConfig = { devMode: false };
     bindedErrorsEvents: { [type: string]: BindedErrorEvents } = {};
-    errorCatcher: UnhandledErrorsCatcher;
+    errorCatcher: IUnhandledErrorsCatcher;
     workerManager: WorkerManager;
-
+    instance: ElectronApplication;
     constructor() {
         this.electron = electron;
         this.app = electron.app;
         process.noDeprecation = true;
         this.app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
         this.app.commandLine.appendSwitch("disable-smooth-scrolling");
-        this.app.commandLine.appendSwitch("disable-gpu");
+        if (this.isDisableGPUAccelerationSet()) {
+            this.app.commandLine.appendSwitch("disable-gpu");
+        }
         this.app.commandLine.appendSwitch('disable-renderer-backgrounding');
-        this.app.commandLine.appendSwitch('js-flags', '--max-old-space-size=4096')
+        this.app.commandLine.appendSwitch('js-flags', '--max-old-space-size=4096 --expose_gc');
+        this.app.commandLine.appendSwitch("ignore-certificate-errors");
+        this.app.commandLine.appendSwitch('disable-site-isolation-trials');
 
         this.logger = createSimpleLogger("info");
         this.logger.log("debug", "creating starter", process.platform);
@@ -111,6 +98,7 @@ export class Starter {
             });
         }
     }
+
 
     fireCacheMigration(profile: ProfileEx): Q.Promise<void> {
         return Q().then(() => {
@@ -165,6 +153,10 @@ export class Starter {
         return process.argv && process.argv.indexOf("--no-autostart") != -1;
     }
 
+    isDisableGPUAccelerationSet(): boolean {
+        return process.argv && process.argv.indexOf("--no-gpu") != -1;
+    }
+
     isHelp(): boolean {
         return process.argv && process.argv.indexOf("--help") != -1;
     }
@@ -172,6 +164,7 @@ export class Starter {
     showHelp(): void {
         console.log("--no-autostart\t\t\t\t\tdo not add PrivMX to system autostart");
         console.log("--allow-multiple-instances\t\t\tallow to start more then one instance of PrivMX in the same time");
+        console.log("--no-gpu\t\t\tdisable GPU acceleration");
     }
 
     allowMultipleInstances(): boolean {
@@ -195,6 +188,9 @@ export class Starter {
                 }
                 if (levelString.toUpperCase() == "WARN") {
                     return RootLogger.WARN;
+                }
+                if (levelString.toUpperCase() == "ERROR") {
+                    return RootLogger.ERROR;
                 }
                 if (levelString.toUpperCase() == "OFF") {
                     return RootLogger.OFF;
@@ -278,7 +274,33 @@ export class Starter {
         }
     }
     
-    onUrl(request: electron.RegisterBufferProtocolRequest, callback: (buffer?: Buffer | electron.MimeTypedBuffer) => void) {
+    onUrl(request: electron.ProtocolRequest, callback: (response: Buffer | electron.ProtocolResponse) => void) {
+        //console.log("onURL", request.url?request.url.substr(0, 100):undefined)
+        let vidConfService = ElectronApplication.instance ? ElectronApplication.instance.videoConferencesService : null;
+        if (vidConfService && vidConfService.isUrlInKnownDomain(request.url)) {
+            const netRequest = electron.net.request({
+                method: request.method,
+                protocol: "https:",
+                hostname: request.url.split("://")[1].split("/")[0],
+                port: 443,
+                path: "/" + request.url.replace("https://", "").split("/").splice(1).join("/"),
+            });
+            for (let h in request.headers) {
+                netRequest.setHeader(h, request.headers[h]);
+            }
+            netRequest.on("response", (response) => {
+                let respBuff = new Buffer("");
+                response.on("data", data => {
+                    respBuff = Buffer.concat([respBuff, data])
+                })
+                response.on("end", () => {
+                    callback(respBuff);
+                });
+            });
+            netRequest.write(request.uploadData[0].bytes);
+            netRequest.end();
+            return;
+        }
         if (request.url.endsWith(".js.map")) {
             callback({mimeType: "application/json", data: Buffer.from("{}", "utf8")});
             return 
@@ -292,6 +314,11 @@ export class Starter {
         //     d: u.d.substr(0, 30) + "..."
         // });
         callback({mimeType: u.m, data: Buffer.from(u.d, "base64")});
+    }
+    
+    onFile(request: electron.ProtocolRequest, callback: (response: string | electron.ProtocolResponse) => void): void {
+        //console.log("onFile", request.url?request.url.substr(0, 100):undefined)
+        callback(unescape(request.url.replace("file:///", "").split("?")[0]));
     }
     
     initCrypto() {
@@ -347,6 +374,8 @@ export class Starter {
             else {
                 httpsSecureContextPartition.protocol.registerBufferProtocol(WindowUrl.PROTOCOL, this.onUrl.bind(this));
             }
+            electron.protocol.registerFileProtocol("file", this.onFile.bind(this));
+            httpsSecureContextPartition.protocol.registerFileProtocol("file", this.onFile.bind(this));
             
             if (process.platform == "win32" && !this.isInUpdateMode()) {
                 let shortcutPath = process.env.APPDATA + "\\Microsoft\\Windows\\Start Menu\\Programs\\" + (this.isInDevMode() ? "PrivMX Dev" : "PrivMX") + ".lnk";
@@ -398,7 +427,7 @@ export class Starter {
                 let profile = profilesManager.getCurrentProfile();
                 this.bindErrorCatcher(profile);
                 // this.fireCacheMigration(profile)
-                ElectronApplication.create(this, profile, profilesManager);
+                this.instance = ElectronApplication.create(this, profile, profilesManager);
                 return profile;
             })
             .then(profile => {
@@ -412,318 +441,34 @@ export class Starter {
     }
 
     bindErrorCatcher(profile: ProfileEx): void {
-        this.errorCatcher = null;
-        this.errorCatcher = new UnhandledErrorsCatcher(profile.absolutePath);
-        this.errorCatcher.onErrorEvent = this.onErrorEvent.bind(this);
+        this.errorCatcher = null;  
+        let errorCatcher = new UnhandledErrorsCatcher(profile, this.isInDevMode());
+        errorCatcher.onErrorEvent = this.onErrorEvent.bind(this);
+        this.errorCatcher = errorCatcher;
     }
 }
 
-export class ProfilesManager {
-    basePath: string;
-    profilesPath: string;
-    profilesConfigPath: string;
-    profiles: Profiles;
-    onNewProfileHandlers: ((absPath: string) => void)[] = [];
-    deviceId: string;
 
-    constructor(
-        public isInDevMode: boolean
-    ) {
-        this.basePath = path.resolve(os.homedir(), ".privmx");
-        this.profilesPath = path.resolve(this.basePath, "profiles");
-        this.profilesConfigPath = path.resolve(this.basePath, "profiles.json");
-        fse.mkdirsSync(this.basePath);
-        fse.mkdirsSync(this.profilesPath);
-        if (fs.existsSync(this.profilesConfigPath)) {
-            this.profiles = JSON.parse(fs.readFileSync(this.profilesConfigPath, "utf8"));
-            if (!this.profiles.deviceIdSeed) {
-                this.profiles.deviceIdSeed = this.generateDeviceIsSeed();
-                this.dumpProfiles();
-            }
-
-            if (isInDevMode && !this.profiles.initProfile) {
-                let devProfile: Profile;
-                devProfile = this.createProfile();
-                this.profiles.profiles[devProfile.name] = devProfile;
-                this.profiles.devInitProfile = devProfile.name;
-                this.dumpProfiles();
-            }
-
-            if (!this.isProfileLanguageSet()) {
-                this.setProfileLanguage();
-            }
-        }
-        else {
-            // let oldPrivmxStoragePath = path.resolve(os.homedir(), ".privmx-storage");
-            // let oldDevPrivmxStoragePath = path.resolve(os.homedir(), ".privmx-dev-storage");
-            this.profiles = {
-                devInitProfile: null,
-                initProfile: null,
-                deviceIdSeed: this.generateDeviceIsSeed(),
-                profiles: {}
-            };
-            let initProfile = this.createProfile();
-            this.profiles.profiles[initProfile.name] = initProfile;
-            this.profiles.initProfile = initProfile.name;
-            // let devProfile: Profile;
-            // if (fs.existsSync(oldDevPrivmxStoragePath)) {
-            //     devProfile = this.createProfile();
-            //     this.profiles.profiles[devProfile.name] = devProfile;
-            //     this.profiles.devInitProfile = devProfile.name;
-            // }
-            this.dumpProfiles();
-            // this.copyOldStorage(initProfile, oldPrivmxStoragePath);
-            // this.copyOldStorage(devProfile, oldDevPrivmxStoragePath);
-        }
-
-    }
-
-    isProfileLanguageSet(): boolean {
-        let profileName = this.isInDevMode ? this.profiles.devInitProfile : this.profiles.initProfile;
-        return profileName && this.profiles.profiles[profileName] && this.profiles.profiles[profileName].lang != null;
-    }
-
-    isLicenceAccepted(): boolean {
-        let profileName = this.isInDevMode ? this.profiles.devInitProfile : this.profiles.initProfile;
-        return profileName && this.profiles.profiles[profileName] && this.profiles.profiles[profileName].licenceAccepted == true;
-    }
-
-    isAutostartEnabled(): boolean {
-        let profileName = this.isInDevMode ? this.profiles.devInitProfile : this.profiles.initProfile;
-        return profileName && this.profiles.profiles[profileName] && this.profiles.profiles[profileName].autostartEnabled == true;
-    }
-
-    getCcApiEndpoint(): string {
-        let profileName = this.isInDevMode ? this.profiles.devInitProfile : this.profiles.initProfile;
-        return profileName && this.profiles.profiles[profileName] && this.profiles.profiles[profileName].ccApiEndpoint ? this.profiles.profiles[profileName].ccApiEndpoint : null;
-    }
-
-
-    setLicenceAccepted(): void {
-        let profileName = this.isInDevMode ? this.profiles.devInitProfile : this.profiles.initProfile;
-        if (profileName) {
-            this.profiles.profiles[profileName].licenceAccepted = true;
-        }
-        this.dumpProfiles();
-    }
-
-    setAutostartEnabled(enabled: boolean): void {
-        let profileName = this.isInDevMode ? this.profiles.devInitProfile : this.profiles.initProfile;
-        if (profileName) {
-            this.profiles.profiles[profileName].autostartEnabled = enabled;
-        }
-        this.dumpProfiles();
-    }
-
-
-    isLoginInfoVisible(): boolean {
-        let profileName = this.isInDevMode ? this.profiles.devInitProfile : this.profiles.initProfile;
-        return profileName && this.profiles.profiles[profileName] && this.profiles.profiles[profileName].loginInfoVisible !== false;
-    }
-
-    setLoginInfoHidden(): void {
-        let profileName = this.isInDevMode ? this.profiles.devInitProfile : this.profiles.initProfile;
-        if (profileName) {
-            this.profiles.profiles[profileName].loginInfoVisible = false;
-        }
-        this.dumpProfiles();
-    }
-
-
-
-    setProfileLanguage(lang?: string): void {
-        let profileName = this.isInDevMode ? this.profiles.devInitProfile : this.profiles.initProfile;
-
-        if (profileName) {
-            this.profiles.profiles[profileName].lang = lang ? lang : this.getDefaultLangCode();
-        }
-
-        this.dumpProfiles();
-    }
-
-    getLangCode(locale: string): string {
-        let sep: number = locale.indexOf("-");
-        if (sep >= 0) {
-            return locale.substr(0, sep);
-        }
-        return locale;
-    }
-
-    getProfileLanguage(): string {
-        let profileName = this.isInDevMode ? this.profiles.devInitProfile : this.profiles.initProfile;
-        if (!(profileName in this.profiles.profiles)) {
-            console.log("Trying to read profile language but given profile ", profileName, "does not exists. Fallback to system locale.");
-            return this.getDefaultLangCode();
-        }
-        return this.profiles.profiles[profileName].lang;
-    }
-    
-    getDefaultLangCode(): string {
-        let langCode = this.getLangCode(electron.app.getLocale());
-        if (LocaleService.canUseAsDefaultLanguage(langCode)) {
-            return langCode;
-        }
-        return LocaleService.DEFAULT_LANG_CODE;
-    }
-
-    static create(isInDevMode: boolean): Q.Promise<ProfilesManager> {
-        let profilesManager: ProfilesManager;
-        return Q().then(() => {
-            profilesManager = new ProfilesManager(isInDevMode);
-            return ProfilesManager.getDeviceId(profilesManager.profiles.deviceIdSeed);
-        })
-            .then(deviceId => {
-                profilesManager.deviceId = deviceId;
-                return profilesManager
-            });
-    }
-
-    generateDeviceIsSeed(): string {
-        return privfs.crypto.serviceSync.randomBytes(10).toString("hex");
-    }
-
-    static getDeviceId(deviceIdSeed: string): Q.Promise<string> {
-        return Q().then(() => {
-            return systeminformation.uuid();
-        })
-            .then(uuid => {
-                let cpus = os.cpus();
-                let hardwareInfo = deviceIdSeed + ":" + cpus.length + ":" + (cpus.length == 0 ? "" : cpus[0].model) + ":" + uuid.os;
-                return privfs.crypto.service.sha256(Buffer.from(hardwareInfo, "utf8"));
-            })
-            .then(hash => {
-                return hash.slice(0, 16).toString("hex");
-            });
-    }
-
-    onNewProfile(handler: (absPath: string) => void) {
-        this.onNewProfileHandlers.push(handler);
-    }
-
-    // copyOldStorage(profile: Profile, oldStoragePath: string) {
-    //     if (profile != null && fs.existsSync(oldStoragePath)) {
-    //         let profileEx = this.prepareProfile(profile);
-    //         fse.copySync(oldStoragePath, profileEx.storageAbsolutePath, {overwrite: true});
-    //     }
-    // }
-
-    createProfile(): Profile {
-        let profileName: string;
-        let profilePath: string;
-        do {
-            profileName = privfs.crypto.serviceSync.randomBytes(10).toString("hex");
-            profilePath = path.resolve(this.profilesPath, profileName);
-        }
-        while (fs.existsSync(profilePath));
-        fse.mkdirsSync(profilePath);
-        let profile = {
-            name: profileName,
-            path: profileName,
-            pathIsRelative: true,
-            lang: this.getDefaultLangCode(),
-        };
-        return profile;
-    }
-
-    getCurrentProfile(): ProfileEx {
-        let profileName = this.isInDevMode ? this.profiles.devInitProfile : this.profiles.initProfile;
-        let profile = this.profiles.profiles[profileName];
-        if (profile == null) {
-            profile = this.createProfile();
-            this.profiles.profiles[profile.name] = profile;
-            if (this.isInDevMode) {
-                this.profiles.devInitProfile = profile.name;
-            }
-            else {
-                this.profiles.initProfile = profile.name;
-            }
-            this.dumpProfiles();
-        }
-        return this.prepareProfile(profile);
-    }
-
-    prepareProfile(profile: Profile): ProfileEx {
-        let absolutePath = profile.pathIsRelative ? path.resolve(this.profilesPath, profile.path) : profile.path;
-        fse.mkdirsSync(absolutePath);
-        let storageAbsolutePath = path.resolve(absolutePath, "storage");
-        fse.mkdirsSync(storageAbsolutePath);
-        let tmpAbsolutePath = path.resolve(absolutePath, "tmp");
-        if (fse.existsSync(tmpAbsolutePath)) {
-            try {
-                fse.removeSync(tmpAbsolutePath);
-            }
-            catch (e) { }
-        }
-        fse.mkdirsSync(tmpAbsolutePath);
-
-        let tmpShortcuts = KeyboardShortcuts.defaultShortcuts;
-        if (fse.existsSync(path.resolve(absolutePath, "shortcuts-example.json"))) {
-            fse.unlinkSync(path.resolve(absolutePath, "shortcuts-example.json"));
-        }
-        fse.writeFileSync(path.resolve(absolutePath, "shortcuts-example.json"), JSON.stringify(tmpShortcuts, null, 2), "utf8");
-
-
-        return {
-            name: profile.name,
-            absolutePath: absolutePath,
-            storageAbsolutePath: storageAbsolutePath,
-            tmpAbsolutePath: tmpAbsolutePath,
-            getLanguage: () => this.getProfileLanguage(),
-            setLanguage: (lang: string) => {
-                this.setProfileLanguage(lang);
-            },
-            isLicenceAccepted: () => this.isLicenceAccepted(),
-            getCcApiEndpoint: () => this.getCcApiEndpoint(),
-            setLicenceAccepted: () => this.setLicenceAccepted(),
-            isLoginInfoVisible: () => this.isLoginInfoVisible(),
-            setLoginInfoHidden: () => this.setLoginInfoHidden(),
-            isAutostartEnabled: () => this.isAutostartEnabled(),
-            setAutostartEnabled: (enabled: boolean) => this.setAutostartEnabled(enabled)
-        };
-    }
-
-    dumpProfiles() {
-        fs.writeFileSync(this.profilesConfigPath, JSON.stringify(this.profiles, null, 2), "utf8");
-    }
-
-    deleteCurrentProfile() {
-        let profileName = this.isInDevMode ? this.profiles.devInitProfile : this.profiles.initProfile;
-        let profile = this.profiles.profiles[profileName];
-        if (profile != null) {
-            let absolutePath = profile.pathIsRelative ? path.resolve(this.profilesPath, profile.path) : profile.path;
-            fse.removeSync(absolutePath);
-            delete this.profiles.profiles[profile.name];
-            if (this.isInDevMode) {
-                this.profiles.devInitProfile = null;
-            }
-            else {
-                this.profiles.initProfile = null;
-            }
-            this.dumpProfiles();
-            let profile2 = this.getCurrentProfile();
-
-            let basePath = profile2.storageAbsolutePath;
-            for (let handler of this.onNewProfileHandlers) {
-                handler(basePath);
-            }
-        }
-    }
-}
-
-export class UnhandledErrorsCatcher {
-
+class UnhandledErrorsCatcher implements IUnhandledErrorsCatcher{
     static readonly F_NAME: string = "error.log"
     onErrorEvent: (type: string) => void;
     logsPath: string;
     unhandledRes = require("electron-unhandled");
 
-    constructor(basePath: string, public silentMode: boolean = true) {
-        this.logsPath = this.getLogsPath(basePath);
+    constructor(public profile: ProfileEx, devMode: boolean, public silentMode: boolean = true) {
+        this.logsPath = this.getLogsPath(profile.absolutePath);
         if (!fse.existsSync(this.logsPath)) {
             fse.mkdirsSync(this.logsPath);
             fs.writeFileSync(path.resolve(this.logsPath, UnhandledErrorsCatcher.F_NAME), "[" + new Date().toUTCString() + "] PrivMX errorlog file created.\n\n", 'utf8');
         }
+        
+        SentryService.initSentry(
+            devMode, 
+            this.profile.isErrorsLoggingEnabled()
+        );
+
         this.unhandledRes({ logger: (args: any) => {
+            SentryService.captureException(args);
             this.catchUnhandledErrors(args);
         }, showDialog: !this.silentMode });
     }

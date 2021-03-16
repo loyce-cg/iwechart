@@ -1,6 +1,7 @@
 import * as $ from "jquery";
 import { ComponentView } from "../base/ComponentView";
 import * as Types from "../../Types";
+import { UI } from "../../web-utils";
 
 export interface InfoTooltipOptions {
     $parentElement: JQuery;
@@ -42,6 +43,7 @@ export class InfoTooltip extends ComponentView {
     
     render($e: JQuery) {
         let $parent = $e.parent();
+        $e.css("display", "none");
         let extra: string = "";
         if (this.optionsSet.extraMessage && !this.optionsSet.withAvatars) {
             extra = "<div class='extra-message'>" + this.optionsSet.extraMessage + "</div>";
@@ -71,8 +73,10 @@ export class InfoTooltip extends ComponentView {
         if (this.$currentTooltip && this.$currentTooltip.css("visibility") == "visible") {
             return;
         }
-        let curr: JQuery = $(<HTMLElement>e.currentTarget);
-        this.$currentTooltip = curr.find(".info-tooltip-component");
+        let $curr: JQuery = $(<HTMLElement>e.currentTarget);
+        this.$currentTooltip = UI.cloneElementWithCanvases($curr.find(".info-tooltip-component"));
+        this.$currentTooltip.appendTo(document.body);
+        this.$currentTooltip.css("display", "");
         this.$currentTooltip.css("visibility", "visible");
         this.ellipsis(this.$currentTooltip);
         
@@ -122,6 +126,7 @@ export class InfoTooltip extends ComponentView {
     onTooltipHide(e: MouseEvent) {
         if (this.$currentTooltip && this.$currentTooltip.css("visibility", "visible")) {
             this.$currentTooltip.css("visibility", "hidden");
+            this.$currentTooltip.remove();
             this.$currentTooltip = null;
         }
     }

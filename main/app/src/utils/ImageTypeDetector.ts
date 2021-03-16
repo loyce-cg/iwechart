@@ -1,3 +1,4 @@
+import {app} from "../Types";
 export type NumericEnumerable = {[index: number]: number}
 
 export interface DetectionResult {
@@ -72,4 +73,14 @@ export class ImageTypeDetector {
         let mime = ImageTypeDetector.detect(header);
         return "data:" + (mime == null ? "image/jpeg" : mime.mime) + ";base64," + base64;
     }
+
+    static createBlobDataFromBase64(base64: string): app.BlobData {
+        let header = ImageTypeDetector.getFirstBytesFromBase64(base64, ImageTypeDetector.MAGIC_HEADER_MAX_LENGTH);
+        let mime = ImageTypeDetector.detect(header);
+        return {
+            mimetype: mime == null ? "image/jpeg" : mime.mime,
+            buffer: Buffer.from(base64, "base64")
+        }
+    }
+
 }

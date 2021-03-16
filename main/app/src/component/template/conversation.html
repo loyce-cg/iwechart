@@ -5,9 +5,10 @@
   {{
     let isVoiceChatActive = model.activeVoiceChatInfo && model.activeVoiceChatInfo.active;
     let voiceChatUsers = model.activeVoiceChatInfo && model.activeVoiceChatInfo.users;
+    let isVideoConferenceActive = !!model.activeVideoConferenceInfo;
   }}
 {{ if (model.isSingleContact) { let shortDescription = Helper.shortDescription(model.person.description); {{
-<li class="conversation-element contact {{@model.withPin ? 'with-pin': ''}} {{@model.person.present ? 'present': ''}} {{@context && context.isActive ? 'active' : ''}} {{@model.person.isBasic ? 'external' : ''}} {{@model.person.deleted ? 'deleted' : ''}} {{@model.unmutedUnread == 0 ? 'no-unmuted-unread' : ''}} {{@model.searchCount > 0 || !model.allSearched ? 'with-search-count' : ''}}  {{@model.person.starred ? 'starred' : ''}} {{@model.unread ? 'unread' : ''}} {{@model.elementsCount === 0 ? 'empty' : ''}} {{@model.person.description ? 'with-description' : 'without-description'}} {{@model.isBellRinging ? 'with-ringing-bell' : ''}} {{@isVoiceChatActive ? 'with-voice-chat-active' : ''}}" data-conversation-id="{{@model.id}}" data-person-hashmail="{{@model.person.hashmail}}">
+<li class="conversation-element contact {{@model.withPin ? 'with-pin': ''}} {{@model.person.present ? 'present': ''}} {{@context && context.isActive ? 'active' : ''}} {{@model.person.isBasic ? 'external' : ''}} {{@model.person.deleted ? 'deleted' : ''}} {{@model.unmutedUnread == 0 ? 'no-unmuted-unread' : ''}} {{@model.searchCount > 0 || !model.allSearched ? 'with-search-count' : ''}}  {{@model.person.starred ? 'starred' : ''}} {{@model.unread ? 'unread' : ''}} {{@model.elementsCount === 0 ? 'empty' : ''}} {{@model.person.description ? 'with-description' : 'without-description'}} {{@model.isBellRinging ? 'with-ringing-bell' : ''}} {{@isVoiceChatActive ? 'with-voice-chat-active' : ''}} {{@isVideoConferenceActive ? 'with-active-video-conference' : ''}}" data-conversation-id="{{@model.id}}" data-person-hashmail="{{@model.person.hashmail}}">
   {{ if (model.withPin) { }}
     <div class="pin-button {{@model.isPinned?'pinned':'not-pinned'}}">
       <i class="fa fa-thumb-tack"></i>
@@ -56,7 +57,7 @@
   </span>
 </li>
 }} } else { {{
-<li class="conversation-element conversation presence-{{@model.personsPresence}} {{@model.withPin ? 'with-pin': ''}} {{@context && context.isActive ? 'active' : ''}} {{@model.unmutedUnread == 0 ? 'no-unmuted-unread' : ''}} {{@model.unread ? 'unread' : ''}} {{@model.elementsCount === 0 ? 'empty' : ''}} {{@model.searchCount > 0 || !model.allSearched ? 'with-search-count' : ''}}  {{@isVoiceChatActive ? 'with-voice-chat-active' : ''}}" data-conversation-id="{{@model.id}}">
+<li class="conversation-element conversation presence-{{@model.personsPresence}} {{@model.withPin ? 'with-pin': ''}} {{@context && context.isActive ? 'active' : ''}} {{@model.unmutedUnread == 0 ? 'no-unmuted-unread' : ''}} {{@model.unread ? 'unread' : ''}} {{@model.elementsCount === 0 ? 'empty' : ''}} {{@model.searchCount > 0 || !model.allSearched ? 'with-search-count' : ''}}  {{@isVoiceChatActive ? 'with-voice-chat-active' : ''}} {{@isVideoConferenceActive ? 'with-active-video-conference' : ''}}" data-conversation-id="{{@model.id}}">
   {{ if (model.withPin) { }}
     <div class="pin-button {{@model.isPinned?'pinned':'not-pinned'}}">
       <i class="fa fa-thumb-tack"></i>
@@ -77,16 +78,16 @@
               
                 {{ if (model.customName) { }}
                 <span class="name"><div class="name-wrapper conv">
-                  {{@model.customName}}
+                  <span class="name">{{@model.customName}}</span>
                   <div class="voice-chat-tooltip has-userslist-tooltip" data-userslist-id="{{@model.id}}"></div>
                 </div></span>
               {{ } else { }}
               <div class="name-wrapper conv">
-              {{model.persons.forEach((person, i) => { {{
-                <span class="name {{@person.isBasic ? 'external' : ''}} {{@person.deleted ? 'deleted' : ''}}">{{@person.name}}{{#i == model.persons.length - 1 ? "" : ",&nbsp;"}}</span>
-              }} }); }}
-              <div class="voice-chat-tooltip has-userslist-tooltip" data-userslist-id="{{@model.id}}"></div>
-            </div>
+                {{model.persons.forEach((person, i) => { {{
+                  <span class="name {{@person.isBasic ? 'external' : ''}} {{@person.deleted ? 'deleted' : ''}}">{{@person.name}}{{#i == model.persons.length - 1 ? "" : ",&nbsp;"}}</span>
+                }} }); }}
+                <div class="voice-chat-tooltip has-userslist-tooltip" data-userslist-id="{{@model.id}}"></div>
+              </div>
               {{ } }}
 
             </div>  

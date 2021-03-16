@@ -44,3 +44,5 @@ start-electron-dev
 electron/out
 /start-electron
 voicechat/out
+analyzer.js
+app/src/emoji/*.png

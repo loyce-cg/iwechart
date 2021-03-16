@@ -2,9 +2,9 @@
 @import {Formatter} from "../../../utils/Formatter"
 @import {app} from "../../../Types";
 @helper Formatter
-@model {assetsManager: AssetsManager, title: string, iframeDataUrl: string, barPosition: string, minimizable: boolean, maximizable: boolean, closable: boolean, platform?: string, preTitleIcon: app.PreTitleIcon, icon?: string, keepSpinnerUntilViewLoaded?: boolean, hideLoadingSpinner?: boolean}
+@model {assetsManager: AssetsManager, title: string, iframeDataUrl: string, barPosition: string, minimizable: boolean, maximizable: boolean, closable: boolean, maximized?: boolean, platform?: string, preTitleIcon: app.PreTitleIcon, icon?: string, keepSpinnerUntilViewLoaded?: boolean, hideLoadingSpinner?: boolean, canSetAlwaysOnTop?: boolean, alwaysOnTop?: boolean}
 <!DOCTYPE html>
-<html>
+<html class="{{@model.maximized ? 'window-maximized' : ''}}">
 <head>
     <meta charset="utf-8" />
     <link href="{{@model.assetsManager.getAsset('themes/default/css/fonts.css')}}" media="all" rel="stylesheet" />
@@ -91,20 +91,36 @@
             -webkit-user-select: none;
             -webkit-app-region: drag;
         }
+        .topbar .topbar-title #topbar-title {
+            display: block;
+            margin-top: 0;
+            -webkit-app-region: drag;
+        }
+        html:not(.window-maximized) .topbar .topbar-title #topbar-title {
+            margin-top: 2px;
+            line-height: 18px;
+        }
+        html.window-maximized #toggle-always-on-top-button {
+            display: none;
+        }
         .topbar .topbar-title-icon {
             position: relative;
-            top: 1px;
+            top: 2px;
             margin-right: 1px;
+        }
+        .topbar .topbar-title-icon.fa {
+            top: 1px;
+        }
+        .topbar .topbar-title-icon.privmx-icon {
+            top: 0;
         }
         #topbar-title.too-long {
             text-align: left;
             position: absolute;
             left: 65px;
         }
-        #topbar-title.too-long+.dirty-marker {
-            position: absolute;
-            right: 67px;
-            top: 8px;
+        #topbar-title.too-long .dirty-marker {
+            top: 6px;
         }
         #topbar-title-text {
             font-kerning: none;
@@ -112,17 +128,20 @@
         }
         .topbar .topbar-buttons {
             position: absolute;
-            top: 4px;
-            right: 4px;
+            top: 0;
+            right: 0;
             text-align: right;
         }
         .topbar .topbar-button {
             display: inline-block;
             width: 10px;
-            height: 16px;
+            height: 20px;
             font-size: 10px;
-            margin-left: 6px;
-            margin-right: 6px;
+            margin-left: 2px;
+            margin-right: 2px;
+            padding-left: 4px;
+            padding-right: 4px;
+            padding-top: 4px;
             cursor: pointer;
             color: #3e474c;
             float: right;
@@ -140,19 +159,34 @@
         .topbar .topbar-button:hover {
             color: #6b7c84;
         }
-        .topbar.topbar-buttons-to-left .topbar-buttons {
+        .topbar.topbar-buttons-to-left:not([data-platform="darwin"]) .topbar-buttons {
             text-align: left;
             right: auto;
             left: 6px;
         }
-        .topbar.topbar-buttons-to-left .topbar-button-close {
+        .topbar.topbar-buttons-to-left:not([data-platform="darwin"]) .topbar-button-close {
             float: left;
         }
-        .topbar.topbar-buttons-to-left .topbar-button-maximize {
+        .topbar.topbar-buttons-to-left:not([data-platform="darwin"]) .topbar-button-maximize {
             float: right;
         }
-        .topbar.topbar-buttons-to-left .topbar-button-minimize {
+        .topbar.topbar-buttons-to-left:not([data-platform="darwin"]) .topbar-button-minimize {
             float: left;
+        }
+        .topbar:not(.topbar-buttons-to-left:not([data-platform="darwin"])) .topbar-button-close {
+            margin-right: 0;
+            padding-right: 8px;
+        }
+        .topbar[data-platform="darwin"] #toggle-always-on-top-button {
+            margin-right: 5px;
+        }
+        #toggle-always-on-top-button::before {
+            transform: rotate(45deg);
+            position: relative;
+            top: 2px;
+        }
+        body.always-on-top #toggle-always-on-top-button::before {
+            transform: none;
         }
         .topbar .dirty-marker {
           display: none;
@@ -162,6 +196,8 @@
           width: 8px;
           height: 8px;
           border-radius: 8px;
+          position: absolute;
+          top: 8px;
         }
         .topbar.dirty .dirty-marker {
           display: inline-block;
@@ -198,7 +234,7 @@
         }
     </style>
 </head>
-<body>
+<body class="{{@model.alwaysOnTop ? 'always-on-top' : ''}}">
     <script type="text/javascript">
         var cnv = document.createElement("canvas");
         var ctx = cnv.getContext("2d");
@@ -232,10 +268,10 @@
             }
             return [l, lineWidth];
         }
-        var topbar, topbarTitle;
+        var topbar, topbarTitle, topbarTitleText, dirtyMarker;
         function titleEllipsis(title) {
             var rect = topbar.getBoundingClientRect();
-            var availWidth = rect.width - 170;
+            var availWidth = rect.width - 210;
             title = title.split("").reverse().join("");
             var [maxChars, lineWidth] = getMaxTextLength(title, availWidth, false);
             if (maxChars < title.length) {
@@ -255,7 +291,7 @@
         }
     </script>
     <div id="topbar" class="topbar {{@model.barPosition == 'left' ? 'topbar-buttons-to-left' : ''}}" data-platform="{{@model.platform}}">
-        <div class="topbar-title">
+        <div class="topbar-title" style="-webkit-app-region: no-drag;">
           <span id="topbar-title" data-icon-type="{{@model.preTitleIcon?model.preTitleIcon:'none'}}">
               <span class="pre-title-icon">
                   <img class="pre-title-icon--section-public" src="{{@model.assetsManager.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
@@ -266,8 +302,8 @@
               </span>
               <span class="topbar-title-icon {{@model.icon}}"></span>
             <span class="topbar-title-text" id="topbar-title-text">{{@model.title}}</span>
+            <span class="dirty-marker"></span>
           </span>
-          <span class="dirty-marker"></span>
         </div>
         {{ if (model.platform != "darwin") { {{
         <div class="topbar-buttons" style="-webkit-app-region: no-drag;">
@@ -280,8 +316,17 @@
             {{ if (model.minimizable) { {{
                 <a id="minimize-button" class="topbar-button topbar-button-minimize ico-minimize"></a>
             }} } }}
+            {{ if (model.canSetAlwaysOnTop) { {{
+                <a id="toggle-always-on-top-button" class="topbar-button topbar-button-toggle-always-on-top fa fa-thumb-tack"></a>
+            }} } }}
         </div>
-        }} } }}
+        }} } else { }}
+        <div class="topbar-buttons" style="-webkit-app-region: no-drag;">
+            {{ if (model.canSetAlwaysOnTop) { {{
+                <a id="toggle-always-on-top-button" class="topbar-button topbar-button-toggle-always-on-top fa fa-thumb-tack"></a>
+            }} } }}
+        </div>
+        {{ } }}
     </div>
     <div class="iframe-container">
         {{
@@ -319,6 +364,8 @@
         performanceLog("openingWindows.pageHtml.start");
         topbar = document.getElementById("topbar");
         topbarTitle = document.getElementById("topbar-title");
+        topbarTitleText = document.getElementById("topbar-title-text");
+        dirtyMarker = document.getElementsByClassName("dirty-marker")[0];
         fullTitle = document.getElementById("topbar-title-text").textContent;
         document.fonts.ready.then(() => {
             measureChars(".");
@@ -361,7 +408,10 @@
                 }
             });
         }
-
+        
+        function updateAlwaysOnTop(alwaysOnTop) {
+            document.body.classList.toggle("always-on-top", alwaysOnTop);
+        }
 
         var closeButton = document.getElementById("close-button");
         if (closeButton) {
@@ -379,6 +429,13 @@
         if (minimizeButton) {
             minimizeButton.addEventListener("click", function() {
                 ipc.send(ipcChannelName + "/wnd", "minimize");
+            });
+        }
+        var toggleAlwaysOnTopButton = document.getElementById("toggle-always-on-top-button");
+        if (toggleAlwaysOnTopButton) {
+            toggleAlwaysOnTopButton.addEventListener("click", function() {
+                var isAlwaysOnTop = document.body.classList.contains("always-on-top");
+                ipc.send(ipcChannelName + "/wnd", "setAlwaysOnTop", !isAlwaysOnTop);
             });
         }
         
@@ -433,6 +490,12 @@
             if (loader) {
                 loader.parentNode.removeChild(loader);
             }
+        });
+        ipc.on("window-maximized-state-changed", function (sender, isMaximized) {
+            document.querySelector("html").classList.toggle("window-maximized", !!isMaximized);
+        });
+        ipc.on("set-always-on-top", function(sender, alwaysOnTop) {
+            updateAlwaysOnTop(alwaysOnTop);
         });
         performanceLog("openingWindows.pageHtml.end");
     </script>

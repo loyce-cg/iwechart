@@ -48,14 +48,13 @@
 
       ],
     "darwin": [
-      {"type": "file", "path": "node_modules/sqlite3/lib/binding/electron-v6.0-darwin-x64/node_sqlite3.node"}
-
+      {"type": "file", "path": "node_modules/sqlite3/lib/binding/electron-v11.3-darwin-x64/node_sqlite3.node"}
     ],
     "linux": [
-      {"type": "file", "path": "node_modules/sqlite3/lib/binding/electron-v6.0-linux-x64/node_sqlite3.node"}
+      {"type": "file", "path": "node_modules/sqlite3/lib/binding/electron-v11.3-linux-x64/node_sqlite3.node"}
     ],
     "win32": [
-      {"type": "file", "path": "node_modules/sqlite3/lib/binding/electron-v6.0-win32-x64/node_sqlite3.node"}
+      {"type": "file", "path": "node_modules/sqlite3/lib/binding/electron-v11.3-win32-x64/node_sqlite3.node"}
     ],
     "plugins": {
       "notes2": {

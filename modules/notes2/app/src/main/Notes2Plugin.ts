@@ -268,6 +268,8 @@ export class Notes2Plugin {
         }).then(() => {
             return this.loadSettings(null, "__global__");
         }).then(() => {
+            this.app.eventDispatcher.dispatchEvent<Mail.Types.event.PluginModuleReadyEvent>({type: "plugin-module-ready", name: Mail.Types.section.NotificationModule.NOTES2});
+
             this.app.addEventListener<Mail.Types.event.MarkAsReadEvent>("mark-as-read", event => {
                 let sessions: Mail.mail.session.Session[] = event.hostHash ? [this.app.sessionManager.getSessionByHostHash(event.hostHash)] : this.getReadySessions();
                 if (event.moduleName == "notes2" || !event.moduleName) {
@@ -438,7 +440,8 @@ export class Notes2Plugin {
             this.recentFilesWindowController.afterRecentFileRenamed(file);
         }
     }
-    
+
+
     openHistory(fromEvent: Mail.Types.event.OpenHistoryViewEvent): void {
         let session = this.app.sessionManager.getSessionByHostHash(fromEvent.hostHash);
         this.app.ioc.create(HistoryWindowController, [fromEvent.parent, session, fromEvent.fileSystem, fromEvent.path]).then(win => {
@@ -1213,6 +1216,35 @@ export class Notes2Plugin {
             });
         })
         .catch(console.error);
+    }
+    
+    openNewAudioAndVideoNoteWindow(session: Mail.mail.session.Session, sectionId: string = null, path: string = "/"): void {
+        this.openVideoRecorderWindow(session, sectionId, path, Mail.window.videorecorder.VideoRecorderMode.AUDIO_AND_VIDEO);
+    }
+    
+    openNewAudioNoteWindow(session: Mail.mail.session.Session, sectionId: string = null, path: string = "/"): void {
+        this.openVideoRecorderWindow(session, sectionId, path, Mail.window.videorecorder.VideoRecorderMode.AUDIO);
+    }
+    
+    openNewPhotoNoteWindow(session: Mail.mail.session.Session, sectionId: string = null, path: string = "/"): void {
+        this.openVideoRecorderWindow(session, sectionId, path, Mail.window.videorecorder.VideoRecorderMode.PHOTO);
+    }
+    
+    openVideoRecorderWindow(session: Mail.mail.session.Session, sectionId: string, path: string, mode: Mail.window.videorecorder.VideoRecorderMode): void {
+        let videoRecorderOptions: Mail.window.videorecorder.VideoRecorderOptions = {
+            saveModel: <Mail.window.videorecorder.VideoRecorderSectionFileSaveModel>{
+                type: "sectionFile",
+                session: session,
+                sectionId: sectionId,
+                path: path,
+            },
+            mode: mode,
+            closeAfterSaved: true,
+        };
+        this.app.ioc.create(Mail.window.videorecorder.VideoRecorderWindowController, [this.app, videoRecorderOptions]).then(win => {
+            const winName = mode == Mail.window.videorecorder.VideoRecorderMode.AUDIO ? "audio-recorder" : "video-recorder";
+            this.app.openSingletonWindow(winName, win);
+        });
     }
     
     getSessions(): Mail.mail.session.Session[] {

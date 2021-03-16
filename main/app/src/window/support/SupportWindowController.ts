@@ -1,11 +1,10 @@
-import {BaseWindowController} from "../base/BaseWindowController";
+import { BaseWindowController } from "../base/BaseWindowController";
 import * as Q from "q";
-import {app, utils} from "../../Types";
+import { app } from "../../Types";
 import { LocaleService } from "../../mail";
 import { i18n } from "./i18n";
 import { WebCCApi } from "../../mail/WebCCApi";
 import { RegisterUtils } from "../login/RegisterUtils";
-import { KeepLoginEvent } from "../login/LoginWindowController";
 
 export interface Model {
     url: string;
@@ -18,10 +17,10 @@ export class SupportWindowController extends BaseWindowController {
     static readonly FORM_WINDOW_WIDTH: number = 800;
     static readonly STATIC_MESSAGE_WINDOW_HEIGHT: number = 440;
     static readonly STATIC_MESSAGE_WINDOW_WIDTH: number = 640;
-
-    loginData: {login: string; password: string; domain: string};
-    static textsPrefix: string = "window.support.";
     
+    loginData: { login: string; password: string; domain: string };
+    static textsPrefix: string = "window.support.";
+
     static registerTexts(localeService: LocaleService): void {
         localeService.registerTexts(i18n, this.textsPrefix);
     }
@@ -31,11 +30,11 @@ export class SupportWindowController extends BaseWindowController {
     iframeLoaded: boolean = false;
 
     constructor(parent: app.WindowParent) {
-        super(parent, __filename, __dirname);
+        super(parent, __filename, __dirname, null, null, "basic");
         this.ipcMode = true;
         this.afterLoadDefer = Q.defer<void>();
         let windowHeight = this.isSupportEnabled() ? SupportWindowController.FORM_WINDOW_HEIGHT : SupportWindowController.STATIC_MESSAGE_WINDOW_HEIGHT;
-        let windowWidth = this.isSupportEnabled() ? SupportWindowController.FORM_WINDOW_WIDTH : SupportWindowController.STATIC_MESSAGE_WINDOW_WIDTH;    
+        let windowWidth = this.isSupportEnabled() ? SupportWindowController.FORM_WINDOW_WIDTH : SupportWindowController.STATIC_MESSAGE_WINDOW_WIDTH;
         this.openWindowOptions = {
             hidden: this.isSupportEnabled(),
             toolbar: false,
@@ -47,10 +46,11 @@ export class SupportWindowController extends BaseWindowController {
             minWidth: windowWidth,
             minHeight: windowHeight,
             title: this.i18n("window.support.title"),
-            backgroundColor: "#0a2933"
+            backgroundColor: "#0a2933",
+            usePrivMXUserAgent: true
         };
     }
-    
+
     waitOnLoad(): Q.Promise<void> {
         return this.afterLoadDefer.promise;
     }
@@ -61,20 +61,20 @@ export class SupportWindowController extends BaseWindowController {
 
     init(): Q.IWhenable<void> {
         return Q().then(() => {
-            if  (this.isSupportEnabled()) {
+            if (this.isSupportEnabled()) {
                 return this.loadSupportForm();
             }
             else {
                 this.setIFrameLoaded();
-            }    
+            }
         })
     }
-    
+
 
     onViewIframeLoaded(): void {
         this.setIFrameLoaded();
     }
-    
+
     setIFrameLoaded(): void {
         this.iframeLoaded = true;
         this.nwin.show();
@@ -87,11 +87,11 @@ export class SupportWindowController extends BaseWindowController {
             supportEnabled: this.isSupportEnabled()
         }
     }
-        
+
     onViewClose(): void {
         this.close();
     }
-    
+
 
     onViewSetWindowHeight(size: number) {
         this.nwin.setHeight(size);
@@ -107,20 +107,19 @@ export class SupportWindowController extends BaseWindowController {
     }
 
     loadSupportForm(): Q.Promise<void> {
-        console.log("loading support form...");
         return Q().then(() => {
             return this.app.isLogged() ? this.app.mailClientApi.privmxRegistry.getGateway() : this.app.mcaFactory.getGateway(this.app.userCredentials.hashmail.host)
         })
-        .then(gateway => {
-            return WebCCApi.getControlCenterSupportForm(gateway, {lang: this.getLang(), version: this.getAppVersion()})
-        })
-        .then(data => {
-            this.supportUrl = data.url;
-        })
-        .fail(e => {
-            this.app.errorLog.onErrorCustom("Ups.. Something went wrong. Please try again later.", e);
-            this.close();
-        })
+            .then(gateway => {
+                return WebCCApi.getControlCenterSupportForm(gateway, { lang: this.getLang(), version: this.getAppVersion() })
+            })
+            .then(data => {
+                this.supportUrl = data.url;
+            })
+            .fail(e => {
+                this.app.errorLog.onErrorCustom("Ups.. Something went wrong. Please try again later.", e);
+                this.close();
+            })
     }
 
 

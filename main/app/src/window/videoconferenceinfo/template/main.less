@@ -1,0 +1,241 @@
+@import "../../base/BaseWindow.less";
+@import "../../../component/template/bckg-icon.less";
+
+.window-videoconferenceinfo-main {
+  height: 100%;
+  font-size: var(--font-size);
+  .wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    .conference-info {
+      flex: 1 1 auto;
+      padding: 20px 10px;
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+      .gong.one-on-one& {
+        padding-bottom: 0;
+      }
+      .conference-creator-info {
+        flex: 0 0 auto;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        .without-conference-title& {
+          margin-bottom: 10px;
+        }
+        .user-container {
+          display: flex;
+          align-items: center;
+          canvas {
+            border-radius: 5px;
+            margin-right: 8px;
+          }
+          .display-name {
+            margin-right: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 150px;
+          }
+        }
+      }
+      .conference-title,
+      .gong-message {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 60px;
+        padding: 10px;
+        margin: 15px 0;
+        border-radius: 5px;
+        font-weight: 400;
+        background: var(--main-panel-task-hover-alt-bg);
+        color: var(--body-fg);
+        .conference-title-inner,
+        .gong-message-inner {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          font-family: var(--chat-font-family);
+          font-size: var(--font-size-xs);
+        }
+      }
+      .gong-icon {
+        font-size: 40px;
+        color: var(--sidebar-item-active-bg);
+        margin: 15px 0 25px 0;
+        transform-origin: 50% 0;
+        animation: ringingTheBellAnimation 0.2s cubic-bezier(0, 0.75, 1, 0.25) infinite;
+      }
+      .gong-message {
+        .gong-icon {
+          margin: 5px 25px 0 10px;
+          flex: 0 0 auto;
+        }
+        .gong-message-inner {
+          flex: 1 1 auto;
+          text-align: left;
+        }
+      }
+    }
+    .one-on-one {
+      line-height: 30px;
+    }
+    .section,
+    .conversation {
+      .pin-button,
+      .settings-button,
+      .number,
+      .elements-count,
+      .assigned-to-prefix {
+        display: none;
+      }
+      .section-element,
+      .conversation-element {
+        text-align: left;
+        display: inline-block;
+      }
+      .conversation-element {
+        list-style-type: none;
+      }
+      .wi-element-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        img {
+          margin: 0;
+        }
+      }
+      .wi-element-inner,
+      .multi-elem {
+        display: flex;
+        align-items: center;
+        line-height: 1.2;
+        .wi-element-name {
+          margin-left: 5px;
+        }
+        .name-wrapper {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          white-space: normal;
+        }
+      }
+      .section-breadcrumb {
+        opacity: 0.7;
+      }
+      .section-element.with-description {
+        .wi-element-description {
+          font-size: var(--font-size-xs);
+          margin-top: -2px;
+          opacity: 0.5;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+      .bckg-icon-border img {
+        filter: brightness(70%);
+      }
+      .conversation-element .text-col {
+        margin-left: 5px;
+      }
+      .image-with-data {
+        display: flex;
+        align-items: center;
+        .image {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          canvas {
+            border-radius: 3px;
+          }
+        }
+      }
+      .avatars-wall {
+        background: var(--section-color-icon);
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        margin-right: 5px;
+        border-radius: 5px;
+        display:block;
+        overflow: hidden;
+        
+        .avatar-2 {
+          width: 30px;
+          height: 30px;
+          background-color: var(--section-color-icon);
+          border-radius: 5px;
+          overflow: hidden;
+        }
+        .avatar-2 {
+          display: flex;
+          flex-direction: row;
+          flex-wrap: wrap;
+        }
+        .avatar-2 canvas {
+          width: 30px;
+          height: 15px;
+          pointer-events: none;
+        }
+        .avatar-2 canvas:nth-child(2) {
+          align-self: flex-end;
+        }
+        .avatar-2>div {
+          width: 15px;
+          height: 15px;
+          display: inline-flex;
+          align-items: center;
+          >canvas {
+            margin: 0 auto;
+          }
+        }
+      }
+    }
+    .buttons {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px 10px 10px;
+      .btn {
+        + .btn {
+          margin-left: 10px;
+        }
+        .icon + .text {
+          margin-left: 5px;
+        }
+        .privmx-icon-videocall {
+          font-size: 18px;
+          line-height: 18px;
+          position: relative;
+          top: 2px;
+        }
+      }
+    }
+  }
+}
+@keyframes ringingTheBellAnimation {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(30deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+  75% {
+    transform: rotate(-30deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}

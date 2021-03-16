@@ -26,6 +26,7 @@ export class ViewSettings {
 	static VIEW_MODE: string = "view-mode";
 	static SHOW_FILE_PREVIEW: string = "show-file-preview";
 	static SHOW_URL_FILES: string = "show-url-files";
+    static SHOW_HIDDEN_FILES: string = "show-hidden-files";
     
     settingsInfo: { [name: string]: { defaults: { [key: string]: number }, isolation: number } };
     settingsStorage: ViewSettingsStorage;
@@ -36,6 +37,7 @@ export class ViewSettings {
             "view-mode": { defaults: { "notes2":0, "summary":0, "filechooser":0 }, isolation: ViewSettingIsolation.PROJECT | ViewSettingIsolation.CONTEXT },
             "show-file-preview": { defaults: { "global":1 }, isolation: ViewSettingIsolation.NONE },
             "show-url-files": { defaults: { "global":1 }, isolation: ViewSettingIsolation.NONE },
+            "show-hidden-files": { defaults: { "global":0 }, isolation: ViewSettingIsolation.NONE },
         };
         
         this.settingsStorage = new ViewSettingsStorage(prefix, kvdb);

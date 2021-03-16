@@ -54,6 +54,9 @@ export class SettingsWindowView extends BaseWindowView<Model> {
         if (!model.isElectron) {
             this.tabs.removeElement("hotkeys");
         }
+        if (!model.isMnemonicEnabled) {
+            this.tabs.removeElement("alternativeLogin");
+        }
         $(document).on("keydown", this.onKeyDown.bind(this));
         this.$main.on("click", "[data-action='close-popup']", this.onClosePopupClick.bind(this));
         this.$menuContainer = this.$main.find(".settings-menu");
@@ -117,9 +120,11 @@ export class SettingsWindowView extends BaseWindowView<Model> {
     }
     
     activateTab(name: string): void {
+        let oldTab: BaseView<any> = null;
         if (this.active) {
             this.tabs.getElement(this.active).tab.$main.removeClass("active");
             this.$menuContainer.find(this.getMenuEntrySelector("", true)).removeClass("active");
+            oldTab = this.tabs.getElement(this.active).tab;
         }
         let newTab = this.tabs.getElement(name).tab;
         newTab.$main.addClass("active");
@@ -129,6 +134,9 @@ export class SettingsWindowView extends BaseWindowView<Model> {
             return newTab.activate();
         })
         .fin(() => {
+            if (oldTab) {
+                oldTab.afterDeactivated();
+            }
             this.$main.find(".loading-panel-backdrop").html("").addClass("hide");
         });
     }
@@ -154,6 +162,9 @@ export class SettingsWindowView extends BaseWindowView<Model> {
         // }
         if (e.keyCode == KEY_CODES.key0 && e.ctrlKey) {
             this.triggerEvent("showPlayerWindow");
+        }
+        if (e.keyCode == KEY_CODES.key7 && e.ctrlKey) {
+            document.body.classList.toggle("show-hidden-fields");
         }
     }
 }

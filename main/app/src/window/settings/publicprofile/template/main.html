@@ -1,10 +1,6 @@
 @import {Model} from "../PublicProfileController";
 @model Model
 <div class="section">
-  <div class="section-header">
-    <i class="fa fa-vcard-o"></i>
-    {{@Helper.i18n("window.settings.section.publicProfile.header")}}
-  </div>
   <div class="section-info">
     {{@Helper.i18n("window.settings.section.publicProfile.info")}}
   </div>
@@ -27,8 +23,9 @@
         </div>
         <div class="input image-input">
           <img src="" alt="" style="display: none;" class="image-preview" />
-          <div>
+          <div class="profile-image-control-links">
             <span class="link" data-trigger="upload-image">{{@Helper.i18n("window.settings.section.publicProfile.image.change.text")}}</span>
+            <span class="link" data-trigger="new-photo">{{@Helper.i18n("window.settings.section.publicProfile.image.newPhoto.text")}}</span>
             <span class="link" data-trigger="remove-image" style="display: none;">{{@Helper.i18n("window.settings.section.publicProfile.image.remove.text")}}</span>
           </div>
           <input type="hidden" name="profile.image" />

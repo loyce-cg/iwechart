@@ -115,7 +115,7 @@ export class MailClientViewHelper extends Helper {
             newText = this.safeMindmapHtml(text.trim());
         }
         if (isHtml) {
-            newText = ContentEditableEditor.convertTasksAndFiles(newText, taskStatuses, metaData);
+            newText = ContentEditableEditor.convertTasksAndFiles(newText, taskStatuses, metaData, this.i18n("core.hint.ctrlClickToOpen"));
         }
         let lines = isHtml ? newText.split("<br>") : newText.split("\n");
         let startsWithGt = (line: string) => {

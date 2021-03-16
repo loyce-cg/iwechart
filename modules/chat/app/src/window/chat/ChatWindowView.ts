@@ -18,12 +18,16 @@ export interface HostEntryModel {
 }
 
 export class ChatWindowView extends wnd.base.BaseAppWindowView<Model> {
+    
     static readonly SIDEBAR_MIN_WIDTH = 100;
     static readonly MESSAGESLIST_MIN_WIDTH = 400;
-
+    static readonly PREVIEW_MIN_WIDTH = 200;
+    
     sidebar: component.sidebar.SidebarView;
     loading: component.loading.LoadingView;
     sectionsSplitter: component.splitter.SplitterView;
+    previewSplitter: component.splitter.SplitterView;
+    // videoConference: VideoConferenceView;
     messages: {[id: string]: ChatMessagesView};
     remoteServers: {[hostHash: string]: HostEntryModel};
     active: ChatMessagesView | PrivateConversationsView | component.disabledsection.DisabledSectionView | NoSectionsView;
@@ -49,15 +53,26 @@ export class ChatWindowView extends wnd.base.BaseAppWindowView<Model> {
         super(parent, mainTemplate);
         
         this.sectionsSplitter = this.addComponent("sectionsSplitter", new component.splitter.SplitterView(this, {
-          firstPanelMinSize: ChatWindowView.SIDEBAR_MIN_WIDTH,
-          secondPanelMinSize: () => {
-              return ChatWindowView.MESSAGESLIST_MIN_WIDTH
-          },
+            firstPanelMinSize: ChatWindowView.SIDEBAR_MIN_WIDTH,
+            secondPanelMinSize: () => {
+                return ChatWindowView.MESSAGESLIST_MIN_WIDTH
+            },
             type: "vertical",
             handlePlacement: "right",
             handleDot: true,
         }));
+        this.previewSplitter = this.addComponent("previewSplitter", new component.splitter.SplitterView(this, {
+            firstPanelMinSize: ChatWindowView.MESSAGESLIST_MIN_WIDTH,
+            secondPanelMinSize: () => {
+                return ChatWindowView.PREVIEW_MIN_WIDTH
+            },
+            type: "vertical",
+            handlePlacement: "right",
+            handleDot: true,
+            flip: true,
+        }));
         this.personsComponent = this.addComponent("personsComponent", new component.persons.PersonsView(this, this.helper));
+        // this.videoConference = this.addComponent("videoConference", new VideoConferenceView(this, this.personsComponent));
         this.personTooltip = new component.persontooltip.PersonTooltipView(this.templateManager, this.personsComponent);
         this.messages = {};
         this.sidebar = this.addComponent("sidebar", new component.sidebar.SidebarView(this, {
@@ -107,6 +122,10 @@ export class ChatWindowView extends wnd.base.BaseAppWindowView<Model> {
             return this.sectionsSplitter.triggerInit();
         })
         .then(() => {
+            this.previewSplitter.$container = this.sectionsSplitter.$right;
+            return this.previewSplitter.triggerInit();
+        })
+        .then(() => {
             this.$chatMessagesContainer = $("<div class='section-chats'></div>");
             this.$privateConversationsContainer = $("<div class='messages-container private' style='" + this.getDefaultHideStyle(false) + "'></div>");
             this.$noSectionsContainer = $("<div class='messages-container no-sections' style='" + this.getDefaultHideStyle(false) + "'></div>");
@@ -114,8 +133,10 @@ export class ChatWindowView extends wnd.base.BaseAppWindowView<Model> {
             this.$chatMessagesContainer.append(this.$privateConversationsContainer);
             this.$chatMessagesContainer.append(this.$noSectionsContainer);
             this.$chatMessagesContainer.append(this.$disabledSectionContainer);
-            this.sectionsSplitter.$right.append(this.$chatMessagesContainer);
             this.sectionsSplitter.$left.addClass("sidebar-container");
+            this.sectionsSplitter.$right.append(this.previewSplitter.$component);
+            this.previewSplitter.$component.addClass("preview-splitter");
+            this.previewSplitter.$left.append(this.$chatMessagesContainer);
             this.sidebar.$container = this.sectionsSplitter.$left;
             return this.sidebar.triggerInit();
         })
@@ -124,6 +145,8 @@ export class ChatWindowView extends wnd.base.BaseAppWindowView<Model> {
             return this.privateConversations.triggerInit();
         })
         .then(() => {
+            // this.videoConference.$container = this.previewSplitter.$right;
+            // return this.videoConference.triggerInit();
             this.noSections.$container = this.$noSectionsContainer;
             return this.noSections.triggerInit();
         })
@@ -437,4 +460,13 @@ export class ChatWindowView extends wnd.base.BaseAppWindowView<Model> {
         let remoteSectionsExists = $hostElement.parent().find(".remote-sections[data-host-id='" + hostHash + "']").length > 0;
         return remoteSectionsExists;
     }
+    
+    // openVideoConferencePanel(): void {
+    //     this.$mainContainer.addClass("with-video-conference");
+    // }
+    
+    // closeVideoConferencePanel(): void {
+    //     this.$mainContainer.removeClass("with-video-conference");
+    // }
+    
 }

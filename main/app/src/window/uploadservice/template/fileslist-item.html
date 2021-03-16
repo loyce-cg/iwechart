@@ -1,0 +1,51 @@
+@import {UploadFileItem} from "../UploadServiceWindowController";
+@import {Context} from "../../../component/extlist/ExtListView";
+@model UploadFileItem
+@context Context<UploadFileItem>
+    {{
+        function trimSlashOfRootFile(path: string) {
+            let parts = path.split("/");
+            return parts.length == 2 ? parts[1] : path;
+        }
+        let basePath = model.path == "/" ? "" : model.path;
+    }}
+<div class="file-item {{$model.status}}" data-id="{{@model.fileId}}" data-progress="{{@model.progress.percent}}" data-progress-status="{{@model.status}}">
+    <span class="name-container">
+        <i class="{{@model.icon}}"></i>
+        <span class="name">{{@trimSlashOfRootFile(model.fileName)}}</span>
+    </span>
+    <span class="progress-container">
+        {{
+            if (model.status == "done") {
+                {{
+                    <div class="action-btn" data-action="open"><i class="fa fa-check"></i></div>
+                }}
+            }
+            else if (model.status == "wait" || model.status == "in-progress") {
+                {{
+                    <div class="action-btn" data-action="cancel"><i class="fa fa-times"></i></div>
+                }}
+            }
+            else if (model.status == "aborted") {
+                {{
+                    <div class="action-btn" data-action="retry"><i class="fa fa-repeat"></i></div>
+                    
+                }}
+            }
+        }}
+        <svg
+            class="progress-ring {{@model.status == 'done' || model.status == 'aborted' ? 'fade-out' : ''}}"
+            width="22"
+            height="22">
+            <circle
+                class="progress-ring__circle"
+                stroke="blue"
+                stroke-width="2"
+                fill="transparent"
+                r="9"
+                cx="11"
+                cy="11"/>
+        </svg>
+    </span>
+
+</div>

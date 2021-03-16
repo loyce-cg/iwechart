@@ -1,0 +1,15 @@
+@model {computerName: string, currentPath: string}
+
+<div class="current-path">{{@model.currentPath}}</div>
+<div class="inner">
+    <div class="wi-element">
+      <div class="wi-element-inner">
+        <div class="wi-element-icon bckg-icon bckg-icon-inverse2 small-icon">
+          <i class="fa fa-desktop"></i>
+        </div>
+        <div class="wi-element-name">
+          {{@model.computerName}}
+        </div>
+      </div>
+    </div>
+  </div>

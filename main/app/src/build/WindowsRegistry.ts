@@ -10,6 +10,8 @@ import {ClearCacheWindowView} from "..//window/clearcache/ClearCacheWindowView";
 import {ComposeWindowView} from "..//window/compose/ComposeWindowView";
 import {ContainerWindowView} from "..//window/container/ContainerWindowView";
 import {ControlCenterWindowView} from "..//window/controlcenter/ControlCenterWindowView";
+import {DevConsoleWindowView} from "..//window/devconsole/DevConsoleWindowView";
+import {DeviceSelectorWindowView} from "..//window/deviceselector/DeviceSelectorWindowView";
 import {DownloadWindowView} from "..//window/download/DownloadWindowView";
 import {DownloadAttachmentWindowView} from "..//window/downloadattachment/DownloadAttachmentWindowView";
 import {EditorWindowView} from "..//window/editor/EditorWindowView";
@@ -47,9 +49,12 @@ import {TaskChooserWindowView} from "..//window/taskchooser/TaskChooserWindowVie
 import {TextViewerWindowView} from "..//window/textviewer/TextViewerWindowView";
 import {UnsupportedWindowView} from "..//window/unsupported/UnsupportedWindowView";
 import {UpdateWindowView} from "..//window/update/UpdateWindowView";
+import {UploadServiceWindowView} from "..//window/uploadservice/UploadServiceWindowView";
 import {UrlWindowView} from "..//window/url/UrlWindowView";
 import {VerifyDomainWindowView} from "..//window/verifydomain/VerifyDomainWindowView";
 import {VideoWindowView} from "..//window/video/VideoWindowView";
+import {VideoConferenceInfoWindowView} from "..//window/videoconferenceinfo/VideoConferenceInfoWindowView";
+import {VideoRecorderWindowView} from "..//window/videorecorder/VideoRecorderWindowView";
 
 export let registry: {className: string, clazz: {new(...args: any[]): any;}}[] = [
     {className: "com.privmx.core.window.about.AboutWindowView", clazz: AboutWindowView},
@@ -63,6 +68,8 @@ export let registry: {className: string, clazz: {new(...args: any[]): any;}}[] =
     {className: "com.privmx.core.window.compose.ComposeWindowView", clazz: ComposeWindowView},
     {className: "com.privmx.core.window.container.ContainerWindowView", clazz: ContainerWindowView},
     {className: "com.privmx.core.window.controlcenter.ControlCenterWindowView", clazz: ControlCenterWindowView},
+    {className: "com.privmx.core.window.devconsole.DevConsoleWindowView", clazz: DevConsoleWindowView},
+    {className: "com.privmx.core.window.deviceselector.DeviceSelectorWindowView", clazz: DeviceSelectorWindowView},
     {className: "com.privmx.core.window.download.DownloadWindowView", clazz: DownloadWindowView},
     {className: "com.privmx.core.window.downloadattachment.DownloadAttachmentWindowView", clazz: DownloadAttachmentWindowView},
     {className: "com.privmx.core.window.editor.EditorWindowView", clazz: EditorWindowView},
@@ -100,7 +107,10 @@ export let registry: {className: string, clazz: {new(...args: any[]): any;}}[] =
     {className: "com.privmx.core.window.textviewer.TextViewerWindowView", clazz: TextViewerWindowView},
     {className: "com.privmx.core.window.unsupported.UnsupportedWindowView", clazz: UnsupportedWindowView},
     {className: "com.privmx.core.window.update.UpdateWindowView", clazz: UpdateWindowView},
+    {className: "com.privmx.core.window.uploadservice.UploadServiceWindowView", clazz: UploadServiceWindowView},
     {className: "com.privmx.core.window.url.UrlWindowView", clazz: UrlWindowView},
     {className: "com.privmx.core.window.verifydomain.VerifyDomainWindowView", clazz: VerifyDomainWindowView},
-    {className: "com.privmx.core.window.video.VideoWindowView", clazz: VideoWindowView}
+    {className: "com.privmx.core.window.video.VideoWindowView", clazz: VideoWindowView},
+    {className: "com.privmx.core.window.videoconferenceinfo.VideoConferenceInfoWindowView", clazz: VideoConferenceInfoWindowView},
+    {className: "com.privmx.core.window.videorecorder.VideoRecorderWindowView", clazz: VideoRecorderWindowView}
 ];

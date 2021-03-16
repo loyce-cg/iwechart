@@ -31,7 +31,7 @@
                   <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
                 </div>
                 <span class="parent-name" vf-model="parentName"></span>
-                <button class="btn btn-link edit-btn" vf-visible="editable" vf-click="move()" vf-disabled="loading">
+                <button class="btn btn-link link edit-btn" vf-visible="editable" vf-click="move()" vf-disabled="loading">
                   {{@Helper.i18n("core.button.change.label")}}
                 </button>
 
@@ -47,6 +47,15 @@
             <input type="text" class="name-input" vf-model="name" maxlength="100" placeholder="{{@Helper.i18n('window.sectionEdit.section_name.placeholder')}}" vf-readonly="editable == false" vf-disabled="loading">
           </div>
         </div>
+        <div class="field">
+          <div class="info input-info">
+            {{@Helper.i18n("window.sectionEdit.section_description.label")}}
+          </div>
+          <div class="input">
+            <input type="text" class="name-input" vf-model="description" maxlength="100" placeholder="{{@Helper.i18n('window.sectionEdit.section_description.placeholder')}}" vf-readonly="editable == false" vf-disabled="loading">
+          </div>
+        </div>
+
         <div class="field">
           <div class="info">
             {{@Helper.i18n("window.sectionEdit.active_modules")}}
@@ -89,7 +98,7 @@
           <div class="field-value" data-acl="group">
             <div class="preview" vf-visible="group.editMode == false">
               <span vf-model="group.getLabel()"></span>
-              <button class="btn btn-link" vf-click="chooseUsers('group')" vf-disabled="loading" vf-visible="editable">
+              <button class="btn btn-link link" vf-click="chooseUsers('group')" vf-disabled="loading" vf-visible="editable">
                               {{@Helper.i18n("core.button.change.label")}}
               </button>
             </div>
@@ -99,7 +108,7 @@
           <div class="field-value">
             <div class="preview" vf-visible="acl.{{@type}}.editMode == false">
               <span vf-model="acl.{{@type}}.getLabel()"></span>
-              <button class="btn btn-link" vf-click="chooseUsers('{{@type}}')" vf-disabled="loading"  vf-visible="editable">
+              <button class="btn btn-link link" vf-click="chooseUsers('{{@type}}')" vf-disabled="loading"  vf-visible="editable">
                 {{@Helper.i18n("core.button.change.label")}}
               </button>
             </div>

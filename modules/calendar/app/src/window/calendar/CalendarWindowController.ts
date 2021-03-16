@@ -1,4 +1,4 @@
-import { window, component, Types, Q, utils, mail } from "pmc-mail";
+import { window, component, Types, Q, utils, mail, app} from "pmc-mail";
 import { CalendarPanelController } from "../../component/calendarPanel/CalendarPanelController";
 import Dependencies = utils.decorators.Dependencies;
 import { CalendarPlugin, CalendarTaskPreviewRequestEvent, CalendarDayPreviewRequestEvent, CalendarPreviewUpdateRequestEvent, CalendarTaskPreviewChangeVisibilityRequestEvent, HorizontalCalendarTaskPreviewWindowLayoutChangeRequestEvent, CalendarBadgesUpdateRequestEvent, CalendarSearchUpdateEvent, CalendarComponentFactory, CalendarDayPreviewChangeVisibilityRequestEvent, CalendarSettingChanged, CalendarsFileAdded, CalendarsFileRemoved, ExtraCalendarsChanged } from "../../main/CalendarPlugin";
@@ -8,6 +8,7 @@ import { CustomTasksElements, ViewContext, Modes } from "../../main/Types";
 import { DatePickerController } from "../../component/datePicker/DatePickerController";
 import { Watchable, Action, EventHandler } from "privfs-mail-client-tasks-plugin/src/main/Types";
 import { i18n } from "./i18n/index";
+import Inject = utils.decorators.Inject;
 
 export interface Model {
     docked: boolean;
@@ -30,7 +31,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
     }
     
     static ENABLE_PREVIEW_IN_WEEK_MODE: boolean = false;
-    
+    @Inject router: app.common.Router;
     docked: boolean;
     activeProjectId: string;
     activeProjectHostHash: string;
@@ -51,8 +52,8 @@ export class CalendarWindowController extends window.base.BaseWindowController {
     dirty: boolean = false;
     calendarTasksCountManager: CalendarTasksCountManager;
     remoteCalendarTasksCountManagers: { [hostHash: string]: CalendarTasksCountManager } = {};
-    calendar1Panels: { [key: string]: CalendarPanelController } = {};
-    calendar2Panels: { [key: string]: CalendarPanelController } = {};
+    calendar1PanelPromises: { [key: string]: Q.Promise<CalendarPanelController> } = {};
+    calendar2PanelPromises: { [key: string]: Q.Promise<CalendarPanelController> } = {};
     previewPanel: TaskPanelController;
     activePanel1: CalendarPanelController;
     activePanel2: CalendarPanelController;
@@ -100,9 +101,9 @@ export class CalendarWindowController extends window.base.BaseWindowController {
             buttons: false,
         }]));
         this.disabledSection = this.addComponent("disabled-section", this.componentFactory.createComponent("disabledsection", [this, Types.section.NotificationModule.CALENDAR]));
-        this.app.addEventListener<CalendarSettingChanged>("calendar-setting-changed", event => {
+        this.bindEvent<CalendarSettingChanged>(this.app, "calendar-setting-changed", async (event) => {
             if (event.setting == "enable-day-preview-panel") {
-                this.onToggleDayPreviewPanel(!!event.value);
+                await this.onToggleDayPreviewPanel(!!event.value);
             }
             else if (event.setting == "horizontal-task-preview-window-layout") {
                 this.previewPanel.overrideIsHorizontalLayout = !!this.calendarPlugin.getSetting(localSession, "horizontal-task-preview-window-layout", null, null);
@@ -126,7 +127,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                 }
             }
         });
-        this.app.addEventListener<Types.event.ActiveAppWindowChangedEvent>("active-app-window-changed", e => {
+        this.bindEvent<Types.event.ActiveAppWindowChangedEvent>(this.app, "active-app-window-changed", e => {
             this.callViewMethod("setIsCalendarTabOpen", e.appWindowId == "calendar");
         });
         this.dataChangedListener = this.onDataChanged.bind(this);
@@ -139,7 +140,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
         let isSearchOn = data.visible && data.value.length > 1;
         this.callViewMethod("onSearchChanged", isSearchOn, false);
         
-        this.initSpellChecker(this.calendarPlugin.userPreferences);
+        this.initSpellChecker();
     }
     
     beforeClose(): void {
@@ -147,11 +148,11 @@ export class CalendarWindowController extends window.base.BaseWindowController {
         for (let hostHash in this.remoteDataChangedListeners) {
             this.calendarPlugin.tasksPlugin.unWatch(this.app.sessionManager.sessions[hostHash], "*", "*", "*", this.remoteDataChangedListeners[hostHash]);
         }
-        for (let id in this.calendar1Panels) {
-            this.calendar1Panels[id].beforeClose();
+        for (let id in this.calendar1PanelPromises) {
+            this.calendar1PanelPromises[id].then(panel => panel.beforeClose());
         }
-        for (let id in this.calendar2Panels) {
-            this.calendar2Panels[id].beforeClose();
+        for (let id in this.calendar2PanelPromises) {
+            this.calendar2PanelPromises[id].then(panel => panel.beforeClose());
         }
         this.previewPanel.beforeClose();
     }
@@ -224,7 +225,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
             promProjectCreator = promProjectCreator.then(() => <any>this.calendarPlugin.tasksPlugin.ensureProjectExists(id, name, localSession));
         }
         
-        this.app.addEventListener<CalendarsFileAdded>("calendars-file-added", e => {
+        this.bindEvent<CalendarsFileAdded>(this.app, "calendars-file-added", e => {
             if (e.hostHash == localSession.hostHash) {
                 this.calendarTasksCountManager.addFile(e.identifier);
             }
@@ -232,7 +233,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                 this.getOrCreateRemoteTasksCountManager(e.hostHash).addFile(e.identifier);
             }
         });
-        this.app.addEventListener<CalendarsFileRemoved>("calendars-file-removed", e => {
+        this.bindEvent<CalendarsFileRemoved>(this.app, "calendars-file-removed", e => {
             if (e.hostHash == localSession.hostHash) {
                 this.calendarTasksCountManager.removeFile(e.identifier);
             }
@@ -240,11 +241,11 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                 this.getOrCreateRemoteTasksCountManager(e.hostHash).removeFile(e.identifier);
             }
         });
-        this.app.addEventListener<ExtraCalendarsChanged>("extra-calendars-changed", e => {
+        this.bindEvent<ExtraCalendarsChanged>(this.app, "extra-calendars-changed", e => {
             this.refreshSidebarCounts();
         });
         
-        this.app.addEventListener("focusChanged", (event) => {
+        this.bindEvent(this.app, "focusChanged", (event) => {
             let windowId = (<any>event).windowId;
             this.calendarPlugin.activeWindowFocused = windowId == "main-window" || windowId == "focus-restored" ? (<window.container.ContainerWindowController>this.parent.parent).activeModel.get() : windowId;
             if (windowId == "tasks" || (windowId == "main-window" && (<window.container.ContainerWindowController>this.parent.parent).activeModel.get() == "tasks") ) {
@@ -253,26 +254,26 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                 }, 200);
             }
         });
-        this.app.addEventListener("focusLost", (event) => {
+        this.bindEvent(this.app, "focusLost", (event) => {
             this.calendarPlugin.activeWindowFocused = null;
         });
         
         
-        this.app.addEventListener("onToggleMaximize-notify", () => {
+        this.bindEvent(this.app, "onToggleMaximize-notify", () => {
             setTimeout(() => {
                 this.callViewMethod("grabFocus", false);
             }, 10);
         });
         
-        this.app.addEventListener("focusLost", () => {
+        this.bindEvent(this.app, "focusLost", () => {
             this.callViewMethod("pauseTimeAgoRefresher");
-        }, "calendar");
+        });
         
-        this.app.addEventListener("focusChanged", event => {
+        this.bindEvent(this.app, "focusChanged", event => {
             if ((<any>event).windowId == "main-window") {
                 this.callViewMethod("resumeTimeAgoRefresher");
             }
-        }, "calendar");
+        });
         
         return Q().then(() => {
             return Q.all([
@@ -302,7 +303,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                     id: CustomTasksElements.ALL_TASKS_ID,
                     icon: {
                         type: "fa",
-                        value: "fa-calendar",
+                        value: "privmx-icon privmx-icon-calendar",
                     },
                     label: this.i18n("plugin.calendar.window.calendar.sidebar.all"),
                     private: false,
@@ -402,25 +403,24 @@ export class CalendarWindowController extends window.base.BaseWindowController {
             }
 
             this.sidebar = this.addComponent("sidebar", this.componentFactory.createComponent("sidebar", [this, sidebarOptions]));
-            this.sidebar.addEventListener("elementbeforeactivate", this.onBeforeActivateSidebarElement.bind(this));
-            this.sidebar.addEventListener("elementactivated", this.onActivatedSidebarElement.bind(this));
-            
-            this.sidebar.addEventListener("sidebarbuttonaction", this.onSidebarButtonAction.bind(this));
+            this.bindEvent(this.sidebar, "elementbeforeactivate", this.onBeforeActivateSidebarElement.bind(this));
+            this.bindEvent(this.sidebar, "elementactivated", this.onActivatedSidebarElement.bind(this));
+            this.bindEvent(this.sidebar, "sidebarbuttonaction", this.onSidebarButtonAction.bind(this));
             this.sidebar.usersListTooltip.getContent = (sectionId: string): string => {
                 return this.app.getUsersListTooltipContent(this.app.sessionManager.getLocalSession(), sectionId);
             }
             
-            this.app.addEventListener("reopen-section", (event: component.disabledsection.ReopenSectionEvent) => {
+            this.bindEvent(this.app, "reopen-section", (event: component.disabledsection.ReopenSectionEvent) => {
                 this.selectProject(localSession, event.element.getId());
             });
-            this.app.addEventListener<Types.event.SectionsLimitReachedEvent>("sectionsLimitReached", event => {
+            this.bindEvent<Types.event.SectionsLimitReachedEvent>(this.app, "sectionsLimitReached", event => {
                 this.sidebar.onSectionsLimitReached(event.reached);
             });
             this.calendarTasksCountManager.sidebar = this.sidebar;
             this.initSessionEvents(localSession);
             this.setSidebarActiveItem(this.getActiveSession(), this.activeProjectId);
             
-            this.app.addEventListener<CalendarSearchUpdateEvent>("calendar-search-update", event => {
+            this.bindEvent<CalendarSearchUpdateEvent>(this.app, "calendar-search-update", event => {
                 let refreshAvatars = this.updateSidebarCustomElements(this.app.sessionManager.getLocalSession(), this.sidebar.customElementList.customElementsCollection);
                 this.updateBadges();
                 this.callViewMethod("onSearchChanged", event.searchString.length > 0, refreshAvatars);
@@ -504,31 +504,56 @@ export class CalendarWindowController extends window.base.BaseWindowController {
             this.expandRemoteSectionsList(event.element.host);
         }
         if (event.element.type == component.sidebar.SidebarElementType.SECTION) {
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.CALENDAR,
+                contextType: "section",
+                contextId: "section:" + event.element.section.getId(),
+                hostHash: localSession.hostHash
+            });            
+            this.contextHistory.append(context);
             this.selectProject(localSession, event.element.section.getId());
-            this.app.viewContext = "section:" + event.element.section.getId();
         }
         else if (event.element.type == component.sidebar.SidebarElementType.REMOTE_SECTION) {
-            // console.log("onBeforeActivateSidebarElement - remote section clicked...");
             let session = this.app.sessionManager.getSessionByHostHash(event.element.hostHash);
-            //this.openRemoteCalendar1Panel(session.hostHash, event.element.section.getId());
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.CALENDAR,
+                contextType: "remote-section",
+                contextId: "section:" + event.element.section.getId(),
+                hostHash: event.element.hostHash
+            });            
+            this.contextHistory.append(context);
             this.selectProject(session, event.element.section.getId());
-            this.app.viewContext = "section:" + event.element.section.getId();
-
         }
         else if (event.element.type == component.sidebar.SidebarElementType.REMOTE_CONVERSATION) {
             let session = this.app.sessionManager.getSessionByHostHash(event.element.hostHash);
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.CALENDAR,
+                contextType: "remote-conversation",
+                contextId: event.element.conv2.id,
+                hostHash: event.element.hostHash
+            });            
+            this.contextHistory.append(context);
             this.selectProject(session, event.element.conv2.id);
-            this.app.viewContext = event.element.conv2.id;
         }
         else if (event.element.type == component.sidebar.SidebarElementType.CUSTOM_ELEMENT) {
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.CALENDAR,
+                contextType: "custom",
+                contextId: event.element.customElement.id,
+                hostHash: localSession.hostHash
+            });            
+            this.contextHistory.append(context);
             this.selectProject(localSession, event.element.customElement.id);
-            if (event.element.customElement.id.indexOf("private:") > -1) {
-                this.app.viewContext = "custom:my";
-            }
         }
         else if (event.element.type == component.sidebar.SidebarElementType.CONVERSATION) {
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.CALENDAR,
+                contextType: "conversation",
+                contextId: event.element.conv2.id,
+                hostHash: localSession.hostHash
+            });            
+            this.contextHistory.append(context);
             this.selectProject(localSession, event.element.conv2.id);
-            this.app.viewContext = event.element.conv2.id;
         }
     }
     
@@ -589,23 +614,32 @@ export class CalendarWindowController extends window.base.BaseWindowController {
     applyHistoryState(processed: boolean, state: string) {
         let usedState = state;
         let localSession = this.app.sessionManager.getLocalSession();
-        if (this.app.viewContext) {
-            let contextData = this.app.viewContext.split(":");
-            
-            if (this.app.switchModuleWithContext()) {
-                if (contextData[0] == "section") {
-                    let contextSection = localSession.sectionManager.getSection(contextData[1]);
+        const context = this.contextHistory.getCurrent();
+
+        if (context) {
+            if (this.app.switchModuleWithContext() || state) {
+                if (context.getType() == "section") {
+                    let contextSection = localSession.sectionManager.getSection(context.getSectionIdFromContextId());
                     if (contextSection && contextSection.isCalendarModuleEnabled()) {
-                        usedState = contextData[1];
+                        usedState = context.getSectionIdFromContextId();
                     }
                 }
-                else if (contextData[0] == "c2" && contextData[2].split("|").length < 3) {
-                    usedState = this.app.viewContext;
+                else if (context.getType() == "conversation") {
+                    const contextData = context.getContextId().split(":");
+                    if (contextData[2].split("|").length < 3) {
+                        usedState = context.getContextId();
+                    }
                 }
-                else if (contextData[0] == "custom" && contextData[1] == "my") {
-                    let privateSection = localSession.sectionManager.getMyPrivateSection();
-                    if (privateSection) {
-                        usedState = privateSection.getId();
+                else if (context.getType() == "custom") {
+                    const subId = context.getContextId();
+                    if (subId == "private") {
+                        let privateSection = localSession.sectionManager.getMyPrivateSection();
+                        if (privateSection) {
+                            usedState = privateSection.getId();
+                        }    
+                    }
+                    else {
+                        usedState = subId;
                     }
                 }
             }
@@ -613,10 +647,12 @@ export class CalendarWindowController extends window.base.BaseWindowController {
         this.app.resetModuleSwitchingModifier();
 
         if (usedState != null) {
-            this.activeProjectId = usedState;
-            this.activeProjectHostHash = localSession.hostHash;
             this.historyStateProjectId = usedState;
-            this.selectProject(localSession, usedState);
+            if (this.activeProjectId !== usedState && this.activeProjectHostHash !== localSession.hostHash) {
+                this.activeProjectId = usedState;
+                this.activeProjectHostHash = localSession.hostHash;
+                this.selectProject(localSession, usedState);
+            }
         }
     }
     
@@ -731,6 +767,14 @@ export class CalendarWindowController extends window.base.BaseWindowController {
         let prom1 = Q();
         let prom2 = Q();
         if (fixedSectionsNames.indexOf(projectId) >= 0) {
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.CALENDAR,
+                contextType: "custom",
+                contextId: projectId,
+                hostHash: session.hostHash
+            });    
+            this.contextHistory.append(context);
+
             activeId = projectId;
             rootId = projectId;
             if (projectId == this.calendarPlugin.getPrivateSectionId()) {
@@ -747,6 +791,14 @@ export class CalendarWindowController extends window.base.BaseWindowController {
         else if (this.calendarPlugin.tasksPlugin.isConv2Project(projectId)) {
             let c2s = this.calendarPlugin.tasksPlugin.getConv2Section(session, projectId);
             if (c2s) {
+                const context = app.common.Context.create({
+                    moduleName: Types.section.NotificationModule.CALENDAR,
+                    contextType: "conversation",
+                    contextId: projectId,
+                    hostHash: session.hostHash
+                });    
+                this.contextHistory.append(context);
+    
                 this.afterViewLoaded.promise.then(() => {
                     prom1 = this.openCalendar1Panel(session, c2s);
                     prom2 = this.openCalendar2Panel(session, c2s);
@@ -757,6 +809,14 @@ export class CalendarWindowController extends window.base.BaseWindowController {
         }
         else {
             let section = session.sectionManager.getSection(projectId);
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.CALENDAR,
+                contextType: "section",
+                contextId: "section:" + projectId,
+                hostHash: session.hostHash
+            });    
+            this.contextHistory.append(context);
+
             if (section instanceof mail.section.SectionService && !section.isCalendarModuleEnabled()) {
                 this.disabledSection.setSection(section);
                 this.callViewMethod("toggleDisabledSection", true);
@@ -774,13 +834,10 @@ export class CalendarWindowController extends window.base.BaseWindowController {
             activeId = state.active.getId();
             rootId = state.active.getId();
         }
-        this.afterViewLoaded.promise.then(() => {
-            this.callViewMethod("onSelectTab", activeId, rootId);
-        });
         let enableDayPreview = !!this.calendarPlugin.getSetting(this.getActiveSession(), "enable-day-preview-panel", this.activeProjectId, ViewContext.CalendarWindow);
         this.afterViewLoaded.promise.then(() => {
             Q.all([prom1, prom2]).then(() => {
-                this.onToggleDayPreviewPanel(enableDayPreview, activeId, session);
+                return this.onToggleDayPreviewPanel(enableDayPreview, activeId, session);
             });
         });
     }
@@ -842,12 +899,12 @@ export class CalendarWindowController extends window.base.BaseWindowController {
     
     createCalendar1Panel(session: mail.session.Session, projectId: string): Q.Promise<CalendarPanelController> {
         let calendarPanelKey = this.getCalendarPanelKey(session.hostHash, projectId);
-        if (calendarPanelKey in this.calendar1Panels) {
-            return Q(this.calendar1Panels[calendarPanelKey]);
+        if (calendarPanelKey in this.calendar1PanelPromises) {
+            return this.calendar1PanelPromises[calendarPanelKey];
         }
         
-        let panel = this.calendar1Panels[calendarPanelKey] = this.addComponent("calendar1Panel-" + calendarPanelKey, this.componentFactory.createComponent("calendarPanel", [this, this.personsComponent]));
-        return Q().then(() => {
+        let panel = this.addComponent("calendar1Panel-" + calendarPanelKey, this.componentFactory.createComponent("calendarPanel", [this, this.personsComponent]));
+        return this.calendar1PanelPromises[calendarPanelKey] = Q().then(() => {
             return this.calendarPlugin.initSession(session);
         })
         .then(() => {
@@ -856,16 +913,16 @@ export class CalendarWindowController extends window.base.BaseWindowController {
         .then(() => {
             panel.calendarId = 1;
             panel.init();
-            panel.addEventListener<CalendarTaskPreviewRequestEvent>("calendar-task-preview-request", event => {
+            this.bindEvent<CalendarTaskPreviewRequestEvent>(panel, "calendar-task-preview-request", event => {
                 if (this.activeProjectId != projectId || this.activeProjectHostHash != session.hostHash) {
                     return;
                 }
                 this.afterViewLoaded.promise.then(() => {
                     this.previewPanel.setTaskId(session, event.task);
                     let calendarPanelKey = this.getCalendarPanelKey(session.hostHash, projectId);
-                    let otherPanel = this.calendar2Panels[calendarPanelKey];
-                    if (otherPanel) {
-                        otherPanel.markTaskAsSelected(event.task);
+                    let otherPanelPromise = this.calendar2PanelPromises[calendarPanelKey];
+                    if (otherPanelPromise) {
+                        otherPanelPromise.then(otherPanel => otherPanel.markTaskAsSelected(event.task));
                     }
                     if (!event.task) {
                         return;
@@ -878,7 +935,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                     }
                 });
             });
-            panel.addEventListener<CalendarDayPreviewRequestEvent>("calendar-day-preview-request", event => {
+            this.bindEvent<CalendarDayPreviewRequestEvent>(panel, "calendar-day-preview-request", event => {
                 if (this.activeProjectId != projectId || this.activeProjectHostHash != session.hostHash) {
                     return;
                 }
@@ -886,7 +943,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                     this.previewDay(event.day);
                 });
             });
-            panel.addEventListener<CalendarPreviewUpdateRequestEvent>("calendar-preview-update-request", () => {
+            this.bindEvent<CalendarPreviewUpdateRequestEvent>(panel, "calendar-preview-update-request", () => {
                 if (this.activeProjectId != projectId || this.activeProjectHostHash != session.hostHash) {
                     return;
                 }
@@ -894,15 +951,16 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                     this.previewPanel.updateView();
                 });
             });
-            panel.addEventListener<CalendarDayPreviewChangeVisibilityRequestEvent>("calendar-day-preview-change-visibility-request", event => {
+            this.bindEvent<CalendarDayPreviewChangeVisibilityRequestEvent>(panel, "calendar-day-preview-change-visibility-request", event => {
                 if (this.activeProjectId != projectId || this.activeProjectHostHash != session.hostHash) {
                     return;
                 }
-                this.afterViewLoaded.promise.then(() => {
-                    this.callViewMethod("changeDayPreviewPanelVisibility", !this.canFirstCalendarShowPreview(session) && event.show);
+                this.afterViewLoaded.promise.then(async () => {
+                    let canFirstCalendarShowPreview = await this.canFirstCalendarShowPreview(session);
+                    this.callViewMethod("changeDayPreviewPanelVisibility", !canFirstCalendarShowPreview && event.show);
                 });
             });
-            panel.addEventListener<CalendarTaskPreviewChangeVisibilityRequestEvent>("calendar-task-preview-change-visibility-request", event => {
+            this.bindEvent<CalendarTaskPreviewChangeVisibilityRequestEvent>(panel, "calendar-task-preview-change-visibility-request", event => {
                 if (this.activeProjectId != projectId || this.activeProjectHostHash != session.hostHash) {
                     return;
                 }
@@ -910,7 +968,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                     this.callViewMethod("changeTaskPreviewPanelVisibility", event.show);
                 });
             });
-            panel.addEventListener<HorizontalCalendarTaskPreviewWindowLayoutChangeRequestEvent>("horizontal-calendar-task-preview-window-layout-change-request", event => {
+            this.bindEvent<HorizontalCalendarTaskPreviewWindowLayoutChangeRequestEvent>(panel, "horizontal-calendar-task-preview-window-layout-change-request", event => {
                 if (this.activeProjectId != projectId || this.activeProjectHostHash != session.hostHash) {
                     return;
                 }
@@ -918,7 +976,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                     this.callViewMethod("updatePreviewLocation", event.horizontalLayout);
                 });
             });
-            panel.addEventListener<CalendarBadgesUpdateRequestEvent>("calendar-badges-update-request", event => {
+            this.bindEvent<CalendarBadgesUpdateRequestEvent>(panel, "calendar-badges-update-request", event => {
                 this.afterViewLoaded.promise.then(() => {
                     this.updateBadges();
                 });
@@ -986,12 +1044,12 @@ export class CalendarWindowController extends window.base.BaseWindowController {
     
     createCalendar2Panel(session: mail.session.Session, projectId: string): Q.Promise<CalendarPanelController> {
         let calendarPanelKey = this.getCalendarPanelKey(session.hostHash, projectId);
-        if (calendarPanelKey in this.calendar2Panels) {
-            return Q(this.calendar2Panels[calendarPanelKey]);
+        if (calendarPanelKey in this.calendar2PanelPromises) {
+            return this.calendar2PanelPromises[calendarPanelKey];
         }
         
-        let panel = this.calendar2Panels[calendarPanelKey] = this.addComponent("calendar2Panel-" + calendarPanelKey, this.componentFactory.createComponent("calendarPanel", [this, this.personsComponent]));
-        return Q().then(() => {
+        let panel = this.addComponent("calendar2Panel-" + calendarPanelKey, this.componentFactory.createComponent("calendarPanel", [this, this.personsComponent]));
+        return this.calendar2PanelPromises[calendarPanelKey] = Q().then(() => {
             return this.calendarPlugin.initSession(session);
         })
         .then(() => {
@@ -1000,7 +1058,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
         .then(() => {
             panel.calendarId = 2;
             panel.init();
-            panel.addEventListener<CalendarTaskPreviewRequestEvent>("calendar-task-preview-request", event => {
+            this.bindEvent<CalendarTaskPreviewRequestEvent>(panel, "calendar-task-preview-request", event => {
                 if (this.activeProjectId != projectId || this.activeProjectHostHash != session.hostHash) {
                     return;
                 }
@@ -1008,9 +1066,9 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                 this.afterViewLoaded.promise.then(() => {
                     this.previewPanel.setTaskId(sess, event.task);
                     let calendarPanelKey = this.getCalendarPanelKey(session.hostHash, projectId);
-                    let otherPanel = this.calendar1Panels[calendarPanelKey];
-                    if (otherPanel) {
-                        otherPanel.markTaskAsSelected(event.task);
+                    let otherPanelPromise = this.calendar1PanelPromises[calendarPanelKey];
+                    if (otherPanelPromise) {
+                        otherPanelPromise.then(otherPanel => otherPanel.markTaskAsSelected(event.task));
                     }
                     if (!event.task) {
                         return;
@@ -1023,7 +1081,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                     }
                 });
             });
-            panel.addEventListener<CalendarPreviewUpdateRequestEvent>("calendar-preview-update-request", () => {
+            this.bindEvent<CalendarPreviewUpdateRequestEvent>(panel, "calendar-preview-update-request", () => {
                 if (this.activeProjectId != projectId || this.activeProjectHostHash != session.hostHash) {
                     return;
                 }
@@ -1031,15 +1089,16 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                     this.previewPanel.updateView();
                 });
             });
-            panel.addEventListener<CalendarDayPreviewChangeVisibilityRequestEvent>("calendar-day-preview-change-visibility-request", event => {
+            this.bindEvent<CalendarDayPreviewChangeVisibilityRequestEvent>(panel, "calendar-day-preview-change-visibility-request", event => {
                 if (this.activeProjectId != projectId || this.activeProjectHostHash != session.hostHash) {
                     return;
                 }
-                this.afterViewLoaded.promise.then(() => {
-                    this.callViewMethod("changeDayPreviewPanelVisibility", !this.canFirstCalendarShowPreview(session) && event.show);
+                this.afterViewLoaded.promise.then(async () => {
+                    let canFirstCalendarShowPreview = await this.canFirstCalendarShowPreview(session);
+                    this.callViewMethod("changeDayPreviewPanelVisibility", !canFirstCalendarShowPreview && event.show);
                 });
             });
-            panel.addEventListener<CalendarTaskPreviewChangeVisibilityRequestEvent>("calendar-task-preview-change-visibility-request", event => {
+            this.bindEvent<CalendarTaskPreviewChangeVisibilityRequestEvent>(panel, "calendar-task-preview-change-visibility-request", event => {
                 if (this.activeProjectId != projectId || this.activeProjectHostHash != session.hostHash) {
                     return;
                 }
@@ -1047,7 +1106,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                     this.callViewMethod("changeTaskPreviewPanelVisibility", event.show);
                 });
             });
-            panel.addEventListener<HorizontalCalendarTaskPreviewWindowLayoutChangeRequestEvent>("horizontal-calendar-task-preview-window-layout-change-request", event => {
+            this.bindEvent<HorizontalCalendarTaskPreviewWindowLayoutChangeRequestEvent>(panel, "horizontal-calendar-task-preview-window-layout-change-request", event => {
                 if (this.activeProjectId != projectId || this.activeProjectHostHash != session.hostHash) {
                     return;
                 }
@@ -1055,7 +1114,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                     this.callViewMethod("updatePreviewLocation", event.horizontalLayout);
                 });
             });
-            panel.addEventListener<CalendarBadgesUpdateRequestEvent>("calendar-badges-update-request", event => {
+            this.bindEvent<CalendarBadgesUpdateRequestEvent>(panel, "calendar-badges-update-request", event => {
                 this.afterViewLoaded.promise.then(() => {
                     this.updateBadges();
                 });
@@ -1123,7 +1182,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
     
     
     
-    onToggleDayPreviewPanel(show: boolean, projectId: string = null, session: mail.session.Session = null): boolean {
+    async onToggleDayPreviewPanel(show: boolean, projectId: string = null, session: mail.session.Session = null): Promise<boolean> {
         if (projectId === null) {
             projectId = this.activeProjectId;
         }
@@ -1138,10 +1197,15 @@ export class CalendarWindowController extends window.base.BaseWindowController {
         }
     }
     
-    onEnableDayPreviewPanel(session: mail.session.Session, projectId: string): boolean {
+    async onEnableDayPreviewPanel(session: mail.session.Session, projectId: string): Promise<boolean> {
         let calendarPanelKey = this.getCalendarPanelKey(session.hostHash, projectId);
-        let panel1 = this.calendar1Panels[calendarPanelKey];
-        let panel2 = this.calendar2Panels[calendarPanelKey];
+        let panel1Promise = this.calendar1PanelPromises[calendarPanelKey];
+        let panel2Promise = this.calendar2PanelPromises[calendarPanelKey];
+        if (!panel1Promise || !panel2Promise) {
+            return false;
+        }
+        let panel1 = await panel1Promise;
+        let panel2 = await panel2Promise;
         if (!panel1 || !panel2) {
             return false;
         }
@@ -1158,12 +1222,12 @@ export class CalendarWindowController extends window.base.BaseWindowController {
             };
         }
         if (!panel1.modeChanged) {
-            panel1.modeChanged = (mode: Modes) => {
+            panel1.modeChanged = async (mode: Modes) => {
                 if (mode == Modes.SINGLE_DAY || (!CalendarWindowController.ENABLE_PREVIEW_IN_WEEK_MODE && (mode == Modes.SINGLE_WEEK || mode == Modes.WEEK))) {
-                    this.ensureDayPreviewState(session, false);
+                    await this.ensureDayPreviewState(session, false);
                 }
                 else {
-                    this.ensureDayPreviewState(session, true);
+                    await this.ensureDayPreviewState(session, true);
                 }
             };
         }
@@ -1193,10 +1257,15 @@ export class CalendarWindowController extends window.base.BaseWindowController {
         return true;
     }
     
-    onHideDayPreviewPanel(session: mail.session.Session, projectId: string): boolean {
+    async onHideDayPreviewPanel(session: mail.session.Session, projectId: string): Promise<boolean> {
         let calendarPanelKey = this.getCalendarPanelKey(session.hostHash, projectId);
-        let panel1 = this.calendar1Panels[calendarPanelKey];
-        let panel2 = this.calendar2Panels[calendarPanelKey];
+        let panel1Promise = this.calendar1PanelPromises[calendarPanelKey];
+        let panel2Promise = this.calendar2PanelPromises[calendarPanelKey];
+        if (!panel1Promise || !panel2Promise) {
+            return false;
+        }
+        let panel1 = await panel1Promise;
+        let panel2 = await panel2Promise;
         if (!panel1 || !panel2) {
             return false;
         }
@@ -1205,12 +1274,16 @@ export class CalendarWindowController extends window.base.BaseWindowController {
         return true;
     }
     
-    previewDay(day: string): void {
+    async previewDay(day: string): Promise<void> {
         let projectId = this.activeProjectId;
         let session = this.getActiveSession();
         let calendarPanelKey = this.getCalendarPanelKey(session.hostHash, projectId);
-        let panel2 = this.calendar2Panels[calendarPanelKey];
-        this.ensureDayPreviewState(session, true);
+        let panel2Promise = this.calendar2PanelPromises[calendarPanelKey];
+        await this.ensureDayPreviewState(session, true);
+        if (!panel2Promise) {
+            return;
+        }
+        let panel2 = await panel2Promise;
         if (panel2 && panel2.currDataModel && day) {
             let [d, m, y] = day.split(".").map(x => parseInt(x));
             panel2.goToDate(d, m, y);
@@ -1229,16 +1302,17 @@ export class CalendarWindowController extends window.base.BaseWindowController {
         }
     }
     
-    closeDayPreview(session: mail.session.Session, ): void {
-        this.ensureDayPreviewState(session, false);
+    async closeDayPreview(session: mail.session.Session): Promise<void> {
+        await this.ensureDayPreviewState(session, false);
     }
     
     onViewCloseDayPreview(): void {
         this.closeDayPreview(this.getActiveSession());
     }
     
-    ensureDayPreviewState(session: mail.session.Session, enabled: boolean): void {
-        if (this.canFirstCalendarShowPreview(session)) {
+    async ensureDayPreviewState(session: mail.session.Session, enabled: boolean): Promise<void> {
+        let canFirstCalendarShowPreview = await this.canFirstCalendarShowPreview(session);
+        if (canFirstCalendarShowPreview) {
             enabled = false;
         }
         if (this.calendarPlugin.getSetting(session, "enable-day-preview-panel", null, null)) {
@@ -1246,9 +1320,13 @@ export class CalendarWindowController extends window.base.BaseWindowController {
         }
     }
     
-    canFirstCalendarShowPreview(session: mail.session.Session): boolean {
+    async canFirstCalendarShowPreview(session: mail.session.Session): Promise<boolean> {
         let calendarPanelKey = this.getCalendarPanelKey(session.hostHash, this.activeProjectId);
-        let panel1 = this.calendar1Panels[calendarPanelKey];
+        let panel1Promise = this.calendar1PanelPromises[calendarPanelKey];
+        if (!panel1Promise) {
+            return false;
+        }
+        let panel1 = await panel1Promise;
         return panel1 && (panel1.currMode == Modes.SINGLE_DAY || (!CalendarWindowController.ENABLE_PREVIEW_IN_WEEK_MODE && (panel1.currMode == Modes.SINGLE_WEEK || panel1.currMode == Modes.WEEK)));
     }
     
@@ -1334,7 +1412,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
     }
     
     initSessionEvents(session: mail.session.Session): void {
-        session.sectionManager.sectionAccessManager.eventDispatcher.addEventListener<Types.event.SectionStateChangedEvent>("section-state-changed", event => {
+        this.bindEvent<Types.event.SectionStateChangedEvent>(session.sectionManager.sectionAccessManager.eventDispatcher, "section-state-changed", event => {
             if (this.activePanel1 && this.activeProjectId == event.sectionId && this.activeProjectHostHash == session.hostHash) {
                 Q().then(() => {
                     return session.sectionManager.load();
@@ -1350,7 +1428,7 @@ export class CalendarWindowController extends window.base.BaseWindowController {
                     }
                 })
             }
-        }, "calendar");
+        });
         
         this.registerChangeEvent(this.calendarPlugin.tasksPlugin.tasksSectionsCollectionNoPrivate[session.hostHash].changeEvent, event => this.onSectionsCollectionChange(session, event));
         this.registerChangeEvent(session.sectionManager.sinkIndexManager.sinkIndexCollection.changeEvent, event => this.onSinkChange(session, event));
@@ -1428,5 +1506,11 @@ export class CalendarWindowController extends window.base.BaseWindowController {
         return `${hostHash}--${projectId}`;
     }
 
-    
+    onViewHistoryArrowLeft(): void {
+        this.router.goPrev();
+    }
+
+    onViewHistoryArrowRight(): void {
+        this.router.goNext();
+    }
 }

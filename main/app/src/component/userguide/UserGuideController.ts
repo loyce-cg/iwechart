@@ -5,7 +5,8 @@ import { i18n } from "./i18n";
 import { BaseAppWindowController } from "../../window/base/BaseAppWindowController";
 
 export interface Model {
-    options: UserGuideOptions,
+    options: UserGuideOptions;
+    hasActionButton: boolean;
 }
 
 export interface UserGuideOptions {
@@ -16,11 +17,12 @@ export interface UserGuideOptions {
     width: number;
     height: number;
     side: "top" | "left" | "bottom" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
-    onClick: () => void;
-    actionButton?: {
-        text: string;
-        onClick: () => void;
-    }
+    // onClick: () => void;
+    // actionButton?: {
+    //     text: string;
+    //     onClick: () => void;
+    // }
+    actionButtonText?: string
 }
 
 
@@ -32,6 +34,9 @@ export class UserGuideController extends ComponentController {
         localeService.registerTexts(i18n, this.textsPrefix);
     }
     
+    private onActionButtonClick?: () => void;
+    private onClick: () => void;
+
     constructor(
         public parent: BaseAppWindowController,
         public options: UserGuideOptions
@@ -40,21 +45,32 @@ export class UserGuideController extends ComponentController {
         this.ipcMode = true;
     }
     
+    setOnClick(fn: () => void): void {
+        this.onClick = fn;
+    } 
+
+    setOnActionButtonClick(fn: () => void): void {
+        this.onActionButtonClick = fn;
+    }
+
     getModel(): Model {
 
         return {
-            options: this.options
+            options: this.options,
+            hasActionButton: typeof this.onActionButtonClick == "function"
         }
     }
     
     onViewAction(action: string): void {
         if (action == "button-action") {
-            if (this.options.actionButton) {
-                this.options.actionButton.onClick();
+            if (typeof this.onActionButtonClick == "function") {
+                this.onActionButtonClick();
             }
         }
         else if (action == "overlay-action") {
-            this.options.onClick();
+            if (typeof this.onClick == "function") {
+                this.onClick();
+            }
         }
     }
     

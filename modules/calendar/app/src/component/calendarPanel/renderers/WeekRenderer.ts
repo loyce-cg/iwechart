@@ -37,6 +37,7 @@ export interface TaskData {
     dayTaskEnd: number;
     topContinues: boolean;
     bottomContinues: boolean;
+    wholeDay: boolean;
 }
 
 export class WeekRenderer extends FastListRenderer<EntryModel> {
@@ -344,7 +345,7 @@ export class WeekRenderer extends FastListRenderer<EntryModel> {
                     day.tasks.push({
                         model: task,
                         fileModel: null,
-                        text: (task.startTimestamp >= day.startTimestamp && !wholeDays ? pad0s(dt0.getHours()) + ":" + pad0s(dt0.getMinutes()) + " " : "") + task.title.trim(),
+                        text: task.title.trim() + (task.startTimestamp >= day.startTimestamp && !wholeDays ? " (" + pad0s(dt0.getHours()) + ":" + pad0s(dt0.getMinutes()) + ")" : ""),
                         width: maxTaskWidth,
                         left: 0,
                         maxNumOfSimultTasks: 0,
@@ -352,6 +353,7 @@ export class WeekRenderer extends FastListRenderer<EntryModel> {
                         dayTaskEnd: dayTaskEnd,
                         topContinues: task.startTimestamp < day.startTimestamp,
                         bottomContinues: task.endTimestamp > day.startTimestamp + 86400000,
+                        wholeDay: wholeDays || task.startTimestamp <= day.startTimestamp && task.endTimestamp >= day.startTimestamp + 86400000,
                     });
                 }
             }
@@ -384,6 +386,7 @@ export class WeekRenderer extends FastListRenderer<EntryModel> {
                         dayTaskEnd: dayTaskEnd,
                         topContinues: false,
                         bottomContinues: false,
+                        wholeDay: false,
                     });
                 }
             }
@@ -547,6 +550,9 @@ export class WeekRenderer extends FastListRenderer<EntryModel> {
             }
             if (task.bottomContinues) {
                 el.className += " bottom-continues";
+            }
+            if (!task.wholeDay && task.dayTaskEnd - task.dayTaskStart <= 15 * 60 * 1000) {
+                el.className += " compact";
             }
             
             let left = task.left + deltaLeft;

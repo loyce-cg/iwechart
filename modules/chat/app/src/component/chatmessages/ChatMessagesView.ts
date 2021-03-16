@@ -4,13 +4,28 @@ import {func as chatTemplate} from "./template/chat.html";
 import {func as chatMessageInnerTemplate} from "./template/chat-message-inner.html";
 import {func as chatReplyTemplate} from "./template/chat-reply.html";
 import {func as voiceChatPeopleTemplate} from "./template/voice-chat-people.html";
-
+import {func as videoConferencePeopleTemplate} from "./template/video-conference-people.html";
+import {func as actionsMenuTemplate} from "./template/actions-menu.html";
 import {func as chatHeaderProfilesTemplate} from "./template/chat-header-profiles.html";
 import {func as msgCountTemplate} from "./template/msg-count.html";
 import {Model, InnerMessageModel, Marker, SearchState} from "./ChatMessagesController";
 import {ChatType} from "../../main/Types";
 import { GUISettings } from "../../main/ChatPlugin";
 import { ChatWindowView } from "../../window/chat/ChatWindowView";
+import { SectionVideoConferenceModel, VideoConferencePersonModel } from "./Types";
+import { GongMessagePopup } from "../gongmessagepopup/GongMessagePopup";
+
+export interface ActionItemModel {
+    id?: string;
+    labelKey?: string;
+    icon?: string;
+    hidden?: boolean;
+    isSeparator?: boolean;
+}
+
+export interface ActionsModel {
+    items: ActionItemModel[];
+}
 
 export interface EntryToRemove {
     sendingId: number;
@@ -79,6 +94,7 @@ export class ChatMessagesView extends component.base.ComponentView {
     encryptionEffect: component.encryptioneffect.EncryptionEffectView;
     thumbs: component.thumbs.ThumbsView;
     loading: component.loading.LoadingView;
+    dropdown: component.dropdown.Dropdown<ActionsModel>;
     editMode: boolean;
     editMsgId: number;
     $settingsMenu: JQuery;
@@ -89,12 +105,16 @@ export class ChatMessagesView extends component.base.ComponentView {
     userActionTimer: any;
     rewindTimer: NodeJS.Timer;
     platform: string;
+    systemLabel: string;
     $imagesToLoad: { [did: string]: JQuery } = {};
     imagesCache: { [did: string]: string } = {};
     scrollEnabled: boolean = true;
     voiceChatModule: VoiceChat.VoiceChatViewModule;
     sendingMsgs: InnerMessageModel[] = [];
     rewindOnActivate: boolean = false;
+    videoConferenceDisconnectedTimestamp: number = 0;
+    gongButtonStopAnimationTimeout: number = null;
+    gongMessagePopup: GongMessagePopup;
 
     constructor(parent: wnd.base.BaseWindowView<any>, public personsComponent: component.persons.PersonsView) {
         super(parent);
@@ -113,7 +133,7 @@ export class ChatMessagesView extends component.base.ComponentView {
             onAfterListRender: this.onAfterRenderMessageList.bind(this)
         }));
         this.emojiPicker = this.addComponent("emojiPicker", new component.emojipicker.EmojiPickerView(this));
-        this.parent.addEventListener("hide-emoji-picker", () => {
+        this.bindEvent(this.parent, "hide-emoji-picker", () => {
             this.emojiPicker.hide();
             this.$container.find(".emoji-picker-open").removeClass("emoji-picker-open");
         })
@@ -130,10 +150,10 @@ export class ChatMessagesView extends component.base.ComponentView {
         this.encryptionEffect = this.addComponent("encryptionEffect", new component.encryptioneffect.EncryptionEffectView(this));
         this.loading = this.addComponent("loading", new component.loading.LoadingView(this));
         this.thumbs = this.addComponent("thumbs", new component.thumbs.ThumbsView(this));
-        this.thumbs.addEventListener<component.thumbs.ThumbLoadedEvent>("thumbLoaded", e => {
+        this.bindEvent<component.thumbs.ThumbLoadedEvent>(this.thumbs, "thumbLoaded", e => {
             e.$thumb.closest(".message.file-box").removeClass("with-not-loaded-image").addClass("with-loaded-image");
         });
-
+        this.gongMessagePopup = new GongMessagePopup(this);
     }
     
 
@@ -142,6 +162,7 @@ export class ChatMessagesView extends component.base.ComponentView {
             return;
         }
         this.platform = model.platform;
+        this.systemLabel = model.systemLabel;
         this.allMessagesRendered = false;
         $("head").append('<style>' + model.customStyle + '</style>');
         if (this.userActionsEnabled) {
@@ -167,12 +188,10 @@ export class ChatMessagesView extends component.base.ComponentView {
             this.$container.on("click", ".task-id", this.onTaskTitleClick.bind(this));
             this.$container.on("click", ".link.reply", this.onTaskReplyClick.bind(this));
             
-            this.$container.on("click", "[data-action=open-notes2]", this.onOpenNotes2Click.bind(this));
-            this.$container.on("click", "[data-action=open-tasks]", this.onOpenTasksClick.bind(this));
             this.$container.on("click", "[data-action=talk]", this.onStartTalkClick.bind(this));
 
             this.$container.on("click", "[data-action=open-settings]", this.onOpenSettingsClick.bind(this));
-            this.$container.on("click", ".context-menu-backdrop2", this.onCloseSettingsClick.bind(this));
+            this.$container.on("click", ".context-menu-backdrop2", this.onBackdropClick.bind(this));
             this.$container.on("change", "input[data-setting]", this.onSettingChanged.bind(this));
             this.$container.on("change", "input[data-view-setting]", this.onViewSettingChanged.bind(this));
             this.$container.on("click", "[data-action=send-chat-message]", this.onSendMessageClick.bind(this));
@@ -182,7 +201,7 @@ export class ChatMessagesView extends component.base.ComponentView {
             this.$container.on("click", "[data-action=delete-message]", this.onDeleteMessageClick.bind(this));
             this.$container.on("click", "[data-action=quote-message]", this.onQuoteMessageClick.bind(this));
             this.$container.on("click", "[data-action=new-file]", this.onNewFilesClick.bind(this));
-            this.$container.on("click", "[data-action=new-task]", this.onNewTaskClick.bind(this));
+            this.$container.on("click", ".actions-menu [data-action-id]", this.onActionsMenuClick.bind(this));
             this.$container.on("click", "[data-action=open-attachment]", this.onOpenAttachmentClick.bind(this));
             this.$container.on("click", "[data-action=open-channel-file]", this.onOpenChannelFile.bind(this));
             this.$container.on("change", "[data-trigger=enter-sends-toggle]", this.onEnterSendsChange.bind(this));
@@ -197,7 +216,10 @@ export class ChatMessagesView extends component.base.ComponentView {
             this.$container.on("click", "[data-action=leave-voice-chat]", this.onLeaveVoiceChatTalkingClick.bind(this));
             this.$container.on("click", "[data-action=toggle-talking]", this.onToggleTalkingClick.bind(this));
             this.$container.on("click", "[data-action=ring-the-bell]", this.onRingTheBellClick.bind(this));
-            this.$container.on("click", ".privmx-quote-tldr-toggle", this.privmxQuoteTldrToggleClick.bind(this))
+            this.$container.on("click", ".privmx-quote-tldr-toggle", this.privmxQuoteTldrToggleClick.bind(this));
+            this.$container.on("click", "[data-action=join-video-conference]", this.onJoinVideoConferenceClick.bind(this));
+            this.$container.on("click", "[data-action=video-conference-disconnect]", this.onVideoConferenceDisconnectClick.bind(this));
+            this.$container.on("click", "[data-action=video-conference-gong]", this.onVideoConferenceGongClick.bind(this));
             //this.$container.on("click", ".many-profiles canvas[data-hashmail-image]", this.onRemovePersonClick.bind(this));
             
             // this.personsComponent.$main = this.$container;
@@ -247,7 +269,7 @@ export class ChatMessagesView extends component.base.ComponentView {
         })
         .then(() => {
             this.showLoading();
-            this.chatMessages.addEventListener<component.extlist.ExtListChangeEvent>("ext-list-change", event => {
+            this.chatMessages.bindEvent<component.extlist.ExtListChangeEvent>(this.chatMessages, "ext-list-change", event => {
                 this.onChatMessagesChanged();
                 this.fireRewindTillSuccess();
             });
@@ -509,14 +531,6 @@ export class ChatMessagesView extends component.base.ComponentView {
         this.triggerEvent("openTask", taskId, true);
     }
     
-    onOpenNotes2Click(): void {
-        this.triggerEvent("openNotes2");
-    }
-    
-    onOpenTasksClick(): void {
-        this.triggerEvent("openTasks");
-    }
-    
     onOpenSettingsClick(e: MouseEvent): void {
         let $btn = <JQuery>$(e.currentTarget);
         this.$settingsMenu.addClass("visible");
@@ -527,8 +541,12 @@ export class ChatMessagesView extends component.base.ComponentView {
         this.$settingsMenu.css("left", Math.max(x, -25.0)).css("top", y);
     }
 
-    onCloseSettingsClick(): void {
+    onBackdropClick(): void {
         this.$settingsMenu.removeClass("visible");
+        if (this.dropdown) {
+            this.dropdown.destroy();
+            this.dropdown = null;
+        }
     }
     
     onSettingChanged(e: MouseEvent): void {
@@ -636,12 +654,91 @@ export class ChatMessagesView extends component.base.ComponentView {
         sel.addRange(range);
     }
     
-    onNewFilesClick(): void {
-        this.triggerEvent("newFiles");
+    onNewFilesClick(e: MouseEvent): void {
+        let model: ActionsModel = {
+            items: [
+                {
+                    id: "new-audioAndVideo-note-window",
+                    labelKey: "plugin.chat.component.chatMessages.newAudioAndVideoNote.title",
+                    icon: "fa fa-file-video-o",
+                },
+                {
+                    id: "new-audio-note-window",
+                    labelKey: "plugin.chat.component.chatMessages.newAudioNote.title",
+                    icon: "fa fa-file-audio-o",
+                },
+                {
+                    id: "new-photo-note-window",
+                    labelKey: "plugin.chat.component.chatMessages.newPhotoNote.title",
+                    icon: "fa fa-file-photo-o",
+                },
+                {
+                    isSeparator: true,
+                },
+                {
+                    id: "new-text-note-window",
+                    labelKey: "plugin.chat.component.chatMessages.newTextNote.title",
+                    icon: "fa fa-font"
+                },
+                {
+                    id: "new-mindmap-window",
+                    labelKey: "plugin.chat.component.chatMessages.newMindmap.title",
+                    icon: "privmx-icon privmx-icon-mindmap"
+                },
+                {
+                    isSeparator: true,
+                },
+                {
+                    id: "open-file-chooser",
+                    labelKey: "plugin.chat.component.chatMessages.openFileChooser.title",
+                    icon: "privmx-icon privmx-icon-logo"
+                },
+                {
+                    id: "upload",
+                    labelKey: this.systemLabel ? "plugin.chat.component.chatMessages.actions.upload.osSpecific." + this.systemLabel : "plugin.chat.component.chatMessages.actions.upload",
+                    icon: "fa fa-upload",
+                }
+            ]
+        };
+        this.dropdown = new component.dropdown.Dropdown({
+            model: model,
+            template: this.templateManager.createTemplate(actionsMenuTemplate),
+            $container: this.$container.find(".chat-reply").parent(),
+            templateManager: this.templateManager,
+            extraClasses: ["to-right", "component-dropdown-new-file"],
+        });
+        this.$container.find(".component-dropdown-new-file").css("left", $(e.currentTarget).offset().left);
     }
     
-    onNewTaskClick(): void {
-        this.triggerEvent("newTask");
+    onActionsMenuClick(event: MouseEvent) {
+        event.stopPropagation();
+        let $trigger = $(event.target).closest("[data-action-id]");
+        let id = $trigger.data("action-id");
+        if (this.dropdown) {
+            this.dropdown.destroy();
+            this.dropdown = null;
+        }
+        if (id == "new-text-note-window") {
+            this.triggerEvent("createNewNote", "text-note");
+        }
+        else if (id == "new-mindmap-window") {
+            this.triggerEvent("createNewNote", "mindmap");
+        }
+        else if (id == "new-audioAndVideo-note-window") {
+            this.triggerEvent("createNewNote", "new-audioAndVideo-note-window");
+        }
+        else if (id == "new-audio-note-window") {
+            this.triggerEvent("createNewNote", "new-audio-note-window");
+        }
+        else if (id == "new-photo-note-window") {
+            this.triggerEvent("createNewNote", "new-photo-note-window");
+        }
+        else if (id == "upload") {
+            this.triggerEvent("uploadFile");
+        }
+        else if (id == "open-file-chooser") {
+            this.triggerEvent("openFileChooser");
+        }
     }
     
     onOpenAttachmentClick(event: MouseEvent): void {
@@ -651,7 +748,7 @@ export class ChatMessagesView extends component.base.ComponentView {
     }
     
     onOpenChannelFile(event: MouseEvent): void {
-        let $e = $(event.target).closest(".channel-file, .img-in-chat");
+        let $e = $(event.target).closest(".channel-file, .img-in-chat, .play-audio-button");
         this.triggerEvent("openChannelFile", $e.data("path"), $e.data("did"));
     }
     
@@ -700,7 +797,7 @@ export class ChatMessagesView extends component.base.ComponentView {
     hideLoading(): void {
         // this.loading.onFinishedLoading();
         if (this.parent && this.parent instanceof ChatWindowView) {
-            this.parent.loading.hideLoading();    
+            this.parent.loading.hideLoading();
         }
     }
     
@@ -1038,16 +1135,20 @@ export class ChatMessagesView extends component.base.ComponentView {
     }
     
     renderHeader(model: Model): void {
-        let template = this.templateManager.createTemplate(chatHeaderProfilesTemplate);
-        let $container = this.$container.find("[data-container=chat-header-profiles-contact]");
-        $container.empty().append(template.renderToJQ(model));
-        this.personsComponent.refreshAvatars();
-        $container.find(".chat-reply-profile").each((idx, el) => {
-            let $profile = $(el);
-            let $rmBtn = $profile.prev();
-            if ($rmBtn.length > 0 && $rmBtn.hasClass("remove-person-button")) {
-                $rmBtn.appendTo($profile);
-            }
+        const user = model.usersWithAccess.find(x => x.hashmail == "admin#lukas2");
+        const $container = this.$container.find("[data-container=chat-header-profiles-contact]");
+        component.persons.PersonsView.fixAvatarRender($container, () => {
+            let template = this.templateManager.createTemplate(chatHeaderProfilesTemplate);
+            $container.empty().append(template.renderToJQ(model));
+            // $container.attr("persons-id", personsId);
+            this.personsComponent.refreshAvatars();
+            $container.find(".chat-reply-profile").each((idx, el) => {
+                let $profile = $(el);
+                let $rmBtn = $profile.prev();
+                if ($rmBtn.length > 0 && $rmBtn.hasClass("remove-person-button")) {
+                    $rmBtn.appendTo($profile);
+                }
+            });
         });
         setTimeout(() => {
             //Electron hax #066
@@ -1229,7 +1330,7 @@ export class ChatMessagesView extends component.base.ComponentView {
     updateCanWrite(canWrite: boolean): void {
         let $textBox = this.$container.find(".chat-reply [data-role=reply-field]");
         this.$container.find("[data-action=send-chat-message]").prop("disabled", !canWrite);
-        this.$container.find(".additional-buttons button[data-action]").prop("disabled", !canWrite);
+        this.$container.find(".additional-buttons button[data-action]:not([data-action='join-video-conference'])").prop("disabled", !canWrite);
         this.$container.find(".additional-buttons button[data-action='ring-the-bell']").prop("disabled", !canWrite || ! this._model.isRingTheBellAvailable);
         // this.$container.find(".additional-buttons button[data-action='join-voice-chat']").prop("disabled", !canWrite || this._model.isTalkingInAnotherSection);
         this.$container.find("[data-trigger=enter-sends-toggle]").prop("disabled", !canWrite);
@@ -1248,7 +1349,6 @@ export class ChatMessagesView extends component.base.ComponentView {
     }
     
     updateEnabledModules(info: { notes2: boolean, tasks: boolean }): void {
-        this.$container.find("[data-action='new-task']").toggleClass("hidden", !info.tasks);
     }
     
     onPasteSeemsEmpty(): void {
@@ -1410,6 +1510,92 @@ export class ChatMessagesView extends component.base.ComponentView {
         this.triggerEvent("toggleTalking");
     }
     
+    async onJoinVideoConferenceClick(e: MouseEvent): Promise<void> {
+        let now = new Date().getTime();
+        if (now - this.videoConferenceDisconnectedTimestamp < 250) {
+            return;
+        }
+        this.triggerEvent("joinVideoConference");
+    }
+    
+    async askForNewConferenceTitle(): Promise<string|false> {
+        const simplePopup = new component.simplepopup.SimplePopup(this.templateManager);
+        const placeholder = this.helper.escapeHtml(this.helper.i18n("plugin.chat.component.chatMessages.videoConferenceTitleQuestionPopup.titleInput.placeholder"));
+        const $input = $(`<input type="text" placeholder="${placeholder}" maxlength="100" />`);
+        let join: boolean = false;
+        await simplePopup.init({
+            $content: $input,
+            buttons: [
+                {
+                    icon: "privmx-icon privmx-icon-videocall",
+                    text: this.helper.i18n("plugin.chat.component.chatMessages.videoConferenceTitleQuestionPopup.startButton.text"),
+                    cssClasses: "btn-success btn-sm small",
+                    onClick: () => { join = true; simplePopup.close(); },
+                },
+                {
+                    text: this.helper.i18n("plugin.chat.component.chatMessages.videoConferenceTitleQuestionPopup.cancelButton.text"),
+                    cssClasses: "btn-default gray btn-sm small",
+                    onClick: () => { join = false; simplePopup.close(); },
+                },
+            ],
+            outsideClickBehavior: component.simplepopup.OutsideClickBehavior.CLOSE_POPUP,
+            width: 360,
+            height: 100,
+            $target: this.$chatReply.find(`[data-action="join-video-conference"]`),
+            horizontalPlacement: webUtils.PopupPlacement.COMMON_END,
+            verticalPlacement: webUtils.PopupPlacement.BEFORE,
+        });
+        simplePopup.show();
+        $input[0].focus();
+        $input.on("keydown", e => {
+            if (e.key == "Escape") {
+                join = false;
+                simplePopup.close();
+            }
+            else if (e.key == "Enter") {
+                join = true;
+                simplePopup.close();
+            }
+        });
+        await simplePopup.getClosePromise();
+        if (join == false) {
+            return false;
+        }
+        const title = $input.val().toString().trim().substr(0, 100);
+        return title;
+    }
+    
+    onVideoConferenceDisconnectClick(): void {
+        let now = new Date().getTime();
+        if (now - this.videoConferenceDisconnectedTimestamp < 250) {
+            return;
+        }
+        this.videoConferenceDisconnectedTimestamp = now;
+        this.triggerEvent("videoConferenceDisconnect");
+    }
+    
+    async onVideoConferenceGongClick(): Promise<void> {
+        const message = await this.askForGongMessage();
+        if (message === false) {
+            return;
+        }
+        let $gongButton = this.$chatReply.find("[data-action='video-conference-gong']");
+        $gongButton.addClass("ringing");
+        if (this.gongButtonStopAnimationTimeout !== null) {
+            clearTimeout(this.gongButtonStopAnimationTimeout);
+            this.gongButtonStopAnimationTimeout = null;
+        }
+        this.gongButtonStopAnimationTimeout = <any>setTimeout(() => {
+            $gongButton.removeClass("ringing");
+            this.gongButtonStopAnimationTimeout = null;
+        }, 2500);
+        this.triggerEvent("videoConferenceGong", message);
+    }
+    
+    async askForGongMessage(): Promise<string|false> {
+        return this.gongMessagePopup.show(this.$chatReply.find(`[data-action="video-conference-gong"]`));
+    }
+    
     onRingTheBellClick(): void {
         let $btn = this.$chatReply.find("button[data-action='ring-the-bell']");
         if ($btn.is(".ringing")) {
@@ -1459,6 +1645,29 @@ export class ChatMessagesView extends component.base.ComponentView {
         let $content = this.templateManager.createTemplate(voiceChatPeopleTemplate).renderToJQ(JSON.parse(usersStr));
         $users.empty().append($content);
         this.personsComponent.refreshAvatars();
+    }
+
+    updateActiveVideoConferenceUsers(personModels: VideoConferencePersonModel[]): void {
+        let $users = this.$chatReply.find(".video-conference-people > .inner > .list");
+        let $content = this.templateManager.createTemplate(videoConferencePeopleTemplate).renderToJQ(personModels);
+        $users.empty().append($content);
+        this.personsComponent.refreshAvatars();
+    }
+    
+    setSectionVideoConferenceModel(modelStr: string): void {
+        const model: SectionVideoConferenceModel = JSON.parse(modelStr);
+        let joinVideoConferenceBtnType = "default";
+        if (model.isUserInAnyVideoConference) {
+            joinVideoConferenceBtnType = model.isUserParticipating ? "bringToFront" : "switch";
+        }
+        else if (model.isVideoConferenceActive) {
+            joinVideoConferenceBtnType = "join";
+        }
+        this.$chatReply.find("[data-action=join-video-conference]").find(".btn-text").text(this.helper.i18n("plugin.chat.component.chatMessages.chatReply.button.joinVideoConference." + joinVideoConferenceBtnType + ".label"));
+        this.$chatReply.find("[data-action=video-conference-disconnect]").toggleClass("visible", model.isUserParticipating);
+        this.$container.toggleClass("is-video-conference-active", model.isVideoConferenceActive);
+        this.$container.toggleClass("is-video-conference-inactive", !model.isVideoConferenceActive);
+        this.updateActiveVideoConferenceUsers(model.personModels);
     }
     
 }

@@ -7,26 +7,7 @@ import {KEY_CODES} from "../../web-utils/UI";
 import {Scope} from "../../web-utils/Scope";
 import {section} from "../../Types";
 import {Lang} from "../../utils/Lang";
-
-// export interface AclEntry {
-//     admins: boolean;
-//     users: boolean;
-//     all: boolean;
-//     usernames: string[];
-//     editMode: boolean;
-//     getLabel(): string;
-//     getUsers(): string;
-// }
-//
-// export interface GroupEntry {
-//     allIsAvailable: boolean;
-//     type: string;
-//     users: string[];
-//     editMode: boolean;
-//     getLabel(): string;
-//     getUsers(): string;
-// }
-
+import { PersonsView } from "../../component/persons/PersonsView";
 export interface AclGroupsEntry {
     groups: string[],
     users: string[],
@@ -46,6 +27,7 @@ export interface ScopeData {
     parentName: string;
     parentScope: string;
     name: string;
+    description: string;
     modules: ModuleEntry[];
     group: AclGroupsEntry;
     state: section.SectionState;
@@ -73,14 +55,22 @@ export class SectionNewWindowView extends BaseWindowView<Model> {
     $aclInner: JQuery;
     scope: Scope<ScopeData>;
     initData: ScopeData;
+    host: string;
+    personsComponent: PersonsView;
     
     constructor(parent: app.ViewParent) {
         super(parent, mainTemplate);
+        this.personsComponent = this.addComponent("personsComponent", new PersonsView(this, this.helper));
     }
     
-    initWindow(model: Model): void {
+    initWindow(model: Model): Q.Promise<void> {
         $(document).on("keydown", this.onKeyDown.bind(this));
-        this.setState(model.state);
+        this.host = model.host;
+        this.personsComponent.$main = this.$main;
+        return this.personsComponent.triggerInit()
+        .then(() => {
+            this.setState(model.state);
+        })
     }
     
     setState(state: State): void {
@@ -101,6 +91,7 @@ export class SectionNewWindowView extends BaseWindowView<Model> {
             parentName: state.parentName,
             parentScope: state.parentScope,
             name: "",
+            description: null,
             modules: state.modules,
             group: this.getGroupEntry(state.group),
             acl: {
@@ -127,7 +118,9 @@ export class SectionNewWindowView extends BaseWindowView<Model> {
             this.scope.setData(data);
         }
         else {
-            this.scope = new Scope(this.$main, data);
+            this.scope = new Scope(this.$main, data, () => {
+                this.personsComponent.refreshAvatars();
+            });
         }
         this.refreshWindowHeight();
     }
@@ -150,11 +143,7 @@ export class SectionNewWindowView extends BaseWindowView<Model> {
             getGroups: null
         };
         entry.getLabel = () => {
-            // if (entry.type == "local") {
-            //     return this.helper.i18n("window.sectionNew.acl.all");
-            // }
-            // return this.getUsersLabel(entry.users);
-            return this.getGroupsLabel(entry.groups) + (entry.users && entry.users.length > 0 ? ',<span class="space"></span>' + this.getUsersLabel(entry.users) : "");
+            return this.renderGroupsAndUsersLabel(entry.groups, entry.users);
         };
         entry.getUsers = () => {
             return this.getUsersLabel(entry.users);
@@ -172,12 +161,7 @@ export class SectionNewWindowView extends BaseWindowView<Model> {
             getGroups: null
         };
         entry.getLabel = () => {
-            // if (entry.admins) {
-            //     return this.helper.i18n("window.sectionNew.acl.admins") + (entry.users ? ", " + this.getUsersLabel(entry.usernames) : "");
-            // }
-            // return this.getUsersLabel(entry.usernames)
-            return this.getGroupsLabel(entry.groups) + (entry.users && entry.users.length > 0 ? ',<span class="space"></span>' + this.getUsersLabel(entry.users) : "");
-
+            return this.renderGroupsAndUsersLabel(entry.groups, entry.users);
         };
         entry.getUsers = () => {
             return this.getGroupsLabel(entry.groups) + (entry.users && entry.users.length > 0 ? ',<span class="space"></span>' + this.getUsersLabel(entry.users) : "");
@@ -186,12 +170,18 @@ export class SectionNewWindowView extends BaseWindowView<Model> {
     }
     
     getUsersLabel(users: string[]): string {
-        if (users.length == 0) {
-            return this.helper.i18n("window.sectionNew.acl.noone");
-        }
-        return users.join(", ");
+        let html = "";
+        users.forEach((user, i) => {
+            let hashmail = user + "#" + this.host;
+            let person = this.personsComponent.getPerson(hashmail);
+            html += i == 0 ? '' : '<span class="space"></span>';
+            html += '<span class="user"><canvas class="not-rendered" data-width="16" data-height="16" data-auto-size="true" data-hashmail-image="' + hashmail + '" data-auto-refresh="true"></canvas> ';
+            html += '<span data-hashmail-name="' + hashmail + '" data-auto-refresh="true" data-hashmail-default-name="' + user + '">' + this.personsComponent.getPersonName(hashmail, person && person.username ? person.username : user) + '</span>';
+            html += (i < users.length - 1 ? ',' : '') + '</span>';
+        });
+        return html;
     }
-    
+
     getGroupsLabel(groups: string[]): string {
         if (groups.length == 0) {
             return "";
@@ -254,6 +244,7 @@ export class SectionNewWindowView extends BaseWindowView<Model> {
             id: this.scope.data.id,
             parentId: this.scope.data.parentId,
             name: this.scope.data.name.trim(),
+            description: this.scope.data.description ? this.scope.data.description.trim() : null,
             modules: this.scope.data.modules.map(x => {
                 return {name: x.id, enabled: x.selected};
             }),
@@ -341,4 +332,16 @@ export class SectionNewWindowView extends BaseWindowView<Model> {
         this.scope.data.removing = false;
         this.scope.onChange();
     }
+
+    renderGroupsAndUsersLabel(groups: string[], users: string[]): string {
+        if (users.length == 0 && groups.length == 0) {
+            return this.helper.i18n("window.sectionEdit.acl.noone");
+        }
+        let toRender = this.getGroupsLabel(groups);
+        if (groups.length && users.length) {
+            toRender += ',<span class="space"></span>';
+        }
+        return toRender + this.getUsersLabel(users);
+    }
+
 }

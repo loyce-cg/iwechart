@@ -107,7 +107,7 @@
     line-height: 1;
     font-kerning: none;
     text-rendering: optimizeSpeed;
-    font-size: var(--font-size-s);
+    font-size: var(--font-size-xs);
     position: relative;
     border-top: 1px solid var(--main-panel-tasks-separator-bg);
   
@@ -156,6 +156,13 @@
     white-space: normal;
     line-height: 1.2;
     overflow: hidden;
+    
+    &.compact {
+      padding-top: 0;
+      padding-bottom: 0;
+      line-height: 1;
+      font-size: var(--font-size-xxs);
+    }
     
     &.narrow {
       word-break: break-all;

@@ -267,7 +267,7 @@
          label {
            font-weight: 500;
            input {
-             margin-top: 5px;
+             margin-top: 6px;
            }
          }
        }
@@ -278,6 +278,22 @@
           position: absolute;
           .btn {
             margin-left: 8px;
+            span::before {
+              line-height: 23px;
+            }
+            &.multiple-icons {
+              .icon + .icon,
+              .icon + .text {
+                margin-left: 5px;
+              }
+              .icon.privmx-icon {
+                position: relative;
+                top: 2px;
+              }
+              .text.ellipsis {
+                font-family: "source_sans_pro";
+              }
+            }
           }
          
           // .window-sectionsummary.single-mode & {
@@ -420,8 +436,81 @@
       }
     }
     
+    &.is-video-conference-active {
+      .chat-reply {
+        .textarea-wrapper {
+          margin-right: 25%;
+        }
+        .video-conference-people {
+          display: inline-block;
+        }
+        .buttons-for-video-conferences {
+          position: fixed;
+          right: 20px;
+        }
+      }
+    }
+    
+    .buttons-for-video-conferences {
+      button[data-action="video-conference-gong"],
+      button[data-action="video-conference-disconnect"] {
+        &:not(.visible) {
+          display: none;
+        }
+      }
+      button[data-action="video-conference-gong"] {
+        padding-right: 5px;
+        .fa {
+          position: relative;
+          right: 0;
+          transform-origin: top;
+        }
+        &.ringing {
+          .fa {
+            animation: ringingTheBellAnimation 0.2s cubic-bezier(0, 0.75, 1, 0.25) infinite;
+          }
+        }
+      }
+      button[data-action="video-conference-disconnect"] {
+        background: #bb0000;
+        color: #fff;
+        &:hover {
+          background-color: #cc0000;
+          color: #fff;
+        }
+        &:active {
+          background-color: #aa0000;
+          color: #fff;
+        }
+        .fa {
+          position: relative;
+          transform: rotate(135deg);
+          left: -5px;
+          &::after {
+            display: block;
+            content: " ";
+            width: 14px;
+            background: #bb0000;
+            border-top: 2px solid var(--button-default-bg);
+            border-bottom: 0px solid var(--button-default-bg);
+            position: absolute;
+            transform: rotate(180deg);
+            top: 9px;
+            left: -2px;
+          }
+        }
+      }
+      button[data-action="join-video-conference"] {
+        .privmx-icon.privmx-icon-videocall {
+          position: relative;
+          top: 2px;
+        }
+      }
+    }
+    
 
-    .chat-reply .voice-chat-people {
+    .chat-reply .voice-chat-people,
+    .chat-reply .video-conference-people {
       position: absolute;
       display: none;
       right: 20px;
@@ -444,6 +533,7 @@
       }
       .list {
         overflow-y: auto;
+        height: 100%;
       }
 
       canvas {
@@ -467,6 +557,71 @@
       padding-right: 0;
       margin-right: 5px;
     }
+}
+
+.btn .privmx-icon.privmx-icon-videocall {
+  font-size: 18px;
+  line-height: 18px;
+  top: 2px;
+  position: relative;
+}
+
+.actions-menu.actions-list {
+  font-size: var(--font-size);
+  color: var(--context-menu-fg);
+  
+  .action {
+    padding: 6px 15px 6px;
+    cursor: pointer;
+    
+    &:hover {
+      background-color: var(--context-menu-hover-bg);
+      color: var(--context-menu-hover-fg);
+    }
+  }
+  .ico {
+    margin-right: 6px;
+    width: 16px;
+    text-align: center;
+    display: inline-block;
+    
+    &:before {
+      vertical-align: top;
+      margin-top: 2px;
+    }
+  }
+  
+  .separator {
+    margin: 0;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border: none;
+  }
+}
+.component-dropdown.component-dropdown-new-file {
+  bottom: 40px;
+  top: auto;
+  position: fixed;
+  margin-left: 17px !important;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  
+  &:before {
+    margin-left: -5px;
+    top: auto;
+    bottom: -6px;
+    transform: rotate(180deg);
+    left: 20px;
+  }
+  
+  
+  span.close[data-action="close"] {
+    display: none;
+  }
+  
+  .separator {
+    margin: 5px 0;
+  }
 }
 
 @keyframes microphoneBlinkAnimation {

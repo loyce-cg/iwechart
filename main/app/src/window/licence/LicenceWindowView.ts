@@ -185,7 +185,8 @@ export class LicenceWindowView extends BaseWindowView<Model> {
         this.$pdfContainer.hide();
         this.makeCustomScroll(this.$htmlContainer);
         // this.makeCustomScroll(this.$inner);
-        this.$htmlContainer.find(".pf-content").append(data.buffer.toString());
+        let buff = Buffer.from(data.buffer);
+        this.$htmlContainer.find(".pf-content").append(buff.toString("utf8"));
     }
 
     

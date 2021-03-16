@@ -71,7 +71,7 @@ export class VoiceChatViewModule {
         this.currentServerApi.server_dingdong();
     }
     
-    toogleDebugLogLevel() {
+    toggleDebugLogLevel() {
         let logger = RootLogger.get("privfs-mail-client.mail.voicechat.api.OpusAudio");
         logger.setLevel(logger.getLevel() == RootLogger.DEBUG ? RootLogger.WARN : RootLogger.DEBUG);
         console.log("Setting log level to " + logger.getLevel().name)

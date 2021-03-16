@@ -1,0 +1,31 @@
+@import { Model } from "../DesktopPickerController";
+@import { func as _desktopPickerTabTemplate } from "./tab.html";
+@model Model
+{{
+  const desktopPickerTabTemplate = Helper.createTemplate(_desktopPickerTabTemplate);
+}}
+<div class="desktop-picker" data-state="hidden">
+  <div class="scrollable-content">
+    <div class="tabs">
+      <div class="tabs--headers">
+        {{ for (let tab of model.tabs) { }}
+          <span data-tab-id="{{@tab.id}}">{{@tab.header}}</span>
+        {{ } }}
+      </div>
+      <div class="tabs--containers">
+        {{ for (let tab of model.tabs) { }}
+          <div data-tab-id="{{@tab.id}}">
+            <div class="tab--header">
+              {{@tab.header}}
+            </div>
+            <div class="tab--content">
+              {{#desktopPickerTabTemplate.render(tab)}}
+            </div>
+          </div>
+        {{ } }}
+      </div>
+    </div>
+  </div>
+  <i class="fa fa-circle-o-notch fa-spin loading-indicator"></i>
+  <i class="fa fa-times close-button" data-action="cancel"></i>
+</div>

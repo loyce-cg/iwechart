@@ -1,10 +1,6 @@
 @import {Model} from "../SettingsTwofaWindowController";
 @model Model
 <div class="section twofa-section">
-  <div class="section-header">
-    <i class="fa fa-lock"></i>
-    {{@Helper.i18n("plugin.twofa.window.settingstwofa.header")}}
-  </div>
   <div class="section-info">
     {{#Helper.i18n("plugin.twofa.window.settingstwofa.info", "<b>", "</b>")}}
   </div>
@@ -39,6 +35,12 @@
             <label>
               <input type="radio" value="sms" vf-model="type" />
               {{@Helper.i18n("plugin.twofa.window.settingstwofa.type.value.sms")}}
+            </label>
+          }} } }}
+          {{ if (model.methods.indexOf("u2f") != -1) { {{
+            <label>
+              <input type="radio" value="u2f" vf-model="type" />
+              {{@Helper.i18n("plugin.twofa.window.settingstwofa.type.value.u2f")}}
             </label>
           }} } }}
         </div>

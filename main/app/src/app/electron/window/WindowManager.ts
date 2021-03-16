@@ -43,8 +43,7 @@ export class WindowManager {
             cut: controller.cut.bind(controller),
             paste: controller.paste.bind(controller),
         });
-        this.windows.push(window);
-        
+        this.windows.push(window);        
         return window;
     }
     
@@ -58,7 +57,7 @@ export class WindowManager {
     }
     
     onClosed(window: ElectronWindow): void {
-        let index = this.windows.indexOf(window);
+        let index = this.windows.findIndex(x => x.controllerId == window.controllerId);
         if (index != -1) {
             this.windows[index] = null;
             this.windows.splice(index, 1);

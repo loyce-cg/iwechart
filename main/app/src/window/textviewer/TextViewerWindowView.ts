@@ -8,7 +8,8 @@ import { KEY_CODES } from "../../web-utils/UI";
 
 @WindowView
 export class TextViewerWindowView extends BaseWindowView<Model> {
-    
+    private $text: JQuery;
+
     constructor(parent: app.ViewParent) {
         super(parent, mainTemplate);
     }
@@ -17,7 +18,14 @@ export class TextViewerWindowView extends BaseWindowView<Model> {
         return Q()
         .then(() => {
             this.$main.on("click", "[data-action=close]", this.onCloseClick.bind(this));
-            this.$main.find(".text").pfScroll();
+            this.$main.on("click", "[data-copy-textarea-id]", (e: Event) => this.helper.onTextAreaCopyClick(<MouseEvent>e));
+            if (! model.useTextArea) {
+                this.$text = this.$main.find(".text");
+                this.$text.pfScroll();
+                if (model.fontSize) {
+                    this.$text.css("font-size", "var(" + model.fontSize + ")");
+                }
+            }
         });
     }
     

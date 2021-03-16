@@ -12,7 +12,7 @@ export class HddStorage {
     
     constructor(dirPath: string) {
         if (!fs.existsSync(dirPath)) {
-            fs.mkdir(dirPath);
+            fs.mkdirSync(dirPath);
         }
         this.dirPath = dirPath;
     }
