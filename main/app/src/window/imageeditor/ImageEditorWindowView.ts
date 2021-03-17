@@ -64,6 +64,8 @@ export class DirtyState {
 export class ImageEditorWindowView extends BaseWindowView<Model> {
     
     static readonly MAX_FILENAME_WIDTH: number = 230;
+    static readonly AVAILABLE_ZOOM_LEVELS: number[] = [0.25, 0.375, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 4.0, 5.0];
+    static readonly DEFAULT_ZOOM_LEVEL_ID: number = 7;
     
     $toolbar: JQuery;
     tuiEditor: any;
@@ -81,8 +83,8 @@ export class ImageEditorWindowView extends BaseWindowView<Model> {
     taskChooser: TaskChooserView;
     currentDataUrl: string;
     isReadonly: boolean = false;
-    zoomLevels: number[] = [0.25, 0.375, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 4.0, 5.0];
-    zoomLevelId: number = 7;
+    zoomLevels: number[] = ImageEditorWindowView.AVAILABLE_ZOOM_LEVELS;
+    zoomLevelId: number = ImageEditorWindowView.DEFAULT_ZOOM_LEVEL_ID;
         
     constructor(parent: app.ViewParent) {
         super(parent, mainTemplate);
@@ -299,6 +301,7 @@ export class ImageEditorWindowView extends BaseWindowView<Model> {
         try {
             this.createEditor(url);
             this.$main.toggleClass("readonly", false);
+            this.setZoomLevelId(ImageEditorWindowView.DEFAULT_ZOOM_LEVEL_ID);
         } catch (e) {
             setTimeout(() => {
                 this.reopenEditor(url);
@@ -438,9 +441,11 @@ export class ImageEditorWindowView extends BaseWindowView<Model> {
         let img = new Image();
         img.onload = () => {
             this.images.push(img);
+            this.triggerEvent("detectImageSize", img.naturalWidth, img.naturalHeight);
             return defer.resolve();
         }
         img.src = url;
+        this.setZoomLevelId(ImageEditorWindowView.DEFAULT_ZOOM_LEVEL_ID);
         return defer.promise;
     }
     
@@ -452,6 +457,11 @@ export class ImageEditorWindowView extends BaseWindowView<Model> {
             URL.revokeObjectURL(this.currentDataUrl);
         }
         this.currentDataUrl = WebUtils.createObjectURL(data);
+        let img = new Image();
+        img.onload = () => {
+            this.triggerEvent("detectImageSize", img.naturalWidth, img.naturalHeight);
+        };
+        img.src = this.currentDataUrl;
         this.reopenEditor(this.currentDataUrl);
     }
     
@@ -589,64 +599,82 @@ export class ImageEditorWindowView extends BaseWindowView<Model> {
     }
     
     setZoomLevelId(zoomLevelId: number): void {
-        if (this.zoomLevelId == zoomLevelId) {
-            return;
-        }
         this.zoomLevelId = zoomLevelId;
         let zoomLevel = this.zoomLevels[this.zoomLevelId];
         let $elem = this.$main.find("#tui-image-editor .tui-image-editor-wrap");
         if ($elem.length == 0) {
             $elem = this.$main.find("#canvas-container img");
-            $elem.css("position", "relative");
         }
+        $elem.css("position", "relative");
         $elem.css("transform", `scale(${zoomLevel})`);
-        if (zoomLevel < 1.0001) {
-            $elem.off("mousewheel.wheelmove");
-            $elem.css({
-                left: "initial",
-                top: "initial",
-            });
-            return;
-        }
-        else {
-            let x = parseInt($elem.css("left")) || 0;
-            let y = parseInt($elem.css("top")) || 0;
-            [x, y] = this.adjustMarginCoords($elem, x, y, zoomLevel);
-            $elem.css("left", x + "px");
-            $elem.css("top", y + "px");
-        }
-        $elem.off("mousewheel.wheelmove").on("mousewheel.wheelmove", e => {
+        let x = parseInt($elem.css("left")) || 0;
+        let y = parseInt($elem.css("top")) || 0;
+        [x, y] = this.adjustCoordsToMakeImgVisible($elem, x, y);
+        $elem.css("left", x + "px");
+        $elem.css("top", y + "px");
+        $elem.parent().off("mousewheel.wheelmove").on("mousewheel.wheelmove", e => {
             let x = parseInt($elem.css("left")) || 0;
             let y = parseInt($elem.css("top")) || 0;
             let d = (<any>e).originalEvent.wheelDelta / 4;
             if (e.shiftKey) {
                 x += d;
-                [x, y] = this.adjustMarginCoords($elem, x, y, zoomLevel);
+                [x, y] = this.adjustCoordsToMakeImgVisible($elem, x, y);
                 $elem.css("left", x + "px");
             }
             else {
                 y += d;
-                [x, y] = this.adjustMarginCoords($elem, x, y, zoomLevel);
+                [x, y] = this.adjustCoordsToMakeImgVisible($elem, x, y);
                 $elem.css("top", y + "px");
             }
         });
     }
     
-    adjustMarginCoords($img: JQuery, x: number, y: number, _zoomLevel: number): [number, number] {
-        let box = { left0: 0, top0: 0, left1: 0, top1: 0 };
+    adjustCoordsToMakeImgVisible($img: JQuery, x: number, y: number): [number, number] {
+        $img = $img.find("canvas.lower-canvas");
         let imgW = $img.width();
         let imgH = $img.height();
-        let $parent = $img.closest(".tui-image-editor-main, #canvas-container");
+        let $parent = $img.closest(".tui-image-editor-main-container, #canvas-container");
         let parentW = $parent.width();
         let parentH = $parent.height();
         
-        box.left0 = -(imgW - parentW) / 2;
-        box.left1 = (imgW - parentW) / 2;
-        box.top0 = -(imgH - parentH) / 2;
-        box.top1 = (imgH - parentH) / 2;
+        let offsetX = (parentW - imgW) / 2;
+        let offsetY = (parentH - imgH) / 2;
+        let imgBox = {
+            x0: offsetX + x,
+            y0: offsetY + y,
+            x1: offsetX + x + imgW,
+            y1: offsetY + y + imgH,
+        };
+        let containerBox = {
+            x0: 0,
+            y0: 0,
+            x1: 0 + parentW,
+            y1: 0 + parentH,
+        };
+        let minVisibleSize = 64;
+        let viewBox = {
+            x0: containerBox.x0 + minVisibleSize,
+            y0: containerBox.y0 + minVisibleSize,
+            x1: containerBox.x1 - minVisibleSize,
+            y1: containerBox.y1 - minVisibleSize,
+        };
         
-        x = Math.min(Math.max(x, box.left0), box.left1);
-        y = Math.min(Math.max(y, box.top0), box.top1);
+        if (imgBox.x1 < viewBox.x0) {
+            // Image too far left
+            x += viewBox.x0 - imgBox.x1;
+        }
+        else if (imgBox.x0 > viewBox.x1) {
+            // Image too far right
+            x -= imgBox.x0 - viewBox.x1;
+        }
+        if (imgBox.y1 < viewBox.y0) {
+            // Image too far up
+            y += viewBox.y0 - imgBox.y1;
+        }
+        else if (imgBox.y0 > viewBox.y1) {
+            // Image too far down
+            y -= imgBox.y0 - viewBox.y1;
+        }
         
         return [x, y];
     }

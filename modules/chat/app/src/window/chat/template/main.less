@@ -12,6 +12,7 @@
 @import "../../../../node_modules/pmc-web/src/component/sidebar/index.less";
 @import "../../../component/chatmessages/template/main.less";
 @import "../../../component/privateconversations/template/main.less";
+@import "../../../component/videoconference/template/main.less";
 @import "../../../component/nosections/template/main.less";
 @import "../../../../node_modules/pmc-web/src/component/disabledsection/index.less";
 
@@ -42,6 +43,20 @@
 
 .component-splitter-panel {
   background: transparent;
+}
+
+.window-chat-main:not(.with-video-conference) {
+  .preview-splitter {
+    &>.component-splitter-panel-left {
+      width: 100% !important;
+    }
+    &>.component-splitter-panel-right {
+      display: none;
+    }
+    &>.component-splitter-handle {
+      display: none;
+    }
+  }
 }
 
 

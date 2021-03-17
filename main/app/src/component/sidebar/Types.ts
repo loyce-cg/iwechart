@@ -1,0 +1,9 @@
+export enum SidebarElementType {
+    CUSTOM_ELEMENT,
+    SECTION,
+    CUSTOM_SECTION,
+    CONVERSATION,
+    HOST,
+    REMOTE_SECTION,
+    REMOTE_CONVERSATION
+}

@@ -415,6 +415,7 @@ export class ContentEditableEditor {
         this.$elem.on("blur", options.onBlur || this.onBlur.bind(this));
         this.$elem.on("focus", options.onFocus || this.onFocus.bind(this));
         this.$elem.on("click", this.onClick.bind(this));
+        this.$elem.addClass("privmx-content-editable-editor");
         if (options.onChange) {
             this.$elem.on("input", options.onChange);
         }
@@ -740,6 +741,11 @@ export class ContentEditableEditor {
                 return null;
             }
         }
+        const $startContainerEditorElement = $(range.startContainer).closest(".privmx-content-editable-editor");
+        const $endContainerEditorElement = $(range.endContainer).closest(".privmx-content-editable-editor");
+        if ($startContainerEditorElement[0] != this.$elem[0] || $endContainerEditorElement[0] != this.$elem[0]) {
+            return null;
+        }
         return range;
     }
     
@@ -1035,6 +1041,9 @@ export class ContentEditableEditor {
         if (!rng) {
             return;
         }
+        if (document.activeElement != this.$elem[0]) {
+            this.$elem[0].focus();
+        }
         
         // Get number of characters to delete
         let leftText = this.getLeftText();
@@ -1065,6 +1074,9 @@ export class ContentEditableEditor {
         let rng = this.getFirstRange();
         if (!rng) {
             return;
+        }
+        if (document.activeElement != this.$elem[0]) {
+            this.$elem[0].focus();
         }
         
         // Get number of characters to delete
@@ -1393,7 +1405,7 @@ export class ContentEditableEditor {
         return unescape(decodeURIComponent(window.atob(str)));
     }
     
-    static convertTasksAndFiles(text: string, taskStatuses: { [taskId: string]: string } = null, metaData: ContentEditableEditorMetaData = null): string {
+    static convertTasksAndFiles(text: string, taskStatuses: { [taskId: string]: string } = null, metaData: ContentEditableEditorMetaData = null, fileLinkTitle?: string): string {
         if (taskStatuses) {
             text = text.replace(/\B#[0-9]{3,}\b/g, <any>((taskHashId: string) => {
                 let taskId = taskHashId.substr(1);
@@ -1414,7 +1426,7 @@ export class ContentEditableEditor {
                 text = text
                     .split(`${entry.userFriendlyId}`)
                     // .join(`<span class="file-label link" data-meta-data="${btoa(JSON.stringify(entry))}"><i class="${entry.icon||"fa fa-file-o"}"></i>${userFriendlyId}</span>`);
-                    .join(`<span class="file-label link" data-meta-data="${this.utf8ToBase64(JSON.stringify(entry))}"><i class="${entry.icon||"fa fa-file-o"}"></i>${userFriendlyId}</span>`);
+                    .join(`<span class="file-label link" data-meta-data="${this.utf8ToBase64(JSON.stringify(entry))}"${fileLinkTitle ? ' title="' + fileLinkTitle + '"' : ''}><i class="${entry.icon||"fa fa-file-o"}"></i>${userFriendlyId}</span>`);
                 }
         }
         return text;

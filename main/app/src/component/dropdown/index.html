@@ -2,7 +2,7 @@
 @type <T>
 @model T
 @context Options<T>
-<div class="component-dropdown">
+<div class="component-dropdown {{@context.extraClasses ? context.extraClasses.join(' ') : ''}}">
   <span class="close" data-action="close">&times;</span>
   <div class="inner">
     {{#context.template.render(model)}}

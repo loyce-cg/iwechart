@@ -1,15 +1,14 @@
-import {component, mail, privfs, utils, window, Types, Q, app} from "pmc-mail";
+import {component, mail, privfs, utils, window, Types, Q, app, Logger as RootLogger} from "pmc-mail";
 import {ChatMessagesController, MessagesFilterUpdater, ChatUpdateSearchStatsEvent, UpdateVoiceChatUsersEvent} from "../../component/chatmessages/ChatMessagesController";
 import {ChatMessage} from "../../main/ChatMessage";
 import {ChatType} from "../../main/Types";
-import {ChatPlugin, ChatComponentFactory, ChatValidMessageTypeForUnreadChangeEvent, ChatValidMessageTypeForDisplayChangeEvent, GUISettings, RequestOpenChatEvent, UpdateChatSidebarSpinnersEvent, MarkedChatsAsReadEvent} from "../../main/ChatPlugin";
+import {ChatPlugin, ChatComponentFactory, ChatValidMessageTypeForUnreadChangeEvent, ChatValidMessageTypeForDisplayChangeEvent, GUISettings, RequestOpenChatEvent, UpdateChatSidebarSpinnersEvent, MarkedChatsAsReadEvent } from "../../main/ChatPlugin";
 import Inject = utils.decorators.Inject;
 import Dependencies = utils.decorators.Dependencies;
 import { PrivateConversationsController } from "../../component/privateconversations/PrivateConversationsController";
 import { i18n } from "./i18n/index";
 import { NoSectionsController } from "../../component/nosections/NoSectionsController";
-
-
+const Logger = RootLogger.get("privfs-chat-plugin.ChatWindowController");
 export interface Model {
     hashmail: string;
     domain: string;
@@ -33,7 +32,7 @@ interface SearchResults {
     }
 }
 
-@Dependencies(["chatmessages", "conv2list", "remoteconv2list", "remotesectionlist", "persons", "extlist", "splitter", "sectionlist", "sectionstabs", "sidebar", "privateconversations", "nosections"])
+@Dependencies(["chatmessages", "conv2list", "remoteconv2list", "remotesectionlist", "persons", "extlist", "splitter", "sectionlist", "sectionstabs", "sidebar", "privateconversations","nosections", "videoconference"])
 export class ChatWindowController extends window.base.BaseAppWindowController {
     
     static textsPrefix: string = "plugin.chat.window.chat.";
@@ -53,12 +52,13 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
     @Inject localStorage: Types.utils.IStorage;
     @Inject collectionFactory: mail.CollectionFactory;
     @Inject contactService: mail.contact.ContactService;
-    
     sidebarOptions: component.sidebar.SidebarOptions;
     sidebar: component.sidebar.SidebarController;
     loading: component.loading.LoadingController;
     personsComponent: component.persons.PersonsController;
     sectionsSplitter: component.splitter.SplitterController;
+    previewSplitter: component.splitter.SplitterController;
+    // videoConference: VideoConferenceController;
     messages: {[id: string]: ChatMessagesController};
     remoteServers: {[hostHash: string]: component.remotehostlist.HostEntry};
     privateConversations: PrivateConversationsController;
@@ -79,6 +79,7 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
             isPublic: false,
             subs: {
                 "splitter-vertical": {defaultValue: 340},
+                "splitter-vertical2": {defaultValue: 340},
                 "chat-channels-splitter-vertical": {defaultValue: 200},
                 "chat-splitter-horizontal": {defaultValue: 170},
                 "left-panel-sections-splitter-proportional": { defaultValue: JSON.stringify({handlePos:250,totalSize:1000}) },
@@ -96,6 +97,7 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
         this.sectionTooltip = this.addComponent("sectiontooltip", this.componentFactory.createComponent("sectiontooltip", [this]));      
         this.loading = this.addComponent("loading", this.componentFactory.createComponent("loading", [this]));  
         this.enableTaskBadgeAutoUpdater();
+        this.addViewScript({ path: "build/jitsi/lib-jitsi-meet.min.js", plugin: "chat" });
     }
         
     onPrimarySectionChange(event: Types.utils.collection.CollectionEvent<mail.section.SectionService>) {
@@ -176,15 +178,7 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
                 
                 conv2ListEnabled: true,
                 conv2Splitter: this.settings.create("left-panel-sections-splitter-proportional"),
-                sidebarButtons: [
-                  {
-                    id: "new-chat",
-                    label: this.i18n("plugin.chat.window.chat.button.newChat.label"),
-                    title: this.i18n("plugin.chat.window.chat.button.newChat.title"),
-                    icon: "ico-comment",
-                    windowOpener: true
-                }
-              ]
+                sidebarButtons: []       
             };
             if (identityProvider.getRights().indexOf("normal") != -1) {
                 sidebarOptions.sidebarButtons.push(
@@ -195,25 +189,40 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
                         icon: "ico-comment",
                         windowOpener: true,
                         onSectionList: true
+                    },
+                    {
+                        id: "new-chat",
+                        label: this.i18n("plugin.chat.window.chat.button.newChat.label"),
+                        title: this.i18n("plugin.chat.window.chat.button.newChat.title"),
+                        icon: "ico-comment",
+                        windowOpener: true,
                     }
                 );
+            }
+            if (identityProvider.getType() == "basic") {
+                sidebarOptions.sidebarButtons.push(
+                    <any>{
+                        id: "new-chat",
+                        label: this.i18n("plugin.chat.window.chat.button.newChat.label"),
+                        title: this.i18n("plugin.chat.window.chat.button.newChat.titleForBasic"),
+                        icon: "ico-comment",
+                        windowOpener: true,
+                        disabled: true,
+                    }    
+                )
             }
             
             this.sidebarOptions = sidebarOptions;
             this.sidebar = this.addComponent("sidebar", this.componentFactory.createComponent("sidebar", [this, sidebarOptions]));
-            this.sidebar.addEventListener("elementbeforeactivate", this.onBeforeActivateSidebarElement.bind(this));
-            this.sidebar.addEventListener("elementactivated", this.onActivatedSidebarElement.bind(this));
-
-            // this.sidebar.addEventListener("hostbeforeactivate", this.onBeforeActivateHostElement.bind(this));
-            // this.sidebar.addEventListener("hostactivated", this.onActivatedHostElement.bind(this));
-
-            this.sidebar.addEventListener("sidebarbuttonaction", this.onSidebarButtonAction.bind(this));
+            this.bindEvent(this.sidebar, "elementbeforeactivate", this.onBeforeActivateSidebarElement.bind(this));
+            this.bindEvent(this.sidebar, "elementactivated", this.onActivatedSidebarElement.bind(this));
+            this.bindEvent(this.sidebar, "sidebarbuttonaction", this.onSidebarButtonAction.bind(this));
             this.sidebar.usersListTooltip.getContent = (sectionId: string): string => {
                 return this.app.getUsersListTooltipContent(this.app.sessionManager.getLocalSession(), sectionId);
             }
 
             this.chatPlugin.chatPrimarySections[localSession.hostHash].changeEvent.add(this.onPrimarySectionChange.bind(this));
-            this.sectionManager.sectionAccessManager.eventDispatcher.addEventListener<Types.event.SectionStateChangedEvent>("section-state-changed", event => {
+            this.bindEvent<Types.event.SectionStateChangedEvent>(this.sectionManager.sectionAccessManager.eventDispatcher, "section-state-changed", event => {
                 if (this.activeMessages && this.activeMessages.chatInfo && this.activeMessages.chatInfo.type == ChatType.CHANNEL && this.activeMessages.chatInfo.section.getId() == event.sectionId) {
                     Q().then(() => {
                         return this.sectionManager.load();
@@ -234,17 +243,17 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
                         }
                     })
                 }
-            }, "chat");
+            });
                     
-            this.app.addEventListener("reopen-section", (event: component.disabledsection.ReopenSectionEvent) => {
+            this.bindEvent(this.app, "reopen-section", (event: component.disabledsection.ReopenSectionEvent) => {
                 this.openChannelView(localSession, event.element.getId(), true);
-            }, "chat");
+            });
             
-            this.app.addEventListener<Types.event.SectionsLimitReachedEvent>("sectionsLimitReached", event => {
+            this.bindEvent<Types.event.SectionsLimitReachedEvent>(this.app, "sectionsLimitReached", event => {
                 this.sidebar.onSectionsLimitReached(event.reached);
             });
 
-            this.app.addEventListener("requestopenchat", (event: RequestOpenChatEvent) => {
+            this.bindEvent(this.app, "requestopenchat", (event: RequestOpenChatEvent) => {
                 let hashmails = event.hashmails.filter(x => this.personService.getPerson(x) != null && this.personService.getPerson(x).contact != null);
                 if (hashmails.length == 0) {
                     this.alert(this.i18n("plugin.chat.window.chat.cantCreateConversationWithoutUsers"));
@@ -255,51 +264,36 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
                 }
                 else {
                     let convId = this.conv2Service.getConvIdFromHashmails(hashmails);
-                    this.app.viewContext = convId;
+                    const context = app.common.Context.create({
+                        moduleName: Types.section.NotificationModule.CHAT,
+                        contextType: "conversation",
+                        contextId: convId,
+                        hostHash: this.app.sessionManager.getLocalSession().hostHash
+                    });
+                    this.contextHistory.append(context); 
                     this.openChatOrConversationView(convId, true);
                 }
-            }, "chat");
+            });
 
-            this.app.addEventListener("focusLost", () => {
+            this.bindEvent(this.app, "focusLost", () => {
                 this.callViewMethod("pauseTimeAgoRefresher");
-            }, "chat");
+            });
             
-            this.app.addEventListener("focusChanged", event => {
-                if ((<any>event).windowId == "main-window") {
-                    this.callViewMethod("resumeTimeAgoRefresher");
-                }
-            }, "chat");
-            
-            this.app.addEventListener<UpdateChatSidebarSpinnersEvent>("update-chat-sidebar-spinners", e => {
+            this.bindEvent<UpdateChatSidebarSpinnersEvent>(this.app, "update-chat-sidebar-spinners", e => {
                 this.sidebar.updateSidebarSpinners({
                     conv2SectionId: e.conv2SectionId,
                     customElementId: e.customElementId,
                     sectionId: e.sectionId,
                     hosts: e.hostHash ? [this.app.sessionManager.getSessionByHostHash(e.hostHash).host] : Object.values(this.app.sessionManager.sessions).map(x => x.host),
                 });
-            }, "chat");
-            
-            this.app.addEventListener<MarkedChatsAsReadEvent>("marked-chats-as-read", event => {
-                // let hostHashes: { [hostHash: string]: boolean } = {};
-                // for (let hostHash in this.sidebar.remoteConv2Lists) {
-                //     this.sidebar.remoteConv2Lists[hostHash].sortedCollection.rebuild();
-                //     hostHashes[hostHash] = true;
-                // }
-                // for (let hostHash in this.sidebar.remoteSectionsLists) {
-                //     this.sidebar.remoteSectionsLists[hostHash].sortedCollection.rebuild();
-                //     hostHashes[hostHash] = true;
-                // }
-                // for (let hostHash in hostHashes) {
-                //     let session = this.app.sessionManager.getSessionByHostHash(hostHash);
-                //     this.updateSidebarHostElement(session);
-                // }
             });
-
+            
             this.personsComponent = this.addComponent("personsComponent", this.componentFactory.createComponent("persons", [this]));
             this.privateConversations = this.addComponent("private-conversations", this.componentFactory.createComponent("privateconversations", [this]));
             this.disabledSection = this.addComponent("disabled-section", this.componentFactory.createComponent("disabledsection", [this, Types.section.NotificationModule.CHAT]));
             this.noSections = this.addComponent("no-sections", this.componentFactory.createComponent("nosections", [this]));
             this.sectionsSplitter = this.addComponent("sectionsSplitter", this.componentFactory.createComponent("splitter", [this, this.settings.create("splitter-vertical")]));
+            this.previewSplitter = this.addComponent("previewSplitter", this.componentFactory.createComponent("splitter", [this, this.settings.create("splitter-vertical2")]));
             this.messages = {};
             
             this.registerChangeEvent(this.sinkIndexManager.sinkIndexCollection.changeEvent, this.onSinkChange);
@@ -320,31 +314,34 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
                 }
             });
             
-            this.app.addEventListener("focusChanged", (event) => {
+            this.bindEvent(this.app, "focusChanged", (event) => {
                 let windowId = (<any>event).windowId;
                 this.chatPlugin.activeWindowFocused = windowId == "main-window" || windowId == "focus-restored" ? this.parent.activeModel.get() : windowId;
                 if (windowId == "chat" || (windowId == "main-window" && this.parent.activeModel.get() == "chat") ) {
                     setTimeout(() => {
                         this.refreshActivePanelThumbs();
+                        if ((<any>event).windowId == "main-window") {
+                            this.callViewMethod("resumeTimeAgoRefresher");
+                        }
                         this.callViewMethod("grabFocus", true);
                     }, 200);
                 }
-            }, "chat");
+            });
 
 
-            this.app.addEventListener("focusLost", (event) => {
+            this.bindEvent(this.app, "focusLost", (event) => {
                 this.chatPlugin.activeWindowFocused = null;
-            }, "chat");
+            });
 
         
-            this.addEventListener("chatupdatesearchstatsevent", this.onChatUpdateSearchStatsEvent.bind(this), "chat");
+            this.bindEvent(this, "chatupdatesearchstatsevent", this.onChatUpdateSearchStatsEvent.bind(this));
             
             
-            this.app.addEventListener("onToggleMaximize-notify", () => {
+            this.bindEvent(this.app, "onToggleMaximize-notify", () => {
                 setTimeout(() => {
                     this.callViewMethod("grabFocus", false);
                 }, 10);
-            }, "chat");
+            });
             
             this.registerChangeEvent(this.app.searchModel.changeEvent, this.onFilterMessages, "multi");
             if (this.app.searchModel.data.visible && this.app.searchModel.data.value != "") {
@@ -359,14 +356,12 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
             });
 
 
-            this.app.addEventListener<Types.event.VoiceChatUsersPresenceChangeEvent>("voice-chat-users-presence-change", event => { 
+            this.bindEvent<Types.event.VoiceChatUsersPresenceChangeEvent>(this.app, "voice-chat-users-presence-change", event => { 
                 this.updateActiveVoiceChatUsersView(event.hostHash, event.sectionId);
-            }, "chat");
+            });
 
-            this.app.addEventListener<UpdateVoiceChatUsersEvent>("update-voice-chat-users", event => {
-                Q().then(() => {
-                    return this.sidebar.getVoiceChatSectionsStates();
-                })
+            this.bindEvent<UpdateVoiceChatUsersEvent>(this.app, "update-voice-chat-users", event => {
+                this.onUpdateVoiceChatUsers(event);
             })
 
             this.app.dispatchEvent({type: "focusChanged", windowId: "chat"});
@@ -375,6 +370,39 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
             let tasksPlugin = this.app.getComponent("tasks-plugin");
             return tasksPlugin.projectsReady;
         });
+    }
+
+    async onUpdateVoiceChatUsers(event: UpdateVoiceChatUsersEvent): Promise<void> { 
+        if (! this.app.serverConfigForUser.privmxStreamsEnabled) {
+            return;
+        }
+        if (event.sectionId) {
+            const session = this.app.sessionManager.getSessionByHostHash(event.hostHash);
+            let section = this.getSectionServiceFromConvIdOrSectionId(session, event.sectionId);
+            if (!section) {
+                return;
+            }
+            try {
+                let api = this.app.sessionManager.getVoiceChatServiceApi(event.hostHash);
+                let data = await api.getRoomInfo(section);
+                session.webSocketNotifier._notifyVoiceChatUsersChange(session, data.users, event.sectionId);    
+            }
+            catch (e) {
+                Logger.warn("voice chat unavailable");
+            }             
+        }
+    }
+
+    getSectionServiceFromConvIdOrSectionId(session: mail.session.Session, sectionOrConvId: string): mail.section.SectionService {
+        let conv = session.conv2Service.collection.find(x => x.section && (x.section.getId() == sectionOrConvId || x.id == sectionOrConvId));
+        let sectionService: mail.section.SectionService;
+        if (conv) {
+            sectionService = conv.section;
+        }
+        else {
+            sectionService = session.sectionManager.getSection(sectionOrConvId);
+        }
+        return sectionService;
     }
     
     getUsergroupIdByMessagesId(session: mail.session.Session, id: string): string {
@@ -454,7 +482,7 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
         this.callViewMethod("activateMessages", activeElementInfo);
         this.callViewMethod("changeIsSearchOn", this.isSearchOn);
         
-        this.initSpellChecker(this.chatPlugin.userPreferences);
+        this.initSpellChecker();
         let localSession = this.app.sessionManager.getLocalSession();
         this.sidebar.toggleCustomElements(this.chatPlugin.chatPrimarySections[localSession.hostHash].list.length > 0);
     }
@@ -499,72 +527,84 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
     
     applyHistoryState(processed: boolean, state: string) {
         let localSession = this.app.sessionManager.getLocalSession();
-        if (this.app.viewContext) {
-            let contextData = this.app.viewContext.split(":");
-            
-            if (this.app.switchModuleWithContext()) {
-                if (contextData[0] == "section") {
-                    let contextSection = this.chatPlugin.sectionManager.getSection(contextData[1]);
+        let context = this.contextHistory.getCurrent();
+
+        let handled: boolean = false;
+        if (context) {
+            if (this.app.switchModuleWithContext() || state) {
+                
+                if (context.getType() == "section") {
+                    let contextSection = this.chatPlugin.sectionManager.getSection(context.getSectionIdFromContextId());
                     if (contextSection && contextSection.isChatModuleEnabled()) {
-                        this.openChannelView(localSession, contextData[1]);
-                        return;
+                        this.openChannelView(localSession, context.getSectionIdFromContextId());
+                        handled = true;
                     }
                 }
                 else
-                if (contextData[0] == "c2") {
-                    this.openChatOrConversationView(this.app.viewContext);
-                    return;
+                if (context.getType() == "conversation") {
+                    this.openChatOrConversationView(context.getContextId());
+                    handled = true;
                 }
                 else
-                if (contextData[0] == "custom") {
-                    if (contextData[1] == "my") {
+                if (context.getType() == "custom") {
+                    if (context.getContextId() == "my") {
                         if (this.chatPlugin.chatPrimarySections[localSession.hostHash].list.length > 0) {
                             this.openChannelView(localSession, this.chatPlugin.chatPrimarySections[localSession.hostHash].get(0).getId());
                         }
                         else {
                             this.openPrivateConversationsView();
                         }
-                        return;
+                        handled = true;
                     }
                 }
             }
         }
         this.app.resetModuleSwitchingModifier();
-        
-        if (processed) {
-            this.reopenChat();
+        if (handled) {
+            return;
         }
-        else {
-            if (state) {
-                if (state == ChatWindowController.MY_PRIVATE) {
-                    this.openPrivateConversationsView();
-                }
-                else if (this.getConversationIfExists(state) == null)  {
-                    this.openChannelView(localSession, state);
-                }
-                else {
-                    this.openChatOrConversationView(state);
-                }
+        if (state) {
+            if (state == ChatWindowController.MY_PRIVATE) {
+                this.openPrivateConversationsView();
+            }
+            else if (this.getConversationIfExists(state) == null)  {
+                this.openChannelView(localSession, state);
             }
             else {
-                this.openLastActiveChat().fail(this.errorCallback);
+                this.openChatOrConversationView(state);
             }
+        }
+        else {
+            this.openLastActiveChat().fail(this.errorCallback);
         }
     }
     
     openLastActiveChat(): Q.Promise<void> {
+        const moduleName = Types.section.NotificationModule.CHAT;
         let localSession = this.app.sessionManager.getLocalSession();
         return Q().then(() => {
             return this.localStorage.get("last-active-chat");
         })
         .then((lastActiveChat: string) => {
             if (lastActiveChat == ChatWindowController.MY_PRIVATE) {
-                this.app.viewContext = "custom:" + ChatWindowController.MY_PRIVATE;
+                const context = app.common.Context.create({
+                    moduleName: moduleName,
+                    contextType: "custom",
+                    contextId: ChatWindowController.MY_PRIVATE,
+                    hostHash: this.app.sessionManager.getLocalSession().hostHash
+                });
+                this.contextHistory.append(context); 
                 this.openPrivateConversationsView();
                 return;
             }
             if (this.getConversationIfExists(lastActiveChat) != null) {
-                this.app.viewContext = lastActiveChat;
+                const context = app.common.Context.create({
+                    moduleName: moduleName,
+                    contextType: "conversation",
+                    contextId: lastActiveChat,
+                    hostHash: this.app.sessionManager.getLocalSession().hostHash
+                });
+                this.contextHistory.append(context); 
                 this.openChatOrConversationView(lastActiveChat);
                 return;
             }
@@ -573,7 +613,13 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
                 section = this.sidebar.sectionList.sectionsCollection.get(0);
             }
             if (section) {
-                this.app.viewContext = "section:" + section.getId();
+                const context = app.common.Context.create({
+                    moduleName: moduleName,
+                    contextType: "section",
+                    contextId: "section:" + section.getId(),
+                    hostHash: this.app.sessionManager.getLocalSession().hostHash
+                });
+                this.contextHistory.append(context); 
                 return this.openChannelView(localSession, section.getId());
             }
             if (lastActiveChat == null) {
@@ -585,12 +631,22 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
     openAnyChat(): void {
         const firstConv = this.chatPlugin.conv2Service.collection ? this.chatPlugin.conv2Service.collection.get(0): null;
         if (firstConv) {
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.CHAT,
+                contextType: "conversation",
+                contextId: firstConv.id,
+                hostHash: this.app.sessionManager.getLocalSession().hostHash
+            });
+            this.contextHistory.append(context); 
             this.openChatOrConversationView(firstConv.id);
         }     
     }
     
     reopenChat(): void {
         let active = this.sidebar.getActive();
+        if (!active) {
+            return;
+        }
         if (active.type == component.sidebar.SidebarElementType.CONVERSATION) {
             this.openChatOrConversationView(active.conv2.id);
         }
@@ -813,20 +869,6 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
             return null;
         }
         return conversation;
-    }
-
-    refreshConversation(conversation: mail.section.Conv2Section): void {
-        if (this.networkIsDown()) {
-            this.showOfflineError();
-            return;
-        }
-        let controller = this;
-        conversation.persons.forEach(person => {
-            if (person.hasContact()) {
-                controller.contactService.refreshContact(person.getHashmail(), true)
-                .fail(controller.logErrorCallback);
-            }
-        });
     }
     
     //===========================
@@ -1264,34 +1306,71 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
     //===========================
     
     onBeforeActivateSidebarElement(event: component.sidebar.ElementBeforeActivateEvent) {
+        const moduleName = "chat";
         event.result = false;
         if (event.element.type == component.sidebar.SidebarElementType.HOST) {
             this.expandRemoteSectionsList(event.element.host);
         }
         else if (event.element.type == component.sidebar.SidebarElementType.REMOTE_SECTION) {
-            this.app.viewContext = "section:" + event.element.section.getId();
+            const context = app.common.Context.create({
+                moduleName: moduleName,
+                contextType: "remote-section",
+                contextId: "section:" + event.element.section.getId(),
+                hostHash: event.element.hostHash
+                
+            });
+            this.contextHistory.append(context);            
             this.openRemoteChannelView(event.element.hostHash, event.element.section.getId());
         }
         else if (event.element.type == component.sidebar.SidebarElementType.REMOTE_CONVERSATION) {
-            this.app.viewContext = event.element.conv2.id;
-
+            const context = app.common.Context.create({
+                moduleName: moduleName,
+                contextType: "remote-conversation",
+                contextId: event.element.conv2.id,
+                hostHash: event.element.hostHash
+            });
+            this.contextHistory.append(context);            
             this.openRemoteChatOrConversationView(event.element.hostHash, event.element.conv2.id, false);
         }
 
         else if (event.element.type == component.sidebar.SidebarElementType.CONVERSATION) {
-            this.app.viewContext = event.element.conv2.id;
+            const context = app.common.Context.create({
+                moduleName: moduleName,
+                contextType: "conversation",
+                contextId: event.element.conv2.id,
+                hostHash: this.app.sessionManager.getLocalSession().hostHash
+            });
+            this.contextHistory.append(context);            
             this.openChatOrConversationView(event.element.conv2.id, false);
         }
         else if (event.element.type == component.sidebar.SidebarElementType.SECTION) {
-            this.app.viewContext = "section:" + event.element.section.getId();
+            const context = app.common.Context.create({
+                moduleName: moduleName,
+                contextType: "section",
+                contextId: event.element.section.getId(),
+                hostHash: this.app.sessionManager.getLocalSession().hostHash
+            });
+            this.contextHistory.append(context);            
             this.openChannelView(this.app.sessionManager.getLocalSession(), event.element.section.getId());
         }
         else if (event.element.type == component.sidebar.SidebarElementType.CUSTOM_SECTION) {
-            this.app.viewContext = "section:" + event.element.section.getId();
+            const context = app.common.Context.create({
+                moduleName: moduleName,
+                contextType: "custom",
+                contextId: event.element.section.getId(),
+                hostHash: this.app.sessionManager.getLocalSession().hostHash
+            });
+            this.contextHistory.append(context);            
             this.openChannelView(this.app.sessionManager.getLocalSession(), event.element.section.getId());
         }
         else if (event.element.type == component.sidebar.SidebarElementType.CUSTOM_ELEMENT) {
-            this.app.viewContext = "custom:" + event.element.customElement.id;
+            const context = app.common.Context.create({
+                moduleName: moduleName,
+                contextType: "custom",
+                contextId: event.element.customElement.id,
+                hostHash: this.app.sessionManager.getLocalSession().hostHash
+            });
+            this.contextHistory.append(context);            
 
             if (event.element.customElement.id == ChatWindowController.MY_PRIVATE) {
                 this.openPrivateConversationsView();
@@ -1304,7 +1383,6 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
         if (event.element.type == component.sidebar.SidebarElementType.HOST) {
         }
         if (event.element.type == component.sidebar.SidebarElementType.CONVERSATION) {
-            this.refreshConversation(event.element.conv2);
             this.refreshActive(localSession);
         }
         else if (event.element.type == component.sidebar.SidebarElementType.SECTION) {
@@ -1312,7 +1390,6 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
         }
         if (event.element.type == component.sidebar.SidebarElementType.REMOTE_CONVERSATION) {
             let session = this.app.sessionManager.getSessionByHostHash(event.element.hostHash);
-            this.refreshRemoteConversation(session, event.element.conv2);
             this.refreshActive(session);
         }
         else if (event.element.type == component.sidebar.SidebarElementType.REMOTE_SECTION) {
@@ -1326,7 +1403,7 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
     }
     
     onSidebarButtonAction(event: component.sidebar.SidebarButtonActionEvent) {
-        if (event.sidebarButton.id == "new-chat") {
+        if (event.sidebarButton.id == "new-chat" && !(<any>event.sidebarButton).disabled) {
             this.openNewChat();
         }
         if (event.sidebarButton.id == "new-section") {
@@ -1436,7 +1513,13 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
             this.app.openSingletonWindow("selectContacts-" + singletonSuffix , win);
             win.getPromise().then(hashmails => {
                 let convId = this.conv2Service.getConvIdFromHashmails(hashmails);
-                this.app.viewContext = convId;
+                const context = app.common.Context.create({
+                    moduleName: Types.section.NotificationModule.CHAT,
+                    contextType: "conversation",
+                    contextId: convId,
+                    hostHash: this.app.sessionManager.getLocalSession().hostHash
+                });
+                this.contextHistory.append(context); 
                 this.openChatOrConversationView(convId, true);
             });
         });
@@ -1753,6 +1836,26 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
         let conversationsCount = this.chatPlugin.conv2Service.collection.list.length;
         return sectionsCount > 0 || conversationsCount > 0;
     }
+    
+    // onJoinVideoConference(event: Types.event.JoinVideoConferenceEvent): void {
+    //     this.callViewMethod("openVideoConferencePanel");
+    //     let session = this.app.sessionManager.getSessionByHostHash(event.hostHash);
+    //     let section = event.section ? event.section : (event.conversation ? event.conversation.section : null);
+    //     if (session && section) {
+    //         this.videoConference.connect(session, section)
+    //         .fail(e => {
+    //             this.videoConference.disconnect();
+    //         });
+    //     }
+    // }
+    
+    // onLeaveVideoConference(event: Types.event.LeaveVideoConferenceEvent): void {
+    //     this.closeVideoConferencePanel();
+    // }
+    
+    // closeVideoConferencePanel(): void {
+    //     this.callViewMethod("closeVideoConferencePanel");
+    // }
     
 }
 

@@ -19,6 +19,7 @@ export class ObjectMap<T = any> {
 
     remove(id: number): void {
         if (id in this.map) {
+            this.map[id] = null;
             delete this.map[id];
         }
     }

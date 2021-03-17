@@ -62,7 +62,7 @@ export class VoiceChatViewWebSocket {
             this.stop();
         });
         this.webSocket.addEventListener("error", event => {
-            console.error(`WebsocketChannel error:`, event);
+            // console.error(`WebsocketChannel error:`, event);
             if (connectDefer) {
                 connectDefer.reject("WebsocketChannel error");
             }

@@ -31,7 +31,11 @@ export class File {
     static choose(properties: ("openFile"|"openDirectory"|"multiSelections"|"createDirectory")[], parentWindow?: AppWindow, defaultPath?: string): Q.Promise<privfs.lazyBuffer.NodeFileLazyContent[]> {
         let parent = parentWindow ? (<ElectronWindow>parentWindow).window : null;
         let defer = Q.defer<privfs.lazyBuffer.NodeFileLazyContent[]>();
-        electron.dialog.showOpenDialog(parent, {properties: properties, defaultPath}, File.onFileChoose.bind(this, defer));
+        electron.dialog.showOpenDialog(parent, {properties: properties, defaultPath}).then(value => {
+            if (value && value.filePaths) {
+                File.onFileChoose(defer, value.filePaths);
+            }
+        });
         return defer.promise;
     }
     
@@ -47,7 +51,8 @@ export class File {
     static chooseDir(parentWindow?: AppWindow, defaultPath?: string): Q.Promise<string> {
         let parent = parentWindow ? (<ElectronWindow>parentWindow).window : null;
         let deferred = Q.defer<string>();
-        electron.dialog.showOpenDialog(parent, { properties: ["openDirectory"], defaultPath }, paths => {
+        electron.dialog.showOpenDialog(parent, { properties: ["openDirectory"], defaultPath }).then(value => {
+            let paths = value ? value.filePaths : null;
             if (paths && paths.length == 1) {
                 deferred.resolve(paths[0]);
             }
@@ -64,9 +69,27 @@ export class File {
         });
     }
     
-    static saveFileWithChoose(content: privfs.lazyBuffer.IContent, session: Session, parentWindow?: AppWindow): Q.Promise<void> {
+    // static saveFileWithChoose_old(content: privfs.lazyBuffer.IContent, session: Session, parentWindow?: AppWindow): Q.Promise<void> {
+    //     let parentBrowserWindow = parentWindow ? (<ElectronWindow>parentWindow).window : null;
+    //     let defer = Q.defer<void>();
+    //     let filters: electron.FileFilter[];
+    //     let ext = nodePath.extname(content.getName());
+    //     if (ext) {
+    //         filters = [];
+    //         ext = ext.substring(1);
+    //         filters.push({name: ext, extensions: [ext]});
+    //     }
+
+    //     electron.dialog.showSaveDialog(parentBrowserWindow, {defaultPath: content.getName(), filters: filters}).then(value => {
+    //         if (value && value.filePath) {
+    //             File.onSaveFileChoose(defer, content, value.filePath);
+    //         }
+    //     });
+    //     return defer.promise;
+    // }
+
+    static async saveFileWithChoose(content: privfs.lazyBuffer.IContent, session: Session, parentWindow?: AppWindow): Promise<void> {
         let parentBrowserWindow = parentWindow ? (<ElectronWindow>parentWindow).window : null;
-        let defer = Q.defer<void>();
         let filters: electron.FileFilter[];
         let ext = nodePath.extname(content.getName());
         if (ext) {
@@ -75,18 +98,20 @@ export class File {
             filters.push({name: ext, extensions: [ext]});
         }
 
-        electron.dialog.showSaveDialog(parentBrowserWindow, {defaultPath: content.getName(), filters: filters}, File.onSaveFileChoose.bind(this, defer, content));
-        return defer.promise;
+        const result = await electron.dialog.showSaveDialog(parentBrowserWindow, {defaultPath: content.getName(), filters: filters});
+        return File.onSaveFileChoose(content, result.filePath);
     }
     
-    static onSaveFileChoose(defer: Q.Deferred<void>, content: privfs.lazyBuffer.IContent, filePath: string): void {
-        if (!filePath) {
-            defer.reject("no-choose");
-            return;
-        }
-        File.saveFile(content, filePath)
-        .then(defer.resolve)
-        .fail(defer.reject);
+
+    static onSaveFileChoose(content: privfs.lazyBuffer.IContent, filePath: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (!filePath) {
+                reject("no-choose");
+            }
+            return File.saveFile(content, filePath)
+            .then(resolve)
+            .fail(reject);
+        })
     }
     
     static saveFile(content: privfs.lazyBuffer.IContent, filePath: string): Q.Promise<void> {

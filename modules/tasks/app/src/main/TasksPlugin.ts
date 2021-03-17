@@ -8,7 +8,6 @@ import { SettingsStorage } from "./SettingsStorage";
 import { TaskWindowController } from "../window/task/TaskWindowController";
 import MsgBoxResult = window.msgbox.MsgBoxResult;
 import MsgBoxOptions = window.msgbox.MsgBoxOptions;
-import { CustomSelectController, CustomSelectItem, CustomSelectOptions } from "../component/customSelect/CustomSelectController";
 import { TaskPanelController, ActionHandlers } from "../component/taskPanel/TaskPanelController";
 import { TaskGroupsPanelController, TasksFilterData, TasksFilterUpdater } from "../component/taskGroupsPanel/TaskGroupsPanelController";
 import { ViewSettings } from "./ViewSettings";
@@ -24,6 +23,7 @@ import { TaskConflictResolver } from "./data/TaskConflictResolver";
 import { IconPickerController } from "../component/iconPicker/IconPickerController";
 import { i18n } from "../i18n/index";
 import { AttachmentsManager } from "./AttachmentsManager";
+import { PrivateSectionIdUpdater } from "./PrivateSectionIdUpdater";
 let Logger = RootLogger.get("privfs-tasks-plugin.TasksPlugin");
 
 interface EventWatcher {
@@ -120,7 +120,6 @@ export interface FileDetachedFromTaskEvent {
 }
 
 export type TasksComponentFactory = Mail.component.ComponentFactory & {
-    createComponent(componentName: "taskscustomselect", args: [Mail.Types.app.IpcContainer, CustomSelectItem[], CustomSelectOptions]): CustomSelectController;
     createComponent(componentName: "iconpicker", args: [Mail.Types.app.IpcContainer]): IconPickerController;
     createComponent(componentName: "taskGroupsPanel", args: [Mail.window.base.BaseWindowController]): TaskGroupsPanelController;
     createComponent<T extends Mail.window.base.BaseWindowController = Mail.window.base.BaseWindowController>(componentName: "taskpanel", args: [T, mail.session.Session, component.persons.PersonsController, ActionHandlers, boolean, boolean, mail.section.OpenableSectionFile[]]): TaskPanelController<T>;
@@ -214,6 +213,8 @@ export class TasksPlugin {
     savingLocks: { [hostHash: string]: { [key: string]: Q.Deferred<number> } } = {};
     
     session: mail.session.Session;
+    
+    privateSectionIdUpdater: PrivateSectionIdUpdater;
     
     constructor(public app: app.common.CommonApplication) {
         if (process && process.argv && process.argv.indexOf("--debug-tasks") >= 0) {
@@ -405,6 +406,7 @@ export class TasksPlugin {
             this.localStorage = res[6];
             this.client = res[7];
             this.sinkIndexManager = res[8];
+            this.privateSectionIdUpdater = new PrivateSectionIdUpdater(this.sectionManager.getMyPrivateSection());
             this.userPreferences.eventDispatcher.addEventListener<Mail.Types.event.UserPreferencesChangeEvent>("userpreferenceschange", this.onUserPreferencesChange.bind(this));
             this.app.registerPmxEvent(this.client.storageProviderManager.event, (event: any) => this.onStorageEvent(localSession, event));
             this.sidebarSectionsCollection = new Mail.utils.collection.FilteredCollection(this.sectionManager.filteredCollection, x => {
@@ -458,6 +460,9 @@ export class TasksPlugin {
                     this.fetchAllUsers(localSession),
                 ]);
             });
+        })
+        .then(() => {
+            this.app.eventDispatcher.dispatchEvent<Mail.Types.event.PluginModuleReadyEvent>({type: "plugin-module-ready", name: Mail.Types.section.NotificationModule.TASKS});
         })
         .then(() => {
             // console.log("lala");
@@ -657,12 +662,14 @@ export class TasksPlugin {
         this.openedWindows = {};
         this.kvdbCs = {};
         this.tasksPrimarySections = null;
+        this.tasksUnreadCountModel.setWithCheck(0);
         this.tasksUnreadCountFullyLoadedModel.setWithCheck(false);
         this.sectionsWithSpinner = {};
         this.savingLocks = {};
         this.tasksSectionsCollection = {};
         this.tasksSectionsCollectionNoPrivate = {};
         this.userNames = {};
+        this.privateSectionIdUpdater = null;
     }
 
 
@@ -943,6 +950,7 @@ export class TasksPlugin {
         let type = key[0];
         key = key.substr(2);
         if (type == "p") {
+            key = this.privateSectionIdUpdater.fixProjectId(key);
             DataMigration.migrateProject(payload);
             let sp = this.loadSettings(session, key, <any>payload);
             payload.taskGroupIds = key in this.projects[session.hostHash] ? this.projects[session.hostHash][key].getTaskGroupIds() : [];
@@ -952,6 +960,8 @@ export class TasksPlugin {
             let updatePinned: { [key: string]: boolean } = {};
             this.projects[session.hostHash][key] = p;
             this.origProjects[session.hostHash][key] = new Project(JSON.parse(JSON.stringify(payload)));
+            this.updateFixedProjectName(this.projects[session.hostHash][key]);
+            this.updateFixedProjectName(this.origProjects[session.hostHash][key]);
             if (old) {
                 let a = old.getPinnedTaskGroupIds();
                 let b = p.getPinnedTaskGroupIds();
@@ -1004,6 +1014,7 @@ export class TasksPlugin {
             return df.promise;
         }
         else if (type == "g") {
+            this.privateSectionIdUpdater.fixTaskGroup(<any>payload);
             DataMigration.migrateTaskGroup(payload);
             payload.taskIds = key in this.taskGroups[session.hostHash] ? this.taskGroups[session.hostHash][key].getTaskIds() : [];
             let tg = new TaskGroup(payload);
@@ -1024,6 +1035,7 @@ export class TasksPlugin {
             }
         }
         else if (type == "t") {
+            this.privateSectionIdUpdater.fixTask(<any>payload);
             DataMigration.migrateTask(payload);
             let t = new Task(payload);
             let oldTask = this.tasks[session.hostHash][key];
@@ -1275,6 +1287,7 @@ export class TasksPlugin {
             if (key[1] == "_") {
                 if (key[0] == "p") {
                     this.origProjects[session.hostHash][element.getId()] = <Project>this.createObject(session, JSON.parse(JSON.stringify(entry2.secured)));
+                    this.updateFixedProjectName(this.origProjects[session.hostHash][element.getId()]);
                 }
                 else if (key[0] == "g") {
                     this.origTaskGroups[session.hostHash][element.getId()] = <TaskGroup>this.createObject(session, JSON.parse(JSON.stringify(entry2.secured)));
@@ -1461,16 +1474,16 @@ export class TasksPlugin {
         return Q().then(() => {
             return <any>session.mailClientApi.privmxRegistry.getSrpSecure();
         })
-            .then(srpSecure => {
-                return srpSecure.request("nextUniqueId", { key: key });
-            })
-            .then(x => {
-                let s = "" + x;
-                while (s.length < 3) {
-                    s = "0" + s;
-                }
-                return s;
-            });
+        .then(srpSecure => {
+            return srpSecure.request("nextUniqueId", { key: key });
+        })
+        .then(x => {
+            let s = "" + x;
+            while (s.length < 3) {
+                s = "0" + s;
+            }
+            return s;
+        });
     }
 
 
@@ -1831,6 +1844,7 @@ export class TasksPlugin {
             this.projects[session.hostHash] = {};
         }
         this.projects[session.hostHash][project.getId()] = project;
+        this.updateFixedProjectName(this.projects[session.hostHash][project.getId()]);
         return this.ensureKvdbCExists(project.getId(), session).then(
             () => <any>this.setKvdbElement(session, project.getId(), "p_" + project.getId(), project, version, origElement)
         );
@@ -1863,6 +1877,16 @@ export class TasksPlugin {
         let ret = !!this.tasksSectionsCollection[session.hostHash].find(x => x && x.getId() == projectId);
         
         return ret;
+    }
+    
+    updateFixedProjectName(project: Project): void {
+        const privateSectionId = this.getPrivateSectionId();
+        if (!project || !privateSectionId) {
+            return;
+        }
+        if (project.getId() == privateSectionId) {
+            project.setName(this.app.localeService.i18n("plugin.tasks.privateTasks"));
+        }
     }
 
 
@@ -2025,14 +2049,20 @@ export class TasksPlugin {
         return null;
     }
     
-    addTask(session: mail.session.Session, task: Task): void {
+    addTask(session: mail.session.Session, task: Task): Q.Promise<void> {
         if (!this.tasks[session.hostHash]) {
             this.tasks[session.hostHash] = {};
         }
         if (!(task.getId() in this.tasks[session.hostHash])) {
             this.tasks[session.hostHash][task.getId()] = task;
         }
-        this.sendTaskMessage(session, task, "create-task");
+        return this.sendTaskMessage(session, task, "create-task")
+        .then(dt => {
+            if (dt) {
+                task.updateModifiedServerDateTime(dt);
+                task.setCreatedDateTime(dt);
+            }
+        });
     }
     
     saveTask(session: mail.session.Session, task: Task, version?: number, origElement?: Task): Q.Promise<void> {
@@ -2084,7 +2114,8 @@ export class TasksPlugin {
             this.tasks[session.hostHash] = {};
         }
         let tasksToSave: Array<TaskId> = [];
-
+        
+        let prom = Q();
         for (let tId of tasks) {
             let t = this.tasks[session.hostHash][tId];
             if (!t) {
@@ -2099,8 +2130,19 @@ export class TasksPlugin {
             });
             t.setModifiedBy(this.getMyId(session));
             t.setModifiedDateTime(new Date().getTime());
+            prom = prom.then(() => {
+                return this.sendTaskMessage(session, t, "modify-task")
+                .then(dt => {
+                    if (dt) {
+                        t.updateModifiedServerDateTime(dt);
+                    }
+                });
+            });
         }
-        return this.saveModified(session, tasksToSave, [], []);
+        prom = prom.then(() => {
+            return this.saveModified(session, tasksToSave, [], []);
+        });
+        return prom;
     }
     
     deleteTasks(session: mail.session.Session, tasks: { [key: string]: Array<TaskGroupId> }): Q.Promise<void> {
@@ -2205,12 +2247,13 @@ export class TasksPlugin {
         return this.nextId(session, StoredObjectTypes.tasksTask);
     }
 
-    sendTaskMessage(session: mail.session.Session, task: Task, type: "create-task" | "delete-task" | "modify-task"): void {
+    sendTaskMessage(session: mail.session.Session, task: Task, type: "create-task" | "delete-task" | "modify-task"): Q.Promise<number> {
         let chatModule = session.sectionManager.getSection(task.getProjectId()).getChatModule();
         if (!chatModule) {
-            return;
+            return Q(null);
         }
-        chatModule.sendTaskMessage(
+        let dt: number | null = null;
+        return chatModule.sendTaskMessage(
             type,
             this.getMyId(session),
             task.getId(),
@@ -2224,10 +2267,15 @@ export class TasksPlugin {
             task.getPriority(),
             task.getAssignedTo(),
         )
-        .then(() => {
-            return;
+        .then(x => {
+            if (x && x.source && x.source.serverDate) {
+                dt = x.source.serverDate;
+            }
         })
-        .fail((err: any) => Logger.error("Error sending task message", err));
+        .fail((err: any) => Logger.error("Error sending task message", err))
+        .then(() => {
+            return dt;
+        });
     }
 
     sendTaskCommentMessage(session: mail.session.Session, task: Task, comment: string, metaDataStr?: string): Q.Promise<privfs.types.message.ReceiverData> {
@@ -2684,11 +2732,17 @@ export class TasksPlugin {
             what: "added",
             arg: "attachment",
             newVal: newAtt,
+        });
+        return this.sendTaskMessage(session, task, "modify-task")
+        .then(dt => {
+            if (dt) {
+                task.updateModifiedServerDateTime(dt);
+            }
+            return this.saveTask(session, task);
         })
-        return Q.all([
-            this.saveTask(session, task),
-            this.addMetaBindedTaskId(file.fileSystem, file.path, taskId, handle),
-        ])
+        .then(() => {
+            return this.addMetaBindedTaskId(file.fileSystem, file.path, taskId, handle);
+        })
         .then(() => {
             this.triggerFileAttached(session, file.handle.ref.did, taskId);
         });
@@ -2706,17 +2760,17 @@ export class TasksPlugin {
         return Q().then(() => {
             return file.getContent();
         })
-            .then(cnt => {
-                return section.uploadFile({
-                    data: cnt,
-                    path: "/",
-                });
-            })
-            .then(result => {
-                if (result && result.openableElement) {
-                    this.attachToTask(session, taskId, <mail.section.OpenableSectionFile>result.openableElement, null);
-                }
+        .then(cnt => {
+            return section.uploadFile({
+                data: cnt,
+                path: "/",
             });
+        })
+        .then(result => {
+            if (result && result.openableElement) {
+                this.attachToTask(session, taskId, <mail.section.OpenableSectionFile>result.openableElement, null);
+            }
+        });
     }
 
     updateMeta(fileSystem: privfs.fs.file.FileSystem, path: string, handle: privfs.fs.descriptor.Handle, func: any): Q.Promise<void> {
@@ -2748,19 +2802,21 @@ export class TasksPlugin {
 
     _metaUpdaterAdder(meta: privfs.types.descriptor.Meta, taskId: string): void {
         let bindedData: { taskIds: string[] } = JSON.parse(this.convertBindedTaskId(meta.bindedElementId));
-        let bindedTaskIds: string[] = bindedData.taskIds;
-        if (bindedTaskIds.indexOf(taskId) < 0) {
-            bindedTaskIds.push(taskId);
+        taskId = taskId.toString();
+        bindedData.taskIds = bindedData.taskIds.filter(x => !!x).map(x => x.toString());
+        if (bindedData.taskIds.indexOf(taskId) < 0) {
+            bindedData.taskIds.push(taskId);
         }
         meta.bindedElementId = JSON.stringify(bindedData);
     }
 
     _metaUpdaterRemover(meta: privfs.types.descriptor.Meta, taskId: string): void {
         let bindedData: { taskIds: string[] } = JSON.parse(this.convertBindedTaskId(meta.bindedElementId));
-        let bindedTaskIds: string[] = bindedData.taskIds;
-        let idx = bindedTaskIds.indexOf(taskId);
+        taskId = taskId.toString();
+        bindedData.taskIds = bindedData.taskIds.filter(x => !!x).map(x => x.toString());
+        let idx = bindedData.taskIds.indexOf(taskId);
         if (idx >= 0) {
-            bindedTaskIds.splice(idx, 1);
+            bindedData.taskIds.splice(idx, 1);
         }
         meta.bindedElementId = JSON.stringify(bindedData);
     }
@@ -2839,6 +2895,7 @@ export class TasksPlugin {
         let toOrphans = dstTaskGroupIds.indexOf("__orphans__") >= 0;
 
         // For each task to move
+        let prom = Q();
         for (let [srcTaskGroupId, taskId] of fullTaskIds) {
             if (!(taskId in this.tasks[session.hostHash]) || orphanizedBlackList.indexOf(taskId) >= 0) {
                 continue;
@@ -2898,6 +2955,14 @@ export class TasksPlugin {
                 });
                 task.setModifiedBy(myId);
                 task.setModifiedDateTime(now);
+                prom = prom.then(() => {
+                    return this.sendTaskMessage(session, task, "modify-task")
+                    .then(dt => {
+                        if (dt) {
+                            task.updateModifiedServerDateTime(dt);
+                        }
+                    });
+                });
             }
         }
 
@@ -2906,7 +2971,9 @@ export class TasksPlugin {
         }
 
         // Save
-        return this.saveModified(session, tasksToSave, taskGroupsToSave, projectsToSave);
+        return prom.then(() => {
+            return this.saveModified(session, tasksToSave, taskGroupsToSave, projectsToSave);
+        });
     }
 
     duplicateTasks(session: mail.session.Session, fullTaskIdsRaw: Array<string>, dstTaskGroupIdRaw: TaskGroupId): Q.Promise<void> {
@@ -2945,8 +3012,8 @@ export class TasksPlugin {
             prom = prom.then(() => <any>this.nextTaskId(session).then(
                 id => {
                     task2.setId(id);
-                    this.addTask(session, task2);
                     this.addTaskToTaskGroup(session, task2, dstTaskGroupId, tasksToSave, taskGroupsToSave, projectsToSave);
+                    return this.addTask(session, task2);
                 }
             ));
         }
@@ -3714,24 +3781,24 @@ export class TasksPlugin {
 
     createTaskGroup(session: mail.session.Session, projectId: string, name: string): Q.Promise<TaskGroupId> {
         return this.nextTaskGroupId(session)
-            .then(id => {
-                let tg = new TaskGroup();
-                DataMigration.setVersion(tg);
-                tg.setId(id);
-                tg.setName(name);
-                tg.setProjectId(projectId);
-                return this.saveTaskGroup(session, tg)
+        .then(id => {
+            let tg = new TaskGroup();
+            DataMigration.setVersion(tg);
+            tg.setId(id);
+            tg.setName(name);
+            tg.setProjectId(projectId);
+            return this.saveTaskGroup(session, tg)
+            .then(() => {
+                if (projectId in this.projects[session.hostHash]) {
+                    let p = this.projects[session.hostHash][projectId];
+                    p.addTaskGroupId(id);
+                    return this.saveProject(session, p)
                     .then(() => {
-                        if (projectId in this.projects[session.hostHash]) {
-                            let p = this.projects[session.hostHash][projectId];
-                            p.addTaskGroupId(id);
-                            return this.saveProject(session, p)
-                                .then(() => {
-                                    return id;
-                                });
-                        }
+                        return id;
                     });
+                }
             });
+        });
     }
 
     createTask(session: mail.session.Session, projectId: string, taskGroupIds: string[], description: string, status: TaskStatus, onBeforeSave: (task: Task) => void = null): Q.Promise<TaskId> {
@@ -3955,8 +4022,13 @@ export class TasksPlugin {
         }
         task.setModifiedBy(this.getMyId(session));
         task.setModifiedDateTime(fileModDate);
-        this.saveTask(session, task);
-        this.sendTaskMessage(session, task, "modify-task");
+        this.sendTaskMessage(session, task, "modify-task")
+        .then(dt => {
+            if (dt) {
+                task.updateModifiedServerDateTime(dt);
+            }
+            return this.saveTask(session, task);
+        });
     }
 
     lockAttachmentModificationMessages(session: mail.session.Session, taskId: TaskId): void {

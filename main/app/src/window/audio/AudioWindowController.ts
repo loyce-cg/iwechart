@@ -8,6 +8,7 @@ import Q = require("q");
 import { LocaleService } from "../../mail";
 import { i18n } from "./i18n";
 import { Session } from "../../mail/session/SessionManager";
+import { AudioPlayerController, LoadAudioTrackEvent } from "../../component/audioplayer/main";
 
 export class Model {
     name: string;
@@ -27,59 +28,35 @@ export class AudioWindowController extends EditorWindowController {
         localeService.registerTexts(i18n, this.textsPrefix);
     }
     
-    playerControls: PlayerControlsController;
-    durationDeferred: Q.Deferred<{ duration: number, currentTime: number }>;
-    tickInterval: number = null;
-    dataLoadedFor: number = null;
-    time: number;
+    audioPlayer: AudioPlayerController;
     
     constructor(parent: app.WindowParent, public session: Session, options: Options) {    
         super(parent, session, __filename, __dirname, options);
         this.ipcMode = true;
         
-        this.app.addEventListener<AddToPlaylistEvent>("add-to-playlist", event => {
+        this.bindEvent<AddToPlaylistEvent>(this.app, "add-to-playlist", event => {
             if (event.id == this.openableElement.getElementId()) {
                 this.callViewMethod("setInPlaylist", true);
             }
         });
-        this.app.addEventListener<DeleteFromPlaylistEvent>("delete-from-playlist", event => {
+        this.bindEvent<DeleteFromPlaylistEvent>(this.app, "delete-from-playlist", event => {
             if (event.id == this.openableElement.getElementId()) {
                 this.callViewMethod("setInPlaylist", false);
             }
         });
-        this.app.addEventListener<ClearPlaylistEvent>("clear-playlist", () => {
+        this.bindEvent<ClearPlaylistEvent>(this.app, "clear-playlist", () => {
             this.callViewMethod("setInPlaylist", false);
         });
-        this.playerControls = this.addComponent("playerControls", this.componentFactory.createComponent("playercontrols", [this, true]));
-        this.playerControls.setApp(this.app);
-        this.playerControls.onViewPlay = () => {
-            this.play(this.openableElement);
-        };
-        this.playerControls.onViewPause = () => {
-            this.pause();
-        };
-        this.playerControls.addEventListener<SetPlayerVolumeEvent>("set-player-volume", event => {
-            this.callViewMethod("setVolume", event.volume);
-            this.playerControls.setVolume(event.volume);
+        
+        this.audioPlayer = this.addComponent("audioplayer", this.componentFactory.createComponent("audioplayer", [this, this.app]));
+        this.bindEvent<LoadAudioTrackEvent>(this.audioPlayer, "load-audio-track", () => {
+            this.loadPlayerData();
         });
-        this.playerControls.addEventListener<SetPlayerOptionEvent>("set-player-option", event => {
-            if (event.option == "muted") {
-                this.callViewMethod("setMuted", event.value);
-            }
-        });
-        this.playerControls.addEventListener<BasicPlayerEvent>("player-set-time", event => {
-            this.time = event.value;
-            this.callViewMethod("setTime", this.time);
-            if (this.tickInterval) {
-                if (this.tickInterval !== null) {
-                    clearInterval(this.tickInterval);
-                    this.tickInterval = null;
-                }
-                this.tickInterval = <any>setInterval(() => {
-                    this.playerControls.slider.setValue(++this.time);
-                }, 1000);
-            }
-        });
+    }
+    
+    reopen(openableElement: OpenableElement): void {
+        this.audioPlayer.reopen();
+        super.reopen(openableElement);
     }
     
     getButtonsState(): ButtonsState {
@@ -134,80 +111,24 @@ export class AudioWindowController extends EditorWindowController {
         this.callViewMethod("setInPlaylist", false);
     }
     
-    onViewAudioEnded(): void {
-        this.pause();
-    }
-    
-    onViewAudioDurationChanged(_currentViewId: number, duration: number, currentTime: number): void {
-        if (this.durationDeferred && this.currentViewId == _currentViewId) {
-            this.durationDeferred.resolve({ duration, currentTime });
-            this.durationDeferred = null;
-        }
-    }
-    
-    play(el: OpenableElement): Q.Promise<void> {
-        if (el) {
-            this.playerControls.slider.setLoading(true);
-            
-            return Q().then(() => {
-                if (this.dataLoadedFor == this.currentViewId) {
-                    return null;
-                }
-                else {
-                    return el.getBlobData()
-                }
-            })
-            .progress(p => {
-                if (p && p.percent) {
-                    this.playerControls.slider.setProgress(p.percent);
-                }
-            })
-            .then(data => {
-                this.durationDeferred = Q.defer();
-                if (data) {
-                    this.callViewMethod("setAudioData", data);
-                }
-                else {
-                    this.callViewMethod("onAudioDurationChanged");
-                }
-                return this.durationDeferred.promise.then(info => {
-                    this.dataLoadedFor = this.currentViewId;
-                    this.playerControls.slider.setLoading(false);
-                    this.playerControls.setPlaying(true);
-                    this.playerControls.slider.setMax(info.duration);
-                    this.time = info.currentTime;
-                    if (this.tickInterval !== null) {
-                        clearInterval(this.tickInterval);
-                        this.tickInterval = null;
-                    }
-                    this.tickInterval = <any>setInterval(() => {
-                        this.playerControls.slider.setValue(++this.time);
-                    }, 1000);
-                    this.callViewMethod("play");
-                });
-            });
-        }
-        else {
-            this.playerControls.slider.setLoading(false);
-            this.playerControls.setPlaying(false);
-            this.playerControls.slider.setMax(0);
-            this.playerControls.slider.setValue(0);
-            this.callViewMethod("pause");
-        }
-    }
-    
-    pause(): void {
-        if (this.tickInterval !== null) {
-            clearInterval(this.tickInterval);
-            this.tickInterval = null;
-        }
-        this.playerControls.setPlaying(false);
-        this.callViewMethod("pause");
-    }
-    
-    onViewPause(): void {
-        this.pause();
-        this.play(null);
+    loadPlayerData(): Q.Promise<void> {
+        let el = this.openableElement;
+        let currentViewId = this.currentViewId;
+        return Q().then(() => {
+            if (this.currentViewId == currentViewId) {
+                return el.getBlobData();
+            }
+        })
+        .progress(p => {
+            if (p && p.percent && this.currentViewId == currentViewId) {
+                this.audioPlayer.setLoadingProgress(p.percent);
+            }
+        })
+        .then(data => {
+            if (data && this.currentViewId == currentViewId) {
+                this.callViewMethod("setAudioData", data);
+            }
+        });
     }
     
 }

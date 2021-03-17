@@ -3,7 +3,7 @@
 @context string
 <div class="window-select-contacts-user contact-item {{@model.username.indexOf('@') >= 0 ? 'external' : ''}}" {{#context == "toChoose" ? " data-action=add-contact" : " data-action=remove-contact"}}>
   <div class="image">
-    <img src="{{#Helper.getAvatarOrDefault(model.avatar)}}" />
+    <img src="{{#Helper.getAvatarOrDefault(model.avatar.avatar)}}" />
   </div>
   <div class="star">
     {{if (model.isStarred) { {{

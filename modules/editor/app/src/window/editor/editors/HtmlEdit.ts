@@ -98,7 +98,9 @@ export class HtmlEdit extends JsonEditor<State, Raw> {
     }
     
     focus(): void {
-        this.data.editor.focus();
+        if (this.data && this.data.editor) {
+            this.data.editor.focus();
+        }
     }
     
     inputEventsHandler(event: KeyboardEvent): boolean {

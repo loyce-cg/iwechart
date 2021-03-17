@@ -8,7 +8,7 @@ import { MutableCollection } from "../../utils/collection/MutableCollection";
 import { TransformCollection } from "../../utils/collection/TransformCollection";
 import { WithActiveCollection } from "../../utils/collection/WithActiveCollection";
 import { MergedCollection } from "../../utils/collection/MergedCollection";
-import { SectionEntry, Model, State } from "../sections/SectionsWindowController";
+import { SectionEntry, Model, State } from "../sections/SectionUITypes";
 import {Inject, Dependencies} from "../../utils/Decorators"
 import { FilteredCollection } from "../../utils/collection/FilteredCollection";
 import { ExtListController } from "../../component/extlist/ExtListController";
@@ -32,6 +32,7 @@ export class SectionPickerWindowController extends BaseWindowController {
     activeCollection: WithActiveCollection<SectionService>;
     filteredCollection: FilteredCollection<SectionService>;
     sections: ExtListController<SectionEntry>;
+    topLevelSelected: boolean;
     
     constructor(parent: app.WindowParent, public sourceSection: SectionService, options?: app.WindowOptions) {
         super(parent, __filename, __dirname);
@@ -67,17 +68,17 @@ export class SectionPickerWindowController extends BaseWindowController {
             return this.sectionManager.load();
         })
         .then(() => {
-            let merged = new MergedCollection<SectionService>();
-            merged.addCollection(new MutableCollection<SectionService>([new VirtualSectionService({
-                id: SectionPickerWindowController.ROOT_ID,
-                name: this.i18n("window.sectionPicker.no_parent.label", this.identityProvider.getIdentity().host),
-                editableMyBe: false,
-                canCreateSubsection: this.identityProvider.isAdmin()
-            })]));
-            merged.addCollection(this.sectionManager.managabledCollection);
-            this.filteredCollection = this.addComponent("filteredCollection", new FilteredCollection<SectionService>(merged, this.filterInvalidSections.bind(this)));
+            // let merged = new MergedCollection<SectionService>();
+            // merged.addCollection(new MutableCollection<SectionService>([new VirtualSectionService({
+            //     id: SectionPickerWindowController.ROOT_ID,
+            //     name: this.i18n("window.sectionPicker.no_parent.label", this.identityProvider.getIdentity().host),
+            //     editableMyBe: false,
+            //     canCreateSubsection: this.identityProvider.isAdmin()
+            // })]));
+            // merged.addCollection(this.sectionManager.managabledCollection);
+            this.filteredCollection = this.addComponent("filteredCollection", new FilteredCollection<SectionService>(this.sectionManager.managabledCollection, this.filterInvalidSections.bind(this)));
 
-            this.registerChangeEvent(merged.changeEvent, this.onCollectionChange);
+            this.registerChangeEvent(this.sectionManager.managabledCollection.changeEvent, this.onCollectionChange);
             this.activeCollection = this.addComponent("activeCollection", new WithActiveCollection(this.filteredCollection));
             if (this.filteredCollection.collection.list.length > 0) {
                 this.activeCollection.setActive(this.filteredCollection.collection.list[0]);
@@ -85,6 +86,7 @@ export class SectionPickerWindowController extends BaseWindowController {
             let castCollection = this.addComponent("castCollection", new TransformCollection<SectionEntry, SectionService>(this.activeCollection, this.convertSection.bind(this)));
             this.sections = this.addComponent("sections", this.componentFactory.createComponent("extlist", [this, castCollection]));
             this.sections.ipcMode = true;
+            this.setTopLevelSelected(this.identityProvider.isAdmin());
         });
     }
     
@@ -97,7 +99,12 @@ export class SectionPickerWindowController extends BaseWindowController {
     }
     
     onViewSelect(): void {
-        this.deferred.resolve(this.activeCollection.getActive());
+        if (this.topLevelSelected) {
+            this.deferred.resolve(null);
+        }
+        else {
+            this.deferred.resolve(this.activeCollection.getActive());
+        }
         this.close();
     }
     
@@ -176,7 +183,8 @@ export class SectionPickerWindowController extends BaseWindowController {
         }
         return {
             canAdd: canAdd,
-            sectionsLimitReached: false
+            sectionsLimitReached: false,
+            isAdmin: this.identityProvider.isAdmin(),
             
         };
     }
@@ -191,5 +199,13 @@ export class SectionPickerWindowController extends BaseWindowController {
                 this.setActive(event.element);
             }
         }
+    }
+
+    private setTopLevelSelected(selected: boolean): void {
+        this.topLevelSelected = selected;
+    }
+
+    onViewTopLevelSelected(selected: boolean): void {
+        this.setTopLevelSelected(selected);
     }
 }

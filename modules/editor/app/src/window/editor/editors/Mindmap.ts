@@ -112,7 +112,9 @@ export class Mindmap extends JsonEditor<State, Raw> {
         }
         $div.detach();
         $div.on('focus', () => {
-            $(doc).focus();
+            if (doc) {
+                $(doc).focus();
+            }
         });
         this.bindDocEvents(doc);
         return {
@@ -143,7 +145,10 @@ export class Mindmap extends JsonEditor<State, Raw> {
     }
     
     focus(): void {
-        this.data.$view.find(".mindmap").focus();
+        let $mindmap = this.data.$view.find(".mindmap");
+        if ($mindmap) {
+            $mindmap.focus();
+        }
         if (this.newFile) {
             this.newFile = false;
             let mm = this.data.doc.elements[0].mm;

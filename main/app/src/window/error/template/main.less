@@ -4,13 +4,16 @@
 .window-error-main {
   padding: 15px;
   font-size: var(--font-size);
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom:0;
+  right:0;
   
   h3 {
     font-size: var(--font-size-xl);
-  }
-  
-  p {
-    margin: 10px 0;
   }
   
   ul {
@@ -76,5 +79,51 @@
     right: 0;
     bottom: 0;
     pointer-events: none;
+  }
+
+  .explanation {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .error-message {
+      flex-grow: 10;
+    }
+  }
+
+  .entry-value.custom {
+    display: flex;
+    flex-flow: row nowrap;
+    padding: 10px 0;
+    height: 100%;
+  }
+
+  .entry-value.custom textarea {
+    order: 1;
+    color: var(--body-fg);
+  }
+  .entry-value.custom .btn {
+    order: 2;
+    flex-basis: 80px;
+    height: 72px;
+    margin-left: 10px;
+  }
+
+  .flex-row {
+    order: 1;
+    &.max-height {
+      flex-grow: 10;
+    }
+    .checkbox {
+      margin-top: 0;
+    }
+  }
+
+  .buttons {
+    order: 10;
+  }
+
+  .additional-info {
+    order: 1;
   }
 }

@@ -1,0 +1,54 @@
+@import "../../base/BaseWindow";
+
+body {
+  background: @colorBackground;
+  font-size: var(--font-size-l);
+}
+
+.devconsole-window-main {
+  height: 100%;
+  .content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 30px;
+    right: 0;
+
+    .pf-scrollable {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .input-bar {
+    height: 30px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    .cmd {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      display: block;
+      width: 100%;
+      border: solid 1px #aaa;
+      border-left: none;
+      border-right: none;
+      padding: 2px 10px;
+      background: transparent;
+    }
+
+    .prompt {
+      display: inline-block;
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      z-index: 10;
+      font-size: var(--font-size-s);
+      line-height: 22px;
+    }
+  }
+
+
+}

@@ -9,6 +9,7 @@ import { Lang } from "../../utils/Lang";
 import * as Q from "q";
 import { SplitterView } from "../../component/splitter/SplitterView";
 import { PersonsView } from "../../component/persons/PersonsView";
+import { PersonTooltipView } from "../../component/persontooltip/web";
 
 declare var c: any;
 
@@ -30,9 +31,11 @@ export class SectionSummaryWindowView extends BaseWindowView<Model> {
     activeModulesCount: number;
     useAutoResizer: boolean = true;
     personsComponent: PersonsView;
+    personTooltip: PersonTooltipView;
     constructor(parent: app.ViewParent) {
         super(parent, mainTemplate);
         this.personsComponent = this.addComponent("personsComponent", new PersonsView(this, this.helper));
+        this.personTooltip = new PersonTooltipView(this.templateManager, this.personsComponent);
         this.modules = {};
         if (this.useAutoResizer) {
             this.useAutoResizer = !!(<any>window).ResizeObserver;
@@ -112,6 +115,9 @@ export class SectionSummaryWindowView extends BaseWindowView<Model> {
             
         })
         .then(() => {
+            return this.personTooltip.init(this.$main);
+        })
+        .then(() => {
             this.personsComponent.refreshAvatars();
             return;
         })
@@ -157,10 +163,6 @@ export class SectionSummaryWindowView extends BaseWindowView<Model> {
             if (e.keyCode == KEY_CODES.enter) {
                 e.preventDefault();
                 this.onOkClick();
-            } else
-            if (e.keyCode == KEY_CODES.escape) {
-                e.preventDefault();
-                this.onCloseClick();
             }
         });
     }

@@ -52,6 +52,7 @@ export class AdminWindowController extends BaseWindowController {
     constructor(parent: app.WindowParent, section: string) {
         super(parent, __filename, __dirname);
         this.ipcMode = true;
+        this.addViewScript({path: "build/ag-grid.js"});
         this.addViewScript({path: "build/colorpicker/a-color-picker/dist/acolorpicker.js"});
         this.addViewStyle({path: "build/aggrid/ag-grid.min.css"});
         this.addViewStyle({path: "build/aggrid/ag-theme-balham-dark.min.css"});

@@ -18,37 +18,37 @@ export class WebCCApi {
 
     static verifyApplicationCode(endpoint: string, model: {applicationCode: types.user.ApplicationCode}): Q.Promise<{email: types.core.Email, domainSuffix: string}> {
         return JsonRpcRequest.promise({
-            url: endpoint, 
-            method: "verifyApplicationCode", 
-            params: {["applicationCode"]: model.applicationCode} 
+            url: endpoint,
+            method: "verifyApplicationCode",
+            params: {["applicationCode"]: model.applicationCode}
         });
     }
 
     static getPrefix(endpoint: string, model: {companyName: types.company.CompanyName}): Q.Promise<{prefix: types.server.ServerPrefix}> {
         return JsonRpcRequest.promise({
-            url: endpoint, 
-            method: "getPrefix", 
-            params: {["companyName"]: model.companyName} 
+            url: endpoint,
+            method: "getPrefix",
+            params: {["companyName"]: model.companyName}
         });
     }
 
     static verifyPrefix(endpoint: string, model: {prefix: types.server.ServerPrefix}): Q.Promise<types.core.OK> {
         return JsonRpcRequest.promise({
             url: endpoint,
-            method: "verifyPrefix", 
-            params: {["prefix"]: model.prefix} 
+            method: "verifyPrefix",
+            params: {["prefix"]: model.prefix}
         });
     }
 
     static registerByApplicationCode(endpoint: string, model: types.api.auth.RegisterByAppCode): Q.Promise<types.api.auth.RegisterByAppCodeResult> {
         return JsonRpcRequest.promise({
             url: endpoint,
-            method: "registerByApplicationCode", 
-            params: {["prefix"]: model.prefix, ["applicationCode"]: model.applicationCode, ["companyName"]: model.companyName} 
+            method: "registerByApplicationCode",
+            params: {["prefix"]: model.prefix, ["applicationCode"]: model.applicationCode, ["companyName"]: model.companyName}
         });
     }
 
-    static getRegistrationInfo(endpoint: string, model: {lang: string, version: string}): Q.Promise<{url: types.core.Url}> {
+    static getRegistrationInfo(endpoint: string, model: {lang: string, version: string, locale: string}): Q.Promise<{url: types.core.Url}> {
         let data: types.api.auth.ServerInfoResult = null;
         let nonce: string = null;
 
@@ -59,8 +59,8 @@ export class WebCCApi {
             nonce = rand;
             return JsonRpcRequest.promise({
                 url: endpoint,
-                method: "getRegistrationInfo", 
-                params: {["lang"]: model.lang, ["version"]: model.version, ["key"]: "6d723idsu238sdhfd2jmd", ["nonce"]: nonce} 
+                method: "getRegistrationInfo",
+                params: {["lang"]: model.lang, locale: model.locale, ["version"]: model.version, ["key"]: "6d723idsu238sdhfd2jmd", ["nonce"]: nonce}
             })
             .then((_data: types.api.auth.ServerInfoResult) => {
                 data = _data;
@@ -77,7 +77,7 @@ export class WebCCApi {
             })
             .then(valid => {
                 return valid ? Q.resolve(data) : Q.reject("Error(10001): Untrusted resource");
-            })  
+            })
         })
     }
 

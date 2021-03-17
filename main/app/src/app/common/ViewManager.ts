@@ -5,6 +5,9 @@ import {app, ipc} from "../../Types";
 import {Starter} from "../../window/base/Starter";
 import {IpcService} from "../../ipc/IpcService";
 import * as RootLogger from "simplito-logger";
+import { AvatarService, AssetsProvider } from "../../web-utils/AvatarService";
+import { PersonProvider } from "../../web-utils/PersonProvider";
+import { MailClientViewHelper } from "../../web-utils/MailClientViewHelper";
 let Logger = RootLogger.get("privfs-mail-client.app.common.ViewManager");
 
 export class ViewManager extends Container implements app.ViewParent {
@@ -17,6 +20,8 @@ export class ViewManager extends Container implements app.ViewParent {
     servicesDefinitions: ipc.IpcServicesDefinitions;
     services: {[name: string]: any};
     controllerId: number;
+    private personProvider: PersonProvider;
+    private avatarService: AvatarService;
     
     constructor(parent: Starter) {
         super(parent);
@@ -76,5 +81,27 @@ export class ViewManager extends Container implements app.ViewParent {
         else {
             ipc.send(channel, message);
         }
+    }
+    
+    getPersonProvider(): PersonProvider {
+        if (this.personProvider == null) {
+            this.personProvider = new PersonProvider();
+        }
+        return this.personProvider;
+    }
+    
+    getAvatarService(): AvatarService {
+        if (this.avatarService == null) {
+            this.avatarService = new AvatarService(this.getPersonProvider(), this.getAssetsProvider());
+        }
+        return this.avatarService;
+    }
+    
+    private getAssetsProvider(): AssetsProvider {
+        return this.getMailClientViewHelper();
+    }
+    
+    private getMailClientViewHelper() {
+        return <MailClientViewHelper>this.templateManager.getHelper("com.privmx.core.web-utils.MailClientViewHelper");
     }
 }

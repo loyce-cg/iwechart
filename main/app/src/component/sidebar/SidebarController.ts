@@ -23,7 +23,11 @@ import { UsersListTooltipController } from "../userslisttooltip/main";
 import { Session } from "../../mail/session/SessionManager";
 import { SectionSummaryWindowController } from "../../window/sectionsummary/SectionSummaryWindowController";
 import { SectionUtils } from "../../mail/section/SectionUtils";
+import { VideoConferencesPollingResult } from "../../app/common/videoconferences/VideoConferencesPolling";
+import { SidebarElementType } from "./Types";
+export * from "./Types";
 
+export * from "./Types";
 export interface SidebarButton {
     id: string;
     label: string;
@@ -31,6 +35,7 @@ export interface SidebarButton {
     icon: string;
     onSectionList?: boolean;
     windowOpener: boolean;
+    disabled?: boolean;
 }
 
 export interface SidebarOptions {
@@ -43,16 +48,6 @@ export interface SidebarOptions {
     sidebarButtons: SidebarButton[];
     sectionsLimitReached: boolean;
     remoteHostList: RemoteHostListControllerOptions;
-}
-
-export enum SidebarElementType {
-    CUSTOM_ELEMENT,
-    SECTION,
-    CUSTOM_SECTION,
-    CONVERSATION,
-    HOST,
-    REMOTE_SECTION,
-    REMOTE_CONVERSATION
 }
 
 export interface SidebarElement {
@@ -97,6 +92,13 @@ export interface Model {
     sectionsLimitReached: boolean;
 }
 
+export interface ActiveVideoConferencesInfo {
+    [hostHash: string]: {
+        sectionIds: string[];
+        conversationIds: string[];
+    };
+}
+
 @Dependencies(["conv2list", "sectionlist", "remotehostlist", "customelementlist", "splitter"])
 export class SidebarController extends ComponentController {
     
@@ -121,6 +123,7 @@ export class SidebarController extends ComponentController {
     basicTooltip: TooltipController;
     usersListTooltip: UsersListTooltipController;
     app: CommonApplication;
+    prevVideoConferencesPollingResultStr: string = "";
 
     constructor(
         parent: Types.app.IpcContainer,
@@ -183,6 +186,9 @@ export class SidebarController extends ComponentController {
             });
             app.addEventListener<Types.event.ToggleSidebarVoiceChatActiveEvent>("toggleSidebarVoiceChatActive", event => {
                 this.toggleVoiceChatActive(event.sectionId, event.conversationSectionId, event.active, event.users);
+            });
+            app.addEventListener<Types.event.GotVideoConferencesPollingResultEvent>("got-video-conferences-polling-result", event => {
+                this.onVideoConferencesPollingResult(event.result);
             });
 
         }
@@ -645,7 +651,7 @@ export class SidebarController extends ComponentController {
             conversationId: type == "conversation" ? id : null,
             customElementId: type == "customElement" ? id : null,
             moduleName: <"chat"|"notes2"|"tasks">this.options.customSectionList.moduleName,
-            hostHash: type == "host" ? id : (type == "customElement" ? localSession.hostHash : (hostId || localSession.hostHash)), 
+            hostHash: type == "host" ? id : (type == "customElement" ? localSession.hostHash : (hostId || localSession.hostHash)),
         });
     }
     
@@ -757,16 +763,17 @@ export class SidebarController extends ComponentController {
         let localSession = this.app.sessionManager.getLocalSession();
         let api = this.app.sessionManager.getVoiceChatServiceApi(localSession.hostHash);
         return Q().then(() => {
-            return api.getRoomsInfo().then(data => {
-                let sections = (data.sections as {users: string[], sectionId: string, roomId: string}[]);
-                if (sections.length > 0) {
-                    sections.forEach(s => {
-                        localSession.webSocketNotifier._notifyVoiceChatUsersChange(localSession, s.users, s.sectionId);
-                    })
-                }
-            })            
-        })
-
+            if ((<any>this.app).serverConfigForUser.privmxStreamsEnabled) {
+                return api.getRoomsInfo().then(data => {
+                    let sections = (data.sections as {users: string[], sectionId: string, roomId: string}[]);
+                    if (sections.length > 0) {
+                        sections.forEach(s => {
+                            localSession.webSocketNotifier._notifyVoiceChatUsersChange(localSession, s.users, s.sectionId);
+                        });
+                    }
+                });
+            }
+        });
     }
 
     onViewLoad(): void {
@@ -787,12 +794,12 @@ export class SidebarController extends ComponentController {
                     selected = x.section;
                     return;
                 }
-            });            
+            });
         }
         else
         if (elementType == "section") {
             selected = session.sectionManager.getSection(id);
-        }             
+        }
         if (selected) {
             let singletonId = "sectionsummarywindow-"+moduleName+"-"+session.hostHash+"-"+id;
             let registered = this.app.manager.getSingleton(singletonId);
@@ -809,10 +816,35 @@ export class SidebarController extends ComponentController {
             this.app.ioc.create(SectionSummaryWindowController, [this.parent, session, selected, moduleName, mainWidth]).then(win => {
                 this.app.openChildWindow(win);
                 this.app.manager.registerSingleton(singletonId, win.manager);
-            });    
+            });
         }
-
-
-}
+    }
+    
+    onVideoConferencesPollingResult(result: VideoConferencesPollingResult): void {
+        let conferences: ActiveVideoConferencesInfo = {};
+        conferences[result.hostHash] = {
+            sectionIds: [],
+            conversationIds: [],
+        };
+        let session = this.app.sessionManager.getSessionByHostHash(result.hostHash);
+        let sectionManager = session.sectionManager;
+        let conv2Service = session.conv2Service;
+        for (let conferenceData of result.conferencesData) {
+            let conv2 = conv2Service.collection.find(x => x.section && x.section.getId() == conferenceData.sectionId);
+            let section = sectionManager.getSection(conferenceData.sectionId);
+            if (conv2) {
+                conferences[result.hostHash].conversationIds.push(conv2.id);
+            }
+            else if (section) {
+                conferences[result.hostHash].sectionIds.push(section.getId());
+            }
+        }
+        let pollingResultStr = JSON.stringify(conferences);
+        if (this.prevVideoConferencesPollingResultStr == pollingResultStr) {
+            return;
+        }
+        this.prevVideoConferencesPollingResultStr = pollingResultStr;
+        this.callViewMethod("updateActiveConferences", pollingResultStr, this.app.sessionManager.getLocalSession().hostHash);
+    }
     
 }

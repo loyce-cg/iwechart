@@ -12,6 +12,7 @@ export class ActivateView extends BaseView<Model> {
     $keyInput: JQuery;
     $nextButton: JQuery;
     $keyInfo: JQuery;
+    $hostInput: JQuery;
     
     constructor(parent: LoginWindowView) {
         super(parent, mainTemplate);
@@ -29,6 +30,7 @@ export class ActivateView extends BaseView<Model> {
         this.$keyInput = this.$form.find(".words");
         this.$nextButton = this.$main.find("[data-action=go-next]");
         this.$keyInfo = this.$main.find(".key-info");
+        this.$hostInput = this.$main.find(".host-input");
         this.setNextEnabled(false);
         this.$keyInput.on('input propertychange', () => {
             this.parent.triggerEvent("keyInputChange", this.$keyInput.val());
@@ -74,12 +76,34 @@ export class ActivateView extends BaseView<Model> {
     setNextEnabled(enabled: boolean): void {
         this.$nextButton.prop("disabled", !enabled);
     }
+
+    onMnemonicEntered(isElectron: boolean): void {
+        if (isElectron) {
+            this.setKeyInfoVisible(false);
+            this.setHostInputVisible(true);                
+        }
+        else {
+            this.setKeyInfoVisible(true);
+            this.$keyInfo.empty().append(this.helper.i18n("window.login.activate.mnemonic.label"))
+        }
+        this.setNextEnabled(true);
+    }
     
+    setHostInputVisible(visible: boolean): void {
+        this.$hostInput.toggleClass("hide", !visible);
+    }
+
+    setKeyInfoVisible(visible: boolean): void {
+        this.$keyInfo.toggleClass("hide", !visible);
+    }
+
     onNextClick(): void {
         this.parent.triggerEvent("activateNextClick");
     }
     
     updateKeyInfo(isKeyCorrect: boolean, isAdmin: boolean, host: string): void {
+        this.setHostInputVisible(false);
+        this.setKeyInfoVisible(true);
         this.$keyInfo.empty();
         let inputValue = this.$keyInput.val();
         if (typeof inputValue === "string" && inputValue.length > 0) {
@@ -87,5 +111,15 @@ export class ActivateView extends BaseView<Model> {
             this.$keyInfo.append($template);
         }
         this.setNextEnabled(isKeyCorrect);
+    }
+
+    getHost(): string {
+        return (this.$hostInput.find("input").val() as string);
+    }
+
+    beforeFocus(): void {
+        this.$keyInfo.empty();
+        this.setHostInputVisible(false);
+        this.setKeyInfoVisible(true);
     }
 }

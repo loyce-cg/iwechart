@@ -84,6 +84,8 @@ import { PrivateUserCreator } from "./admin/userCreation/PrivateUserCreator";
 import { AdminRightService } from "./admin/AdminRightService";
 import { UserGroupCreatorService } from "./section/UserGroupCreatorService";
 import { ManagableUserCreator } from "./admin/userCreation/ManagableUserCreator";
+import { Router } from "../app/common/router/Router";
+import { ContextHistory } from "../app/common/contexthistory/ContextHistory";
 
 class FakeIoc {
     
@@ -672,7 +674,7 @@ export class PrivmxRegistry {
                 let defaultData: {[domain: string]: {mode: FilterMode}} = {};
                 defaultData[identity.host] = {mode: FilterMode.ALLOW};
                 return this.getKvdbMapWithMigration<MailFilterEntry>(MailConst.MAIL_FILTER_KVDB_INDEX, MailConst.MAIL_FILTER_FILENAME, defaultData).then(kvdb => {
-                    return new MailFilter(kvdb);
+                    return new MailFilter(kvdb, identity.host);
                 });
             });
         });
@@ -1116,6 +1118,14 @@ export class PrivmxRegistry {
     getLowUserService2(): Q.Promise<LowUserService2> {
         return this.ioc.resolve("lowUserService2");
     }
+
+    getRouter(): Q.Promise<Router> {
+        return this.ioc.resolve("router");
+    }
+
+    getContextHistory(): Q.Promise<ContextHistory> {
+        return this.ioc.resolve("contextHistory");
+    }
     
     getSinkIndexProvider(): Q.Promise<mail.SinkIndexProvider> {
         return this.ioc.resolve("sinkIndexProvider");
@@ -1176,7 +1186,7 @@ export class PrivmxRegistry {
     getLocaleService(): Q.Promise<LocaleService> {
         return this.ioc.resolve("localeService");
     }
-    
+
     getUserSettingsService(): Q.Promise<UserSettingsService> {
         return this.ioc.resolve("userSettingsService");
     }

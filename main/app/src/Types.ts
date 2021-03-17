@@ -17,6 +17,7 @@ import {Options as SelectContactsWindowOptions} from "./window/selectcontacts/Se
 import {NotificationController} from "./component/notification/NotificationController";
 import {ErrorLog} from "./app/common/ErrorLog";
 import {SectionService} from "./mail/section/SectionService";
+import {Conv2Section} from "./mail/section/Conv2Service";
 import {SinkIndex, PollingItem} from "./mail/SinkIndex";
 import {LowUser} from "./mail/LowUser";
 import {Profile, UserPreferences} from "./mail/UserPreferences";
@@ -28,7 +29,11 @@ import { MutableCollection } from "./utils/collection/MutableCollection";
 import { PrivmxRegistry } from "./mail/PrivmxRegistry";
 import { SimpleOpenableElement } from "./app/common/shell/ShellTypes";
 import { VoiceChatUser } from "./app/common/voicechat/VoiceChatService";
-import { Person } from "./mail/person/Person";
+import { Person, AvatarWithVersion } from "./mail/person/Person";
+import { VideoConferencesPollingResult } from "./app/common/videoconferences/VideoConferencesPolling";
+import { IContext } from "./app/common/contexthistory/Context";
+import { SoundsCategoryName } from "./sounds/SoundsLibrary";
+import { RoomMetadata } from "./app/common/videoconferences/VideoConferencesService";
 
 
 export namespace utils {
@@ -211,7 +216,7 @@ export namespace webUtils {
         name: string;
         present: boolean;
         description: string;
-        avatar: string;
+        avatar: AvatarWithVersion;
         lastUpdate: number;
         isEmail: boolean;
         isStarred: boolean;
@@ -224,13 +229,18 @@ export namespace webUtils {
         ipAddress: string;
     }
 
+    export interface AvatarWithVersion {
+        avatar: string;
+        revision: string;
+    }
+
     export interface PersonModelFullOptymized {
         hashmail: string;
         username: string;
         name: string;
         present: boolean;
         description: string;
-        avatar: app.BlobData;
+        avatar: {avatar: app.BlobData, revision: string};
         lastUpdate: number;
         isEmail: boolean;
         isStarred: boolean;
@@ -278,12 +288,14 @@ export namespace webUtils {
         }[];
         personsPresence?: number;
         isBellRinging?: boolean;
-        activeVoiceChatInfo?: webUtils.ActiveVoiceChatInfo
+        activeVoiceChatInfo?: webUtils.ActiveVoiceChatInfo;
+        activeVideoConferenceInfo?: webUtils.ActiveVideoConferenceInfo;
     }
     
     export interface SectionListElementModel {
         id: string;
         name: string;
+        description: string;
         unread: number;
         elementsCount: number;
         searchCount: number;
@@ -298,6 +310,7 @@ export namespace webUtils {
         pinned: boolean;
         isBellRinging?: boolean;
         activeVoiceChatInfo?: webUtils.ActiveVoiceChatInfo;
+        activeVideoConferenceInfo?: webUtils.ActiveVideoConferenceInfo;
     }
 
     export interface HostListElementModel {
@@ -385,6 +398,43 @@ export namespace webUtils {
         active: boolean;
         users: PersonSimpleModel[]
     }
+    
+    export interface ActiveVideoConferenceInfo {
+        users: PersonSimpleModel[];
+    }
+    
+    export interface Icon {
+        type: "fontAwesome" | "fontIco" | "fontPrivMX" | "badgeIcon" | "asset" | "img" | "avatar" | "none";
+        noBackground?: boolean;
+        withBorder?: boolean;
+        noFixedSize?: boolean;
+    }
+    
+    export interface IconFont extends Icon {
+        type: "fontAwesome" | "fontIco" | "fontPrivMX";
+        iconName: string;
+    }
+    
+    export interface IconAsset extends Icon {
+        type: "asset";
+        assetName: string;
+    }
+    
+    export interface IconImg extends Icon {
+        type: "img";
+        src: string;
+    }
+    
+    export interface IconBadgeIcon extends Icon {
+        type: "badgeIcon";
+        modelJsonStr: string | null;
+    }
+    
+    export interface IconAvatar extends Icon {
+        type: "avatar";
+        hashmail: string | null;
+    }
+    
 }
 
 export namespace event {
@@ -485,7 +535,7 @@ export namespace event {
     
     export interface AdditionalLoginStepEvent<T = any> extends Event<Q.Promise<void>> {
         type: "additionalloginstep";
-        basicLoginResult: {srpSecure: privfs.core.PrivFsSrpSecure};
+        basicLoginResult: privfs.types.core.AdditionalLoginContext;
         data: T;
     }
     
@@ -526,6 +576,7 @@ export namespace event {
     export interface ElectronNotificationServiceEvent extends Event {
         type: "notifyInTray" | "notifyInTooltip",
         options?: NotificationTooltipOptions,
+        ignoreSilentMode?: boolean,
         context?: NotificationContext,
     }
     
@@ -569,7 +620,9 @@ export namespace event {
         tray?: boolean,
         tooltip?: boolean,
         tooltipOptions?: NotificationTooltipOptions,
+        ignoreSilentMode?: boolean,
         context?: NotificationContext,
+        overrideSoundCategoryName?: SoundsCategoryName;
     }
     
     export interface NotificationTooltipOptions {
@@ -764,6 +817,34 @@ export namespace event {
         type: "streamsAction";
         action: "talk" | "mute" | "hangup";
     }
+
+    export interface GotVideoConferencesPollingResultEvent extends Event {
+        type: "got-video-conferences-polling-result";
+        hostHash: string;
+        result: VideoConferencesPollingResult;
+    }
+
+    export interface JoinVideoConferenceEvent extends Event {
+        type: "join-video-conference";
+        hostHash: string;
+        section?: SectionService;
+        conversation?: Conv2Section;
+        roomMetadata: RoomMetadata;
+    }
+    
+    export interface LeaveVideoConferenceEvent extends Event {
+        type: "leave-video-conference";
+    }
+
+    export interface PluginModuleReadyEvent extends Event {
+        type:"plugin-module-ready";
+        name: "chat" | "notes2" | "tasks";
+    }
+
+    export interface NetworkStatusChangeEvent extends Event {
+        type: "network-status-change",
+        status: "resumed" | "lost"
+    }
     
 }
 
@@ -790,6 +871,15 @@ export namespace app {
         notifications?: NotificationController;
         errorLog?: ErrorLog;
         getData: () => Q.IWhenable<privfs.lazyBuffer.IContent>;
+        sourceSectionId?: string;
+        sourcePath?: string;
+        sourceDid?: string;
+    }
+    
+    export enum SendFileSameLocationAction {
+        UPLOAD_FILE,
+        ONLY_SEND_CHAT_MESSAGE,
+        CANCEL,
     }
     
     export type OnLogoutCallback = () => boolean;
@@ -887,8 +977,7 @@ export namespace app {
 
     export interface PersonAvatar {
         hashmail: string;
-        lastUpdate: number;
-        avatar: string;
+        avatar: AvatarWithVersion;
         isEmail: boolean;
     }
     
@@ -984,6 +1073,7 @@ export namespace app {
         isElectron?: boolean;
         extraBodyAttributes?: { [key: string]: string };
         host?: string;
+        docked?: boolean;
     }
     
     export type WindowLoadOptions = WindowLoadOptionsHtml|WindowLoadOptionsUrl|WindowLoadOptionsBase|WindowLoadOptionsRender;
@@ -1002,6 +1092,7 @@ export namespace app {
         closable?: boolean;
         showLoadingScreen?: boolean;
         hideLoadingSpinner?: boolean;
+        canSetAlwaysOnTop?: boolean;
         decoration?: boolean;
         widget?: boolean;
         cssClass?: string;
@@ -1026,11 +1117,12 @@ export namespace app {
         keepSpinnerUntilViewLoaded?: boolean;
         manualSpinnerRemoval?: boolean;
         electronPartition?: string;
+        usePrivMXUserAgent?: boolean;
     }
     
     export interface HistoryEntry {
         pathname: string;
-        state?: string;
+        state?: IContext;
         key?: string;
     }
     
@@ -1076,8 +1168,8 @@ export namespace app {
     
     export interface Error {
         askToReport: boolean;
-        errorData: string;
-        occurredAt: number;
+        e: any;
+        message: string;
         helpCenterCode?: number;
     }
     
@@ -1226,6 +1318,7 @@ export namespace section {
         name: string;
         modules: {[module: string]: {enabled: boolean, data: string}};
         extraOptions: SectionExtra;
+        description: string;
     }
     
     export interface SectionBasicGroup {
@@ -1334,7 +1427,6 @@ export namespace section {
             createSubsections: string;
         };
         primary: boolean;
-        extraOptions: SectionExtra;
     }
     
     export interface SectionMessage {
@@ -1611,5 +1703,30 @@ export namespace subidentity {
         sectionPubKey: section.SectionKey;
         section: SectionService;
         privmxRegistry: PrivmxRegistry;
+    }
+}
+
+export namespace filesimporter {
+    export interface FileEntry {
+        path: string;
+        fileType: string;
+        size: number;
+    }
+    
+    export interface ScanResult {
+        path: string;
+        files: FileEntry[];
+        finished: boolean;
+        hasError: boolean;
+        err: any;
+    }
+   
+    export interface Message {
+        name: string;
+    }
+
+    export interface ProcessResult {
+        err: any;
+        hasError: boolean;
     }
 }

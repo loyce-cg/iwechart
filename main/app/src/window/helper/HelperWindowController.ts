@@ -21,7 +21,7 @@ export class HelperWindowController extends BaseWindowController {
     silentMode: boolean = false;
 
     constructor(parent: app.WindowParent) {
-        super(parent, __filename, __dirname);
+        super(parent, __filename, __dirname, null, null, "basic");
         this.ipcMode = true;
         this.openWindowOptions.hidden = true;
         this.skipLoadingFonts();
@@ -31,8 +31,8 @@ export class HelperWindowController extends BaseWindowController {
         this.silentMode = value;
     }
     
-    playAudio(soundName: string, force: boolean = false): void {
-        if (! this.silentMode || (this.silentMode && force)) {
+    playAudio(soundName: string, force: boolean = false, _ignoreSilentMode: boolean = undefined): void {
+        if (! this.silentMode || (this.silentMode && force) || _ignoreSilentMode === true) {
             this.callViewMethod("playAudio", soundName, force);
         } 
     }

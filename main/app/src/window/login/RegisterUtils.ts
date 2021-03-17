@@ -5,11 +5,16 @@ import * as Q from "q";
 
 export class RegisterUtils {
     constructor (public app: CommonApplication) {}
-
+    
+    private extractDataPartFromToken(token: string) {
+        return token.includes(":") ? token.split(":")[1] : token;
+    }
+    
     checkAndSetTokenInfo(tokenHash: string): boolean {
         let decoded: utils.RegisterTokenInfo;
         try {
-            let json = Buffer.from(privfs.bs58.decode(tokenHash.split(":")[1])).toString("utf-8");
+            const dataPart = this.extractDataPartFromToken(tokenHash);
+            const json = Buffer.from(privfs.bs58.decode(dataPart)).toString("utf-8");
             decoded = <utils.RegisterTokenInfo>JSON.parse(json);
         }
         catch(e) {
@@ -36,5 +41,9 @@ export class RegisterUtils {
                 });
             });
         })
-    }    
+    }
+    
+    isTextLookLikeMnemonic(text: string): boolean {
+        return text.trim().split(/\s+/g).length >= 12;
+    }
 }

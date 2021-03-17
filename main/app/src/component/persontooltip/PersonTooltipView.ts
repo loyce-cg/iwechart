@@ -39,9 +39,9 @@ export class PersonTooltipView {
         this.$currentAvatar = $e;
         let persons = (<string>$e.data("tooltip-trigger")).split(",").map(x => this.personsView.getPerson(x));
         this.$avatarPlaceholder = this.templateManager.createTemplate(tooltipTemplate).renderToJQ(persons);
-        this.$avatarPlaceholder.find("canvas").each((i, e) => {
+        this.$avatarPlaceholder.find("canvas").each((_i, e) => {
             let $e = $(e);
-            this.personsView.avatarService.draw(<HTMLCanvasElement>e, $e.data("hashmail-image"), this.personsView.getAvatarOptions($e));
+            this.personsView.avatarService.draw(<HTMLCanvasElement>e, $e.data("hashmail-image"), this.personsView.getAvatarOptions($e), false);
         });
         $("body").append(this.$avatarPlaceholder);
         this.ellipsis(this.$avatarPlaceholder.find(".description-container"));

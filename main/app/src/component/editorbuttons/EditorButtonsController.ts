@@ -11,6 +11,7 @@ import { TaskChooserWindowController } from "../../window/taskchooser/main";
 import { LocaleService, filetree } from "../../mail";
 import { i18n } from "./i18n";
 import { Session } from "../../mail/session/SessionManager";
+import { OpenableSectionFile } from "../../mail/section";
 
 export type EditorButtonsParent = BaseWindowController & {
     openableElement: OpenableElement;
@@ -93,7 +94,7 @@ export class EditorButtonsController extends WindowComponentController<EditorBut
         if (!this.app.isElectronApp() || isLocalFile) {
             return false;
         }
-        if (mime == "application/x-stt" || mime == "application/x-smm") {
+        if (mime == "application/x-stt" || mime == "application/x-smm" || mime == "application/x-svv" || mime == "application/x-saa") {
             return false;
         }
         return true;
@@ -114,6 +115,11 @@ export class EditorButtonsController extends WindowComponentController<EditorBut
         })
         .progress(progress => {
             this.parent.notifications.progressNotification(notificationId, progress);
+        })
+        .catch(e => {
+            if (e !== "no-choose") {
+               this.parent.getLogger().warn("Error during downloading", e); 
+            }
         })
         .fin(() => {
             this.parent.notifications.hideNotification(notificationId);
@@ -206,10 +212,21 @@ export class EditorButtonsController extends WindowComponentController<EditorBut
     
     onViewSend(): void {
         if (this.parent.openableElement) {
+            let sourceSectionId: string = null;
+            let sourcePath: string = null;
+            let sourceDid: string = null;
+            if ((this.parent.openableElement instanceof OpenableSectionFile) && this.parent.openableElement.section) {
+                sourceSectionId = this.parent.openableElement.section.getId();
+                sourcePath = this.parent.openableElement.path;
+                sourceDid = this.parent.openableElement.handle.ref.did;
+            }
             this.app.sendFile({
                 getData: () => this.parent.openableElement.getSliceableContent(),
                 notifications: this.parent.notifications,
                 parent: this.parent.getClosestNotDockedController(),
+                sourceSectionId: sourceSectionId,
+                sourcePath: sourcePath,
+                sourceDid: sourceDid,
             });
         }
     }

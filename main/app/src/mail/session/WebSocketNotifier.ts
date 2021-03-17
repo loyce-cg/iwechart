@@ -17,6 +17,7 @@ export class WebSocketNotifier {
     static readonly NOTIFICATION_TYPE_PKI_REVISION: string = "userPkiRevision";
     static readonly NOTIFICATION_TYPE_ONLINE_STATE: string = "onlineState";
     static readonly NOTIFICATION_TYPE_ROOM_STATE: string = "roomState";
+    static readonly NOTIFICATION_TYPE_VIDEO_ROOM_STATE: string = "videoRoomState";
     
     notifier: privfs.rpc.NotifyService;
     connected: boolean = false;
@@ -49,7 +50,16 @@ export class WebSocketNotifier {
         })
 
     }
-
+    
+    _notifyVideoChatUsersChange(session: Session, users: string[], sectionId: string): void {
+        users = users.map(user => {
+            if (user.indexOf("#") < 0) {
+                return `${user}#${session.host}`;
+            }
+            return user;
+        })
+        this.app.videoConferencesService.polling.update(session, sectionId, users);
+    }
 
     getContext(session: Session, sectionId: string): string {
         let conv2Id: string = null;
@@ -192,11 +202,6 @@ export class WebSocketNotifier {
     }
 
     getVoiceChatCachedUsers(session: Session, sectionId: string): string[] {
-        // if (sectionId.indexOf("c2:") == 0) {
-        //     let convSectionId = session.conv2Service.collection.find(x => x.id == sectionId).section.getId();
-        //     return this.cachedVoiceChatUsersDataMap[session.hostHash + "-" + convSectionId] || [];
-
-        // }
         let id = this.getProperId(session, sectionId);
         return id && this.cachedVoiceChatUsersDataMap[session.hostHash + "-" + id] ? this.cachedVoiceChatUsersDataMap[session.hostHash + "-" + id] : [];
     }
@@ -212,85 +217,114 @@ export class WebSocketNotifier {
         }
     }
 
-    init(): Q.Promise<void> {
-        this.reconnecting = true;
-        if (this.connectionCheckerInterval) {
-            clearInterval(this.connectionCheckerInterval);
-        }
+    private startReconnectLoop(): void {
+        this.stopReconnectLoop();
         this.connectionCheckerInterval = setInterval(() => {
             this.reconnect()
         }, 5000);
-        return Q().then(() => {
+    }
 
-            return this.session.mailClientApi.privmxRegistry.getGateway();
-        })
-        .then(gateway => {
-            return gateway.rpc.createWebSocketNotifier((role, data) => {
-                if (role == WebSocketNotifier.NOTIFICATION_TYPE_PKI_REVISION) {
-                    let eData = <PmxApi.api.event.UserPkiRevisionEventData>data;
-                    let userHashmail = new privfs.identity.Hashmail({user: eData.username, host: this.session.host});
-                    this.session.conv2Service.personService.updatePkiRevision(userHashmail.hashmail, eData.pkiRevision);
-                }
-                else
-                if (role == WebSocketNotifier.NOTIFICATION_TYPE_ONLINE_STATE) {
-                    let eData = <PmxApi.api.user.UsernameEx>data;
-                    let userHashmail = new privfs.identity.Hashmail({user: eData.username, host: this.session.host});
-                    this.session.conv2Service.personService.updateExtraInfo(userHashmail.hashmail, eData);
-                    this.eventDispatcher.dispatchEvent<event.UserPresenceChangeEvent>({
-                        type: "user-presence-change",
-                        hostHash: this.session.hostHash,
-                        host: this.session.host,
-                        role: role,
-                        data: eData
-                    });
-                }
-                else
-                if (role == WebSocketNotifier.NOTIFICATION_TYPE_ROOM_STATE) {
-                    if (! this.app.serverConfigForUser.privmxStreamsEnabled) {
-                        return;
-                    }
-                    let eData = <PmxApi.api.event.RoomStateEventData>data;
-                    this._notifyVoiceChatUsersChange(this.session, eData.users, eData.sectionId);
-                }
-                else
-                if (role == "descriptorReleased" || role == "descriptorLocked" || role == "descriptorModified" || role == "descriptorDeleted"
-                || role == "descriptorCreated" || role == "descriptorUpdated") {
-                    this.fireFileLockChangedEvent(role, data);
-                }
-            }, () => {
+    private stopReconnectLoop(): void {
+        if (this.connectionCheckerInterval) {
+            clearInterval(this.connectionCheckerInterval);
+            this.connectionCheckerInterval = null;
+        }
+    }
 
-                Logger.warn("websocket disconnected (in main)");
-                this.connected = false;
-                this.reconnecting = false;
-            })
-            .then(notifier => {
-                this.notifier = notifier;
-                this.connected = true;
-                this.reconnecting = false;
-                this.refreshUsersPresence();
-                Logger.info("connected");
-            })
-            .fail((e) => {
-                this.connected = false;
-                Logger.error("WebSocket error", e);
-                // this.eventDispatcher.dispatchEvent<event.UserPresenceChangeEvent>({
-                //     type: "user-presence-change",
-                //     hostHash: this.session.hostHash,
-                //     host: this.session.host,
-                //     role: "error",
-                //     data: e
-                // });
-                this.eventDispatcher.dispatchEvent<event.LostConnectionInWebSocketEvent>({
-                    type: "lost-connection-in-web-socket",
-                    hostHash: this.session.hostHash
-                })
-                return null;
-            })
-        })
-        .fin(() => {
+    async init(): Promise<void> {
+        if (this.connected) {
+            return;
+        }
+        this.reconnecting = true;
+        this.startReconnectLoop();
+
+        const gateway = await this.session.mailClientApi.privmxRegistry.getGateway();
+        try {
+            const notifier = await gateway.rpc.createWebSocketNotifier(
+                this.onSocketNotification.bind(this),
+                this.onSocketDisconnect.bind(this)
+            );  
+            this.notifier = notifier;
+            this.connected = true;
             this.reconnecting = false;
-        })
+            this.refreshUsersPresence();
+            Logger.info("connected");
+            this.stopReconnectLoop();
+        }
+        catch(e) {
+            this.connected = false;
+            this.reconnecting = false;
+            Logger.info("WebSocket error", e);
+            this.eventDispatcher.dispatchEvent<event.LostConnectionInWebSocketEvent>({
+                type: "lost-connection-in-web-socket",
+                hostHash: this.session.hostHash
+            })
+            this.startReconnectLoop();
+        }
+    }
 
+    private onSocketNotification(role: string, data: any): void {
+        if (role == WebSocketNotifier.NOTIFICATION_TYPE_PKI_REVISION) {
+            let eData = <PmxApi.api.event.UserPkiRevisionEventData>data;
+            let userHashmail = new privfs.identity.Hashmail({user: eData.username, host: this.session.host});
+            this.session.conv2Service.personService.updatePkiRevision(userHashmail.hashmail, eData.pkiRevision);
+        }
+        else
+        if (role == WebSocketNotifier.NOTIFICATION_TYPE_ONLINE_STATE) {
+            let eData = <PmxApi.api.user.UsernameEx>data;
+            let userHashmail = new privfs.identity.Hashmail({user: eData.username, host: this.session.host});
+            this.session.conv2Service.personService.updateExtraInfo(userHashmail.hashmail, eData);
+            this.eventDispatcher.dispatchEvent<event.UserPresenceChangeEvent>({
+                type: "user-presence-change",
+                hostHash: this.session.hostHash,
+                host: this.session.host,
+                role: role,
+                data: eData
+            });
+        }
+        else
+        if (role == WebSocketNotifier.NOTIFICATION_TYPE_ROOM_STATE) {
+            if (! this.app.serverConfigForUser.privmxStreamsEnabled) {
+                return;
+            }
+            let eData = <PmxApi.api.event.RoomStateEventData>data;
+            this._notifyVoiceChatUsersChange(this.session, eData.users, eData.sectionId);
+        }
+        else if (role == WebSocketNotifier.NOTIFICATION_TYPE_VIDEO_ROOM_STATE) {
+            let eData = <PmxApi.api.video.RoomInfo>data;
+            this._notifyVideoChatUsersChange(this.session, eData.users, eData.sectionId);
+        }
+        else
+        if (role == "descriptorReleased" || role == "descriptorLocked" || role == "descriptorModified" || role == "descriptorDeleted"
+        || role == "descriptorCreated" || role == "descriptorUpdated") {
+            this.fireFileLockChangedEvent(role, data);
+        }
+
+    }
+
+    private onSocketDisconnect(): void {
+        Logger.info("websocket disconnected (in main)");
+        this.connected = false;
+        this.reconnecting = false;
+        this.destroyNotifier();
+        this.startReconnectLoop();
+    }
+
+    destroyNotifier(): void {
+        this.notifier.rpc.disconnect();
+        this.notifier.disconnect();
+        this.notifier.onDisconnect = null;
+        this.notifier.onNotification = null;
+        clearTimeout(this.notifier.rpc.timer);
+        this.notifier.rpc.timer = null;
+        this.notifier.rpc.connection.onDisconnect = null;
+        this.notifier.rpc.connection.onReceivedMessage = null;
+        this.notifier.rpc.connection.ticketsManager.clearTickets();
+        this.notifier.rpc.connection.ticketsManager.savedStates = null;
+        this.notifier.rpc.connection.ticketsManager = null;
+        this.notifier.rpc.connection = null;
+        this.notifier.rpc = null;
+        this.notifier = null;
     }
 
     fireFileLockChangedEvent(role: event.DescriptorLockEventRole, data: PmxApi.api.event.DescriptorCreatedEventData | PmxApi.api.event.DescriptorUpdatedEventData
@@ -330,22 +364,21 @@ export class WebSocketNotifier {
         })
     }
 
-    reconnect(): Q.Promise<void> {
-        return Q().then(() => {
-            if (this.reconnecting || this.connected) {
-                if (this.connected) {
-                    Logger.info("already connected")
-                }
-                return Q();
+    async reconnect(): Promise<void> {
+        if (this.reconnecting || this.connected) {
+            if (this.connected) {
+                Logger.info("already connected");
             }
-            Logger.warn("reconnecting ...");
-            return this.init();
-        })
+            return;
+        }
+        Logger.info("reconnecting ...");
+        return this.init();
     }
 
     closeConnection(): void {
         if (this.notifier) {
             this.notifier.disconnect();
+            this.destroyNotifier();
         }
     }
 

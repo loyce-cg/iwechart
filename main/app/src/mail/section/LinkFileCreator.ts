@@ -21,6 +21,13 @@ export class LinkFileCreator {
     }
     
     uploadLinkFilesFromText(text: string, errorCallback: (e: any) => void) {
+        let links = this.getLinksFromText(text);
+        links.forEach(link => {
+            this.uploadLinkFile(link).fail(errorCallback);
+        });
+    }
+    
+    getLinksFromText(text: string) {
         let invalidStrings: string[] = [
             "<br>", "<br/>", "&nbsp;", "\t", "\r", "\n"
         ];
@@ -31,15 +38,17 @@ export class LinkFileCreator {
             tempString = tempString.replace(new RegExp(inv, 'g'), " ");
         });
         let words = tempString.split(" ");
+        let links: string[] = [];
         words.forEach(word => {
             word = Lang.endsWith(word, ".") ? word.substring(0, word.length - 1) : word;
             if (Lang.startsWith(word, "http://") ||
                 Lang.startsWith(word, "https://") ||
                 Lang.startsWith(word, "ftp://") ||
                 Lang.startsWith(word, "www.")) {
-                this.uploadLinkFile(word).fail(errorCallback);
+                links.push(word);
             }
         });
+        return links;
     }
     
     getLinkName(url: string) {

@@ -106,7 +106,7 @@ export class MsgBoxWindowController extends BaseWindowController {
     preventClose: boolean;
     
     constructor(parent: app.WindowParent, options: MsgBoxOptions) {
-        super(parent, __filename, __dirname);
+        super(parent, __filename, __dirname, null, null, "basic");
         this.ipcMode = !options.disableIPC;
         this.setViewBasicFonts();
         this.options = Utils.fillByDefaults(options, {
@@ -142,7 +142,6 @@ export class MsgBoxWindowController extends BaseWindowController {
             no: {
                 visible: false,
                 label: this.i18n("core.button.no.label"),
-                faIcon: "times",
                 btnClass: "btn-default",
                 action: {
                     type: "close",
@@ -199,13 +198,14 @@ export class MsgBoxWindowController extends BaseWindowController {
             return this.options;
         }
         let options: any = {};
-        for (let key in options) {
-            let value = (<any>options)[key];
+        for (let key in this.options) {
+            let value = (<any>this.options)[key];
             if (typeof(value) != "function") {
                 options[key] = value;
             }
         }
-        return this.options;
+        options.extraHandlers = [];
+        return options;
     }
     
     onViewAction(name: string): void {

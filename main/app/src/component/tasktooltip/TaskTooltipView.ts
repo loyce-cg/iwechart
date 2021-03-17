@@ -2,15 +2,24 @@ import * as Types from "../../Types";
 import { TooltipView } from "../tooltip/web";
 import {func as sectionTemplate} from "../template/custom-element.html";
 import {func as personTemplate} from "../template/conversation.html";
-import {func as iconTemplate} from "../template/taskgroup-icon.html";
+import {func as iconTemplate} from "../template/icon.html";
+import * as $ from "jquery";
+
+interface TaskTooltipOptions {
+    showCtrlClickInfo: boolean;
+}
 
 export class TaskTooltipView extends TooltipView {
     
     refreshAvatars: () => void = () => null;
+    options: TaskTooltipOptions = {
+        showCtrlClickInfo: false,
+    };
     
-    constructor(public parent: Types.app.ViewParent) {
+    constructor(public parent: Types.app.ViewParent, options?: Partial<TaskTooltipOptions>) {
         super(parent);
         this.tooltipName = "task";
+        this.options = $.extend({}, this.options, options);
     }
     
     setContent(taskId: string, cnt: string) {
@@ -69,7 +78,10 @@ export class TaskTooltipView extends TooltipView {
                 html += "    <div class='task-tooltip-taskgroups'>";
                 for (let tg of data.taskGroups) {
                     let escaped = this.helper.escapeHtml(tg.name);
-                    let icon = tg.icon ? iconTpl.render(tg.icon) : "";
+                    let icon = tg.icon ? iconTpl.render(<Types.webUtils.IconBadgeIcon>{
+                        type: "badgeIcon",
+                        modelJsonStr: tg.icon,
+                    }) : "";
                     html += '<span class="taskgroup-label ' + (tg.pinned ? "pinned" : "") + '" title="' + escaped + '"><span>' + icon + '</span><span>' + escaped + '</span></span>';
                 }
                 html += "    </div>";
@@ -131,6 +143,9 @@ export class TaskTooltipView extends TooltipView {
                 }
                 html += "    </div>";
                 html += "  </div>";
+            }
+            if (this.options.showCtrlClickInfo) {
+                html += `    <div class="task-tooltip-click-to-open">${this.helper.escapeHtml(this.helper.i18n("core.hint.ctrlClickToOpen"))}</div>`
             }
             html += "</div>";
             

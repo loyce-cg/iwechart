@@ -12,21 +12,23 @@ xhr2.nodejsSet({
     httpsAgent: new https.Agent({keepAlive: true}),
 });
 
-let starterClass: Starter;
-let starter;
+
+export let starter: Starter;
 switch (process.platform) {
     case "linux":
-        starterClass = new LinuxStarter();
+        starter = new LinuxStarter();
         break;
     case "win32":
-        starterClass = new WinStarter();
+        starter = new WinStarter();
         break;
     case "darwin":
-        starterClass = new MacStarter();
+        starter = new MacStarter();
         break;
 }
 
-if (starterClass) {
-    // starter = new starterClass();
-    starterClass.run();
+if (starter) {
+    starter.run();
 }
+
+// for chrome://inspect to get instance of the node app:
+// let app = require("./app/out/app/electron/start.js").starter.instance

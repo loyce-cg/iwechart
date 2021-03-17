@@ -2,6 +2,7 @@ import {window, utils, mail, component, Q, Types} from "pmc-mail";
 import Inject = utils.decorators.Inject;
 import { i18n } from "./i18n/index";
 import { UpdateAppsSpinnersEvent } from "../../main/AppsPlugin";
+import { State, StatisticsChangeEvent, UsageStatisticsService } from "../../usagestatistics/UsageStatisticsService";
 
 export interface SectionModel {
     primary: boolean,
@@ -26,6 +27,7 @@ export interface ViewModel {
     tasksFullyLoaded: boolean;
     calendarFullyLoaded: boolean;
     appVersion?: string;
+    isElectron: boolean;
 }
 
 export class AppsWindowController extends window.base.BaseAppWindowController {
@@ -47,6 +49,8 @@ export class AppsWindowController extends window.base.BaseAppWindowController {
     pinnedSectionIds: string[] = [];
     allSpinnersHidden: boolean = false;
     session: mail.session.Session;
+    usageStats: UsageStatisticsService;
+    currentUsageStats: StatisticsChangeEvent;
     
     refreshBadgesLoaded(): void {
         for (let id in this.fullyLoadedModule) {
@@ -66,12 +70,17 @@ export class AppsWindowController extends window.base.BaseAppWindowController {
             let dblClick: boolean = this.app.userPreferences.getUnreadBadgeUseDoubleClick();
             return this.app.localeService.i18n(`markAllAsRead.tooltip.${dblClick?'double':'single'}Click`);
         };
+
         this.refreshPinnedSectionIdsList();
         this.app.userPreferences.eventDispatcher.addEventListener<Types.event.UserPreferencesChangeEvent>("userpreferenceschange", (event) => {
             this.onUserPreferencesChange(event);
         });
 
         this.navBar.activeLogo = false;
+    }
+
+    updateStatisticsInView(event: StatisticsChangeEvent): void {
+        this.callViewMethod("updateStatistics", event.messages, event.tasks, event.files);
     }
     
     registerBadgesEvents(): void {
@@ -141,13 +150,18 @@ export class AppsWindowController extends window.base.BaseAppWindowController {
 
             this.sectionList = this.addComponent("sectionList", this.componentFactory.createComponent("extlist", [this, this.sortedSectionsCollection]));
             this.sectionList.ipcMode = true;
-            this.app.eventDispatcher.addEventListener("first-login-info-closed", this.showFilesUserGuide.bind(this));
-
+            this.bindEvent(this.app, "first-login-info-closed", this.showFilesUserGuide.bind(this));
             return this.app.mailClientApi.loadUserPreferences();
         })
         .then(() => {
             this.registerBadgesEvents();
-            return;
+        })
+        .then(() => {
+            this.usageStats = new UsageStatisticsService(this.app, this.app.sessionManager.getLocalSession());       
+            this.usageStats.eventDispatcher.addEventListener<StatisticsChangeEvent>("statistics-change", event => {
+                this.currentUsageStats = event;
+                this.updateStatisticsInView(event);
+            });
         })
         .then(() => {
             this.app.addEventListener<UpdateAppsSpinnersEvent>("update-apps-spinners", e => {
@@ -184,14 +198,27 @@ export class AppsWindowController extends window.base.BaseAppWindowController {
             notes2FullyLoaded: notes2FullyLoaded,
             tasksFullyLoaded: tasksFullyLoaded,
             calendarFullyLoaded: calendarFullyLoaded,
-            appVersion: this.app.getVersion().ver
+            appVersion: this.app.getVersion().ver,
+            isElectron: this.app.isElectronApp()
         };
     }
     
     onViewSetAllSpinnersHidden(allSpinnersHidden: boolean): void {
         this.allSpinnersHidden = allSpinnersHidden;
     }
+
+    onViewLoad(): void {
+        if (this.currentUsageStats) {
+            this.updateStatisticsInView(this.currentUsageStats);
+        }
+    }
     
+    onActivate(): void {
+        this.usageStats.refresh().catch(e => {
+            this.logError(e);
+        });
+    }
+
     getAppWindows() {
         return this.parent.appWindows
             .filter(x => x.visible !== false)
@@ -258,7 +285,8 @@ export class AppsWindowController extends window.base.BaseAppWindowController {
             return this.sectionManager.load()
         })
         .then(() => {
-            if (this.sectionManager.sectionsCollection.list.length == 1 && this.sectionManager.sectionsCollection.list[0].getId() == "private:admin") {
+            const privateSectionId = this.sectionManager.getMyPrivateSection().getId();
+            if (this.sectionManager.sectionsCollection.list.length == 1 && this.sectionManager.sectionsCollection.list[0].getId() == privateSectionId) {
                 return false;
             }
             return true;
@@ -288,22 +316,15 @@ export class AppsWindowController extends window.base.BaseAppWindowController {
                 shape: "rounded-rectangle",
                 text: this.i18n("plugin.apps.window.apps.filesUserGuide.text"),
                 side: "bottom",
-                onClick: () => {
-                    this.userGuide.close();
-                    this.callViewMethod("closeFilesUserGuide");
-                    this.removeComponent("userguide");
-                    this.parent.redirectToAppWindow("notes2");
-                },
-                // actionButton: {
-                //     text: "Ok",
-                //     onClick: () => {
-                //         console.log("button clicked");
-                //         this.userGuide.close();
-                //         this.callViewMethod("closeFilesUserGuide");
-                //         this.removeComponent("userguide");
-                //     }
-                // }
-                }]));
+            }]));
+            this.userGuide.ipcMode = true;
+            this.userGuide.setOnClick(() => {
+                this.userGuide.close();
+                this.callViewMethod("closeFilesUserGuide");
+                this.removeComponent("userguide");
+                this.parent.redirectToAppWindow("notes2");        
+            });
+
             this.callViewMethod("showFilesUserGuide");
         })
     }
@@ -354,7 +375,7 @@ export class AppsWindowController extends window.base.BaseAppWindowController {
     }
     
     onUserPreferencesChange(event: Types.event.UserPreferencesChangeEvent) {
+        super.onUserPreferencesChange(event);
         this.refreshPinnedSectionIdsList();
     }
-
 }

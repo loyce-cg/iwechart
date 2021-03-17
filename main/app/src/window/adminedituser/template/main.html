@@ -92,7 +92,11 @@
                   <img src="{{@ img }}" alt="" />
                 </div>
               </div>
-              <div class="name">{{@ name }}</div>
+              <div class="name">{{@ name }}
+                {{ if (model.blocked) { {{ 
+                  <span class="blocked-label">({{@Helper.i18n("window.adminEditUser.users.details.blocked")}})</span>                  
+                }} } }}
+              </div>
               <div class="description">{{@ description }}</div>
             </div>
           </div>
@@ -203,7 +207,7 @@
           }
         }}
         
-        <div class="field">
+        <div class="field buttons">
           <div class="info"></div>
           <div class="input">
             <button type="button" class="btn btn-success" data-action="save-changes">
@@ -222,6 +226,24 @@
                 {{@Helper.i18n("window.adminEditUser.users.details.button.resetPassword.text")}}
               </button>
             }} } }}
+            {{
+              if (! model.myself) {
+                if (model.blocked) { {{
+                  <button type="button" class="btn btn-default" data-action="unblock-user">
+                    <i class="fa fa-unlock"></i>
+                    {{@Helper.i18n("window.adminEditUser.users.details.button.unblock.text")}}
+                  </button>
+                }} }
+                else { {{
+                  <button type="button" class="btn btn-default" data-action="block-user">
+                    <i class="fa fa-lock"></i>
+                    {{@Helper.i18n("window.adminEditUser.users.details.button.block.text")}}
+                  </span>
+                }} }
+  
+              }
+            }}
+        
             <button type="button" class="btn btn-default" data-action="close">
               {{@Helper.i18n("core.button.close.label")}}
             </button>

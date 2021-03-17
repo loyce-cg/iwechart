@@ -13,6 +13,7 @@ import { Entry } from "../../mail/filetree/NewTree";
 import { LocaleService } from "../../mail";
 import { i18n } from "./i18n";
 import { Session } from "../../mail/session/SessionManager";
+import { WebUtils } from "../../web-utils";
 
 
 export interface Options {
@@ -93,7 +94,7 @@ export class EditorWindowController extends BaseWindowController {
         let client = this.session.sectionManager.client;
         this.registerPmxEvent(client.storageProviderManager.event, this.onStorageEvent);
 
-        this.app.addEventListener<event.FileLockChangedEvent>("file-lock-changed", event => {
+        this.bindEvent<event.FileLockChangedEvent>(this.app, "file-lock-changed", event => {
             if (this.editorButtons) {
                 Q.all([
                     this.isFileLocked(),
@@ -109,6 +110,9 @@ export class EditorWindowController extends BaseWindowController {
     
     reopen(openableElement: OpenableElement) {
         this.currentViewId++;
+        let client = this.session.sectionManager.client;
+        this.unregisterPmxEvent(client.storageProviderManager.event, this.onStorageEvent);
+        this.registerPmxEvent(client.storageProviderManager.event, this.onStorageEvent);
         this.openableElement = openableElement;
         this.setWindowIcon(this.openableElement);
         this.refreshName();
@@ -123,7 +127,8 @@ export class EditorWindowController extends BaseWindowController {
     }
     
     release() {
-        this.currentViewId++;
+        let client = this.session.sectionManager.client;
+        this.unregisterPmxEvent(client.storageProviderManager.event, this.onStorageEvent);
         this.openableElement = null;
         this.refreshName();
         this.callViewMethod("release", this.currentViewId);
@@ -136,7 +141,7 @@ export class EditorWindowController extends BaseWindowController {
             previewMode: this.previewMode,
             printMode: this.printMode,
             systemLabel: this.app.isElectronApp() ? (<any>this.app).getSystemLabel() : undefined,
-            localFile: this.openableElement ? this.openableElement.isLocalFile() : false
+            localFile: this.openableElement ? this.openableElement.isLocalFile() : false,
         };
     }
     
@@ -193,7 +198,7 @@ export class EditorWindowController extends BaseWindowController {
         })
     }
     
-    onViewLoad() {
+    onViewLoad() {        
         this.loadData();
     }
     

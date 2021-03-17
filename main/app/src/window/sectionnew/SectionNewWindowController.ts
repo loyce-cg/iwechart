@@ -12,8 +12,12 @@ import { UtilApi } from "../../mail/UtilApi";
 import { SectionUtils } from "../../mail/section/SectionUtils";
 import { LocaleService } from "../../mail";
 import { i18n } from "./i18n";
+import { PersonsController } from "../../component/persons/PersonsController";
+import { ContactService } from "../../mail/contact/ContactService";
+import { Lang } from "../../utils/Lang";
 
 export interface Model {
+    host: string;
     modules: string[];
     docked: boolean;
     state: State;
@@ -51,6 +55,7 @@ export interface SectionUpdateResult {
     state: section.SectionState;
     userSettings: section.UserSettings;
     isPrivate: boolean;
+    description: string;
 }
 
 export interface Options {
@@ -76,6 +81,7 @@ export class SectionNewWindowController extends BaseWindowController {
     
     @Inject identityProvider: utils.IdentityProvider;
     @Inject utilApi: UtilApi;
+    @Inject contactService: ContactService;
     deferred: Q.Deferred<SectionUpdateResult>;
     deferredSection: Q.Deferred<SectionService>;
     sectionManager: SectionManager;
@@ -84,6 +90,7 @@ export class SectionNewWindowController extends BaseWindowController {
     docked: boolean;
     onlyReturnResult: boolean;
     activeSection: SectionService;
+    personsComponent: PersonsController;
     
     constructor(parent: app.WindowParent, public options: Options) {
         super(parent, __filename, __dirname);
@@ -93,6 +100,7 @@ export class SectionNewWindowController extends BaseWindowController {
         this.sectionManager = options.manager;
         this.docked = !!options.docked;
         this.onlyReturnResult = !!options.onlyReturnResult;
+        this.personsComponent = this.addComponent("personsComponent", this.componentFactory.createComponent("persons", [this]));
         
         this.openWindowOptions = {
             toolbar: false,
@@ -139,7 +147,10 @@ export class SectionNewWindowController extends BaseWindowController {
                 modules: this.modules.map(x => {
                     return {id: x, selected: true};
                 }),
-                group: {users: [user], groups: []},
+                // group: {users: [user], groups: []},
+                group: {
+                    users: [], groups: [SectionUtils.LOCAL_USERS_GROUP]
+                },
                 state: "enabled",
                 acl: {
                     createSubsections: {admins: false, all: false, users: [user]},
@@ -158,8 +169,33 @@ export class SectionNewWindowController extends BaseWindowController {
         this.callViewMethod("setState", this.state);
     }
     
+    getAvailableUsers(sectionUsers: string[], model: section.SectionUpdateModelDecrypted): string[] {
+        let host = this.identityProvider.getIdentity().host;
+        let ret: string[] = [];
+        let availGroups = SectionUtils.getPredefinedGroups();
+
+        sectionUsers.forEach(x => {
+            if (availGroups.indexOf(x) != -1) {
+                ret.push(x);
+            }
+            else
+            if (x.indexOf("<") == -1) {
+                ret.push(x);
+            }
+            else 
+            if(this.contactService.getContactByHashmail(x + "#" + host) != null) {
+                ret.push(x);
+            }
+        });
+        let reduced = ret.filter(item => {
+            return this.contactService.deletedUsers.indexOf(item) == -1; 
+        })
+        return reduced;
+    }
+
     getModel(): Model {
         return {
+            host: this.identityProvider.getIdentity().host,
             modules: this.modules,
             docked: this.docked,
             state: this.state
@@ -268,14 +304,22 @@ export class SectionNewWindowController extends BaseWindowController {
                 let newSection: section.SectionCreateModelDecrypted = {
                     id: null,
                     parentId: updateResult.parentId != SectionsWindowController.ROOT_ID ? updateResult.parentId : null,
-                    data: {name: updateResult.name, modules: {}, extraOptions: null},
-                    group: {type: "usernames", users: [this.identityProvider.getIdentity().user]},
+                    data: {
+                        name: updateResult.name, 
+                        modules: {}, 
+                        extraOptions: null,
+                        description: updateResult.description
+                    },
+                    group: {
+                        type: SectionUtils.getProperGroupType(updateResult.group.groups),
+                        users: SectionUtils.filterUsers(updateResult.group.users)
+                    },
                     state: updateResult.state,
                     acl: updateResult.isPrivate ? {
                         manage: {admins: false, all: false, users: [this.identityProvider.getIdentity().user]},
                         createSubsections: {admins: false, all: false, users: [this.identityProvider.getIdentity().user]}
                     } : updateResult.acl,
-                    primary: false,
+                    primary: false
                 };
                 return this.sectionManager.createSectionWithModules(newSection, updateResult.modules, false);
             }
@@ -354,6 +398,20 @@ export class SectionNewWindowController extends BaseWindowController {
     }
 
     
+    setUsersAndGroups(type: string, users: string[], groups: string[]): void {
+        if (type == "group") {
+            
+            this.state.group.users = users;
+            this.state.group.groups = groups;
+        }
+        else if (type == "manage") {
+            this.state.acl.manage.users = users.concat(groups);
+        }
+        else if (type == "createSubsections") {
+            this.state.acl.createSubsections.users = users.concat(groups);
+        }
+    }
+
     setUsers(type: string, users: string[], groups: string[]): void {
         if (type == "group") {
             this.state.group.users = users;
@@ -383,7 +441,7 @@ export class SectionNewWindowController extends BaseWindowController {
     onViewChooseUsers(type: string) {
         this.app.ioc.create(SelectContactsWindowController, [this.parent, {
             editable: true,
-            hashmails: this.getUsers(type).map(x => {
+            hashmails: Lang.unique(this.getUsers(type).concat(this.getGroups(type)).map(x => {
                 let groups = SectionUtils.getPredefinedGroups(this.identityProvider.getRights());
                 if (groups.indexOf(x) > -1) {
                     return x;
@@ -392,7 +450,7 @@ export class SectionNewWindowController extends BaseWindowController {
                     return x + "#" + this.identityProvider.getIdentity().host;
                 }
                 
-            }),
+            })),
             fromServerUsers: true,
             allowMyself: true,
             allowGroups: true,
@@ -405,7 +463,7 @@ export class SectionNewWindowController extends BaseWindowController {
                 let groups = hashmails.filter(x => availGroups.indexOf(x) > -1);
                 let leftHashmails = hashmails.filter(x => groups.indexOf(x) == -1);
                 let users = leftHashmails.map(x => x.split("#")[0]);
-                this.setUsers(type, users, groups);
+                this.setUsersAndGroups(type, users, groups);
                 this.callViewMethod("updateUsers", type, users, groups);
             });
             

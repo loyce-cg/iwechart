@@ -7,6 +7,7 @@ import { Inject } from "../../utils/Decorators";
 import { SectionManager } from "../../mail/section";
 import { section } from "../../mail";
 import { Session } from "../../mail/session/SessionManager";
+import { ThumbGeneratedEvent } from "../../mail/thumbs/ThumbGenerator";
 
 export enum MissingThumbAction {
     DO_NOTHING = "do-nothing",
@@ -35,6 +36,9 @@ export class ThumbsController extends ComponentController {
     
     constructor(parent: Types.app.IpcContainer, public app: CommonApplication, options: ThumbsOptions) {
         super(parent);
+        this.bindEvent<ThumbGeneratedEvent>(this.app, "thumb-generated", event => {
+            this.onViewRequestThumbImage(event.fileDid, event.sectionId);
+        });
         this.ipcMode = true;
         for (let k in options) {
             (<any>this.options)[k] = (<any>options)[k];

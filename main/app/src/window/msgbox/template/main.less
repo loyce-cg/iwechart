@@ -2,7 +2,7 @@
 
 body {
   background: @colorBackground;
-  font-size: var(--font-size-l);
+  font-size: var(--font-size);
   &.admin-alert {
     background: #292929;
     color: #eee;
@@ -17,6 +17,7 @@ body {
 
 .window-alert-main {
   height: 100%;
+  background: inherit;
   
   .processing {
     display: none;
@@ -86,10 +87,11 @@ body {
       
       label {
         font-weight: normal;
+        cursor: pointer;
       }
       input {
         vertical-align: top;
-        margin-top: 5px;
+        margin-top: 4px;
       }
     }
   }

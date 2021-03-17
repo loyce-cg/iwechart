@@ -1,0 +1,18 @@
+@import { SimplePopupButton, SimplePopupOptions } from "../SimplePopup";
+@model SimplePopupOptions
+{{
+  const hasButtons = model.buttons && model.buttons.length > 0;
+}}
+<div class="simple-popup {{@hasButtons ? 'with-buttons' : 'without-buttons'}}">
+  <div class="content-wrapper">
+    <div class="content">
+    </div>
+  </div>
+  <div class="buttons">
+      {{ if (hasButtons) { }}
+        {{ for (let button of <SimplePopupButton[]>model.buttons) { }}
+          <span class="btn {{@button.cssClasses ? button.cssClasses : ''}}">{{ if (button.icon) { }}<i class="icon {{@button.icon}}"></i>{{ } }}{{ if (button.text) { }}<span class="text">{{@button.text}}</span>{{ } }}</span>
+        {{ } }}
+      {{ } }}
+  </div>
+</div>

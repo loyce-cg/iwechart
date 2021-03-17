@@ -56,7 +56,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
     }
     
     @Inject identity: privfs.identity.Identity;
-    
+    @Inject router: app.common.Router;
     docked: boolean;
     activeProjectId: ProjectId;
     activeProjectHostHash: string;
@@ -84,7 +84,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
     afterViewLoaded: Q.Deferred<void> = Q.defer();
     componentFactory: TasksComponentFactory;
     
-    taskGroupsPanels: { [key: string]: TaskGroupsPanelController } = {};
+    taskGroupsPanelPromises: { [key: string]: Q.Promise<TaskGroupsPanelController> } = {};
     activePanel: TaskGroupsPanelController = null;
     
     remoteServers: { [hostHash: string]: component.remotehostlist.HostEntry } = {};
@@ -147,7 +147,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
         let isSearchOn = data.visible && data.value.length > 1;
         this.callViewMethod("onSearchChanged", isSearchOn, false);
         
-        this.initSpellChecker(this.tasksPlugin.userPreferences);
+        this.initSpellChecker();
     }
     
     beforeClose(): void {
@@ -163,15 +163,15 @@ export class TasksWindowController extends window.base.BaseWindowController {
 
         this.privateSection = localSession.sectionManager.getMyPrivateSection();
         this.tasksCountManager = new TasksCountManager(localSession, this.privateSection, this.tasksPlugin, null);
-        this.app.addEventListener<UpdateSectionBadgeEvent>("update-section-badge", this.onUpdateSectionBadge.bind(this));
-        this.app.addEventListener<UpdateTasksSidebarSpinnersEvent>("update-tasks-sidebar-spinners", e => {
+        this.bindEvent<UpdateSectionBadgeEvent>(this.app, "update-section-badge", this.onUpdateSectionBadge.bind(this));
+        this.bindEvent<UpdateTasksSidebarSpinnersEvent>(this.app, "update-tasks-sidebar-spinners", e => {
             this.sidebar.updateSidebarSpinners({
                 conv2SectionId: e.conv2SectionId,
                 customElementId: e.customElementId,
                 sectionId: e.sectionId,
                 hosts: e.hostHash ? [this.app.sessionManager.getSessionByHostHash(e.hostHash).host] : Object.values(this.app.sessionManager.sessions).map(x => x.host),
             });
-        }, "tasks");
+        });
 
         this.verticalSplitter = this.addComponent("verticalSplitter", this.componentFactory.createComponent("splitter", [this, this.settings.create("tasks-splitter-vertical")]));
         this.verticalSplitter2 = this.addComponent("verticalSplitter2", this.componentFactory.createComponent("splitter", [this, this.settings.create("tasks-splitter-vertical2-proportional")]));
@@ -241,7 +241,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
         //     return <any>Q.resolve();
         // });
         
-        this.app.addEventListener("focusChanged", (event) => {
+        this.bindEvent(this.app, "focusChanged", (event) => {
             let windowId = (<any>event).windowId;
             this.tasksPlugin.activeWindowFocused = windowId == "main-window" || windowId == "focus-restored" ? (<ContainerWindowController>this.parent.parent).activeModel.get() : windowId;
             if (windowId == "tasks" || (windowId == "main-window" && (<ContainerWindowController>this.parent.parent).activeModel.get() == "tasks") ) {
@@ -250,28 +250,28 @@ export class TasksWindowController extends window.base.BaseWindowController {
                 }, 200);
             }
         });
-        this.app.addEventListener("focusLost", (event) => {
+        this.bindEvent(this.app, "focusLost", (event) => {
             this.tasksPlugin.activeWindowFocused = null;
         });
-        this.app.addEventListener<BadgesUpdateRequestEvent>("badges-update-request", event => {
+        this.bindEvent<BadgesUpdateRequestEvent>(this.app, "badges-update-request", event => {
             this.updateBadges();
         });
-        this.app.addEventListener<MarkedTasksAsReadEvent>("marked-tasks-as-read", event => {
+        this.bindEvent<MarkedTasksAsReadEvent>(this.app, "marked-tasks-as-read", event => {
             this.updateBadges();
         });
         
-        this.app.addEventListener("focusLost", () => {
+        this.bindEvent(this.app, "focusLost", () => {
             this.callViewMethod("pauseTimeAgoRefresher");
-        }, "tasks");
+        });
         
-        this.app.addEventListener("focusChanged", event => {
+        this.bindEvent(this.app, "focusChanged", event => {
             if ((<any>event).windowId == "main-window") {
                 this.callViewMethod("resumeTimeAgoRefresher");
             }
-        }, "tasks");
+        });
         
         
-        this.app.addEventListener("onToggleMaximize-notify", () => {
+        this.bindEvent(this.app, "onToggleMaximize-notify", () => {
             setTimeout(() => {
                 this.callViewMethod("grabFocus", false);
             }, 10);
@@ -307,7 +307,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
                     id: CustomTasksElements.ALL_TASKS_ID,
                     icon: {
                         type: "fa",
-                        value: "fa-tasks",
+                        value: "privmx-icon privmx-icon-tasks",
                     },
                     label: this.i18n("plugin.tasks.window.tasks.sidebar.allTasks"),
                     private: false,
@@ -410,18 +410,18 @@ export class TasksWindowController extends window.base.BaseWindowController {
             }
             
             this.sidebar = this.addComponent("sidebar", this.componentFactory.createComponent("sidebar", [this, sidebarOptions]));
-            this.sidebar.addEventListener("elementbeforeactivate", this.onBeforeActivateSidebarElement.bind(this));
-            this.sidebar.addEventListener("elementactivated", this.onActivatedSidebarElement.bind(this));
-            this.sidebar.addEventListener("sidebarbuttonaction", this.onSidebarButtonAction.bind(this));
+            this.bindEvent(this.sidebar, "elementbeforeactivate", this.onBeforeActivateSidebarElement.bind(this));
+            this.bindEvent(this.sidebar, "elementactivated", this.onActivatedSidebarElement.bind(this));
+            this.bindEvent(this.sidebar, "sidebarbuttonaction", this.onSidebarButtonAction.bind(this));
             
             this.sidebar.usersListTooltip.getContent = (sectionId: string): string => {
                 return this.app.getUsersListTooltipContent(this.app.sessionManager.getLocalSession(), sectionId);
             }
             
-            this.app.addEventListener("reopen-section", (event: component.disabledsection.ReopenSectionEvent) => {
+            this.bindEvent(this.app, "reopen-section", (event: component.disabledsection.ReopenSectionEvent) => {
                 this.selectProject(localSession, event.element.getId());
             });
-            this.app.addEventListener<Types.event.SectionsLimitReachedEvent>("sectionsLimitReached", event => {
+            this.bindEvent<Types.event.SectionsLimitReachedEvent>(this.app, "sectionsLimitReached", event => {
                 this.sidebar.onSectionsLimitReached(event.reached);
             });
             
@@ -430,7 +430,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
             this.tasksCountManager.sidebar = this.sidebar;
             this.setSidebarActiveItem(localSession, this.activeProjectId);
             
-            this.app.addEventListener<TasksSearchUpdateEvent>("tasks-search-update", event => {
+            this.bindEvent<TasksSearchUpdateEvent>(this.app, "tasks-search-update", event => {
                 let refreshAvatars = this.updateSidebarCustomElements(localSession, this.sidebar.customElementList.customElementsCollection);
                 this.updateBadges();
                 this.callViewMethod("onSearchChanged", event.searchString.length > 0, refreshAvatars);
@@ -515,30 +515,56 @@ export class TasksWindowController extends window.base.BaseWindowController {
             this.expandRemoteSectionsList(event.element.host);
         }
         else if (event.element.type == component.sidebar.SidebarElementType.REMOTE_SECTION) {
-            // console.log("onBeforeActivateSidebarElement - remote section clicked...");
-            //this.openRemoteTaskGroupsPanel(event.element.hostHash, event.element.section);
             let session = this.app.sessionManager.getSessionByHostHash(event.element.hostHash);
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.TASKS,
+                contextType: "remote-section",
+                contextId: "section:" + event.element.section.getId(),
+                hostHash: event.element.hostHash
+            });            
+            this.contextHistory.append(context);
             this.selectProject(session, event.element.section.getId());
-            this.app.viewContext = "section:" + event.element.section.getId();
         }
         else if (event.element.type == component.sidebar.SidebarElementType.SECTION) {
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.TASKS,
+                contextType: "section",
+                contextId: "section:" + event.element.section.getId(),
+                hostHash: localSession.hostHash
+            });            
+            this.contextHistory.append(context);
             this.selectProject(localSession, event.element.section.getId());
-            this.app.viewContext = "section:" + event.element.section.getId();
         }
         else if (event.element.type == component.sidebar.SidebarElementType.CUSTOM_ELEMENT) {
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.TASKS,
+                contextType: "custom",
+                contextId: event.element.customElement.id,
+                hostHash: localSession.hostHash
+            });            
+            this.contextHistory.append(context);
             this.selectProject(localSession, event.element.customElement.id);
-            if (event.element.customElement.id.indexOf("private:") > -1) {
-                this.app.viewContext = "custom:my";
-            }
         }
         else if (event.element.type == component.sidebar.SidebarElementType.CONVERSATION) {
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.TASKS,
+                contextType: "conversation",
+                contextId: event.element.conv2.id,
+                hostHash: localSession.hostHash
+            });            
+            this.contextHistory.append(context);
             this.selectProject(localSession, event.element.conv2.id);
-            this.app.viewContext = event.element.conv2.id;
         }
         else if (event.element.type == component.sidebar.SidebarElementType.REMOTE_CONVERSATION) {
             let session = this.app.sessionManager.getSessionByHostHash(event.element.hostHash);
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.TASKS,
+                contextType: "remote-conversation",
+                contextId: event.element.conv2.id,
+                hostHash: event.element.hostHash
+            });            
+            this.contextHistory.append(context);
             this.selectProject(session, event.element.conv2.id);
-            this.app.viewContext = event.element.conv2.id;
         }
 
     }
@@ -620,28 +646,33 @@ export class TasksWindowController extends window.base.BaseWindowController {
     }
     
     applyHistoryState(processed: boolean, state: string) {
-        if (processed) {
-            return;
-        }
         let usedState = state;
         let localSession = this.app.sessionManager.getLocalSession();
-        if (this.app.viewContext) {
-            let contextData = this.app.viewContext.split(":");
-            
-            if (this.app.switchModuleWithContext()) {
-                if (contextData[0] == "section") {
-                    let contextSection = localSession.sectionManager.getSection(contextData[1]);
+        const context = this.contextHistory.getCurrent();
+        if (context) {
+            if (this.app.switchModuleWithContext() || state) {
+                if (context.getType() == "section") {
+                    let contextSection = localSession.sectionManager.getSection(context.getSectionIdFromContextId());
                     if (contextSection && contextSection.isKvdbModuleEnabled()) {
-                        usedState = contextData[1];
+                        usedState = context.getSectionIdFromContextId();
                     }
                 }
-                else if (contextData[0] == "c2" && contextData[2].split("|").length < 3) {
-                    usedState = this.app.viewContext;
+                else if (context.getType() == "conversation") {
+                    const contextData = context.getContextId().split(":");
+                    if (contextData[2].split("|").length < 3) {
+                        usedState = context.getContextId();
+                    }
                 }
-                else if (contextData[0] == "custom" && contextData[1] == "my") {
-                    let privateSection = localSession.sectionManager.getMyPrivateSection();
-                    if (privateSection) {
-                        usedState = privateSection.getId();
+                else if (context.getType() == "custom") {
+                    const subId = context.getContextId();
+                    if (subId == "private") {
+                        let privateSection = localSession.sectionManager.getMyPrivateSection();
+                        if (privateSection) {
+                            usedState = privateSection.getId();
+                        }
+                    }
+                    else {
+                        usedState = subId;
                     }
                 }
             }
@@ -650,10 +681,12 @@ export class TasksWindowController extends window.base.BaseWindowController {
         
         if (usedState != null) {
             let newActiveProjectId = usedState.startsWith("section:") ? usedState.substring("section:".length) : usedState;
-            this.activeProjectId = newActiveProjectId;
-            this.activeProjectHostHash = localSession.hostHash;
             this.initWithProject = newActiveProjectId;
-            this.selectProject(localSession, newActiveProjectId);
+            if (this.activeProjectId !== newActiveProjectId && this.activeProjectHostHash !== localSession.hostHash) {
+                this.activeProjectId = newActiveProjectId;
+                this.activeProjectHostHash = localSession.hostHash;
+                this.selectProject(localSession, newActiveProjectId);
+            }
         }
     }
     
@@ -781,10 +814,6 @@ export class TasksWindowController extends window.base.BaseWindowController {
         }
     }
     
-    // onSelectTab(sectionId: string): void {
-    //     this.selectProject(sectionId);
-    // }
-    
     onViewSelectProject(projectId: string) {
         // TODO WRONG PARAM
         this.selectProject(this.app.sessionManager.getLocalSession(), projectId);
@@ -879,6 +908,14 @@ export class TasksWindowController extends window.base.BaseWindowController {
         let rootId: string;
         this.callViewMethod("toggleDisabledSection", false);
         if (fixedSectionsNames.indexOf(projectId) >= 0) {
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.TASKS,
+                contextType: "custom",
+                contextId: projectId,
+                hostHash: session.hostHash
+            });    
+            this.contextHistory.append(context);
+
             activeId = projectId;
             rootId = projectId;
             if (projectId == this.tasksPlugin.getPrivateSectionId()) {
@@ -895,6 +932,14 @@ export class TasksWindowController extends window.base.BaseWindowController {
             if (!c2s) {
                 return;
             }
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.TASKS,
+                contextType: "conversation",
+                contextId: projectId,
+                hostHash: session.hostHash
+            });    
+            this.contextHistory.append(context);
+
             this.afterViewLoaded.promise.then(() => {
                 this.openTaskGroupsPanel(session, c2s);
             });
@@ -903,6 +948,14 @@ export class TasksWindowController extends window.base.BaseWindowController {
         }
         else {
             let section = session.sectionManager.getSection(projectId);
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.TASKS,
+                contextType: "section",
+                contextId: "section:" + projectId,
+                hostHash: session.hostHash
+            });
+            this.contextHistory.append(context);
+
             if (section instanceof mail.section.SectionService && !section.isKvdbModuleEnabled()) {
                 this.disabledSection.setSection(section);
                 this.callViewMethod("toggleDisabledSection", true);
@@ -919,9 +972,6 @@ export class TasksWindowController extends window.base.BaseWindowController {
             activeId = state.active.getId();
             rootId = state.active.getId();
         }
-        this.afterViewLoaded.promise.then(() => {
-            this.callViewMethod("onSelectTab", activeId, rootId);
-        });
     }
     
     onSectionsCollectionChange(session: mail.session.Session, event: Types.utils.collection.CollectionEvent<mail.section.SectionService>): void {
@@ -970,11 +1020,11 @@ export class TasksWindowController extends window.base.BaseWindowController {
     createTaskGroupsPanel(session: mail.session.Session, projectId: string): Q.Promise<TaskGroupsPanelController> {
         // console.log("on createTaskGroupsPanel", projectId);
         let tgPanelKey = this.getTaskGroupsPanelKey(session.hostHash, projectId);
-        if (tgPanelKey in this.taskGroupsPanels) {
-            return Q(this.taskGroupsPanels[tgPanelKey]);
+        if (tgPanelKey in this.taskGroupsPanelPromises) {
+            return this.taskGroupsPanelPromises[tgPanelKey];
         }
-        let panel = this.taskGroupsPanels[tgPanelKey] = this.addComponent("taskGroupsPanel-" + tgPanelKey, this.componentFactory.createComponent("taskGroupsPanel", [this]));
-        return Q().then(() => {
+        let panel = this.addComponent("taskGroupsPanel-" + tgPanelKey, this.componentFactory.createComponent("taskGroupsPanel", [this]));
+        return this.taskGroupsPanelPromises[tgPanelKey] = Q().then(() => {
             let mergedSectionsNames = [
                 CustomTasksElements.ALL_TASKS_ID,
                 CustomTasksElements.TASKS_ASSIGNED_TO_ME_ID,
@@ -992,7 +1042,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
                 });
             };
             panel.init();
-            panel.addEventListener<TaskPreviewRequestEvent>("task-preview-request", event => {
+            this.bindEvent<TaskPreviewRequestEvent>(panel, "task-preview-request", event => {
                 return Q().then(() => {
                     return this.taskPanel.setSession(this.app.sessionManager.getSessionByHostHash(event.hostHash));
                 })
@@ -1025,7 +1075,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
     
                 })
             });
-            panel.addEventListener<TaskPanelUpdateRequestEvent>("taskpanel-update-request", () => {
+            this.bindEvent<TaskPanelUpdateRequestEvent>(panel, "taskpanel-update-request", () => {
                 if (this.activeProjectId != projectId || this.activeProjectHostHash != session.hostHash) {
                     return;
                 }
@@ -1033,7 +1083,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
                     this.taskPanel.updateView();
                 });
             });
-            panel.addEventListener<TaskPanelChangeVisibilityRequestEvent>("taskpanel-change-visibility-request", event => {
+            this.bindEvent<TaskPanelChangeVisibilityRequestEvent>(panel, "taskpanel-change-visibility-request", event => {
                 if (this.activeProjectId != projectId || this.activeProjectHostHash != session.hostHash) {
                     return;
                 }
@@ -1041,7 +1091,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
                     this.callViewMethod("changeTaskPanelVisibility", event.show);
                 });
             });
-            panel.addEventListener<HorizontalTaskWindowLayoutChangeRequestEvent>("horizontal-task-window-layout-change-request", event => {
+            this.bindEvent<HorizontalTaskWindowLayoutChangeRequestEvent>(panel, "horizontal-task-window-layout-change-request", event => {
                 if (this.activeProjectId != projectId || this.activeProjectHostHash != session.hostHash) {
                     return;
                 }
@@ -1049,7 +1099,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
                     this.callViewMethod("updatePreviewLocation", event.horizontalLayout);
                 });
             });
-            panel.addEventListener<BadgesUpdateRequestEvent>("badges-update-request", event => {
+            this.bindEvent<BadgesUpdateRequestEvent>(panel, "badges-update-request", event => {
                 this.afterViewLoaded.promise.then(() => {
                     this.updateBadges();
                 });
@@ -1100,10 +1150,10 @@ export class TasksWindowController extends window.base.BaseWindowController {
             return;
         }
         let tgPanelKey = this.getTaskGroupsPanelKey(hostHash, projectId);
-        let panel = this.taskGroupsPanels[tgPanelKey];
-        if (panel) {
+        let panelPromise = this.taskGroupsPanelPromises[tgPanelKey];
+        if (panelPromise) {
             // console.log("openedTaskGroupsPanel - call activate");
-            panel.activate();
+            panelPromise.then(panel => panel.activate());
         }
     }
     
@@ -1192,7 +1242,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
     }
     
     initSessionEvents(session: mail.session.Session): void {
-        session.sectionManager.sectionAccessManager.eventDispatcher.addEventListener<Types.event.SectionStateChangedEvent>("section-state-changed", event => {
+        this.bindEvent<Types.event.SectionStateChangedEvent>(session.sectionManager.sectionAccessManager.eventDispatcher, "section-state-changed", event => {
             if (this.activePanel && this.activeProjectId == event.sectionId && this.activeProjectHostHash == session.hostHash) {
                 Q().then(() => {
                     return session.sectionManager.load();
@@ -1208,7 +1258,7 @@ export class TasksWindowController extends window.base.BaseWindowController {
                     }
                 })
             }
-        }, "tasks");
+        });
         this.registerChangeEvent(this.tasksPlugin.tasksSectionsCollectionNoPrivate[session.hostHash].changeEvent, event => this.onSectionsCollectionChange(session, event));
         this.registerChangeEvent(session.sectionManager.sinkIndexManager.sinkIndexCollection.changeEvent, event => this.onSinkChange(session, event));
     }
@@ -1340,6 +1390,14 @@ export class TasksWindowController extends window.base.BaseWindowController {
     
     getTaskGroupsPanelKey(hostHash: string, projectId: string): string {
         return `${hostHash}--${projectId}`;
+    }
+
+    onViewHistoryArrowLeft(): void {
+        this.router.goPrev();
+    }
+
+    onViewHistoryArrowRight(): void {
+        this.router.goNext();
     }
 
     static getProjectId(section: mail.section.SectionService|mail.section.Conv2Section|string): string {

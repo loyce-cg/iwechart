@@ -2,7 +2,6 @@ import {WindowManager} from "./window/WindowManager";
 import {ElectronWindow} from "./window/ElectronWindow";
 import {CommonApplication} from "../common/CommonApplication";
 import {LocaleService} from "../../mail/LocaleService";
-import {HddStorage} from "../../utils/HddStorage";
 import {DownloadWindowController} from "../../window/download/DownloadWindowController";
 import {HelperWindowController} from "../../window/helper/HelperWindowController";
 import {PlayerHelperWindowController} from "../../window/playerhelper/PlayerHelperWindowController";
@@ -11,16 +10,14 @@ import {Version} from "../../utils/Version";
 import electron = require("electron");
 import os = require("os");
 import path = require("path");
-import events = require("events");
-import {Model} from "../../utils/Model";
-import {app, event, mail, utils, ipc} from "../../Types";
+import {app, event, mail, utils, ipc, filesimporter} from "../../Types";
 import {AssetsManager} from "../common/AssetsManager";
 import {Lang, Formatter} from "../../utils";
 import {InitializerOptions} from "../browser/Initializer";
 import * as nodeFs from "fs";
 import * as fsExtra from "fs-extra";
 import * as RootLogger from "simplito-logger";
-import {Starter, GlobalShortcutConfigItem, ProfilesManager} from "./starter/Starter";
+import {Starter} from "./starter/Starter";
 import {ContainerWindowController} from "../../window/container/ContainerWindowController";
 import * as Q from "q";
 import * as privfs from "privfs-client";
@@ -67,6 +64,12 @@ import { MailConst } from "../../mail";
 import { MimeType } from "../../mail/filetree";
 import { Session } from "../../mail/session/SessionManager";
 import { WindowUrl } from "./WindowUrl";
+import { ProfileEx, UserProfileSettingChangeEvent } from "./profiles/Types";
+import { ProfilesManager } from "./profiles/ProfilesManager";
+import { ContextType } from "../common/contexthistory/Context";
+import { TasksExecutor } from "./filesimporter/TasksExecutor";
+import { SentryService } from "./sentry/SentryService";
+import { SelfTester } from "./SelfTester";
 // import {measure} from "../../utils/Decorators";
 
 let Logger = RootLogger.get("privfs-mail-client.app.electron.ElectronApplication");
@@ -100,22 +103,6 @@ export interface LastLoginInfo {
 export interface ProcessVersionsElectron extends NodeJS.ProcessVersions {
     electron: string;
     chrome: string;
-}
-
-export interface ProfileEx {
-    name: string;
-    absolutePath: string;
-    storageAbsolutePath: string;
-    tmpAbsolutePath: string;
-    getLanguage(): string;
-    setLanguage(lang: string): void;
-    isLicenceAccepted(): boolean;
-    getCcApiEndpoint(): string;
-    setLicenceAccepted(): void;
-    isLoginInfoVisible(): boolean;
-    setLoginInfoHidden(): void;
-    isAutostartEnabled(): boolean;
-    setAutostartEnabled(enabled: boolean): void;
 }
 
 export interface ChannelSetting {
@@ -189,6 +176,9 @@ export class ElectronApplication extends CommonApplication {
     askingSystemClipboardIntegrationPromise: Q.Promise<boolean> = null;
     askingSystemClipboardIntegrationWindow: AppWindow = null;
     connectionRestoredDeferred: Q.Deferred<void> = null;
+    filesImporterTasksExecutor: TasksExecutor;
+
+    static instance: ElectronApplication;
     
     static create(starter: Starter, profile: ProfileEx, profilesManager: ProfilesManager): ElectronApplication {
         let version = Version.get();
@@ -219,13 +209,13 @@ export class ElectronApplication extends CommonApplication {
         //setting up loglevel
         let forcedLogLevel = starter.getForcedLogLevel();
         if (forcedLogLevel) {
-            RootLogger.setLevel(forcedLogLevel, true);
-            Logger.setLevel(forcedLogLevel, true);
+            RootLogger.setLevel(forcedLogLevel);
+            Logger.setLevel(forcedLogLevel);
             console.log("LogLevel set (forced): ", forcedLogLevel.name);
         }
         if (! isRunningInDevMode && ! forcedLogLevel) {
-            RootLogger.setLevel(Logger.ERROR, true);
-            Logger.setLevel(Logger.ERROR, true);
+            RootLogger.setLevel(Logger.ERROR);
+            Logger.setLevel(Logger.ERROR);
         }
 
         
@@ -233,6 +223,7 @@ export class ElectronApplication extends CommonApplication {
         Logger.debug("Electron path: ", electronPath);
         
         if (isRunningInDevMode) {
+            
             Logger.debug("Starting from dev env..");
             let execParts = execPath.replace(/\\/g, "/").split("/");
             
@@ -320,15 +311,24 @@ export class ElectronApplication extends CommonApplication {
 
     ) {
         super(electron.ipcMain, new SqlStorage(profile.storageAbsolutePath), LocaleService.create(i18n, profile.getLanguage()), mailResourceLoader, assetsManager);
+        ElectronApplication.instance = this;
         this.customizedTheme = customizedTheme;
+        this.deviceId = profilesManager.deviceId;
+        SentryService.registerWindowFunction(this.openErrorWindow.bind(this), this.isErrorWindowOpened.bind(this));
         
+        RootLogger.addAppender({append: (level, loggerName, args) => {
+            if (level.name.toLocaleUpperCase() == "ERROR") {
+                const newArgs = ["[SentryLogger][" + new Date().toISOString() + "][" + loggerName + "][" + level.name + "]"].concat(args);
+                SentryService.captureException(newArgs);
+            }
+        }});
+
         this.screenCover = new ElectronScreenCover({
             timeout: 180000,
             timeoutCheck: 180000,
             showCover: this.showScreenCover.bind(this),
             hideCover: this.hideScreenCover.bind(this),
         });
-        this.manager = new BaseWindowManager(null, null);
         Logger.debug("Electron version", (<ProcessVersionsElectron>process.versions).electron);
         this.externalOpenedFilesSyncIntervals = [];
         this.additionalMenuItems = [];
@@ -363,6 +363,7 @@ export class ElectronApplication extends CommonApplication {
         );
         this.errorReporter = new ErrorReporter(this);
         this.errorLogFile = path.resolve(profile.absolutePath, "logs/error.log");
+
         this.updater = new Updater(this, path.resolve(os.homedir(), ".privmx"), this.profile.absolutePath);
         if (process.platform == "darwin") {
             this.keyboardShortcuts = new MacKeyboardShortcuts(this);
@@ -399,6 +400,7 @@ export class ElectronApplication extends CommonApplication {
         });
         
         this.profilesIPC = new ProfilesManagerIPC(this);
+        this.filesImporterTasksExecutor = new TasksExecutor();
     }
     
     startAsUpdate() {
@@ -440,6 +442,8 @@ export class ElectronApplication extends CommonApplication {
             this.app.exitApp();
         }
         
+        SelfTester.run();
+
         this.domainFromLogin = "";
         this.ioc.create(HelperWindowController, [this]).then(helperWindow => {
             this.windows.helper = this.registerInstance(helperWindow);
@@ -490,7 +494,6 @@ export class ElectronApplication extends CommonApplication {
 
         this.updater.checkForUpdate().catch((e) => {});
         this.monitorForUpdates();
-        
         
         this.loadPlugins();
         this.start(afterUpdate);
@@ -777,7 +780,7 @@ export class ElectronApplication extends CommonApplication {
     }
     
     onWindowClose(): void {
-        if (this.windowManager.windows.length == 1) {
+        if (this.windowManager.windows.length == 0) {
             this.quit();
         }
     }
@@ -957,7 +960,7 @@ export class ElectronApplication extends CommonApplication {
     }
     
     getDesktopDownloadUrl(): string {
-        return "https://privmx.com/cc/download";
+        return "https://privmx.com/download";
     }
     
     getTermsUrl(): string {
@@ -1028,11 +1031,11 @@ export class ElectronApplication extends CommonApplication {
         })
     }
     
-    directSaveContent(content: privfs.lazyBuffer.IContent, session: Session, _parent?: app.WindowParentEx): Q.Promise<void> {
+    directSaveContent(content: privfs.lazyBuffer.IContent, session: Session, _parent?: app.WindowParentEx): Promise<void> {
         return this.saveToHddWithChoose(content, session, _parent ? (<any>_parent).nwin : null);
     }
     
-    saveContent(content: privfs.lazyBuffer.IContent, session: Session, parent?: app.WindowParentEx): Q.Promise<void> {
+    async saveContent(content: privfs.lazyBuffer.IContent, session: Session, parent?: app.WindowParentEx): Promise<void> {
         let openable = content instanceof OpenableElement ? content : new SimpleOpenableElement(content);
         return this.ioc.create(DownloadWindowController, [parent || this, openable, session]).then(downloadWindow => {
             this.registerInstance(downloadWindow);
@@ -1061,8 +1064,8 @@ export class ElectronApplication extends CommonApplication {
         return this.version;
     }
     
-    playAudio(soundName: string, force: boolean = false) {
-        (<HelperWindowController>this.windows.helper).playAudio(soundName, force);
+    playAudio(soundName: string, force: boolean = false, _ignoreSilentMode: boolean = undefined) {
+        (<HelperWindowController>this.windows.helper).playAudio(soundName, force, _ignoreSilentMode);
     }
 
     setAudioEnabled(enabled: boolean) {
@@ -1155,12 +1158,12 @@ export class ElectronApplication extends CommonApplication {
         return File.saveFile(content, filePath);
     }
     
-    saveToHddWithChoose(content: privfs.lazyBuffer.IContent, session: Session, parentWindow?: AppWindow): Q.Promise<void> {
+    saveToHddWithChoose(content: privfs.lazyBuffer.IContent, session: Session, parentWindow?: AppWindow): Promise<void> {
         return File.saveFileWithChoose(content, session, parentWindow);
     }
     
     electronShellOpen(filePath: string): void {
-        electron.shell.openItem(filePath);
+        electron.shell.openPath(filePath);
     }
     
     addTrayMenuEntry(options: Electron.MenuItemConstructorOptions) {
@@ -1459,7 +1462,6 @@ export class ElectronApplication extends CommonApplication {
     }
     
     screenCapture(): Q.Promise<ImageEditorWindowController> {
-
         return Q().then(() => {
             return this.takeScreenshot()
             .then(data => {
@@ -1640,7 +1642,6 @@ export class ElectronApplication extends CommonApplication {
         this.state.autoLoginAttemptPerformed = true;
         this.state.sthNewAtLoginFail = null;
         this.connectionStatusCheckerElectron = new ConnectionStatusCheckerElectron(this, userCredentials);
-        
         super.onLogin(mailClientApi, userCredentials);
     }
     
@@ -1757,10 +1758,15 @@ export class ElectronApplication extends CommonApplication {
         this.cleanupTempFiles();
         let container = (<ContainerWindowController>this.windows.container);
         if (container) {
-            this.closeAllWindows().then(() => {
-                // container.hide().then(() => {
-                    electron.app.quit();
-                // });
+            Q()
+            .then(() => {
+                return (<SqlStorage>this.storage).initBaseLevel();
+            })
+            .then(() => {
+                return this.closeAllWindows();
+            })
+            .fin(() => {
+                electron.app.quit();
             });
         }
         else {
@@ -1832,8 +1838,8 @@ export class ElectronApplication extends CommonApplication {
         this.state.appFocused = (<ElectronWindow>this.windows.container.nwin).window.isFocused();
     }
     
-    showBaloonNotification(title?: string, elements?: string[], customIcon?: electron.NativeImage, context?: event.NotificationContext) {
-        if (this.getSilentMode()) {
+    showBaloonNotification(title?: string, elements?: string[], customIcon?: electron.NativeImage, context?: event.NotificationContext, ignoreSilentMode?: boolean) {
+        if (this.getSilentMode() && !ignoreSilentMode) {
             return;
         }
 
@@ -1884,17 +1890,9 @@ export class ElectronApplication extends CommonApplication {
     
     onTooltipClick(context: event.NotificationContext): void   {
         this.showMainWindow();
-        let wndToOpen: ContainerWindowController;
-        for (let wndId in this.windows) {
-            if (this.windows[wndId] instanceof ContainerWindowController) {
-                this.app.viewContext = context.sinkId;
-                wndToOpen = (<ContainerWindowController>this.windows[wndId]);
-                break;
-            }
-        }
-        if (wndToOpen) {
-            wndToOpen.redirectToAppWindow(context.module, context.sinkId);
-        }
+        const contextSession = this.sessionManager.getSessionByHostHash(context.hostHash);
+        const contextType = this.contextHistory.getContextTypeFromSessionAndSinkId(contextSession, context.sinkId);
+        this.router.navigateTo(context.module, contextType, context.sinkId, context.hostHash);
         this.refreshTrayMenu();
     }
     
@@ -1931,30 +1929,18 @@ export class ElectronApplication extends CommonApplication {
         this.setNewCount(unread);
     }
     
-    monitorInternetAccess() {
-        if (this.internetMonitorTimer) {
-            return;
-        }
 
-        let func = () => {
-            Q().then(() => {
-                if (this.connectionStatusCheckerElectron) {
-                    return this.connectionStatusCheckerElectron.getServerConnectedStatus()
-                    .then(serverConnection => {
-                        if (! serverConnection) {
-                            this.onServerConnectionError();
-                        }
-                    })
-                }
-            })
-            .then(() => {
-                return this.hasNetworkConnection();
-            })
-            .then((isConnected: boolean) => {
-                this.hasInternetConnection = isConnected;
-            })
-        }
-        this.internetMonitorTimer = setInterval( () => func(),  5 * 1000);
+    monitorInternetAccess(): void {
+        this.bindEvent<event.NetworkStatusChangeEvent>(this.app, "network-status-change", event => {
+            if (event.status == "lost") {
+                Logger.info("connection lost");
+                this.onServerConnectionError();
+            }
+            if (event.status == "resumed") {
+                Logger.info("connection restored");
+                this.onServerConnectionRestored();
+            }
+        })
     }
 
     stopMonitorInternetAccess(): void {
@@ -1995,7 +1981,6 @@ export class ElectronApplication extends CommonApplication {
         this.refreshTrayMenu();
         
         // this.connectionStatusCheckerElectron.tryReconnect();
-        this.connectionStatusCheckerElectron.startReconnectChecker();
     }
     
     onServerConnectionRestored() {
@@ -2099,7 +2084,7 @@ export class ElectronApplication extends CommonApplication {
                     this.app.dispatchEvent({type: "file-opened-external", element: options.element});
                 })
                 .fail(e => {
-                    Logger.error("Error during downloading", e);
+                    Logger.warn("Error during downloading", e);
                 });
             }
         });
@@ -2270,7 +2255,14 @@ export class ElectronApplication extends CommonApplication {
     
     getSystemClipboardFiles(includeContents: boolean = true): { mime: string, data: Buffer, path?: string }[] {
         if (process.platform == "darwin" || process.platform == "win32") {
-            const clipboardFiles = require("clipboard-files");
+            let clipboardFiles;
+            try {
+                clipboardFiles = require("clipboard-files");
+            }
+            catch (e) {
+                console.error("Fatal error: Missing clipboard-files lib");
+                process.exit(1)
+            }
             let files: { mime: string, data: Buffer, path?: string }[] = [];
             
             let filePaths = (<string[]>clipboardFiles.readFiles()).map(x => decodeURI(x));
@@ -2333,86 +2325,6 @@ export class ElectronApplication extends CommonApplication {
         }
         
         return [];
-    }
-    
-    getClipboardElementToPaste(allowedPrivMxFormats: string[], allowedSystemFormats: string[], onlyPlainText: boolean = false): Q.Promise<ClipboardElement> {
-        this.clipboard.populateFromSystem();
-        let elementPrivMx: ClipboardElement = null;
-        let elementSystem: ClipboardElement = null;
-        let elementPrivMxId: number = null;
-        let elementSystemId: number = null;
-        for (let i = this.clipboard.storedElements.length - 1; i >= 0 && (elementPrivMx === null || elementSystem === null); --i) {
-            let el = this.clipboard.storedElements[i];
-            if (el.source == "privmx" && elementPrivMx === null) {
-                for (let format of allowedPrivMxFormats) {
-                    if (this.clipboard.elementMatches(el, format, "privmx")) {
-                        elementPrivMx = el;
-                        elementPrivMxId = i;
-                        break;
-                    }
-                }
-            }
-            if (el.source == "system" && elementSystem === null) {
-                for (let format of allowedSystemFormats) {
-                    if (this.clipboard.elementMatches(el, format, "system")) {
-                        elementSystem = el;
-                        elementSystemId = i;
-                        break;
-                    }
-                }
-            }
-        }
-        if (elementPrivMx === null && elementSystem === null) {
-            return Q(null);
-        }
-        let element: ClipboardElement = null;
-        // let integrationEnabled: boolean = false;
-        return Q().then(() => {
-            if (elementSystem && (!elementPrivMx || elementSystemId > elementPrivMxId)) {
-                // return this.tryAskSystemClipboardIntegration().then(integration => {
-                //     integrationEnabled = integration;
-                //     if (integration) {
-                //         return elementSystem;
-                //     }
-                //     else {
-                //         return elementPrivMx;
-                //     }
-                // });
-                return elementSystem;
-            }
-            else {
-                return elementPrivMx;
-            }
-        }).then(_element => {
-            if (!_element) {
-                return null;
-            }
-            element = _element;
-            let filesStr: string = element.data[PrivMxClipboard.FORMAT_SYSTEM_FILES];
-            if (filesStr && !onlyPlainText) {
-                let files: { path?: string, mime: string }[] = JSON.parse(filesStr);
-                if (files.filter(x => !x.path).length == 0) {
-                    return this.app.tryPasteFiles(files.map(x => x.path));
-                }
-                else if (files.length == 1 && (<any>files[0].mime).startsWith("image/")) {
-                    return this.app.tryPasteImageData();
-                }
-            }
-            return true;
-        })
-        .then(paste => {
-            if (paste === null) {
-                return null;
-            }
-            if (paste === false) {
-                let el = JSON.parse(JSON.stringify(element));
-                el.data = {
-                    text: el.data.text,
-                };
-                return el.data.text ? el : null;
-            }
-            return element;
-        });
     }
     
     tryPasteFiles(paths: string[]): Q.Promise<boolean> {
@@ -2615,21 +2527,27 @@ export class ElectronApplication extends CommonApplication {
                         marginsType: 0,
                         pageSize: "A4",
                         printBackground: false,
-                    }, (err, data) => {
-                        if (err) {
-                            Logger.debug("Error while converting to PDF:");
-                            Logger.debug(err);
+                    })
+                    .then(data => {
+                        let cnt = privfs.lazyBuffer.Content.createFromBuffer(data, "application/pdf", file.name.substr(0, file.name.lastIndexOf(".")) + ".pdf");
+                        File.saveFileWithChoose(cnt, session, parentWindow)
+                        .then(() => {
+                            wnd.close();
+                            def.resolve();
+                        })
+                        .catch(() => {
+                            wnd.close();
+                            def.reject();
+                        });
+                    })
+                    .catch(err => {
+                        Logger.debug("Error while converting to PDF:");
+                        Logger.debug(err);
+                        try {
+                            wnd.close();
                         }
-                        else {
-                            let cnt = privfs.lazyBuffer.Content.createFromBuffer(data, "application/pdf", file.name.substr(0, file.name.lastIndexOf(".")) + ".pdf");
-                            File.saveFileWithChoose(cnt, session, parentWindow).then(() => {
-                                wnd.close();
-                                def.resolve();
-                            }).catch(() => {
-                                wnd.close();
-                                def.reject();
-                            });
-                        }
+                        catch {}
+                        def.reject();
                     });
                 }, 600);
                 return def.promise;
@@ -2699,7 +2617,7 @@ export class ElectronApplication extends CommonApplication {
     }
     
     getMaxFileSizeLimit(): number {
-        return 25 * 1000 * 1000;
+        return 100 * 1000 * 1000;
     }
     
     canPasteFile(path: string): boolean {
@@ -2846,23 +2764,6 @@ export class ElectronApplication extends CommonApplication {
         })
     }
     
-    openErrorWindow(error: Types.app.Error): void {
-        let errorReport = this.errorReporter.createReport(error);
-        this.app.ioc.create(ErrorWindowController, [this, { error: error, errorLog: errorReport.errorLog, systemInformation: errorReport.systemInformation }]).then(win => {
-            win.getPromise().then(userAction => {
-                if (userAction.sendReport) {
-                    this.errorReporter.send(error, userAction.includeErrorLog, userAction.includeSystemInformation).then(() => {
-                        win.afterReportSent();
-                    })
-                    .fail(() => {
-                        win.close();
-                    });
-                }
-            });
-            return this.openChildWindow(win);
-        });
-    }
-    
     getCcApiEndpoint(): string {
         return this.profile.getCcApiEndpoint();
     }
@@ -2960,17 +2861,32 @@ export class ElectronApplication extends CommonApplication {
         return ret;
     }
 
-    askForMicrophoneAccess(): Q.Promise<boolean> {
-        // console.log("electron chrome version", process.versions['chrome']);
+    async askForMicrophoneAccess(): Promise<boolean> {
         if (process.platform == "darwin") {
-            return (<any>electron.systemPreferences).askForMediaAccess("microphone");
-
+            let askForMedia = await electron.systemPreferences.askForMediaAccess("microphone");
+            return askForMedia;
         }
         else {
-            return Q.resolve(true);
+            return true;
+        }
+        
+    }
+
+    async openMacOSSystemPreferencesWindow(pane: string, section?: string): Promise<void> {
+        return electron.shell.openExternal(`x-apple.systempreferences:com.apple.preference.${pane}${section ? `?${section}` : ''}`);
+    }
+
+    async askForCameraAccess(): Promise<boolean> {
+        if (process.platform == "darwin") {
+            let askForMedia = await electron.systemPreferences.askForMediaAccess("camera");
+            return askForMedia;
+        }
+        else {
+            return true;
         }
     }
     
+
     getAssetSafeUrl(path: string) {
         let assetPath = this.assetsManager.getAsset(path);
         if (!assetPath.startsWith("file://")) {
@@ -2978,5 +2894,76 @@ export class ElectronApplication extends CommonApplication {
         }
         let content = fs.readFileSync(assetPath.substr(7));
         return WindowUrl.buildUrl("dektop-assets", MimeType.resolve(path), content);
+    }
+
+    reportToSentryOnErrorCallback(e: any): void {
+        SentryService.captureException(e);
+    }
+
+    setErrorsLoggingEnabled(enabled: boolean): void {
+        this.profile.setErrorsLoggingEnabled(enabled);
+        this.eventDispatcher.dispatchEvent<UserProfileSettingChangeEvent<boolean>>({
+            type: "userprofilesettingchange",
+            name: MailConst.ERRORS_LOGGING_ENABLED,
+            value: enabled
+        })
+    }
+
+    isErrorsLoggingEnabled(): boolean {
+        // hide auto errors logging option
+        return false;
+        // return this.profile.isErrorsLoggingEnabled();
+    }
+
+    fireFileTreeBrowseWorker(dir: string, progressListener: (progress: filesimporter.ScanResult) => void): void {
+        this.filesImporterTasksExecutor.addTask(dir, progressListener);
+    }
+    cancelFileTreeBrowseWorker(dir: string): void {
+        this.filesImporterTasksExecutor.cancelTask(dir);
+    }
+
+    getGPUInfo(): electron.GPUFeatureStatus {
+        (<ElectronWindow>this.manager.getMainWindow().controller.nwin).openChromePageWindow("gpu");
+        return electron.app.getGPUFeatureStatus()
+    }
+
+    async openErrorWindow(error: any): Promise<boolean> {
+        let breadcrumbs = <any[]>error.breadcrumbs;
+        
+        let message = breadcrumbs ? breadcrumbs[breadcrumbs.length - 1].message : "Undefined error";
+        const err: Types.app.Error = {
+            askToReport: true,
+            e: error,
+            message: message
+        }
+        const winPrepared = await this.app.ioc.create(ErrorWindowController, [this, { error: err }]);
+        winPrepared.parent = this.manager.getMainWindow().controller;
+
+        const win = await this.app.openSingletonWindow(SentryService.SENTRY_WINDOW_NAME, winPrepared);
+
+        return (<ErrorWindowController>win).getPromise().then(result => {
+            win.close();
+            return result.sendReport;
+        })
+    }
+
+    isErrorWindowOpened(windowName: string): boolean {
+        return this.app.manager.isSingletonRegistered(windowName);
+    }
+
+    reportToSentry(e: any): void {
+        SentryService.captureException(e);
+    }
+    
+    getEnviromentLocale(): string {
+        return this.starter.app.getLocale() + "-" + this.starter.app.getLocaleCountryCode();
+    }
+
+    getInMemoryCacheSize(): number {
+        return (<any>this.storage).getInMemorySize();
+    }
+
+    protected setSentryEnabled(enabled: boolean): void {
+        SentryService.setEnabled(enabled);
     }
 }

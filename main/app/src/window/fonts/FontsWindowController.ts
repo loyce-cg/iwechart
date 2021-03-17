@@ -35,7 +35,7 @@ export class FontsWindowController extends BaseWindowController {
     
     init() {
         return Q().then(() => {
-            this.app.addEventListener<event.UpdateStatusChangeEvent>("update-status-change", event => {
+            this.bindEvent<event.UpdateStatusChangeEvent>(this.app, "update-status-change", event => {
                 if (event.status == "downloading") {
                     this.callViewMethod("setDownloadProgress", Math.round(event.downloaded * 100 / event.total));
                     if (this.lastProgressStatus != event.status) {

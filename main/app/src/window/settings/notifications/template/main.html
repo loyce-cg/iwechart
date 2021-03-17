@@ -1,10 +1,6 @@
 @import {Model} from "../NotificationsController";
 @model Model
 <div class="section notifications-section">
-  <div class="section-header">
-    <i class="fa fa-bell-o"></i>
-    {{@Helper.i18n("window.settings.section.notifications.header")}}
-  </div>
   <div class="section-info" style="display: none;">
   </div>
   
@@ -14,7 +10,7 @@
   
   <div class="base-form">
     <div class="fields">
-      
+    {{ if (model.isElectron) { {{
       <div class="field">
         <div class="info">{{@Helper.i18n("window.settings.section.notifications.uiNotifications.label")}}:</div>
         <div class="input checkbox">
@@ -58,10 +54,11 @@
       </div>
       
       <div class="field-separator" style="margin-bottom:-10px"></div>
+    }} } }}
       
       <div class="field">
         <div class="info">
-          {{@Helper.i18n("window.settings.section.notifications.notifyAbout.label")}}
+          {{@model.isElectron ? Helper.i18n("window.settings.section.notifications.notifyAbout.label") : Helper.i18n("window.settings.section.notifications.notifyAboutWeb.label")}}
         </div>
         <div class="input checkbox">
           {{model.entries.forEach(entry => { {{

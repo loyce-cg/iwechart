@@ -1,0 +1,268 @@
+@import "../../base/BaseWindow";
+@import "../../../component/audiolevelindicator/template/main.less";
+@import "../../../component/audioplayer/index.less";
+@import "../../../component/customselect/template/main.less";
+
+html, body {
+  background: #292929;
+}
+
+.window-videorecorder-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  &[data-mode="audio"] {
+    .preview--video {
+      display: none;
+    }
+    .controls .resolution-custom-select-container {
+      display: none;
+    }
+  }
+  &[data-mode="video"],
+  &[data-mode="audioAndVideo"],
+  &[data-mode="photo"] {
+    .preview--no-video {
+      display: none;
+    }
+  }
+  &[data-mode="photo"] {
+    span.timer {
+      display: none;
+    }
+  }
+  .preview--photo {
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  &[data-mode="photo"][data-state="after-recording"] {
+    .preview--photo {
+      display: flex;
+      img {
+        max-width: 100%;
+        max-height: 100%;
+      }
+    }
+    .preview--video,
+    .preview--no-video {
+      display: none;
+    }
+  }
+  
+  &[data-state="before-recording"] .controls>div.controls--before-recording,
+  &[data-state="recording"]:not([data-mode="photo"]) .controls>div.controls--recording,
+  &[data-state="recording"][data-mode="photo"] .controls>div.controls--before-recording,
+  &[data-state="after-recording"] .controls>div.controls--after-recording {
+    display: grid;
+  }
+  
+  &[data-state="before-recording"],
+  &[data-state="recording"] {
+    video {
+      transform: scaleX(-1);
+    }
+  }
+  
+  .controls .btn {
+    height: 30px;
+    vertical-align: top;
+  }
+  
+  .video-and-constraints-container {
+    flex: 1 1 auto;
+    height: calc(100% - 50px);
+    display: flex;
+    flex-direction: row;
+    .preview {
+      flex: 1 1 auto;
+      height: 100%;
+      .preview--video,
+      .preview--no-video,
+      .preview--photo {
+        height: 100%;
+      }
+      .preview--no-video {
+        font-size: 40px;
+        color: #fff;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        .audio-player-placeholder {
+          margin-top: 25px;
+        }
+        .audio-player-container:not(.visible) {
+          opacity: 0;
+          pointer-events: none;
+          position: absolute;
+        }
+        .audio-player-container .component-player-controls .component-slider > .text {
+          color: #fff;
+        }
+      }
+      video {
+        margin: 0 auto;
+        width: 100%;
+        max-height: 100%;
+        outline: none;
+      }
+    }
+    .constraints {
+      flex: 0 0 auto;
+      padding: 10px;
+      display: none;
+      button {
+        display: block;
+        width: 100%;
+        margin-bottom: 5px;
+        .fa {
+          width: 20px;
+          text-align: left;
+        }
+      }
+    }
+  }
+  .controls {
+    flex: 0 0 50px;
+    padding: 12px;
+    min-height: 50px;
+    max-height: 50px;
+    &.mini {
+      zoom: 0.6;
+    }
+    &.mini--without-advanced-controls {
+      .resolution-custom-select-container,
+      .switch-container>span:not(.switch) {
+        display: none;
+      }
+    }
+    >div {
+      display: none;
+      grid-template-columns: max-content min-content max-content;
+      grid-template-columns: 1fr min-content 1fr;
+      >div {
+        white-space: nowrap;
+      }
+      .controls--right {
+        text-align: right;
+      }
+    }
+    .resolution-custom-select-container {
+      display: inline-block;
+      width: 110px;
+      margin-left: 5px;
+    }
+    .timer {
+      color: #fff;
+      font-size: var(--font-size);
+      position: relative;
+      top: 2px;
+      margin-left: 10px;
+      &,
+      & * {
+        font-family: var(--ff-monospace);
+      }
+    }
+    button[data-action="enable-grayscale"],
+    button[data-action="disable-grayscale"] {
+      .fa {
+        width: 20px;
+        text-align: left;
+      }
+    }
+    button[data-action="change-devices"] {
+      width: 30px;
+      i.ico-settings {
+        position: relative;
+        top: 1px;
+        left: -1px;
+      }
+    }
+    button[data-action] {
+      i.fa,
+      i.privmx-icon,
+      i[class^="ico"] {
+        + span {
+          margin-left: 5px;
+        }
+      }
+    }
+    button[data-action="stop-recording"] {
+      background-color: #bb0000;
+      color: #fff;
+      &:hover {
+        background-color: #cc0000;
+        color: #fff;
+      }
+      &:active {
+        background-color: #aa0000;
+        color: #fff;
+      }
+    }
+  }
+  
+  .loading-container {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .loading-spinner {
+      .fa {
+        font-size: 40px;
+        color: #fff;
+      }
+    }
+    &:not(.visible) {
+      display: none;
+      .loading-spinner {
+        .fa {
+          animation: none;
+        }
+      }
+    }
+  }
+  .switch-container {
+    cursor: pointer;
+    font-size: var(--font-size);
+    color: var(--switch-bg2);
+    .switch {
+      display: inline-block;
+      vertical-align: middle;
+      width: 27px;
+      height: 10px;
+      background-color: var(--switch-bg);
+      border-radius: @radius;
+      position: relative;
+      cursor: pointer;
+      margin: -3px 5px 0 0;
+      
+      &::before {
+        content: " ";
+        position: absolute;
+        top: -3px;
+        left: 0;
+        right: auto;
+        width: 16px;
+        height: 16px;
+        background-color: var(--switch-bg2);
+        border-radius: 1000px;
+      }
+      &.active {
+        background-color: @colorSuccess;
+        
+        &:before {
+            left: auto;
+            right: 0;
+        }
+      }
+    }
+  }
+}

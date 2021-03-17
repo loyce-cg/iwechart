@@ -1,5 +1,5 @@
 import {SectionApi} from "./SectionApi";
-import {SectionKeyManager} from "./SectionKeyManager";
+import {SectionKeyManager, AddKeyEvent} from "./SectionKeyManager";
 import {SectionService} from "./SectionService";
 import {ModuleFactory, ModuleFactoryObj, ModuleService, OpenableSectionFile, FileExporter, ZipFileExporter, ChatModuleService} from "./ModuleService";
 import {MutableCollection} from "../../utils/collection/MutableCollection";
@@ -399,7 +399,7 @@ export class SectionManager {
         })
         .then(k => {
             key = k;
-            return this.sectionKeyManager.storeKey(key);
+            return this.sectionKeyManager.storeKey(key, Date.now());
         })
         .then(() => {
             return SectionService.encode(section.data, key.key);
@@ -500,8 +500,8 @@ export class SectionManager {
     //      KEYS
     //==================
     
-    onKeyAdd(event: {type: string, key: section.SectionKey, source: string}): void {
-        this.onKey(event.key);
+    onKeyAdd(event: AddKeyEvent): void {
+        this.onKey(event.key, event.timestamp);
         if (this.getSection(event.key.sectionId) == null && event.source == "mail") {
             this.load().fail(e => {
                 Logger.error("Error during reloading after mail", e);
@@ -511,12 +511,12 @@ export class SectionManager {
     
     onKeyLoad(): void {
         for (let keyMapId in this.sectionKeyManager.keysMap) {
-            let key = this.sectionKeyManager.keysMap[keyMapId];
-            this.onKey(key);
+            const keyEntry = this.sectionKeyManager.keysMap[keyMapId];
+            this.onKey(keyEntry.key, keyEntry.timestamp);
         }
     }
     
-    onKey(key: section.SectionKey): void {
+    onKey(key: section.SectionKey, timestamp: number): void {
         let section = this.getSection(key.sectionId);
         if (section != null && section.key != key && key.keyId == section.sectionData.keyId) {
             Q().then(() => {
@@ -531,7 +531,7 @@ export class SectionManager {
                 Logger.error("Error during assigning key to section", e);
             });
         }
-        this.subidentityKeyUpdater.checkKey(key);
+        this.subidentityKeyUpdater.checkKey(key, timestamp);
     }
     
     onRefreshSections(): void {

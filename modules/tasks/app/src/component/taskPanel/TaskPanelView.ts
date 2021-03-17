@@ -2,9 +2,10 @@ import { component, JQuery as $, Q, Types, webUtils, Starter } from "pmc-web";
 import { Model, InternalModel, TaskOutOfSync } from "./TaskPanelController";
 import { func as mainTemplate } from "./template/main.html";
 import { func as taskTemplate } from "./template/task.html";
+import { func as customSelectTaskStatusTemplate } from "./template/customSelectTaskStatus.html";
 import { func as iconTemplate } from "../../window/taskGroupForm/template/icon.html";
 import { TaskId, AttachmentId } from "../../main/Types";
-import { CustomSelectView } from "../customSelect/CustomSelectView";
+import { CUSTOM_SELECT_CUSTOM_TEMPLATE_TASK_STATUS } from "./Types";
 
 interface InitialData {
     [key: string]: any;
@@ -36,12 +37,12 @@ export class TaskPanelView extends component.base.ComponentView {
     descriptionEditor: webUtils.ContentEditableEditor;
     commentEditor: webUtils.ContentEditableEditor;
     
-    customSelectProject: CustomSelectView;
-    customSelectTaskGroup: CustomSelectView;
-    customSelectAssignedTo: CustomSelectView;
-    customSelectType: CustomSelectView;
-    customSelectStatus: CustomSelectView;
-    customSelectPriority: CustomSelectView;
+    customSelectProject: component.customselect.CustomSelectView;
+    customSelectTaskGroup: component.customselect.CustomSelectView;
+    customSelectAssignedTo: component.customselect.CustomSelectView;
+    customSelectType: component.customselect.CustomSelectView;
+    customSelectStatus: component.customselect.CustomSelectView;
+    customSelectPriority: component.customselect.CustomSelectView;
     dateTimePicker: any;
     dateTimePicker2: any;
     
@@ -145,12 +146,16 @@ export class TaskPanelView extends component.base.ComponentView {
             this.updateHistoryHeight();
         });
         
-        this.customSelectProject = this.addComponent("customSelectProject", new CustomSelectView(this)).onChange(this.onProjectSelectChange.bind(this));
-        this.customSelectTaskGroup = this.addComponent("customSelectTaskGroup", new CustomSelectView(this)).onChange(this.onTaskGroupSelectChange.bind(this));
-        this.customSelectAssignedTo = this.addComponent("customSelectAssignedTo", new CustomSelectView(this)).onChange(this.onAssignedToSelectChange.bind(this));
-        this.customSelectType = this.addComponent("customSelectType", new CustomSelectView(this)).onChange(this.onTypeSelectChange.bind(this));
-        this.customSelectStatus = this.addComponent("customSelectStatus", new CustomSelectView(this)).onChange(this.onStatusSelectChange.bind(this));
-        this.customSelectPriority = this.addComponent("customSelectPriority", new CustomSelectView(this)).onChange(this.onPrioritySelectChange.bind(this));
+        this.customSelectProject = this.addComponent("customSelectProject", new component.customselect.CustomSelectView(this, {})).onChange(this.onProjectSelectChange.bind(this));
+        this.customSelectTaskGroup = this.addComponent("customSelectTaskGroup", new component.customselect.CustomSelectView(this, {})).onChange(this.onTaskGroupSelectChange.bind(this));
+        this.customSelectAssignedTo = this.addComponent("customSelectAssignedTo", new component.customselect.CustomSelectView(this, {})).onChange(this.onAssignedToSelectChange.bind(this));
+        this.customSelectType = this.addComponent("customSelectType", new component.customselect.CustomSelectView(this, {})).onChange(this.onTypeSelectChange.bind(this));
+        this.customSelectStatus = this.addComponent("customSelectStatus", new component.customselect.CustomSelectView(this, {
+            customItemTemplates: {
+                [CUSTOM_SELECT_CUSTOM_TEMPLATE_TASK_STATUS]: this.templateManager.createTemplate(customSelectTaskStatusTemplate),
+            },
+        })).onChange(this.onStatusSelectChange.bind(this));
+        this.customSelectPriority = this.addComponent("customSelectPriority", new component.customselect.CustomSelectView(this, {})).onChange(this.onPrioritySelectChange.bind(this));
         this.customSelectProject.refreshAvatars = this.refreshAvatars.bind(this);
         this.customSelectTaskGroup.refreshAvatars = this.refreshAvatars.bind(this);
         this.customSelectAssignedTo.refreshAvatars = this.refreshAvatars.bind(this);
@@ -237,13 +242,13 @@ export class TaskPanelView extends component.base.ComponentView {
                 {
                     action: "edit",
                     enabled: true,
-                    icon: "fa-edit",
+                    icon: null,
                     label: helper.i18n("plugin.tasks.component.taskPanel.floatingButtons.edit")
                 },
                 {
                     action: "add-attachment",
                     enabled: false,
-                    icon: "fa fa-plus",
+                    icon: null,
                     label: helper.i18n("plugin.tasks.component.taskPanel.floatingButtons.addAttachment")
                 },
                 {
@@ -255,7 +260,7 @@ export class TaskPanelView extends component.base.ComponentView {
                 {
                     action: "toggle-marked-as-read",
                     enabled: !model.newTask && !model.autoMarkAsRead,
-                    icon: "fa fa-check",
+                    icon: null,
                     label: model.isRead ? helper.i18n("plugin.tasks.component.taskPanel.markAsUnread") : helper.i18n("plugin.tasks.component.taskPanel.markAsRead"),
                 },
             ]
@@ -279,7 +284,7 @@ export class TaskPanelView extends component.base.ComponentView {
         }
     }
     
-    registerDateTimePickerView(csName: string, view: CustomSelectView): void {
+    registerDateTimePickerView(csName: string, view: any): void {
         if (csName == "dateTimePicker") {
             this.dateTimePicker = this.addComponent("dateTimePicker", view);
         }
@@ -287,7 +292,6 @@ export class TaskPanelView extends component.base.ComponentView {
             this.dateTimePicker2 = this.addComponent("dateTimePicker2", view);
         }
     }
-    
     updateDescriptionMaxHeight(h: number) {
         if (!this.internalModel.docked || this.internalModel.editable) {
             return;
@@ -757,7 +761,7 @@ export class TaskPanelView extends component.base.ComponentView {
         this.updateRelatedSection(this.internalModel.projectId);
     }
     
-    openCustomSelect(cs: CustomSelectView): void {
+    openCustomSelect(cs: component.customselect.CustomSelectView): void {
         cs.toggleOpen();
         if (this.personTooltip.$avatarPlaceholder) {
             this.personTooltip.$avatarPlaceholder.detach();
@@ -1073,7 +1077,7 @@ export class TaskPanelView extends component.base.ComponentView {
             return;
         }
         let $btn = this.$container.find("button.add-attachment");
-        $btn.prop("disabled", this.customSelectProject.items.filter(x => x.selected).length == 0);
+        $btn.prop("disabled", this.customSelectProject.items.filter(x => x.type == "item" && x.selected).length == 0);
     }
     
     visualAddAttachment(attInfoStr: string): void {
@@ -1264,9 +1268,9 @@ export class TaskPanelView extends component.base.ComponentView {
     }
     
     getCurrentSectionId(): string {
-        let el = this.customSelectProject.items.filter(it => it.selected)[0];
+        let el = this.customSelectProject.items.filter(it => it.type == "item" && it.selected)[0] as component.customselect.CustomSelectItem | null;
         if (el) {
-            return el.val;
+            return el.value;
         }
         return null;
     }

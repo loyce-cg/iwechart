@@ -8,7 +8,6 @@ import {SectionUtils} from "./section/SectionUtils";
 import {PromiseUtils} from "simplito-promise";
 import {LazyLoader} from "./LazyLoader";
 import {MailConst} from "./MailConst";
-import {Utils} from "../utils/Utils";
 import * as RootLogger from "simplito-logger";
 import {MessageTagsFactory} from "./MessageTagsFactory";
 import {IOC} from "./IOC";
@@ -21,6 +20,7 @@ import { SectionService } from "./section/SectionService";
 import { Directory } from "./filetree/NewTree";
 import { RegisterParams } from "./McaFactory";
 import { SerializedContactsFile, SerializedContact } from "./contact/Contact";
+import { UUID } from "../utils/UUID";
 let Logger = RootLogger.get("privfs-mail-client.mail.MailClientApi");
 
 export class MailClientApi {
@@ -549,6 +549,7 @@ export class MailClientApi {
                                     data: fs.rootRef.extPriv58
                                 }
                             },
+                            description: null,
                             extraOptions: null
                         },
                         group: {
@@ -575,9 +576,12 @@ export class MailClientApi {
                     {name: "calendar", enabled: true},
                 ];
                 return PromiseUtils.oneByOne(modules, (_i, entry) => {
-                    return privateSection.getAndCreateModule(entry.name, entry.enabled);
+                    return privateSection.getAndCreateModule(entry.name, entry.enabled)
+                    .fail(e => {
+                        Logger.error("ERROR during adding module to private section", entry.name, e);
+                    });
                 });
-            });
+            })
         });
     }
     
@@ -639,7 +643,7 @@ export class MailClientApi {
                                 if (identityProvider.isAdmin()) {
                                     var data = {
                                         state: "ACTIVE",
-                                        uuid: Utils.generateUUID(),
+                                        uuid: UUID.generateUUID(),
                                         hashmail: identityProvider.getIdentity().hashmail,
                                         keystore: keystore
                                     };
@@ -730,7 +734,8 @@ export class MailClientApi {
                         originalId: section.getId(),
                         parentOriginalId: parent ? parent.getId() : null,
                         primary: section.sectionData.primary,
-                        extraOptions: section.sectionData.extraOptions,
+                        extraOptions: section.secured.extraOptions,
+                        description: section.secured.description,
                         modules: [],
                         acl: {
                             read: readAccess,
@@ -1032,6 +1037,7 @@ export class MailClientApi {
                         data: {
                             name: eSection.name,
                             modules: calendar && calendar.enabled == false ? {calendar: {enabled: false, data: null}} : {},
+                            description: eSection.description,
                             extraOptions: eSection.extraOptions? eSection.extraOptions : null
                             
                         },
@@ -1041,7 +1047,7 @@ export class MailClientApi {
                             manage: getAcl(eSection.acl ? eSection.acl.manage : null),
                             createSubsections: getAcl(eSection.acl ? eSection.acl.createSubsections : null),
                         },
-                        primary: !!eSection.primary
+                        primary: !!eSection.primary,
                     }, eSection.modules, true);
                 })
                 .then(section => {
@@ -1605,6 +1611,7 @@ export interface ExportedSection {
     originalId: string;
     parentOriginalId: string;
     primary?: boolean;
+    description: string;
     extraOptions?: section.SectionExtra,
     modules: {name: string, enabled: boolean}[];
     acl: {

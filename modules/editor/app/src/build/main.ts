@@ -42,6 +42,8 @@ export class Plugin {
         Mail.mail.filetree.MimeType.add(".pmxtt", "application/x-stt");
         Mail.mail.filetree.MimeType.add(".smm", "application/x-smm");
         Mail.mail.filetree.MimeType.add(".pmxmm", "application/x-smm");
+        Mail.mail.filetree.MimeType.add(".pmxvv", "video/x-svv");
+        Mail.mail.filetree.MimeType.add(".pmxaa", "audio/x-saa");
         Mail.mail.filetree.MimeType.add(".sss", "application/x-sss");
         Mail.mail.filetree.Path.hiddenExts.push(".stx");
         Mail.mail.filetree.Path.hiddenExts.push(".sss");
@@ -49,9 +51,13 @@ export class Plugin {
         Mail.mail.filetree.Path.hiddenExts.push(".stt");
         Mail.mail.filetree.Path.hiddenExts.push(".pmxmm");
         Mail.mail.filetree.Path.hiddenExts.push(".pmxtt");
+        Mail.mail.filetree.Path.hiddenExts.push(".pmxvv");
+        Mail.mail.filetree.Path.hiddenExts.push(".pmxaa");
         
         app.shellRegistry.registerMimetypeIcon("application/x-stt", "fa fa-font");
         app.shellRegistry.registerMimetypeIcon("application/x-smm", "privmx-icon privmx-icon-mindmap");
+        app.shellRegistry.registerMimetypeIcon("video/x-svv", "fa fa-file-video-o");
+        app.shellRegistry.registerMimetypeIcon("audio/x-saa", "fa fa-file-audio-o");
         app.shellRegistry.registerMimetypeIcon("application/x-sss", "fa fa-table");
         
         app.shellRegistry.registerAppEx({

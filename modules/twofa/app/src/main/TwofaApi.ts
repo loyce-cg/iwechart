@@ -1,4 +1,5 @@
 import {Q, privfs} from "pmc-mail";
+import * as webauthn from "webauthn-js";
 
 export interface TwofaEnableData {
     type: string;
@@ -16,9 +17,16 @@ export interface TwofaResult {
     data: TwofaData;
 }
 
-
 export interface EnableResult {
     attempts: number;
+    webauthnRegister?: webauthn.Types.PublicKeyCredentialCreationOptions;
+}
+
+export interface ChallengeModel {
+    code?: string;
+    u2fRegister?: webauthn.Types.PublicKeyCredentialAttestation;
+    u2fLogin?: webauthn.Types.PublicKeyCredentialAssertion;
+    rememberDeviceId?: boolean;
 }
 
 export class TwofaApi {
@@ -47,8 +55,8 @@ export class TwofaApi {
         return this.gateway.request("twofaEnable", {data: data});
     }
     
-    challenge(code: string, rememberDeviceId: boolean): Q.Promise<void>  {
-        return this.gateway.request("twofaChallenge", {code: code, rememberDeviceId: rememberDeviceId})
+    challenge(model: ChallengeModel): Q.Promise<void>  {
+        return this.gateway.request("twofaChallenge", model)
     }
     
     resendCode(): Q.Promise<void>  {

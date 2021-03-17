@@ -43,6 +43,10 @@ import * as loading from "./loading/web";
 import * as thumbs from "./thumbs/web";
 import * as voicechatcontrols from "./voicechatcontrols/web";
 import * as tree from "./tree/web";
+import * as audioplayer from "./audioplayer/web";
+import * as customselect from "./customselect/web";
+import * as simplepopup from "./simplepopup/web";
+import * as audiolevelindicator from "./audiolevelindicator/web";
 
 export {
     autorefresh,
@@ -90,4 +94,8 @@ export {
     loading,
     thumbs,
     voicechatcontrols,
+    audioplayer,
+    customselect,
+    simplepopup,
+    audiolevelindicator as audiolevel,
 }

@@ -1,4 +1,4 @@
-import {component, window as wnd, JQuery as $, Q, Types} from "pmc-web";
+import {component, window as wnd, JQuery as $, Q, Types, webUtils} from "pmc-web";
 import {func as mainTemplate} from "./template/main.html";
 import {func as sectionTemplate} from "./template/section.html";
 import {ViewModel} from "./AppsWindowController";
@@ -28,14 +28,29 @@ export class AppsWindowView extends wnd.base.BaseAppWindowView<ViewModel> {
         this.loadedModules["notes2"] = false;
         this.loadedModules["tasks"] = false;
         this.loadedModules["calendar"] = false;
-
+        
+        const visibilityObserver = new (webUtils as any).VisibilityObserver(document.body);
+        let visibilityObserverSingleShotRegistered: boolean = false;
+        
         this.sectionList = this.addComponent("sectionList", new component.extlist.ExtListView(this, {
             template: sectionTemplate,
             onAfterListRender: () => {
                 // let sectionsHeight = this.$main.find(".sections-inner").outerHeight();
                 // this.$main.find(".sections").css("height", sectionsHeight > AppsWindowView.MAX_SECTIONS_CONTAINER_HEIGHT ? AppsWindowView.MAX_SECTIONS_CONTAINER_HEIGHT + "px" : sectionsHeight + "px");
                 
-                this.updateSplitSectionsNames();
+                if (visibilityObserver.isTargetVisible) {
+                    this.updateSplitSectionsNames();
+                }
+                else if (!visibilityObserverSingleShotRegistered) {
+                    visibilityObserver.addSingleShotCallback((visible: boolean) => {
+                        visibilityObserverSingleShotRegistered = false;
+                        if (visible) {
+                            this.updateSplitSectionsNames();
+                        }
+                    });
+                    visibilityObserverSingleShotRegistered = true;
+                    return;
+                }
             }
         }));
         this.basicTooltip = this.addComponent("basicTooltip", new component.tooltip.TooltipView(this));
@@ -188,29 +203,39 @@ export class AppsWindowView extends wnd.base.BaseAppWindowView<ViewModel> {
     }
   
     updateSplitSectionsNames() {
-        let firstLen = 10;
-        let lastLen = 7;
+        const options: webUtils.ellipsis.EllipsisOptions = {
+            wordBreak: {
+                isEnabled: true,
+                minWordLength: 6,
+                minPrefixLength: 3,
+                minSuffixLength: 3,
+            },
+        };
+        const ellipsisNormal = new webUtils.ellipsis.Ellipsis(options);
+        const ellipsisBold = new webUtils.ellipsis.Ellipsis(options);
         this.$main.find(".sections .wi-element-name").each((_, el) => {
-            let $el = $(el);
-            if ($el.children().length == 0) {
-                let text = $el.text().trim();
-                let a = text.substr(0, firstLen);
-                let b = text.substr(firstLen, Math.max(0, text.length - firstLen - lastLen));
-                let c = text.substr(a.length + b.length);
-                if (b.length <= 3) {
-                    a += b;
-                    b = "";
-                }
-                let html = '<span class="first">' + this.helper.escapeHtml(a) + '</span>';
-                html += '<span class="middle">' + this.helper.escapeHtml(b) + '</span>';
-                html += '<span class="dots">' + (b.length == 0 ? "" : "...") + '</span>';
-                html += '<span class="last">' + this.helper.escapeHtml(c) + '</span>';
-                $el.html(html);
-                $el.attr("title", text);
+            const $el = $(el);
+            $el.find(".section-breadcrumb").remove();
+            const breadcrumb = $el.data("breadcrumb").trim();
+            const sectionName = $el.data("section-name").trim();
+            const textSpans: webUtils.ellipsis.SimpleTextSpan[] = [];
+            if (breadcrumb.length > 0) {
+                textSpans.push({
+                    text: breadcrumb + " ",
+                    textToHtml: text => `<span class="section-breadcrumb">${text}</span>`,
+                });
             }
+            if (sectionName.length > 0) {
+                textSpans.push({
+                    text: sectionName,
+                    textToHtml: text => text,
+                });
+            }
+            const ellipsis = $el.hasClass("bold") ? ellipsisBold : ellipsisNormal;
+            ellipsis.apply($el, textSpans);
         });
     }
-
+    
     getFilesPos(): {x: number, y: number} {
         let $notes2Tale = this.$main.find(".app-launcher[data-app-window=notes2]");
         let rect = $notes2Tale[0].getBoundingClientRect() as DOMRect;
@@ -234,6 +259,7 @@ export class AppsWindowView extends wnd.base.BaseAppWindowView<ViewModel> {
 
     closeFilesUserGuide(): void {
         this.userGuideVisible = false;
+        this.$main.find(".user-guide-container").remove();
     }
 
     onResizeWindow(): void {
@@ -353,6 +379,19 @@ export class AppsWindowView extends wnd.base.BaseAppWindowView<ViewModel> {
     
     setAllSpinnersHidden(allSpinnersHidden: boolean):void {
         this.triggerEvent("setAllSpinnersHidden", allSpinnersHidden);
+    }
+
+    updateStatistics(chats: number, tasks: number, files: number): void {
+        const $stats = this.$main.find(".modules-statistics");
+        const $chatsCountElement = $stats.find(".chat-count");
+        const $tasksCountElement = $stats.find(".tasks-count");
+        const $filesCountElement = $stats.find(".notes2-count");
+
+        $chatsCountElement.text(chats ? webUtils.NumberFormatter.formatSimpleWithSuffix(chats): "-");
+        $tasksCountElement.text(tasks ? webUtils.NumberFormatter.formatSimpleWithSuffix(tasks): "-");
+        $filesCountElement.text(files ? webUtils.NumberFormatter.formatSimpleWithSuffix(files): "-");
+        
+        $stats.fadeIn(500);
     }
     
 }

@@ -36,7 +36,10 @@ export class ActivateController extends WindowComponentController<LoginWindowCon
             keyCorrect: false
         };
     }
-    
+
+    async getHostInputFromView(): Promise<string> {
+        return this.retrieveFromView<string>("getHost");
+    }    
     onViewOpenLogin(): void {
         this.parent.openLogin();
     }

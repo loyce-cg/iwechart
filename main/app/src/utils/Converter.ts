@@ -1,6 +1,7 @@
 import {Conversation} from "../mail/conversation/Conversation";
 import * as Types from "../Types";
 import { Conv2Section } from "../mail/section/Conv2Service";
+import { CommonApplication } from "../app/common/CommonApplication";
 
 export class Converter {
     
@@ -83,7 +84,8 @@ export class Converter {
                 },
                 persons: null,
                 isBellRinging: isBellRinging,
-                activeVoiceChatInfo: activeVoiceChatInfo
+                activeVoiceChatInfo: activeVoiceChatInfo,
+                activeVideoConferenceInfo: this.getActiveVideoConferenceInfo(model),
             };
         }
         return {
@@ -111,7 +113,8 @@ export class Converter {
             }),
             personsPresence: this.getPersonsPresence(model),
             isBellRinging: isBellRinging,
-            activeVoiceChatInfo: activeVoiceChatInfo
+            activeVoiceChatInfo: activeVoiceChatInfo,
+            activeVideoConferenceInfo: this.getActiveVideoConferenceInfo(model),
         };
     }
     
@@ -140,4 +143,17 @@ export class Converter {
         }
         return 0;
     }
+    
+    static getActiveVideoConferenceInfo(conv2section: Conv2Section): Types.webUtils.ActiveVideoConferenceInfo {
+        let hostHash = CommonApplication.instance.sessionManager.getLocalSession().hostHash;
+        for (let id in CommonApplication.instance.sessionManager.sessions) {
+            let session = CommonApplication.instance.sessionManager.sessions[id];
+            if (session.conv2Service == conv2section.conv2Service) {
+                hostHash = id;
+                break;
+            }
+        }
+        return CommonApplication.instance.videoConferencesService.getActiveVideoConferenceInfoForConv2Section(hostHash, conv2section);
+    }
+    
 }

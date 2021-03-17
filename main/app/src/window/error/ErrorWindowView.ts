@@ -18,9 +18,9 @@ export class ErrorWindowView extends BaseWindowView<Model> {
         this.notifications = this.addComponent("notifications", new NotificationView(this));
     }
     
+
     initWindow(model: Model): Q.Promise<void> {
         this.model = model;
-        this.triggerEventInTheSameTick("setWindowHeight", Math.ceil(this.$main.outerHeight()));
         return Q()
         .then(() => {
             this.$main.on("click", "a", this.onLinkClick.bind(this));
@@ -28,8 +28,9 @@ export class ErrorWindowView extends BaseWindowView<Model> {
             this.$main.on("click", "[data-action=dontSend]", this.onDontSendClick.bind(this));
             this.$main.on("click", "[data-action=close]", this.onCloseClick.bind(this));
             this.$main.on("click", "[data-action=toggle-report-option]", this.onToggleReportOptionClick.bind(this));
-            this.$main.on("click", "[data-action=show-error-log]", this.onShowErrorLogClick.bind(this));
-            this.$main.on("click", "[data-action=show-system-information]", this.onShowSystemInformationClick.bind(this));
+            this.$main.on("click", "input[name=errorsLoggingEnabled]", this.onErrorsLoggingSwitchClick.bind(this))
+            this.$main.on("click", "[data-copy-textarea-id]", (e: Event) => this.helper.onTextAreaCopyClick(<MouseEvent>e));
+            this.$main.on("click", "[data-action=show-full-report]", this.onShowFullReport.bind(this));
             $(document).on("keydown", this.onKeyDown.bind(this));
             this.notifications.$container = this.$main.find(".notifications-container");
             return Q.all([
@@ -62,14 +63,6 @@ export class ErrorWindowView extends BaseWindowView<Model> {
         $optionContainer.find(".switch").toggleClass("active");
     }
     
-    onShowErrorLogClick(e: MouseEvent): void {
-        this.triggerEvent("showErrorLog");
-    }
-    
-    onShowSystemInformationClick(e: MouseEvent): void {
-        this.triggerEvent("showSystemInformation");
-    }
-    
     onKeyDown(e: KeyboardEvent): void {
         if (e.keyCode == KEY_CODES.escape) {
             if (this.model.error.askToReport) {
@@ -87,6 +80,19 @@ export class ErrorWindowView extends BaseWindowView<Model> {
                 this.triggerEvent("close");
             }
         }
+    }
+
+    onUpdateErrorsLoggingEnabled(enabled: boolean): void {
+        this.$main.find("input[name=errorsLoggingEnabled]").prop("checked", enabled);
+    }
+
+    onErrorsLoggingSwitchClick(event: MouseEvent): void {
+        let checked = this.$main.find("input[name=errorsLoggingEnabled]").prop("checked");
+        this.triggerEvent("errorsLoggingEnabled", checked);
+    }
+
+    onShowFullReport(): void {
+        this.triggerEvent("showFullReport");
     }
     
 }

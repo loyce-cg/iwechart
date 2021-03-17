@@ -32,7 +32,15 @@ export class Plugin {
         
         app.addEventListener<Mail.Types.event.AdditionalLoginStepEvent<AdditionalLoginStepData>>("additionalloginstep", event => {
             if (event.data && event.data.reason == "twofa" && CodeWindowController.isSupported(event.data)) {
-                event.result = app.ioc.create(CodeWindowController, [app, event.data, new TwofaApi(event.basicLoginResult.srpSecure.gateway)]).then(win => {
+                let host = event.basicLoginResult.gateway.getHost();
+                let login = (<any>event.data).webauthnLogin;
+                event.result = app.ioc.create(CodeWindowController, [app, {
+                    data: event.data,
+                    api: new TwofaApi(event.basicLoginResult.gateway),
+                    cancellable: false,
+                    host: host,
+                    u2f: {register: null, login: login}
+                }]).then(win => {
                     app.openSingletonWindow("twofa-window" , win);
                     return win.getPromise();
                 });

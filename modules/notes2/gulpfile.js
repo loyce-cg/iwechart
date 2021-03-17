@@ -4,7 +4,7 @@ var gutil = Project.libs.gutil;
 
 var baseConfig = Project.getConfig();
 baseConfig.scriptsConfig["plugin-main"] = {
-    clearRequires: ["trash", "drivelist", "ncp", "fs", "path", "os"]
+    clearRequires: ["trash", "drivelist", "ncp", "fs", "path", "os", "original-fs", "hidefile"]
 };
 gutil.log("Building " + baseConfig.buildId + " ...");
 

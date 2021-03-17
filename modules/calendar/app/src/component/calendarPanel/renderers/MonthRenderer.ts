@@ -56,7 +56,7 @@ export class MonthRenderer extends FastListRenderer<EntryModel> {
     firstValidDate: Date;
     lastValidDate: Date;
     weekHeight: number = 100;
-    taskHeight: number = 18;
+    taskHeight: number = 16;
     cachedWeekData: WeekData[] = null;
     cachedDaysByName: { [day: string]: DayData } = null;
     centerAfterRenderArgs: { entryId: number, delta: number } = null;
@@ -311,7 +311,7 @@ export class MonthRenderer extends FastListRenderer<EntryModel> {
             let end = task.endTimestamp;
             let dt0 = new Date(task.startTimestamp);
             let wholeDays = task.wholeDays;
-            let origText = (wholeDays ? "" : pad0s(dt0.getHours()) + ":" + pad0s(dt0.getMinutes()) + " ") + task.title.trim();
+            let origText = task.title.trim() + (wholeDays ? "" : " (" + pad0s(dt0.getHours()) + ":" + pad0s(dt0.getMinutes()) + ")");
             let text = origText;
             let duration = (task.endTimestamp - task.startTimestamp);
             if (wholeDays) {
@@ -330,7 +330,7 @@ export class MonthRenderer extends FastListRenderer<EntryModel> {
                 if (dayStr in daysByName) {
                     let isDayExpanded = this.expandedDay == dayStr;
                     let dt2 = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
-                    let week = DateUtils.weekNumber(dt2)
+                    let week = DateUtils.weekNumber(dt2);
                     let rangeStart = dt2.getTime();
                     let rangeEnd = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() + 1).getTime();
                     let fragmentText = "";

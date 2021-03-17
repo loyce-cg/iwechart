@@ -1,11 +1,12 @@
 import { ImgGenerator } from "./ImgGenerator";
 import { SectionService } from "../section";
-import { ThumbGenerator } from "./ThumbGenerator";
+import { GeneratedThumb, ThumbGenerator } from "./ThumbGenerator";
 import { CommonApplication } from "../../app/common";
 import Q = require("q");
 import { Entry } from "../filetree/NewTree";
 import { lazyBuffer } from "privfs-client";
 import { section } from "..";
+import { PreGeneratedGenerator } from "./PreGeneratedGenerator";
 
 export class ThumbsManager {
     
@@ -19,18 +20,24 @@ export class ThumbsManager {
     
     constructor(public app: CommonApplication) {
         ThumbsManager.instance = this;
-        this.generators.push(new ImgGenerator());
+        this.generators.push(new ImgGenerator(this.app));
     }
     
     getThumbPath(did: string, filePath: string): string {
         let idx = filePath.lastIndexOf(".");
         let ext = idx ? filePath.substr(idx) : ".jpg";
+        if (ext == ".pmxvv") {
+            ext = ".jpg";
+        }
         return `${ThumbsManager.THUMBS_PATH}/${did}${ext}`;
     }
     
-    copnvertFilePathToThumbPath(filePath: string, did: string): string {
+    convertFilePathToThumbPath(filePath: string, did: string): string {
         let idx = filePath.lastIndexOf(".");
         let ext = filePath.substr(idx);
+        if (ext == ".pmxvv") {
+            ext = ".jpg";
+        }
         return `${ThumbsManager.THUMBS_PATH}/${did}${ext}`;
     }
     
@@ -42,7 +49,7 @@ export class ThumbsManager {
             let fileEntry = tree.collection.find(x => x.ref && x.ref.did == did);
             if (fileEntry) {
                 let filePath = fileEntry.path;
-                let thumbPath = this.copnvertFilePathToThumbPath(filePath, did);
+                let thumbPath = this.convertFilePathToThumbPath(filePath, did);
                 let thumbEntry = tree.collection.find(x => x.path == thumbPath);
                 return thumbEntry;
             }
@@ -106,19 +113,22 @@ export class ThumbsManager {
             }
         })
         .then(osf => {
-            if (!osf) {
+            if (!osf || !osf.getMimeType().startsWith("image/")) {
                 return null;
             }
             return osf.getContent();
         });
     }
     
-    createThumb(section: SectionService, filePath: string): Q.Promise<string> {
+    createThumb(section: SectionService, filePath: string, preGeneratedThumb?: GeneratedThumb): Q.Promise<string> {
         if (!this.app.isElectronApp()) {
             return Q(null);
         }
         return this.ensureThumbsDirExists(section)
         .then(() => {
+            if (preGeneratedThumb) {
+                return new PreGeneratedGenerator(this.app, preGeneratedThumb);
+            }
             return this.getGeneratorFromPath(section, filePath);
         })
         .then(generator => {

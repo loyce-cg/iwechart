@@ -92,6 +92,10 @@ export class PlayerHelperWindowView extends BaseWindowView<void> implements IMus
     }
     
     initVoiceChatViewModule(processorsPaths: ProcessorsPaths, url: string) {
+        if (typeof((<any>window)["AudioWorkletNode"]) === "undefined") {
+            console.warn("AudioWorkletNode not available");
+            return;
+        }
         if (this.voiceChatModule) {
             return;
         }
@@ -103,6 +107,9 @@ export class PlayerHelperWindowView extends BaseWindowView<void> implements IMus
     
     streamsTalk(url: string, processorsPaths: ProcessorsPaths, roomId: string, auth: string, _username: string, key: ArrayBuffer) {
         this.initVoiceChatViewModule(processorsPaths, url);
+        if (!this.voiceChatModule) {
+            return;
+        }
         this.voiceChatModule.streamsTalk({name: roomId, key: key}, auth)
         .fail(e => {
             this.triggerEvent("talkFailed");
@@ -127,6 +134,9 @@ export class PlayerHelperWindowView extends BaseWindowView<void> implements IMus
     
     streamsRingTheBell(url: string, processorsPaths: ProcessorsPaths, _roomId: string): void {
         this.initVoiceChatViewModule(processorsPaths, url);
+        if (!this.voiceChatModule) {
+            return;
+        }
         this.voiceChatModule.streamsRingTheBell();
     }
     

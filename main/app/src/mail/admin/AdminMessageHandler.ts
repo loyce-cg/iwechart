@@ -39,6 +39,7 @@ export class AdminMessageHandler {
                 }
                 switch (event.type) {
                     case "grant-admin-key": {
+                        Logger.warn("Grant admin key from message");
                         return this.adminKeyHolder.saveAdminKey(privfs.crypto.ecc.ExtKey.fromBase58(event.extKey));
                     }
                     case "grant-shared-db-key": {

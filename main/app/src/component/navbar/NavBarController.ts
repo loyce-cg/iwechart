@@ -2,7 +2,7 @@ import {ComponentController} from "../base/ComponentController";
 import {ContainerWindowController} from "../../window/container/ContainerWindowController";
 import {CommonApplication} from "../../app/common/CommonApplication";
 import {Person} from "../../mail/person/Person";
-import {app, event, utils} from "../../Types";
+import {app, event, utils, webUtils, section as sectionTypes} from "../../Types";
 import {GroupedElements} from "../../utils/GroupedElements";
 import {Inject, Dependencies} from "../../utils/Decorators";
 import {BaseAppWindowController} from "../../window/base/BaseAppWindowController";
@@ -17,11 +17,19 @@ import { LocaleService, UtilApi } from "../../mail";
 import { i18n } from "./i18n";
 import { TooltipController } from "../tooltip/main";
 import { VoiceChatControlsController } from "../voicechatcontrols/main";
+import { Conv2Section, SectionService } from "../../mail/section";
+import { Converter } from "../../utils/Converter";
+import { SectionListController } from "../sectionlist/SectionListController";
+import { PersonsController } from "../persons/PersonsController";
+import { ContextHistory, NewContextAddedToHistoryEvent, ContextHistoryChangeEvent } from "../../app/common/contexthistory/ContextHistory";
+import { Router } from "../../app/common/router/Router";
+import { InAnyVideoConferenceStateChanged } from "../../app/common/videoconferences/VideoConferencesService";
 let Logger = RootLogger.get("privfs-mail-client.component.navbar.NavBarController");
 
 export interface PersonModel {
     avatar: string;
     description: string;
+    hashmail: string;
     name: string;
 }
 
@@ -50,6 +58,9 @@ export interface Model extends UserModel {
     isActive: boolean;
     activeLogo: boolean;
     showWindowControls: boolean;
+    showNavigation: boolean;
+    navPrevButtonState: boolean;
+    navNextButtonState: boolean;
 };
 
 export interface MenuEntry {
@@ -66,7 +77,7 @@ export interface NavBarMenuActionEvent extends event.Event<boolean> {
     action: string;
 }
 
-@Dependencies(["playercontrols", "voicechatcontrols"])
+@Dependencies(["playercontrols", "voicechatcontrols", "persons"])
 export class NavBarController extends ComponentController {
     
     static textsPrefix: string = "component.navbar.";
@@ -81,7 +92,9 @@ export class NavBarController extends ComponentController {
     @Inject mailFilter: MailFilter
     @Inject userPreferences: UserPreferences;
     @Inject componentFactory: ComponentFactory;
-
+    @Inject contextHistory: ContextHistory;
+    @Inject router: Router;
+    
     app: CommonApplication;
     parent: BaseAppWindowController;
     containerController: ContainerWindowController;
@@ -91,6 +104,8 @@ export class NavBarController extends ComponentController {
     playerControls: PlayerControlsController;
     voiceChatControls: VoiceChatControlsController;
     basicTooltip: TooltipController;
+    personsComponent: PersonsController;
+    videoConferenceState: { hostHash: string, section: SectionService, conversation: Conv2Section } = null;
     
     constructor(
         parent: BaseAppWindowController
@@ -166,7 +181,7 @@ export class NavBarController extends ComponentController {
             icon: "fa fa-medkit",
             label: this.app.localeService.i18n("component.navbar.userMenu.support"),
             action: "open-support"
-        });    
+        });
 
         // this.menu.addElement({
         //     id: "fonts",
@@ -176,6 +191,7 @@ export class NavBarController extends ComponentController {
         //     label: "Fonts",
         //     action: "open-fonts"
         // });
+
         this.menu.addElement({
             id: "logout",
             priority: 100,
@@ -222,24 +238,38 @@ export class NavBarController extends ComponentController {
                 });
             }
         });
-        this.app.addEventListener<event.JoinedVoiceChatTalkingEvent>("joinedVoiceChat", event => {
+        this.app.addEventListener<event.JoinedVoiceChatTalkingEvent>("joinedVoiceChat", _event => {
             this.callViewMethod("updateShortState");
         });
-        this.app.addEventListener<event.LeftVoiceChatTalkingEvent>("leftVoiceChat", event => {
+        this.app.addEventListener<event.LeftVoiceChatTalkingEvent>("leftVoiceChat", _event => {
             this.callViewMethod("updateShortState");
         });
+        this.app.addEventListener<event.JoinVideoConferenceEvent>("join-video-conference", event => {
+            this.updateVideoConferenceState(event.hostHash, event.section, event.conversation);
+        });
+        this.app.addEventListener<event.LeaveVideoConferenceEvent>("leave-video-conference", _event => {
+            this.updateVideoConferenceState();
+        });
+        this.app.addEventListener<InAnyVideoConferenceStateChanged>("in-any-video-conference-state-changed", () => {
+            this.updateInAnyVideoConferenceState();
+        });
+        this.app.addEventListener<ContextHistoryChangeEvent>("context-history-change", (_event) => {
+            this.updateNavButtonsState();
+        })
+
         this.basicTooltip = this.addComponent("basicTooltip", this.componentFactory.createComponent("tooltip", [this]));
-        this.basicTooltip.getContent = (id: string) => {
+        this.basicTooltip.getContent = (_id: string) => {
             let dblClick: boolean = this.userPreferences.getUnreadBadgeUseDoubleClick();
             return this.app.localeService.i18n(`markAllAsRead.tooltip.${dblClick?'double':'single'}Click`);
         };
+        this.personsComponent = this.addComponent("personsComponent", this.componentFactory.createComponent("persons", [this]));
     }
     
     onTrialStatusChange(event: event.TrialStatusUpdateEvent): void {
         let trialModel: app.TrialStatus = event;
         this.callViewMethod("updateTrialStatus", JSON.stringify(trialModel));
     }
-
+    
     getModel(): Model {
         let person = this.personService.getPerson(this.identityProvider.getIdentity().hashmail);
         return {
@@ -247,6 +277,7 @@ export class NavBarController extends ComponentController {
             person: {
                 avatar: person.getAvatar(),
                 description: person.getDescription(),
+                hashmail: person.getHashmail(),
                 name: person.getName(),
             },
             // wylaczamy powiadomienia o wiadomosciach z zewnatrz
@@ -261,7 +292,10 @@ export class NavBarController extends ComponentController {
             isActive: this.isActive(),
             activeLogo: this.activeLogo,
             showWindowControls: this.getShowWindowControl(),
+            showNavigation: this.app.isElectronApp(),
             isAdmin: this.identityProvider.isAdmin(),
+            navPrevButtonState: this.contextHistory.hasPrev(),
+            navNextButtonState: this.contextHistory.hasNext()
         };
     }
     
@@ -311,6 +345,9 @@ export class NavBarController extends ComponentController {
         else if (action == "logout") {
             this.app.logout();
         }
+        else if (action == "upload-service") {
+            this.app.uploadService.bringUploadWindow();
+        }
         else if (action == "open-settings") {
             this.app.openSettings();
         }
@@ -350,6 +387,10 @@ export class NavBarController extends ComponentController {
     }
     
     onViewShowAppWindow(appWindowId: string, withShiftKey: boolean): void {
+        let active = this.containerController.activeModel.get();
+        if (active == "notes2") {
+            this.app.eventDispatcher.dispatchEvent({type: "clear-previews"});
+        }
         this.app.contextModifierPresent = withShiftKey;
         this.containerController.redirectToAppWindow(appWindowId);
     }
@@ -371,7 +412,7 @@ export class NavBarController extends ComponentController {
         this.containerController.redirectToAppWindow(windows[currentAppIndex].id);
     }
     
-    onViewToogleFullscreen(): void {
+    onViewToggleFullscreen(): void {
         if (this.fullscreenModel) {
             this.fullscreenModel.toggle();
         }
@@ -401,6 +442,13 @@ export class NavBarController extends ComponentController {
             this.callViewMethod("showFirstLoginInfo");
         }
         this.app.updatePaymentStatus();
+        
+        let chatPlugin = this.app.getComponent("chat-plugin");
+        let wnd = chatPlugin.currentVideoConferenceWindowController;
+        if (wnd && wnd.joinVideoConferenceEvent) {
+            let evt: event.JoinVideoConferenceEvent = wnd.joinVideoConferenceEvent;
+            this.updateVideoConferenceState(evt.hostHash, evt.section, evt.conversation);
+        }
     }
     
     onActiveChange(): void {
@@ -416,6 +464,12 @@ export class NavBarController extends ComponentController {
     }
     
     onPersonsChange(person: Person): void {
+        if (this.videoConferenceState) {
+            this.updateVideoConferenceState(this.videoConferenceState.hostHash, this.videoConferenceState.section, this.videoConferenceState.conversation);
+        }
+        else {
+            this.updateVideoConferenceState();
+        }
         if (person.hashmail != this.identityProvider.getIdentity().hashmail) {
             return;
         }
@@ -423,6 +477,7 @@ export class NavBarController extends ComponentController {
             person: {
                 avatar: person.getAvatar(),
                 description: person.getDescription(),
+                hashmail: person.getHashmail(),
                 name: person.getName()
             },
             menu: this.menu,
@@ -498,4 +553,51 @@ export class NavBarController extends ComponentController {
         this.app.openOrderInfo();
     }
     
+    updateVideoConferenceState(hostHash?: string, section?: SectionService, conversation?: Conv2Section): void {
+        let active: boolean = hostHash && !!(section || conversation);
+        if (!active) {
+            this.videoConferenceState = null;
+            this.callViewMethod("updateVideoConferenceState", false);
+            return;
+        }
+        this.videoConferenceState = { hostHash, section, conversation };
+        let type: "section"|"conversation" = section ? "section" : "conversation";
+        let model = conversation ? this.getConv2Model(conversation) : this.getSectionModel(section);
+        let modelStr = model ? JSON.stringify(model) : null;
+        this.callViewMethod("updateVideoConferenceState", active, type, modelStr);
+    }
+    
+    updateInAnyVideoConferenceState(): void {
+        const isUserInAnyConference = this.app.videoConferencesService.isUserInAnyConference();
+        this.callViewMethod("updateInAnyVideoConferenceState", isUserInAnyConference);
+    }
+    
+    getConv2Model(c2s: Conv2Section): webUtils.ConversationModel {
+        return Converter.convertConv2(c2s, 0, 0, 0, true, 0, false, false, false, null);
+    }
+    
+    getSectionModel(section: SectionService): webUtils.SectionListElementModel {
+        return SectionListController.convertSection(section, 0, 0, 0, true, false, false, sectionTypes.NotificationModule.CHAT, null, true);
+    }
+    
+    onViewOpenVideoConference(): void {
+        let chatPlugin = this.app.getComponent("chat-plugin");
+        chatPlugin.bringVideoConferenceWindowToFront();
+    }
+
+    onViewHistoryPrev(): void {
+        if (this.app.isElectronApp()) {
+            this.router.goPrev();
+        }
+    }
+
+    onViewHistoryNext(): void {
+        if (this.app.isElectronApp()) {
+            this.router.goNext();
+        }
+    }
+    
+    updateNavButtonsState() {
+        this.callViewMethod("updateNavButtonsState", this.contextHistory.hasNext(), this.contextHistory.hasPrev());
+    }
 }

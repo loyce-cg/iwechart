@@ -10,12 +10,31 @@
   let isCreated = objType == "create-file";
   let normalDate = objType != "create-task" && objType != "create-file";
   let voicechatMessage = objType == "joined-voicechat" || objType == "left-voicechat";
+  let videoConferenceMessage = objType == "video-conference-start" || objType == "video-conference-end";
+  let videoConferenceGongMessage = objType == "video-conference-gong";
+  let wasMsgRead = model.read || (model.contentType == "application/json" && !videoConferenceGongMessage);
+  let isPrivMxAudio = false;
+  let isPrivMxVideo = false;
+  let isPrivMxAudioOrVideo = false;
+  let isImage = false;
+  let hasThumbnail = false;
+  if (model.type == "chat" && model.contentType == "application/json") {
+    let obj = model.textAsJson;
+    if (obj.type == "create-file") {
+      let path = obj.path || "";
+      isPrivMxAudio = path.endsWith(".pmxaa");
+      isPrivMxVideo = path.endsWith(".pmxvv");
+      isPrivMxAudioOrVideo = isPrivMxAudio || isPrivMxVideo;
+      isImage = obj.mimeType.startsWith("image/");
+      hasThumbnail = isPrivMxVideo || isImage;
+    }
+  }
 }}
 <div class="{{@model.sending ? 'chat-sending' : ''}} {{@model.distanceFromClosestMatch !== null ? `dist-${model.distanceFromClosestMatch}` : ''}}" data-msg-id="{{@model.msgId}}" data-msg-num="{{@model.msgNum}}" data-sent-id="sending-{{@model.sendingId}}" data-hashmail="{{@model.sender.hashmail}}" data-date="{{@Helper.dateDay(model.serverDate)}}">
   <div class="chat-date-separator" style="user-select:none">
     <div class="day-date"><div>{{@Helper.dateDay(model.serverDate)}}</div></div>
   </div>
-  <div class="chat-message {{@model.myMessage ? 'outgoing' : 'incoming' }} {{@(model.read || model.contentType == 'application/json') ? 'read' : 'unread'}} {{@model.deleted ? 'deleted' : ''}} {{@model.isTldr ? 'tldr' : '' }} {{@model.distanceFromClosestMatch !== null ? `dist-${model.distanceFromClosestMatch}` : ''}}">
+  <div class="chat-message {{@model.myMessage ? 'outgoing' : 'incoming' }} {{@wasMsgRead ? 'read' : 'unread'}} {{@model.deleted ? 'deleted' : ''}} {{@model.isTldr ? 'tldr' : '' }} {{@model.distanceFromClosestMatch !== null ? `dist-${model.distanceFromClosestMatch}` : ''}}">
     <div class="sender-picture" data-tooltip-trigger="{{@model.sender.hashmail}}">
       <canvas class="not-rendered" data-hashmail-image="{{@model.sender.hashmail}}" data-width="30" data-height="30" data-auto-size="true" data-auto-refresh="true"></canvas>
     </div>
@@ -23,7 +42,7 @@
       <div class="sender-name" data-hashmail-name="{{@model.sender.hashmail}}" data-hashmail-default-name="{{@model.sender.defaultName}}" data-auto-refresh="true" style="user-select:none">
         {{@model.sender.name}}
       </div>
-      <div class="message {{@voicechatMessage ? 'voicechat' : ''}} {{@model.attachments.length > 0 ? 'with-attachments':''}}{{@fileBoxClass}}{{@isCreated ? ' created':''}} {{@isCreated && model.textAsJson && model.textAsJson.mimeType.startsWith('image/') && !model.nonExistantFileLink ? ' with-not-loaded-image':''}} {{@model.isEditable ? 'editable' : ''}}">
+      <div class="message {{@voicechatMessage ? 'voicechat' : ''}} {{@videoConferenceMessage ? 'videoconference' : ''}} {{@videoConferenceGongMessage ? 'videoconference-gong' : ''}} {{@model.attachments.length > 0 ? 'with-attachments':''}}{{@fileBoxClass}}{{@isCreated ? ' created':''}} {{@isCreated && model.textAsJson && hasThumbnail && !model.nonExistantFileLink ? ' with-not-loaded-image':''}} {{@model.isEditable ? 'editable' : ''}}">
         {{ if (normalDate) { {{
           {{ if (model.sending) { {{
             <div class="date date-sending" data-sending="true" title="{{@Helper.i18n("plugin.chat.component.chatMessages.chatMessageSending.date.title")}}"><i class="fa fa-circle-o-notch fa-spin "></i></div>
@@ -98,7 +117,7 @@
             let showExtraButtons = !model.sending;
             if (obj.type == "create-file") {
               {{
-                <div class="file-box created">
+                <div class="file-box created {{@isPrivMxAudio?'with-audio-player':''}}">
                   {{ if (model.fileInfoIcon) { {{
                     <i class="{{@model.fileInfoIcon}}"></i>
                   }} } else { {{
@@ -113,7 +132,7 @@
                         {{ if (model.fileTaskBadges) { }}
                           <span class="file-task-badges">
                             {{ for (let taskBadge of model.fileTaskBadges) { }}
-                              <span class="task task-id has-task-tooltip {{@taskBadge.labelClass}}" data-task-id="{{@taskBadge.taskId}}" data-task-badge-autoupdate="false">#{{@taskBadge.taskId}}</span>
+                              <span class="task task-id task-label has-task-tooltip {{@taskBadge.labelClass}}" data-task-id="{{@taskBadge.taskId}}" data-task-badge-autoupdate="true">#{{@taskBadge.taskId}}</span>
                             {{ } }}
                           </span>
                         {{ } }}
@@ -135,13 +154,24 @@
                       <div class="size-line"><span class="size">{{@Helper.bytesSize(obj.size)}}</span></div>
                     }} } }}
                   </div>
-                  {{ if (model.sending) { {{
+                  {{ if (model.sending && !hasThumbnail) { {{
                     <span class="date date-sending" data-sending="true" title="{{@Helper.i18n("plugin.chat.component.chatMessages.chatMessageSending.date.title")}}"><i class="fa fa-circle-o-notch fa-spin "></i></span>
                   }} } }}
 
                   
-                  {{ if ((<any>obj.mimeType).startsWith("image/") && !model.nonExistantFileLink) { }}
-                    <img class="img-in-chat not-loaded" data-action="open-channel-file" data-path="{{@path}}" data-did="{{@fileDid}}" data-thumb-did="{{@fileDid}}" data-thumb-host-hash="{{@model.hostHash}}" data-thumb-section-id="{{@model.sectionId}}" data-thumb-state="{{@component.thumbs.ThumbState.UNINITIALIZED}}" data-thumb-in-place="true" alt="" />
+                  {{ if (hasThumbnail && !model.nonExistantFileLink) { }}
+                    <div class="thumb-container">
+                      <img class="img-in-chat not-loaded {{@isPrivMxVideo?'thumb-type-video':''}} {{@isPrivMxAudio?'thumb-type-audio':''}}" data-action="open-channel-file" data-path="{{@path}}" data-did="{{@fileDid}}" data-thumb-did="{{@fileDid}}" data-thumb-host-hash="{{@model.hostHash}}" data-thumb-section-id="{{@model.sectionId}}" data-thumb-state="{{@component.thumbs.ThumbState.UNINITIALIZED}}" data-thumb-in-place="true" alt="" />
+                      {{ if (isPrivMxVideo) { }}
+                        <i class="fa fa-play-circle play-icon"></i>
+                      {{ } }}
+                    </div>
+                  {{ } }}
+                  
+                  {{ if (isPrivMxAudio && !model.nonExistantFileLink) { }}
+                    <div class="play-audio-button" data-action="open-channel-file" data-path="{{@path}}" data-did="{{@fileDid}}">
+                      <i class="fa fa-play-circle play-icon"></i>
+                    </div>
                   {{ } }}
                 </div>
             
@@ -182,7 +212,7 @@
                     <span class="channel-file" data-action="open-channel-file" data-path="{{@newPath}}">{{@newName}}</span>
                     {{ if (model.fileTaskBadges) { }}
                       {{ for (let taskBadge of model.fileTaskBadges) { }}
-                        <span class="task task-id has-task-tooltip {{@taskBadge.labelClass}}" data-task-id="{{@taskBadge.taskId}}" data-task-badge-autoupdate="false">#{{@taskBadge.taskId}}</span
+                        <span class="task task-id task-label task-label has-task-tooltip {{@taskBadge.labelClass}}" data-task-id="{{@taskBadge.taskId}}" data-task-badge-autoupdate="true">#{{@taskBadge.taskId}}</span
                       {{ } }}
                     {{ } }}
                   </div>
@@ -200,7 +230,7 @@
 
                   <div class="text">
                     <div class="line">
-                      <span class="task task-id has-task-tooltip {{@taskLabelClass}}" data-task-id="{{@obj.id}}" data-task-badge-autoupdate="false">{{@obj.label}}</span><span class="task task-name">{{#Helper.formatRichMessage(obj.name, "html")}}</span>
+                      <span class="task task-id task-label has-task-tooltip {{@taskLabelClass}}" data-task-id="{{@obj.id}}" data-task-badge-autoupdate="true">{{@obj.label}}</span><span class="task task-name">{{#Helper.formatRichMessage(obj.name, "html")}}</span>
                     </div>
                   </div>
                   {{ if (model.sending) { {{
@@ -224,7 +254,7 @@
                   <div class="text">
                     <div class="line">
                       <span>
-                        <span class="task task-id has-task-tooltip {{@taskLabelClass}}" data-task-id="{{@obj.id}}" data-task-badge-autoupdate="false">{{@obj.label}}</span><span class="task task-name">{{#Helper.formatRichMessage(obj.name, "html")}}</span>
+                        <span class="task task-id task-label has-task-tooltip {{@taskLabelClass}}" data-task-id="{{@obj.id}}" data-task-badge-autoupdate="true">{{@obj.label}}</span><span class="task task-name">{{#Helper.formatRichMessage(obj.name, "html")}}</span>
                         <span class="task task-modified"><span class="task task-label">{{@Helper.i18n("plugin.chat.component.chatMessages.message.task.modified")}}.</span></span>
                         <span class="task task-status"><span class="task task-label">{{@Helper.i18n("plugin.chat.component.chatMessages.message.task.status")}}:</span>{{@statusName}}</span>
                       </span>
@@ -244,7 +274,7 @@
                   <div class="text">
                     <div class="line">
                       <span>
-                        <span class="task task-id has-task-tooltip {{@taskLabelClass}}" data-task-id="{{@obj.id}}" data-task-badge-autoupdate="false">{{@obj.label}}</span><span class="task task-name">{{#Helper.formatRichMessage(obj.name, "html")}}</span>
+                        <span class="task task-id task-label has-task-tooltip {{@taskLabelClass}}" data-task-id="{{@obj.id}}" data-task-badge-autoupdate="true">{{@obj.label}}</span><span class="task task-name">{{#Helper.formatRichMessage(obj.name, "html")}}</span>
                         <span class="task task-modified"><span class="task task-label">{{@Helper.i18n("plugin.chat.component.chatMessages.message.task.deleted")}}.</span></span>
                       </span>
                     </div>
@@ -262,7 +292,7 @@
                   <div class="text {{@model.isExpanded ? 'expanded' : '' }}" data-tldr-processed="0">
                     <div class="line">
                       <span>
-                        <span class="task task-id has-task-tooltip {{@taskLabelClass}}" data-task-id="{{@obj.id}}" data-task-badge-autoupdate="false">{{@obj.label}}</span>
+                        <span class="task task-id task-label has-task-tooltip {{@taskLabelClass}}" data-task-id="{{@obj.id}}" data-task-badge-autoupdate="true">{{@obj.label}}</span>
                         <span class="task task-comment">{{#Helper.formatRichMessage(obj.comment, "html", model.taskStatuses)}}</span>
                         <span class="link reply">{{@Helper.i18n("plugin.chat.component.chatMessages.message.task.replyComment")}}</span>
                       </span>
@@ -274,10 +304,29 @@
             
               }}
             }
-            else
-            if (obj.type == "joined-voicechat" || obj.type == "left-voicechat") {
+            else if (obj.type == "joined-voicechat" || obj.type == "left-voicechat") {
               {{
               <div class="voicechat-box {{@obj.type}}"><span class="fa fa-phone"></span><span class="voicechat-text">{{@Helper.i18n("plugin.chat.component.chatMessages.voicechatmessage." + obj.type)}}</span></div>
+              }}
+            }
+            else if (obj.type == "video-conference-start" || obj.type == "video-conference-end") {
+              const hasTitle = !!model.textAsJson.conferenceTitle;
+              const i18nSuffix = obj.type == "video-conference-start" ? (hasTitle ? ".withTitle" : ".withoutTitle") : "";
+              const i18nArg = obj.type == "video-conference-start" ? (hasTitle ? model.textAsJson.conferenceTitle : undefined) : undefined;
+              const ended = obj.type == "video-conference-end";
+              {{
+                <div class="videoconference-box {{@obj.type}}"><span class="privmx-icon privmx-icon-videocall{{@ended?'-ended':''}}"></span><span class="videoconference-text">{{@Helper.i18n("plugin.chat.component.chatMessages.videoConferenceMessage." + obj.type + i18nSuffix, i18nArg)}}</span></div>
+              }}
+            }
+            else if (obj.type == "video-conference-gong") {
+              const hasMessage = !!model.textAsJson.message;
+              const i18nSuffix = (hasMessage ? ".withTitle" : ".withoutTitle");
+              const i18nArg = hasMessage ? model.textAsJson.message : undefined;
+              {{
+                <div class="videoconference-gong-box">
+                  <span class="gong-icon fa fa-bell-o"></span>
+                  <span class="gong-text">{{@Helper.i18n("plugin.chat.component.chatMessages.videoConferenceMessage.video-conference-gong" + i18nSuffix, i18nArg)}}</span>
+                </div>
               }}
             }
             else {

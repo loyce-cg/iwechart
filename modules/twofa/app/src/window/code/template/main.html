@@ -12,6 +12,8 @@
     {{@Helper.i18n("plugin.twofa.window.code.info.email", model.data.email)}}
   }} } else if (model.data.type == "googleAuthenticator") { {{
     {{@Helper.i18n("plugin.twofa.window.code.info.googleAuthenticator")}}
+  }} } else if (model.data.type == "u2f") { {{
+    {{@Helper.i18n("plugin.twofa.window.code.info.u2f")}}
   }} } }}
   </div>
   <div class="message"></div>
@@ -33,9 +35,11 @@
     </label>
   </div>
   <div class="button-container">
-    <button class="btn btn-primary btn-block btn-lg submit-code">
-      {{@Helper.i18n("plugin.twofa.window.code.submit")}}
-    </button>
+    {{ if (model.data.type == "email" || model.data.type == "sms" || model.data.type == "googleAuthenticator") { {{
+      <button class="btn btn-primary btn-block btn-lg submit-code">
+        {{@Helper.i18n("plugin.twofa.window.code.submit")}}
+      </button>
+    }} } }}
     {{ if (model.data.type == "email" || model.data.type == "sms") { {{
       <div class="or"><div>lub</div></div>
       <button class="btn btn-default btn-block btn-lg resend-code">

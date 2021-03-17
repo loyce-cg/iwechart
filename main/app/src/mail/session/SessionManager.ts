@@ -16,6 +16,7 @@ import { SectionManager } from "../section/SectionManager";
 import { Conv2Service } from "../section";
 import { WebSocketNotifier } from "./WebSocketNotifier";
 import { VoiceChatServiceApi } from "../voicechat/VoiceChatServiceApi";
+import { VideoConferencesServiceApi } from "../videoconferences/VideoConferencesServiceApi";
 import { AssetsManager } from "../../app/common/AssetsManager";
 import { MailStats } from "..";
 import { CommonApplication } from "../../app/common/CommonApplication";
@@ -44,6 +45,7 @@ export interface SessionServices {
     networkStatusService: NetworkStatusService;
     taskStream: ParallelTaskStream;
     voiceChatServiceApi?: VoiceChatServiceApi;
+    videoConferencesServiceApi?: VideoConferencesServiceApi;
 }
 
 export class SessionManager {
@@ -113,6 +115,14 @@ export class SessionManager {
             this.sessions[hostHash].services.voiceChatServiceApi = new VoiceChatServiceApi(this.sessions[hostHash].userData.srpSecure)
         }
     }
+    
+    registerVideoConferencesService(hostHash: string): void {
+        this.initServicesObject(hostHash);
+        if (!this.sessions[hostHash].services.videoConferencesServiceApi) {
+            this.sessions[hostHash].services.videoConferencesServiceApi = new VideoConferencesServiceApi(this.sessions[hostHash].userData.srpSecure, this.sessions[hostHash].userData.identity.host);
+        }
+        this.app.videoConferencesService.polling.start(this.sessions[hostHash]);
+    }
 
     /// API METHODS
     
@@ -160,6 +170,7 @@ export class SessionManager {
             };
             this.sessions[hostHash] = newSession;
             this.registerVoiceChatService(hostHash);
+            this.registerVideoConferencesService(hostHash);
 
             // console.log("session - registerServices before");
             return this.registerServices(hostHash);
@@ -213,6 +224,7 @@ export class SessionManager {
         if ( !(hostHash in this.sessions)) {
             throw new Error("There is no remote sessions with given host: " + host);
         }
+        this.app.videoConferencesService.polling.stop(this.sessions[hostHash]);
         this.sessions[hostHash].userData.srpSecure.gateway.rpc.disconnect();
         this.sessions[hostHash].mailClientApi.destroy();
         this.sessions[hostHash].webSocketNotifier.closeConnection();
@@ -278,6 +290,7 @@ export class SessionManager {
 
             if (hostHash == this.getLocalSession().hostHash) {
                 this.registerVoiceChatService(hostHash);
+                this.registerVideoConferencesService(hostHash);
 
                 // tymczasowo websock wylaczony dla sekcji zdalnych
                 this.sessions[hostHash].webSocketNotifier = new WebSocketNotifier(this.eventDispatcher, this.sessions[hostHash], this.localeService, this.app);
@@ -319,6 +332,15 @@ export class SessionManager {
             return this.sessions[hostHash].services.voiceChatServiceApi;
         } else {
             throw new Error("Voice chat not initialized.");
+        }
+    }
+
+    getVideoConferencesServiceApi(hostHash: string): VideoConferencesServiceApi {
+        if (this.sessions[hostHash].services && (this.sessions[hostHash]).services.videoConferencesServiceApi) {
+            return this.sessions[hostHash].services.videoConferencesServiceApi;
+        }
+        else {
+            throw new Error("VideConferencesServiceApi not initialized.");
         }
     }
     

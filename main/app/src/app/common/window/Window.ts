@@ -123,8 +123,31 @@ export abstract class Window {
     
     abstract removeSpinner(): void;
     
-    updatePreTitleIcon(icon: app.PreTitleIcon): void {
+    updatePreTitleIcon(icon: app.PreTitleIcon): void {   
     }
+    updateSpellCheckerLanguages(): void {
+    }
+    
+    getAvailableSpellCheckerLangauges(): string[] {
+        return [];
+    }
+
+    // destroy(): void {
+    //     console.log("window.destroy")
+    //     this.events.clear();
+    //     this.events.map = {};
+    //     console.log("clearing docked windows")
+    //     for (let id in this.dockedWindows) {
+    //         this.dockedWindows[id].destroy();
+    //         this.dockedWindows[id] = null;
+    //         delete this.dockedWindows[id];
+    //     }
+    // }
+    
+    abstract isAlwaysOnTop(): boolean;
+    abstract setAlwaysOnTop(alwaysOnTop: boolean): void;
+    
+    abstract center(): void;
     
 }
 

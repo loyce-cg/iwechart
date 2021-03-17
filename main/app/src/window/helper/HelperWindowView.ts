@@ -17,6 +17,7 @@ export class HelperWindowView extends BaseWindowView<void> {
         this.audioPlayer.add("message-sent", this.helper.getAsset("sounds/message-sent.wav"));
         this.audioPlayer.add("message-deleted", this.helper.getAsset("sounds/message-deleted.wav"));
         this.audioPlayer.add("screenshot", this.helper.getAsset("sounds/screenshot.mp3"));
+        this.audioPlayer.add("gong", this.helper.getAsset("sounds/new-messages.wav"));
     }
     
     setSound(categoryName: SoundsCategoryName, fileName: string): void {

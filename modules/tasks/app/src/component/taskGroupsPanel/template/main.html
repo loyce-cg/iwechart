@@ -79,18 +79,18 @@
       <div class="filter-container"></div>
     </div>
     <div class="button-container">
-      <button id="toggle-all-collapsed-{{@model.safeProjectId}}" class="btn btn-sm btn-default small collapse-all tasks-collapse-all-button" data-action="taskgroup-toggle-collapsed-all">
+      <button id="toggle-all-collapsed-{{@model.uniqueSafeId}}" class="btn btn-sm btn-default small collapse-all tasks-collapse-all-button" data-action="taskgroup-toggle-collapsed-all">
         <span class="act-text-collapse">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.toggleCollapsedAllCollapse")}}</span>
         <span class="act-text-expand">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.toggleCollapsedAllExpand")}}</span>
       </button>
       <span class="hide-done">
-        <input id="tasks-settings-hide-done-{{@model.safeProjectId}}" type="checkbox" data-setting="hide-done" />
-        <label for="tasks-settings-hide-done-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.hideDone")}} <span class="done-tasks-count"></span></label>
+        <input id="tasks-settings-hide-done-{{@model.uniqueSafeId}}" type="checkbox" data-setting="hide-done" />
+        <label for="tasks-settings-hide-done-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.hideDone")}} <span class="done-tasks-count"></span></label>
       </span>
-      <button id="tasks-settings-kanban-mode-{{@model.safeProjectId}}" class="btn btn-xs btn-default kanban-mode" data-setting="kanban-mode" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.kanbanMode")}}">
+      <button id="tasks-settings-kanban-mode-{{@model.uniqueSafeId}}" class="btn btn-xs btn-default kanban-mode" data-setting="kanban-mode" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.kanbanMode")}}">
         K
       </button>
-      <button id="tasks-settings-show-recently-modified-{{@model.safeProjectId}}" class="btn btn-xs btn-default show-recently-modified" data-setting="show-recently-modified" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.viewModeMultipleLists")}}">
+      <button id="tasks-settings-show-recently-modified-{{@model.uniqueSafeId}}" class="btn btn-xs btn-default show-recently-modified" data-setting="show-recently-modified" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.viewModeMultipleLists")}}">
         <span class="fa fa-th-list"></span>
       </button>
       <button class="btn btn-xs btn-default refresh" title="{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.refresh")}}">
@@ -121,121 +121,121 @@
       <li>
         <span class="hide-in-summary">
           {{ checked = model.settings["show-task-panel"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-show-task-panel-{{@model.safeProjectId}}" data-setting="show-task-panel" {{@checked}} />
-          <label for="tasks-settings-show-task-panel-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showTaskPanel")}}</label>
+          <input type="checkbox" id="tasks-settings-show-task-panel-{{@model.uniqueSafeId}}" data-setting="show-task-panel" {{@checked}} />
+          <label for="tasks-settings-show-task-panel-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showTaskPanel")}}</label>
         </span>
       </li>
       <li class="subitem">
         <span class="hide-in-summary">
           {{ checked = model.settings["horizontal-task-window-layout"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-horizontal-task-window-layout-{{@model.safeProjectId}}" data-setting="horizontal-task-window-layout" {{@checked}} />
-          <label for="tasks-settings-horizontal-task-window-layout-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.horizontalTaskWindowLayout")}}</label>
+          <input type="checkbox" id="tasks-settings-horizontal-task-window-layout-{{@model.uniqueSafeId}}" data-setting="horizontal-task-window-layout" {{@checked}} />
+          <label for="tasks-settings-horizontal-task-window-layout-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.horizontalTaskWindowLayout")}}</label>
         </span>
       </li>
       <li>
         <span>
           {{ checked = model.settings["show-orphans"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-show-orphans-{{@model.safeProjectId}}" data-setting="show-orphans" {{@checked}} />
-          <label for="tasks-settings-show-orphans-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showOrphans")}}</label>
+          <input type="checkbox" id="tasks-settings-show-orphans-{{@model.uniqueSafeId}}" data-setting="show-orphans" {{@checked}} />
+          <label for="tasks-settings-show-orphans-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showOrphans")}}</label>
         </span>
       </li>
       <li>
         <span>
           {{ checked = model.settings["show-header-per-list"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-show-header-per-list-{{@model.safeProjectId}}" data-setting="show-header-per-list" {{@checked}} />
-          <label for="tasks-settings-show-header-per-list-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showHeaderPerList")}}</label>
+          <input type="checkbox" id="tasks-settings-show-header-per-list-{{@model.uniqueSafeId}}" data-setting="show-header-per-list" {{@checked}} />
+          <label for="tasks-settings-show-header-per-list-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showHeaderPerList")}}</label>
         </span>
       </li>
       <li>
         <span>
           {{ checked = model.settings["show-list-progress"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-show-list-progress-{{@model.safeProjectId}}" data-setting="show-list-progress" {{@checked}} />
-          <label for="tasks-settings-show-list-progress-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showListProgress")}}</label>
+          <input type="checkbox" id="tasks-settings-show-list-progress-{{@model.uniqueSafeId}}" data-setting="show-list-progress" {{@checked}} />
+          <label for="tasks-settings-show-list-progress-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showListProgress")}}</label>
         </span>
       </li>
       <li>
         <span>
           {{ checked = model.settings["texts-with-status-color"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-texts-with-status-color-{{@model.safeProjectId}}" data-setting="texts-with-status-color" {{@checked}} />
-          <label for="tasks-settings-texts-with-status-color-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.textsWithStatusColor")}}</label>
+          <input type="checkbox" id="tasks-settings-texts-with-status-color-{{@model.uniqueSafeId}}" data-setting="texts-with-status-color" {{@checked}} />
+          <label for="tasks-settings-texts-with-status-color-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.textsWithStatusColor")}}</label>
         </span>
       </li>
       <li>
         <span>
           {{ checked = model.settings["narrow-issue-rows"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-narrow-issue-rows-{{@model.safeProjectId}}" data-setting="narrow-issue-rows" {{@checked}} />
-          <label for="tasks-settings-narrow-issue-rows-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.narrowIssueRows")}}</label>
+          <input type="checkbox" id="tasks-settings-narrow-issue-rows-{{@model.uniqueSafeId}}" data-setting="narrow-issue-rows" {{@checked}} />
+          <label for="tasks-settings-narrow-issue-rows-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.narrowIssueRows")}}</label>
         </span>
       </li>
       <li class="context-menu-group-header">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.moduleMenu.headers.columns")}}</li>
       <li class="setting-show-hash-id-column">
         <span>
           {{ checked = model.settings["show-hash-id-column"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-show-hash-id-column-{{@model.safeProjectId}}" data-setting="show-hash-id-column" {{@checked}} />
-          <label for="tasks-settings-show-hash-id-column-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showHashIdColumn")}}</label>
+          <input type="checkbox" id="tasks-settings-show-hash-id-column-{{@model.uniqueSafeId}}" data-setting="show-hash-id-column" {{@checked}} />
+          <label for="tasks-settings-show-hash-id-column-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showHashIdColumn")}}</label>
         </span>
       </li>
       <li class="subitem">
         <span>
           {{ checked = model.settings["show-task-numbers"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-show-task-numbers-{{@model.safeProjectId}}" data-setting="show-task-numbers" {{@checked}} />
-          <label for="tasks-settings-show-task-numbers-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showTaskNumbers")}}</label>
+          <input type="checkbox" id="tasks-settings-show-task-numbers-{{@model.uniqueSafeId}}" data-setting="show-task-numbers" {{@checked}} />
+          <label for="tasks-settings-show-task-numbers-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showTaskNumbers")}}</label>
         </span>
       </li>
       <li class="setting-show-task-column">
         <span>
           {{ checked = model.settings["show-task-column"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-show-task-column-{{@model.safeProjectId}}" data-setting="show-task-column" {{@checked}} />
-          <label for="tasks-settings-show-task-column-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showTaskColumn")}}</label>
+          <input type="checkbox" id="tasks-settings-show-task-column-{{@model.uniqueSafeId}}" data-setting="show-task-column" {{@checked}} />
+          <label for="tasks-settings-show-task-column-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showTaskColumn")}}</label>
         </span>
       </li>
       <li class="subitem">
         <span>
           {{ checked = model.settings["show-all-other-list-names"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-show-all-other-list-names-{{@model.safeProjectId}}" data-setting="show-all-other-list-names" {{@checked}} />
-          <label for="tasks-settings-show-all-other-list-names-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showAllOtherListNames")}}</label>
+          <input type="checkbox" id="tasks-settings-show-all-other-list-names-{{@model.uniqueSafeId}}" data-setting="show-all-other-list-names" {{@checked}} />
+          <label for="tasks-settings-show-all-other-list-names-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showAllOtherListNames")}}</label>
         </span>
       </li>
       <li class="subitem">
         <span>
           {{ checked = model.settings["show-full-task-descriptions"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-show-full-task-descriptions-{{@model.safeProjectId}}" data-setting="show-full-task-descriptions" {{@checked}} />
-          <label for="tasks-settings-show-full-task-descriptions-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showFullTaskDescriptions")}}</label>
+          <input type="checkbox" id="tasks-settings-show-full-task-descriptions-{{@model.uniqueSafeId}}" data-setting="show-full-task-descriptions" {{@checked}} />
+          <label for="tasks-settings-show-full-task-descriptions-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showFullTaskDescriptions")}}</label>
         </span>
       </li>
       <li class="setting-show-status-column">
         <span>
           {{ checked = model.settings["show-status-column"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-show-status-column-{{@model.safeProjectId}}" data-setting="show-status-column" {{@checked}} />
-          <label for="tasks-settings-show-status-column-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showStatusColumn")}}</label>
+          <input type="checkbox" id="tasks-settings-show-status-column-{{@model.uniqueSafeId}}" data-setting="show-status-column" {{@checked}} />
+          <label for="tasks-settings-show-status-column-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showStatusColumn")}}</label>
         </span>
       </li>
       <li class="setting-show-assigned-to-column">
         <span>
           {{ checked = model.settings["show-assigned-to-column"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-show-assigned-to-column-{{@model.safeProjectId}}" data-setting="show-assigned-to-column" {{@checked}} />
-          <label for="tasks-settings-show-assigned-to-column-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showAssignedToColumn")}}</label>
+          <input type="checkbox" id="tasks-settings-show-assigned-to-column-{{@model.uniqueSafeId}}" data-setting="show-assigned-to-column" {{@checked}} />
+          <label for="tasks-settings-show-assigned-to-column-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showAssignedToColumn")}}</label>
         </span>
       </li>
       <li class="setting-show-attachments-column">
         <span>
           {{ checked = model.settings["show-attachments-column"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-show-attachments-column-{{@model.safeProjectId}}" data-setting="show-attachments-column" {{@checked}} />
-          <label for="tasks-settings-show-attachments-column-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showAttachmentsColumn")}}</label>
+          <input type="checkbox" id="tasks-settings-show-attachments-column-{{@model.uniqueSafeId}}" data-setting="show-attachments-column" {{@checked}} />
+          <label for="tasks-settings-show-attachments-column-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showAttachmentsColumn")}}</label>
         </span>
       </li>
       <li class="setting-show-created-column">
         <span>
           {{ checked = model.settings["show-created-column"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-show-created-column-{{@model.safeProjectId}}" data-setting="show-created-column" {{@checked}} />
-          <label for="tasks-settings-show-created-column-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showCreatedColumn")}}</label>
+          <input type="checkbox" id="tasks-settings-show-created-column-{{@model.uniqueSafeId}}" data-setting="show-created-column" {{@checked}} />
+          <label for="tasks-settings-show-created-column-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showCreatedColumn")}}</label>
         </span>
       </li>
       <li class="setting-show-modified-column">
         <span>
           {{ checked = model.settings["show-modified-column"] ? " checked" : ""; }}
-          <input type="checkbox" id="tasks-settings-show-modified-column-{{@model.safeProjectId}}" data-setting="show-modified-column" {{@checked}} />
-          <label for="tasks-settings-show-modified-column-{{@model.safeProjectId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showModifiedColumn")}}</label>
+          <input type="checkbox" id="tasks-settings-show-modified-column-{{@model.uniqueSafeId}}" data-setting="show-modified-column" {{@checked}} />
+          <label for="tasks-settings-show-modified-column-{{@model.uniqueSafeId}}">{{@Helper.i18n("plugin.tasks.component.taskGroupsPanel.settings.showModifiedColumn")}}</label>
         </span>
       </li>
 	  </ul>

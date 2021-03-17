@@ -113,6 +113,7 @@ export class KvdbCollectionManager {
                 return;
             }
             this.pollTimeout = setTimeout(() => {
+                clearTimeout(this.pollTimeout);
                 this.pollTimeout = null;
                 this.poll();
             }, this.kvdbPollInterval.value);

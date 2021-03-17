@@ -7,7 +7,6 @@ import {Inject} from "../../utils/Decorators";
 import { LocaleService } from "../../mail";
 import { i18n } from "./i18n";
 import * as PmxApi from "privmx-server-api";
-import { SessionManager } from "../../mail/session/SessionManager";
 import { EventDispatcher } from "../../utils";
 import * as privfs from "privfs-client";
 
@@ -16,7 +15,6 @@ export interface Model {
 }
 
 export class PersonsController extends ComponentController {
-    
     static textsPrefix: string = "component.persons.";
     
     static registerTexts(localeService: LocaleService): void {
@@ -26,10 +24,16 @@ export class PersonsController extends ComponentController {
     @Inject persons: Persons;
     @Inject eventDispatcher: EventDispatcher;
 
+    lastSeqOnUpdate: {[hashmail: string]: number} = {};
+
     constructor(parent: Types.app.IpcContainer) {
         super(parent);
         this.ipcMode = true;
-        this.registerChangeEvent(this.persons.changeEvent, this.onPersonChange);
+
+
+        this.registerChangeEvent<Person>(this.persons.changeEvent, (person) => {
+            this.onPersonChange(person);
+        });
     
         this.eventDispatcher.addEventListener<Types.event.UserPresenceChangeEvent>("user-presence-change", e => {
             if (e.role == "onlineState" && e.host == this.persons.identity.host) {
@@ -53,11 +57,15 @@ export class PersonsController extends ComponentController {
     }
     
     onPersonChange(person: Person): void {
-        this.callViewMethod("refreshPerson", PersonsController.getPersonModelFull(person, this.persons.contactService.getUserExtraInfo(person.hashmail)));
+        if (person.hashmail in this.lastSeqOnUpdate && person.changeSeq <= this.lastSeqOnUpdate[person.hashmail]) {
+            return;
+        }
+        this.lastSeqOnUpdate[person.hashmail] = person.changeSeq;
+        this.callViewMethod("refreshPerson", PersonsController.getPersonModelFull(person, this.persons.contactService.getUserExtraInfo(person.hashmail)));                    
     }
     
     static getPersonModelFull(person: Person, userExtraInfo: PmxApi.api.user.UsernameEx): Types.webUtils.PersonModelFullOptymized {
-        let avatar = person.getAvatar();
+        let avatar = person.getAvatarWithVersion();
         let contact = person.getContact();
         let client: string = "";
         if (userExtraInfo) {
@@ -72,7 +80,7 @@ export class PersonsController extends ComponentController {
             name: person.hasContact() && person.contact.hasName() ? person.contact.getDisplayName() : "",
             description: person.getDescription(),
             present: userExtraInfo && (<any>userExtraInfo).isOnline ? (<any>userExtraInfo).isOnline : false,
-            avatar: avatar ? PersonsController.getBlobDataFromDataURL(avatar): null,
+            avatar: {avatar: avatar.avatar ? PersonsController.getBlobDataFromDataURL(avatar.avatar): null, revision: avatar.revision},
             lastUpdate: person.getLastUpdate().getTime(),
             isEmail: person.isEmail(),
             isStarred: person.isStarred(),

@@ -26,7 +26,7 @@ export class ControlCenterWindowController extends BaseWindowController {
     iframeLoaded: boolean = false;
 
     constructor(parent: app.WindowParent) {
-        super(parent, __filename, __dirname);
+        super(parent, __filename, __dirname, null, null, "basic");
         this.ipcMode = true;
         this.afterLoadDefer = Q.defer<void>();
 
@@ -40,7 +40,8 @@ export class ControlCenterWindowController extends BaseWindowController {
             height: 640,
             minWidth: 800,
             minHeight: 640,
-            title: this.i18n("window.controlcenter.title")
+            title: this.i18n("window.controlcenter.title"),
+            usePrivMXUserAgent: true
         };
     }
     
@@ -55,13 +56,14 @@ export class ControlCenterWindowController extends BaseWindowController {
     init(): Q.IWhenable<void> {
         this.registerUtils = new RegisterUtils(this.app);
         return Q().then(() => {
+            let locale = this.app.getEnviromentLocale();
             let lang = this.app.localeService.currentLang;
             let version = this.app.getVersion().str;
             let endpoint = this.app.getCcApiEndpoint() || WebCCApi.ApiEndpoint;
             if (this.app.isRunningInDevMode() && endpoint == WebCCApi.ApiEndpoint) {
                 this.alert("Warning: You are connecting to production server running client app in dev mode.");
             }
-            return WebCCApi.getRegistrationInfo(this.app.getCcApiEndpoint() || WebCCApi.ApiEndpoint, {lang, version})
+            return WebCCApi.getRegistrationInfo(this.app.getCcApiEndpoint() || WebCCApi.ApiEndpoint, {lang, locale, version})
         })
         .then(data => {
             this.controlCenterApiUrl = data.url;
@@ -113,8 +115,8 @@ export class ControlCenterWindowController extends BaseWindowController {
     onViewClose(): void {
         if (this.loginData) {
             this.app.dispatchEvent<FillInLoginFieldsEvent>({
-                type: "fill-in-login-fields", 
-                hashmail: new privfs.identity.Hashmail({user: this.loginData.login, host: this.loginData.domain}).hashmail, 
+                type: "fill-in-login-fields",
+                hashmail: new privfs.identity.Hashmail({user: this.loginData.login, host: this.loginData.domain}).hashmail,
                 password: this.loginData.password
             });
         }
@@ -125,8 +127,8 @@ export class ControlCenterWindowController extends BaseWindowController {
         // auto login
         if (this.loginData) {
             // this.app.dispatchEvent<FillInLoginFieldsEvent>({
-            //     type: "fill-in-login-fields", 
-            //     hashmail: new privfs.identity.Hashmail({user: this.loginData.login, host: this.loginData.domain}).hashmail, 
+            //     type: "fill-in-login-fields",
+            //     hashmail: new privfs.identity.Hashmail({user: this.loginData.login, host: this.loginData.domain}).hashmail,
             //     password: this.loginData.password
             // });
 
@@ -149,14 +151,14 @@ export class ControlCenterWindowController extends BaseWindowController {
             }
             // return this.app.mcaFactory.register(
             return this.app.mcaFactory.registerFirstUser(
-                login, 
+                login,
                 this.app.getRegisterTokenInfo().domain,
-                login, 
-                password, 
-                email, 
-                "", 
-                this.app.getRegisterTokenInfo().token, 
-                weakPassword, 
+                login,
+                password,
+                email,
+                "",
+                this.app.getRegisterTokenInfo().token,
+                weakPassword,
                 this.app.getRegisterTokenInfo().key);
         })
         .then(() => {

@@ -89,7 +89,6 @@ export class FilesListView extends component.base.ComponentView {
     }
     
     init(model: Model) {
-        // console.log("filesListView init")
         this.model = model;
         this.selectedFileIds = JSON.parse(model.selectedIdsStr);
         return Q().then(() => {
@@ -106,13 +105,14 @@ export class FilesListView extends component.base.ComponentView {
             this.$container.on("keydown", this.onKeydown.bind(this));
             this.$container.on("click", ".file-entry[data-id]", this.onFileEntryClick.bind(this));
             this.$container.on("click", "[data-action=new-note]", this.onNewNoteClick.bind(this));
-            this.$container.on("click", "[data-action=open-chat]", this.onOpenChatClick.bind(this));
-            this.$container.on("click", "[data-action=open-tasks]", this.onOpenTasksClick.bind(this));
             this.$container.on("click", "[data-action=refresh]", this.onFileActionClick.bind(this));
             this.$container.on("click", "[data-action=toggle-view-mode]", this.onToggleViewModeClick.bind(this));
             this.$container.on("click", "[data-action=mark-all-as-read]", this.onMarkAllAsReadClick.bind(this));
             this.$container.on("click", "[data-action=empty-trash]", this.onEmptyTrashClick.bind(this));
             this.$container.on("click", "[data-action=export-files]", this.onExportAllFilesClick.bind(this));
+            if (model.isElectron) {
+                this.$container.on("click", "[data-action=import-files]", this.onImportFilesClick.bind(this));
+            }
             this.$container.on("click", "[data-action=add-dir-to-playlist]", this.onAddDirToPlaylistClick.bind(this));
             this.$container.on("click", ".actions-menu [data-action-id]", this.onActionsMenuClick.bind(this));
             this.$container.on("click", "[data-task-id]", this.onTaskClick.bind(this));
@@ -348,7 +348,17 @@ export class FilesListView extends component.base.ComponentView {
         this.triggerEvent("fileAction", "exportFiles");
         this.$settingsMenu.removeClass("visible");
     }
+
+    onImportFilesClick(e: MouseEvent): void {
+        e.stopPropagation();
+        if ((<HTMLElement>e.currentTarget).classList.contains("disabled")) {
+            return;
+        }
+        this.triggerEvent("fileAction", "importFiles");
+        this.$settingsMenu.removeClass("visible");
+    }
     
+
     onEmptyTrashClick(e: MouseEvent): void {
         e.stopPropagation();
         if ((<HTMLElement>e.currentTarget).classList.contains("disabled")) {
@@ -407,6 +417,8 @@ export class FilesListView extends component.base.ComponentView {
         $items.filter("[data-action=mark-all-as-read]").toggleClass("disabled", $entries.filter(".unread").length == 0);
         $items.filter("[data-action=export-files]").toggleClass("disabled", $entries.length == 0);
         $items.filter("[data-action=add-dir-to-playlist]").toggleClass("disabled", $entries.find(".fa-music").length == 0);
+        $items.filter("[data-action=import-files]").toggleClass("hide", this.model.isAll || this.model.isTrash || this.model.isLocal);
+        $items.filter("[action-id=show-hidden-files]").toggleClass("hide", this.model.isLocal == false);
     }
     
     getRowSize(): number {
@@ -450,14 +462,6 @@ export class FilesListView extends component.base.ComponentView {
         }
     }
     
-    onOpenChatClick(): void {
-        this.triggerEvent("openChat");
-    }
-    
-    onOpenTasksClick(): void {
-        this.triggerEvent("openTasks");
-    }
-    
     onNewNoteClick(): void {
         if (!this.editable) {
             this.triggerEventInTheSameTick("menuAction", "upload");
@@ -474,6 +478,21 @@ export class FilesListView extends component.base.ComponentView {
                     id: "new-mindmap-window",
                     labelKey: "plugin.notes2.component.filesList.newMindmap.title",
                     icon: "privmx-icon privmx-icon-mindmap"
+                },
+                {
+                    id: "new-audioAndVideo-note-window",
+                    labelKey: "plugin.notes2.component.filesList.newAudioAndVideoNote.title",
+                    icon: "fa fa-file-video-o",
+                },
+                {
+                    id: "new-audio-note-window",
+                    labelKey: "plugin.notes2.component.filesList.newAudioNote.title",
+                    icon: "fa fa-file-audio-o",
+                },
+                {
+                    id: "new-photo-note-window",
+                    labelKey: "plugin.notes2.component.filesList.newPhotoNote.title",
+                    icon: "fa fa-file-photo-o",
                 },
                 {
                     isSeparator: true,
@@ -694,4 +713,10 @@ export class FilesListView extends component.base.ComponentView {
         this.$filesActions.find("[action-id=unlock]").toggleClass("hide", !unlockAvail);
         this.$filesActions.find("[action-id=lock]").toggleClass("hide", locked);
     }
+    
+    hideLockUnlockButtons(): void {
+        this.$filesActions.find("[action-id=unlock]").toggleClass("hide", true);
+        this.$filesActions.find("[action-id=lock]").toggleClass("hide", true);
+    }
+    
 }

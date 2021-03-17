@@ -33,14 +33,16 @@ export class SliderController extends ComponentController {
     }
     
     setMax(max: number) {
+        this.max = max;
         this.afterViewLoaded.promise.then(() => {
-            this.callViewMethod("setMax", max);
+            this.callViewMethod("setMax", this.max);
         });
     }
     
     setValue(value: number) {
+        this.value = Math.min(value, this.max);
         this.afterViewLoaded.promise.then(() => {
-            this.callViewMethod("setValue", value);
+            this.callViewMethod("setValue", this.value);
         });
     }
     

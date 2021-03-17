@@ -42,7 +42,9 @@ export class MindmapEditorWindowView extends BaseWindowView<Model> {
         this.personsComponent = this.addComponent("personsComponent", new PersonsView(this, this.helper));
         this.notifications = this.addComponent("notifications", new NotificationView(this));
         this.editorButtons = this.addComponent("editorbuttons", new EditorButtonsView(this));
-        this.taskTooltip = this.addComponent("tasktooltip", new TaskTooltipView(this));
+        this.taskTooltip = this.addComponent("tasktooltip", new TaskTooltipView(this, {
+            showCtrlClickInfo: true,
+        }));
         this.taskTooltip.refreshAvatars = () => { this.personsComponent.refreshAvatars(); };
         this.taskChooser = this.addComponent("taskchooser", new TaskChooserView(this));
         this.mindmapEditor = this.addComponent("mindmapeditor", new MindmapEditorView(this));

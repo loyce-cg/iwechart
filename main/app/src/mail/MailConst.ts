@@ -36,6 +36,7 @@ export class MailConst {
     static UI_NOTIFICATIONS = "ui.notifications";
     static UI_APP_SILENT_MODE = "ui.appSilentMode";
     static UI_SPELLCHECKER = "ui.spellchecker2";
+    static UI_SPELLCHECKER_LANGUAGES = "ui.spellCheckerLanguages";
     static UI_UNREAD_BADGE_CLICK_ACTION = "ui.unreadBadgeClickAction";
     static UI_UNREAD_BADGE_USE_DOUBLE_CLICK = "ui.unreadBadgeUseDoubleClick";
     static UI_PLAY_BUBBLE_POP_SOUND = "ui.playBubblePopSound";
@@ -59,5 +60,10 @@ export class MailConst {
     static CED_IS_AUTO_FILE_PICKER_ENABLED = "contentEditableEditor.isAutoFilePickerEnabled";
     static PROFILE_IMAGE = "profile.image";
     static SWITCH_VOICE_CHAT_SHOW_CONFIRM = "ui.switchvoicechatconfirm.hideConfirmChecked";
+    static AUTOSTART_ENABLED = "ui.autostartEnabled";
+    static ERRORS_LOGGING_ENABLED = "ui.errorsLoggingEnabled";
+    static UI_SELECTED_DEVICES = "ui.selectedDevices";
+    static UI_VIDEO_FRAME_SIGNATURE_VERIFICATION_RATIO_INVERSE = "ui.videoFrameSignatureVerificationRatioInverse";
+    static UI_CUSTOM_SUCCESS_COLOR = "ui.customSuccessColor";
     
 }

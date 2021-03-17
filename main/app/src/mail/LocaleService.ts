@@ -17,6 +17,7 @@ export interface Language {
     flagCode?: string;
     showEvenIfEmpty?: boolean;
     isEmpty: boolean;
+    spellCheckerCode: string;
 }
 
 export class LocaleService {
@@ -25,15 +26,15 @@ export class LocaleService {
     static readonly FALLBACK_LANG_CODE = "en";
     static readonly LOG_MISSING_TRANSLATIONS = false;
     static readonly AVAILABLE_LANGS: Language[] = [
-        { code: "en", nativeName: "English", isExperimental: false, flagCode: "gb", showEvenIfEmpty: true, isEmpty: false },
-        { code: "da", nativeName: "Dansk", isExperimental: true, flagCode: "dk", isEmpty: false },
-        { code: "de", nativeName: "Deutsch", isExperimental: true, isEmpty: false },
-        { code: "es-ES", nativeName: "Español", isExperimental: true, flagCode: "es", isEmpty: false },
-        { code: "fr", nativeName: "Français", isExperimental: true, isEmpty: false },
-        { code: "it", nativeName: "Italiano", isExperimental: true, isEmpty: false },
-        { code: "nl", nativeName: "Nederlands", isExperimental: true, isEmpty: false },
-        { code: "pl", nativeName: "Polski", isExperimental: false, isEmpty: false },
-        { code: "sv-SE", nativeName: "Svenska", isExperimental: true, flagCode: "se", isEmpty: false },
+        { code: "en", nativeName: "English", isExperimental: false, flagCode: "gb", showEvenIfEmpty: true, isEmpty: false, spellCheckerCode: "en-US" },
+        { code: "da", nativeName: "Dansk", isExperimental: true, flagCode: "dk", isEmpty: false, spellCheckerCode: "da" },
+        { code: "de", nativeName: "Deutsch", isExperimental: true, isEmpty: false, spellCheckerCode: "de" },
+        { code: "es-ES", nativeName: "Español", isExperimental: true, flagCode: "es", isEmpty: false, spellCheckerCode: "es-ES" },
+        { code: "fr", nativeName: "Français", isExperimental: true, isEmpty: false, spellCheckerCode: "fr" },
+        { code: "it", nativeName: "Italiano", isExperimental: true, isEmpty: false, spellCheckerCode: "it" },
+        { code: "nl", nativeName: "Nederlands", isExperimental: true, isEmpty: false, spellCheckerCode: "nl" },
+        { code: "pl", nativeName: "Polski", isExperimental: false, isEmpty: false, spellCheckerCode: "pl" },
+        { code: "sv-SE", nativeName: "Svenska", isExperimental: true, flagCode: "se", isEmpty: false, spellCheckerCode: "sv" },
     ];
     static readonly DEFAULT_LANG_CODE: string = "en";
     static EMPTY_LANGS_PROCESSED: boolean = false;

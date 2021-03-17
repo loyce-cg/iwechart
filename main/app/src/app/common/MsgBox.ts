@@ -89,6 +89,7 @@ export class MsgBoxCore {
             if (options.onWindowCreated) {
                 options.onWindowCreated(controller.nwin);
             }
+            controller.nwin.focus();
             return controller.getPromise();
         });
     }

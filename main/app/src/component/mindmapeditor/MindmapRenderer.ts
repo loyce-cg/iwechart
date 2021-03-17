@@ -3,13 +3,21 @@ import { NodeRenderer } from "./NodeRenderer";
 import { Rect } from "./Rect";
 import { Mindmap } from "./Mindmap";
 import * as $ from "jquery";
+import { MindmapRendererScheduler } from "./MindmapRendererScheduler";
 
 export class MindmapRenderer {
     
     protected _isFrozen: boolean = false;
     protected rootNodeRenderer: NodeRenderer = new NodeRenderer(null, this);
+    private scheduler: MindmapRendererScheduler;
     
     constructor(public mindmap: Mindmap, public $mindmapContainer: JQuery, public $nodesContainer: JQuery, public $hiddenNodesContainer: JQuery, public $svg: JQuery, public formatText: (str: string) => string) {
+        this.scheduler = new MindmapRendererScheduler({
+            canRenderFunction: () => this.$mindmapContainer && this.$mindmapContainer.is(":visible"),
+            renderFunction: () => this.renderCore(),
+            maxNumberOfAttempts: 3,
+            delayBetweenAttempts: 100,
+        });
     }
     
     freeze(): void {
@@ -29,6 +37,10 @@ export class MindmapRenderer {
     }
     
     render(): void {
+        this.scheduler.schedule();
+    }
+    
+    private renderCore(): void {
         let t: number[] = [];
         let ft = (key: string = null) => {
             t.push(performance.now());

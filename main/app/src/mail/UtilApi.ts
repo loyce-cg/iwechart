@@ -49,7 +49,8 @@ export class UtilApi {
             setTimeout(reject.bind(null, reason), 1000);
         });
     }
-
+    
+    // TODO Refactoring
     pingWithRetry(): Q.Promise<string> {
         let p: Q.Promise<string> = Q.reject();
         for(let i = 0; i < 3; i++) {

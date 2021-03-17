@@ -25,19 +25,13 @@ export class EditorButtonsView extends ComponentView {
                 {
                     action: "edit",
                     enabled: model.edit,
-                    icon: "fa-edit",
+                    icon: null,
                     label: this.helper.i18n("component.editorButtons.toolbar.button.edit.label")
-                },
-                {
-                    action: "print",
-                    enabled: model.print,
-                    icon: "fa-print",
-                    label: this.helper.i18n("component.editorButtons.toolbar.button.print.label")
                 },
                 {
                     action: "save-as-pdf",
                     enabled: model.saveAsPdf,
-                    icon: "privmx-icon privmx-icon-pdf",
+                    icon: null,
                     label: this.helper.i18n("component.editorButtons.toolbar.button.saveAsPdf.label")
                 },
                 {
@@ -55,32 +49,32 @@ export class EditorButtonsView extends ComponentView {
                 {
                     action: "attach-to-task",
                     enabled: model.attachToTask,
-                    icon: "privmx-icon privmx-icon-tasks",
+                    icon: null,
                     label: this.helper.i18n("component.editorButtons.toolbar.button.attachToTask.label")
                 },
                 {
                     action: "open-external",
                     enabled: model.openExternal,
-                    icon: "fa-folder-open-o",
+                    icon: null,
                     label: model.systemLabel ? this.helper.i18n("component.editorButtons.toolbar.button.openExternal.label.osSpecific", model.systemLabel) : this.helper.i18n("component.editorButtons.toolbar.button.openExternal.label")
                 },
                 {
                     action: "lock",
                     enabled: model.lock,
-                    icon: "fa-lock",
+                    icon: null,
                     label: this.helper.i18n("component.editorButtons.toolbar.button.lock.label")
                 },
 
                 {
                     action: "unlock",
                     enabled: model.unlock,
-                    icon: "fa-unlock",
+                    icon: null,
                     label: this.helper.i18n("component.editorButtons.toolbar.button.unlock.label")
                 },
                 {
                     action: "close",
                     enabled: model.close,
-                    icon: "fa-times",
+                    icon: null,
                     label: this.helper.i18n("component.editorButtons.toolbar.button.close.label")
                 }
             ]

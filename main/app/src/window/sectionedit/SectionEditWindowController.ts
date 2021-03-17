@@ -44,6 +44,7 @@ export interface State {
     userSettings: section.UserSettings;
     editable: boolean;
     primary: boolean;
+    description: string;
     isAdmin: boolean;
     empty: boolean;
     parentScope: string;
@@ -66,6 +67,7 @@ export interface SectionUpdateResult {
     state: section.SectionState;
     userSettings: section.UserSettings;
     primary: boolean;
+    description: string;
 }
 
 export interface Options {
@@ -223,6 +225,7 @@ export class SectionEditWindowController extends BaseWindowController {
                 },
                 state: model.state,
                 primary: section.sectionData.primary,
+                description: model.data.description,
                 canCreateSubsection: model.acl.createSubsections.all || this.identityProvider.isAdmin() || model.acl.createSubsections.users.indexOf(user) > -1,
                 acl: {
                     manage: {
@@ -258,6 +261,7 @@ export class SectionEditWindowController extends BaseWindowController {
                 group: {users: [user], groups: []},
                 state: "enabled",
                 primary: section.sectionData.primary,
+                description: "",
                 canCreateSubsection: false,
                 parentScope: "",
                 acl: {
@@ -418,7 +422,11 @@ export class SectionEditWindowController extends BaseWindowController {
                 let newSection: section.SectionCreateModelDecrypted = {
                     id: null,
                     parentId: updateResult.parentId,
-                    data: {name: updateResult.name, modules: {}, extraOptions: null},
+                    data: {
+                        name: updateResult.name, 
+                        modules: {}, extraOptions: null, 
+                        description: updateResult.description
+                    },
                     group: {type: SectionUtils.getProperGroupType(updateResult.group.groups), users: SectionUtils.filterUsers(updateResult.group.users)},
                     state: updateResult.state,
                     acl: updateResult.acl,
@@ -502,6 +510,7 @@ export class SectionEditWindowController extends BaseWindowController {
             updated.acl = updateResult.acl;
             updated.state = updateResult.state;
             updated.primary = updateResult.primary;
+            updated.data.description = updateResult.description;
             return updated;
         };
     }

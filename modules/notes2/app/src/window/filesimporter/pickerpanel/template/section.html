@@ -1,0 +1,26 @@
+@import {SectionEntryModel} from "../Types";
+@import {component} from "pmc-web";
+@model SectionEntryModel
+@context component.extlist.Context<SectionEntryModel>
+
+
+
+<div class="section-element wi-element {{@model.description ? 'with-description': ''}} {{@context.isActive ? 'active' : ''}} {{@model.enabled ? '' : 'disabled'}} {{@model.primary ? 'primary' : ''}}" data-section-id="{{@model.id}}">
+    <div class="wi-element-inner">
+      <div class="wi-element-icon bckg-icon {{@model.scope == 'private' ? 'bckg-icon-border' : ''}} has-section-tooltip" data-section-id="{{@model.id}}">
+        <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
+      </div>
+      <div class="wi-element-name {{@model.breadcrumb.length > 0 ? 'with-breadcrumb' : ''}}">
+        <div class="name-wrapper">
+          {{ if (model.breadcrumb.length > 0) { {{
+            <span class="section-breadcrumb">{{#model.breadcrumb}}</span>
+          }} } }}
+          {{@model.name}}
+          <div class="voice-chat-tooltip has-userslist-tooltip" data-userslist-id="{{@model.id}}"></div>
+          {{ if (model.description) { {{
+            <div class="wi-element-description">{{@model.description}}</div>
+          }} } }}  
+        </div>
+      </div>
+    </div>
+  </div>

@@ -3,6 +3,16 @@ interface JQuery {
         turnOn(): void;
         turnOff(): void;
         destroy(): void;
+        scrollToBottom(): void;
+    };
+    pfScrollExperimental(): {
+        turnOn(): void;
+        turnOff(): void;
+        destroy(): void;
+        scrollBy(deltaPosition: number): void;
+        scrollTo(newPosition: number): void;
+        scrollToTop(): void;
+        scrollToBottom(): void;
     };
     content(): JQuery;
     content(p: JQuery): JQuery;

@@ -9,6 +9,9 @@ import {Lang} from "../../../utils/Lang";
 
 export class PublicProfileView extends BaseView<Model> {
     
+    static readonly PROFILE_IMAGE_MAX_WIDTH: number = 200;
+    static readonly PROFILE_IMAGE_MAX_HEIGHT: number = 200;
+    
     hashmail: string;
     profile: Profile;
     testMode: boolean;
@@ -28,6 +31,7 @@ export class PublicProfileView extends BaseView<Model> {
     
     initTab() {
         this.$main.on("click", "[data-trigger=upload-image]", this.onUploadProfileImage.bind(this));
+        this.$main.on("click", "[data-trigger=new-photo]", this.onNewPhotoClick.bind(this));
         this.$main.on("click", "[data-trigger=remove-image]", this.onRemoveProfileImage.bind(this));
         this.$main.on("input", "[name='profile.name']", this.onProfileNameInput.bind(this));
         this.$main.on("input", "[name='profile.description']", this.onProfilDescriptionInput.bind(this));
@@ -73,17 +77,68 @@ export class PublicProfileView extends BaseView<Model> {
         let imageLoader = new ImageLoader();
         imageLoader.testMode = this.testMode;
         imageLoader.max = {
-            width: 200,
-            height: 200
+            width: PublicProfileView.PROFILE_IMAGE_MAX_WIDTH,
+            height: PublicProfileView.PROFILE_IMAGE_MAX_HEIGHT,
         };
         imageLoader.onLoad = this.onLoadProfileImage.bind(this);
         imageLoader.start();
+    }
+    
+    onNewPhotoClick(): void {
+        this.triggerEvent("newPhoto");
     }
     
     onLoadProfileImage(dataUrl: string): void {
         this.profile.image = dataUrl;
         this.renderProfileImage();
         this.renderPreview();
+    }
+    
+    async usePhoto(dataUrl: string): Promise<void> {
+        const scaledDataUrl = await this._scaleProfileImage(dataUrl);
+        this.onLoadProfileImage(scaledDataUrl);
+    }
+    
+    private async _scaleProfileImage(dataUrl: string): Promise<string> {
+        const img = document.createElement("img");
+        const imgLoadPromise = new Promise<void>(resolve => {
+            img.onload = () => { resolve(); };
+        });
+        img.src = dataUrl;
+        await imgLoadPromise;
+        
+        const origWidth = img.naturalWidth;
+        const origHeight = img.naturalHeight;
+        const { width: targetWidth, height: targetHeight } = this._getTargetProfileImageSize(origWidth, origHeight);
+        
+        const cnv = document.createElement("canvas");
+        const ctx = cnv.getContext("2d");
+        cnv.width = targetWidth;
+        cnv.height = targetHeight;
+        ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+        
+        return cnv.toDataURL("image/png", 1.0);
+    }
+    
+    private _getTargetProfileImageSize(origWidth: number, origHeight: number): { width: number, height: number } {
+        const maxWidth = PublicProfileView.PROFILE_IMAGE_MAX_WIDTH;
+        const maxHeight = PublicProfileView.PROFILE_IMAGE_MAX_HEIGHT;
+        
+        if (origWidth <= maxWidth && origHeight <= maxHeight) {
+            return {
+                width: origWidth,
+                height: origHeight,
+            };
+        }
+        
+        const overwidthRatio = origWidth / maxWidth;
+        const overheightRatio = origHeight / maxHeight;
+        const scale: number = 1.0 / Math.max(overwidthRatio, overheightRatio);
+        
+        return {
+            width: origWidth * scale,
+            height: origHeight * scale,
+        };
     }
     
     onRemoveProfileImage(): void {

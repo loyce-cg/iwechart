@@ -10,6 +10,11 @@ import {UI, KEY_CODES} from "./UI";
 import {Scope} from "./Scope";
 import {WebUtils} from "./WebUtils";
 import {NumberFormatter} from "./NumberFormatter";
+import { AudioLevelObserver } from "./AudioLevelObserver";
+import { PopupPlacement, PopupPositionCalculator } from "./PopupPositionCalculator";
+import * as ellipsis from "./ellipsis";
+import { Debouncer } from "./Debouncer";
+import { VisibilityObserver } from "./VisibilityObserver";
 
 export {
     AvatarGenerator,
@@ -26,5 +31,11 @@ export {
     UI,
     Scope,
     WebUtils,
-    NumberFormatter
+    NumberFormatter,
+    AudioLevelObserver,
+    PopupPlacement,
+    PopupPositionCalculator,
+    ellipsis,
+    Debouncer,
+    VisibilityObserver,
 }

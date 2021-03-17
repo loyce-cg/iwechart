@@ -1,0 +1,17 @@
+@import { TabModel } from "../DesktopPickerController";
+@model TabModel
+<div class="desktop-picker-tab">
+  <div class="options">
+    <div class="option">
+      {{ if (model.canShareDesktopAudio) { }}
+      <label>
+        <input type="checkbox" data-option="share-desktop-audio" />
+        <span>
+          {{@Helper.i18n("plugin.chat.component.desktoppicker.options.shareDesktopAudio.label")}}
+        </span>
+      </label>
+      {{ } }}
+    </div>
+  </div>
+  <ul class="items"></ul>
+</div>

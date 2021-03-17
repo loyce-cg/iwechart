@@ -9,6 +9,7 @@ import {utils, event} from "../Types";
 import { EventDispatcher } from "../utils/EventDispatcher";
 import { MailConst } from "./MailConst";
 import { SoundsLibrary, SoundsCategoryName } from "../sounds/SoundsLibrary";
+import { LocaleService } from ".";
 let Logger = RootLogger.get("privfs-mail-client.mail.UserPreferences");
 
 
@@ -62,6 +63,7 @@ export interface UI {
     seenFirstLoginInfo: boolean;
     lang?: string;
     spellchecker2: boolean;
+    spellCheckerLanguages: string;
     showEncryptedText: boolean;
     showAllSections: boolean;
     
@@ -78,6 +80,10 @@ export interface UI {
     autoMarkAsRead: boolean;
     inactivityOverlay: boolean;
     autostartEnabled?: boolean;
+    errorsLoggingEnabled?: boolean;
+    selectedDevices?: string;
+    videoFrameSignatureVerificationRatioInverse?: number;
+    customSuccessColor?: string;
 }
 
 export interface Mail {
@@ -135,6 +141,7 @@ export class UserPreferences {
             notifications: true,
             seenFirstLoginInfo: false,
             spellchecker2: false,
+            spellCheckerLanguages: null,
             showEncryptedText: true,
             showAllSections: true,
             contextSwitchWithoutShift: true,
@@ -148,6 +155,9 @@ export class UserPreferences {
             pinnedSectionIdsStr: "[]",
             autoMarkAsRead: true,
             inactivityOverlay: true,
+            selectedDevices: null,
+            videoFrameSignatureVerificationRatioInverse: 1000,
+            customSuccessColor: "default",
         },
         profile: {
             name: "",
@@ -231,6 +241,9 @@ export class UserPreferences {
     
     set(path: string, value: any, save: boolean): Q.Promise<void> {
         return Q().then(() => {
+            if (LodashGet(this.data, path) === value) {
+                return;
+            }
             Logger.debug("set", path, value, save);
             LodashSet(this.data, path, value);
             if (save) {
@@ -306,6 +319,36 @@ export class UserPreferences {
         return this.getValue(MailConst.UI_SPELLCHECKER, false);
     }
     
+    getSpellCheckerLanguages(skipEnabledCheck: boolean = false): string[] {
+        if (!skipEnabledCheck) {
+            let isSpellCheckerEnabled = this.getValue(MailConst.UI_SPELLCHECKER, false);
+            if (!isSpellCheckerEnabled) {
+                return [];
+            }
+        }
+        
+        let spellCheckerLanguagesStr = this.getValue(MailConst.UI_SPELLCHECKER_LANGUAGES, JSON.stringify(this.getDefaultSpellCheckerLanguages()));
+        
+        try {
+            let arr = JSON.parse(spellCheckerLanguagesStr);
+            return arr ? arr : this.getDefaultSpellCheckerLanguages();
+        }
+        catch {}
+        
+        return this.getDefaultSpellCheckerLanguages();
+    }
+    
+    getDefaultSpellCheckerLanguages(): string[] {
+        let defaultLangCode = this.getValue<string>("ui.lang") || "en";
+        let defaultLang = LocaleService.AVAILABLE_LANGS.filter(x => x.code == defaultLangCode)[0];
+        let defaultLanguages = [defaultLang ? defaultLang.spellCheckerCode : "en-US"];
+        return defaultLanguages;
+    }
+    
+    setSpellCheckerLanguages(langs: string[]): Q.Promise<void> {
+        return this.set(MailConst.UI_SPELLCHECKER_LANGUAGES, JSON.stringify(langs), true);
+    }
+    
     getUnreadBadgeClickAction(): UnreadBadgeClickAction {
         return this.getValue(MailConst.UI_UNREAD_BADGE_CLICK_ACTION, UnreadBadgeClickAction.ASK);
     }
@@ -365,6 +408,14 @@ export class UserPreferences {
     
     getProfileImage(): string {
         return this.getValue(MailConst.PROFILE_IMAGE, "") || "";
+    }
+    
+    getVideoFrameSignatureVerificationRatioInverse(): number {
+        return this.getValue<number>(MailConst.UI_VIDEO_FRAME_SIGNATURE_VERIFICATION_RATIO_INVERSE, 1000) || 1000;
+    }
+    
+    async setVideoFrameSignatureVerificationRatioInverse(ratioInverse: number): Promise<void> {
+        await this.set(MailConst.UI_VIDEO_FRAME_SIGNATURE_VERIFICATION_RATIO_INVERSE, ratioInverse, true);
     }
     
 }

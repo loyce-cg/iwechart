@@ -114,7 +114,7 @@ export class TaskWindowController extends window.base.BaseWindowController {
     }
     
     onViewLoad() {
-        this.initSpellChecker(this.tasksPlugin.userPreferences);
+        this.initSpellChecker();
     }
     
     setHandle(handle: privfs.fs.descriptor.Handle): void {

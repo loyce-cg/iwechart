@@ -28,7 +28,13 @@ export type UserInfo = privfs.types.core.RawUserAdminData & {
     lastIp: string;
     myself: boolean;
     displayName: string;
+    hashmail: string;
+    userId: string;
+    showUserId: boolean;
 }
+
+type SortOrder = "asc" | "desc";
+type SortType = "userId" | "loginDate" | "clientVersion";
 
 @Dependencies(["autorefresh", "extlist"])
 export class UsersController extends WindowComponentController<AdminWindowController> {
@@ -54,6 +60,9 @@ export class UsersController extends WindowComponentController<AdminWindowContro
     usersSize: AutoRefreshController<number>;
     currentUsername: string;
     
+    currentSortOrder: SortOrder = "desc";
+    currentSortType: SortType = "loginDate"; 
+
     constructor(parent: AdminWindowController) {
         super(parent);
         this.ipcMode = true;
@@ -65,8 +74,9 @@ export class UsersController extends WindowComponentController<AdminWindowContro
         this.confirm = this.parent.confirm.bind(this.parent);
         this.filteredCollection = new FilteredCollection(this.userAdminService.usersCollection, user => ! UsersController.isUserRemote(user, this.identity.host));
         this.transformCollection = this.addComponent("collectionWithMyself", new TransformCollection<UserInfo, privfs.types.core.RawUserAdminData>(this.filteredCollection, this.convertToUserInfo.bind(this)))
-        this.usersCollection = this.addComponent("usersCollection", new SortedCollection(this.transformCollection,
-            SortedCollection.stringNullableNumericComparator<privfs.types.core.RawUserAdminData>("lastLoginDate", "desc", SortedCollection.stringComparator("username"))));
+        this.usersCollection = this.addComponent("usersCollection", new SortedCollection(this.transformCollection, (a, b) => {
+            return this.sorter(a, b);
+        }));
         this.users = this.addComponent("users", this.componentFactory.createComponent("extlist", [this, this.usersCollection]));
         this.users.ipcMode = true;
         this.usersSize = this.addComponent("usersSize", this.componentFactory.createComponent<number, void>("autorefresh", [this, {model: this.usersCollection, isCollectionSize: true}]));
@@ -86,12 +96,65 @@ export class UsersController extends WindowComponentController<AdminWindowContro
         }
     }
     
+    sorter(a: UserInfo, b: UserInfo): number {
+        let first: UserInfo;
+        let second: UserInfo;
+        if (this.currentSortOrder == "asc") {
+            first = a;
+            second = b;
+        }
+        else {
+            first = b;
+            second = a;
+        }
+        if (this.currentSortType == "loginDate") {
+            return UsersController.compareLoginDateString(first.lastLoginDate, second.lastLoginDate); 
+        }
+        if (this.currentSortType == "userId") {
+            return first.username.localeCompare(second.username);
+        }
+        if (this.currentSortType == "clientVersion") {
+            return first.lastClientVersion.localeCompare(second.lastClientVersion);
+        }
+    }
+
+    static compareLoginDateString(d1: string, d2: string): number {
+        if (! d1) {
+            return 1;
+        }
+        if (! d2) {
+            return -1;
+        }
+        return Number(d1) - Number(d2);
+    }
+
+    switchCurrentSortOrder(): void {
+        if (this.currentSortOrder == "asc") {
+            this.currentSortOrder = "desc";
+        }
+        else {
+            this.currentSortOrder = "asc";
+        }
+    }
+
     onViewRefreshUsers(channelId: number): void {
         this.addTaskExWithProgress("", true, channelId, () => {
             return this.userAdminService.refreshUsersCollection();
         });
     }
     
+    onViewSortBy(sortType: SortType) {
+        console.log("sortBy", sortType)
+        if (sortType == this.currentSortType) {
+            this.switchCurrentSortOrder();
+        }
+        else {
+            this.currentSortType = sortType;
+        }
+        console.log("rebuilding collection");
+        this.filteredCollection.rebuild();
+    }
+
     onViewAddUser(): void {
         if (this.adminKeyHolder.adminKey == null) {
             this.alert(this.i18n("window.admin.users.noAdminKey"));
@@ -130,6 +193,9 @@ export class UsersController extends WindowComponentController<AdminWindowContro
         .then(() => {
             this.callViewMethod("setAddUserButtonState", this.parent.isMaxUsersLimitReached());
         })
+        .then(() => {
+            this.callViewMethod("initPfScroll");
+        })
 
     }
 
@@ -148,7 +214,16 @@ export class UsersController extends WindowComponentController<AdminWindowContro
         ret.lastSeenDate = personModelFull.lastSeen;
         ret.loggedInSince = personModelFull.loggedInSince;
         ret.lastIp = personModelFull.ipAddress;
-        ret.displayName = contact  && contact.getDisplayName() != hashmail ? contact.getDisplayName() : element.username
+        ret.userId = element.username;
+        ret.hashmail = hashmail;
+        if (contact && contact.getDisplayName() != hashmail) {
+            ret.displayName = contact.getDisplayName();
+            ret.showUserId = true;
+        }
+        else {
+            ret.displayName = element.username;
+            ret.showUserId = false;
+        }
         return ret;
     }
 
@@ -169,38 +244,5 @@ export class UsersController extends WindowComponentController<AdminWindowContro
         });
     }
 
-    onViewBlockUser(channelId: number, username: string): void {
-        this.confirm()
-        .then(res => {
-            if (res.result != "yes") {
-                return;
-            }
-            this.addTaskExWithProgress(this.i18n(""), true, channelId, () => {
-                return this.parent.utilApi.setUserBlocked((username as PmxApi.api.core.Username), true);
-            })
-            .then(() => {
-                let user = this.usersCollection.getBy("username", username);
-                (<any>user).blocked = true;
-                this.usersCollection.triggerUpdateElement(user);
-            })
-        });
-    }
-
-    onViewUnblockUser(channelId: number, username: string): void {
-        this.confirm()
-        .then(res => {
-            if (res.result != "yes") {
-                return;
-            }
-            this.addTaskExWithProgress(this.i18n(""), true, channelId, () => {
-                return this.parent.utilApi.setUserBlocked((username as PmxApi.api.core.Username), false);
-            })            
-            .then(() => {
-                let user = this.usersCollection.getBy("username", username);
-                (<any>user).blocked = false;
-                this.usersCollection.triggerUpdateElement(user);
-            })
-        });
-    }
-
 }
+

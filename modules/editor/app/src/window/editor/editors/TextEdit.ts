@@ -61,7 +61,9 @@ export class TextEdit extends Editor<State> {
     }
     
     focus(): void {
-        this.data.$textarea.focus();
+        if (this.data && this.data.$textarea) {
+            this.data.$textarea.focus();
+        }
     }
     
     setEditMode(editMode: boolean): void {

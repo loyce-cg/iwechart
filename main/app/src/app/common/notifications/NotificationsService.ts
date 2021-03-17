@@ -30,8 +30,10 @@ export class NotificationsService {
             tooltip: (event.options ? event.options.tooltip : true),
             tray: (event.options ? event.options.tray : true),
             tooltipOptions: event.options.tooltipOptions,
+            ignoreSilentMode: (event.options.ignoreSilentMode ? event.options.ignoreSilentMode : false),
             sender: event.options.sender,
-            context: event.options.context
+            context: event.options.context,
+            overrideSoundCategoryName: event.options ? event.options.overrideSoundCategoryName : null,
         }
 
         this.pendingNotifications.push(<PendingNotification>{time: new Date().getTime(), options: options});
@@ -53,7 +55,9 @@ export class NotificationsService {
                     notificationToRun.tooltip = x.options.tooltip;
                     notificationToRun.tooltipOptions = x.options.tooltipOptions;
                     notificationToRun.tray = x.options.tray;
+                    notificationToRun.ignoreSilentMode = x.options.ignoreSilentMode;
                     notificationToRun.context = x.options.context;
+                    notificationToRun.overrideSoundCategoryName = x.options.overrideSoundCategoryName;
                 });
                 this.lastNotificationTime = new Date().getTime();
                 this.notifyUser(notificationToRun);
@@ -64,13 +68,14 @@ export class NotificationsService {
     
     notifyUser(options: event.NotificationOptions) {
         if (options.sound) {
-            this.app.playAudio("notification");
+            const soundCategoryName = options.overrideSoundCategoryName ? options.overrideSoundCategoryName : "notification";
+            this.app.playAudio(soundCategoryName, undefined, options.ignoreSilentMode);
         }
         if (options.tray) {
             this.eventDispatcher.dispatchEvent<event.ElectronNotificationServiceEvent>({type: "notifyInTray"});
         }
         if (options.tooltip && !this.app.userPreferences.isGloballyMuted()) {
-            this.eventDispatcher.dispatchEvent<event.ElectronNotificationServiceEvent>({type: "notifyInTooltip", options: options.tooltipOptions, context: options.context});
+            this.eventDispatcher.dispatchEvent<event.ElectronNotificationServiceEvent>({type: "notifyInTooltip", options: options.tooltipOptions, ignoreSilentMode: options.ignoreSilentMode, context: options.context});
         }
     }
 }

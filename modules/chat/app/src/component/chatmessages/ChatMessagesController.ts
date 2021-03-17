@@ -1,4 +1,4 @@
-import { app, component, mail, utils, window, Q, PrivmxException, privfs, Types } from "pmc-mail";
+import { app, component, mail, utils, window, Q, PrivmxException, privfs, Types, Logger as RootLogger} from "pmc-mail";
 import { ChatMessage } from "../../main/ChatMessage";
 import { ChatType } from "../../main/Types";
 import { MessagesMarkerQueue, MessagesMarkerQueueEx } from "../../main/MessagesMarkerQueue";
@@ -8,10 +8,11 @@ import Dependencies = utils.decorators.Dependencies;
 import { i18n } from "./i18n/index";
 import SectionManager = mail.section.SectionManager;
 import SinkIndexEntry = mail.SinkIndexEntry;
-
 import { SendingQueue } from "./SendingQueue";
 import { SendingFileLocksManager } from "./SendingFileLocksManager";
+import { SectionVideoConferenceModel, VideoConferencePersonModel } from "./Types";
 
+const Logger = RootLogger.get("privfs-chat-plugin.Plugin");
 export interface ChannelModel {
     id: string;
     name: string;
@@ -26,6 +27,7 @@ export interface UpdateVoiceChatUsersEvent {
 }
 
 export interface Model {
+    userType: string;
     maxMsgTextSize: number;
     enterSends: boolean;
     chatType: ChatType;
@@ -35,6 +37,7 @@ export interface Model {
     channel: ChannelModel;
     hasNotes2: boolean;
     hasTasks: boolean;
+    canCreateTask: boolean;
     unreadMarkers: Marker[];
     customStyle: string;
     customTemplate: string;
@@ -46,6 +49,7 @@ export interface Model {
     isRemote: boolean;
     usersWithAccess: PersonModel[];
     platform: string;
+    systemLabel: string;
     contextSize: number;
     isInVoiceChatInThisSection: boolean;
     isVoiceChatActiveInThisSection: boolean;
@@ -54,6 +58,8 @@ export interface Model {
     isTalkingInAnotherSection: boolean;
     isRingTheBellAvailable: boolean;
     isVoiceChatEnabled: boolean;
+    inAnyVideoConference: boolean;
+    inVideoConferenceInThisSection: boolean;
 }
 
 export interface TaskBadge {
@@ -137,14 +143,16 @@ export class SearchState {
 }
 
 export class MessagesFilterUpdater {
-    static UPDATE_DELAY: number = 400;
-    static MIN_CHARS_NUM: number = 2;
+    static UPDATE_DELAY: number = 500;
+    static MIN_CHARS_NUM: number = 3;
     toUpdate: MessagesFilterData;
     previousFilter: MessagesFilterData;
     filter: MessagesFilterData;
     originalTakeCollectionSeq: number;
     originalSeqAlreadyKept: boolean;
     updateTimer: NodeJS.Timer;
+    lastFilterChangeTime: number;
+    deactivateMessagesTime: number;
     onUpdate: () => boolean;
     restoreSeq: (origSeq: number) => void;
     constructor() {
@@ -154,6 +162,11 @@ export class MessagesFilterUpdater {
 
     setFilter(filter: MessagesFilterData): void {
         this.filter = filter;
+        this.lastFilterChangeTime = Date.now();
+    }
+
+    onDeactivateMessages(): void {
+        this.deactivateMessagesTime = Date.now();
     }
 
     keepSeq(seq: number): void {
@@ -173,7 +186,15 @@ export class MessagesFilterUpdater {
     }
 
     needsUpdate(): boolean {
+        if (this.deactivateMessagesTime && this.deactivateMessagesTime < this.lastFilterChangeTime && this.previousFilter && this.previousFilter.value.length > 0) {
+            return true;
+        }
+
         if (!this.previousFilter || !this.filter) {
+            return true;
+        }
+
+        if (this.previousFilter.visible && ! this.filter.visible) {
             return true;
         }
 
@@ -184,7 +205,6 @@ export class MessagesFilterUpdater {
         if (!this.previousFilter.visible && !this.filter.visible) {
             return false;
         }
-
         return this.previousFilter.value != this.filter.value;
     }
 
@@ -197,6 +217,7 @@ export class MessagesFilterUpdater {
             if (this.originalTakeCollectionSeq != null && typeof this.restoreSeq == "function") {
                 this.restoreSeq(this.originalTakeCollectionSeq);
             }
+
             this.setFilter({ value: "", visible: false });
             if (this.onUpdate && this.needsUpdate()) {
                 if (this.onUpdate()) {
@@ -208,6 +229,7 @@ export class MessagesFilterUpdater {
         if (filter.value.length < MessagesFilterUpdater.MIN_CHARS_NUM && filter.value.length != 0) {
             return;
         }
+
         this.toUpdate = {
             value: app.common.SearchFilter.prepareNeedle(filter.value),
             visible: filter.visible,
@@ -244,6 +266,8 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
     static MIN_SEARCH_RESULTS_TO_LOAD = 10;
 
     static SEARCH_CONTEXT_SIZE = 3;
+    
+    static readonly IS_VOICE_CHAT_ENABLED: boolean = false;
     
     @Inject messageFlagsUpdater: mail.MessageFlagsUpdater;
     @Inject identity: privfs.identity.Identity;
@@ -304,6 +328,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
     distancesFromClosestMatch: number[] = [];
     // showContextForSinkIndexEntryIds: number[] = [];
     fileMessagesByDid: { [did: string]: mail.SinkIndexEntry } = {};
+    previousSectionVideoConferenceModelStr: string | null;
 
     session: mail.session.Session;
     sectionManager: SectionManager;
@@ -386,7 +411,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         this.registerChangeEvent(this.personService.persons.changeEvent, this.onPersonChange.bind(this));
 
         this.registerChangeEvent(this.messages.collection.changeEvent, this.onMessagesChange.bind(this), "multi");
-        this.app.addEventListener<Types.event.UserDeletedEvent>("user-deleted", event => {
+        this.bindEvent<Types.event.UserDeletedEvent>(this.app, "user-deleted", event => {
             this.callViewMethod("updateCanWrite", this.canWrite());
         });
 
@@ -430,7 +455,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
             missingThumbAction: component.thumbs.MissingThumbAction.USE_ORIGINAL_IMAGE,
         }]));
         this.loading = this.addComponent("loading", this.componentFactory.createComponent("loading", [this]));
-        this.app.addEventListener<Types.event.FileRenamedEvent>("fileRenamed", event => {
+        this.bindEvent<Types.event.FileRenamedEvent>(this.app, "fileRenamed", event => {
             if (event.isLocal) {
                 return;
             }
@@ -454,28 +479,9 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                     }
                 }
             });
-        //     if (!this.openableElement) {
-        //         return;
-        //     }
-        //     let newFullFileName: string = null;
-        //     if (event.isLocal) {
-        //         if (this.app.isElectronApp() && (<any>this.openableElement).openableElementType == "LocalOpenableElement") {
-        //             if (event.oldPath == this.openableElement.getElementId() || (this.updatedFullFileName && event.oldPath == this.updatedFullFileName)) {
-        //                 newFullFileName = event.newPath;
-        //             }
-        //         }
-        //     }
-        //     else {
-        //         if (this.openableElement instanceof mail.section.OpenableSectionFile && (this.openableElement.path == event.oldPath || (this.updatedFullFileName && event.oldPath == this.updatedFullFileName))) {
-        //             newFullFileName = event.newPath;
-        //         }
-        //     }
-        //     if (newFullFileName) {
-        //         let newFileName: string = newFullFileName.substr(newFullFileName.lastIndexOf("/") + 1);
-        //         this.updateFileName(newFileName, newFullFileName, this.getTitle(newFullFileName));
-        //     }
         });
-        this.app.addEventListener<Types.event.JoinedVoiceChatTalkingEvent>("joinedVoiceChat", event => {
+
+        this.bindEvent<Types.event.JoinedVoiceChatTalkingEvent>(this.app, "joinedVoiceChat", event => {
             if (event.sectionId == this.getSection().getId()) {
                 this.toggleIsVoiceChatActiveInThisSection(false);
                 this.toggleIsInVoiceChatInThisSection(true);
@@ -487,7 +493,8 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                 this.toggleIsTalkingInAnotherSection(true);
             }
         });
-        this.app.addEventListener<Types.event.LeftVoiceChatTalkingEvent>("leftVoiceChat", event => {
+
+        this.bindEvent<Types.event.LeftVoiceChatTalkingEvent>(this.app, "leftVoiceChat", event => {
             if (event.sectionId == this.getSection().getId()) {
                 this.toggleIsInVoiceChatInThisSection(false);
                 this.toggleIsVoiceChatActiveInThisSection(this.app.voiceChatService.isVoiceChatActive(this.session, event.sectionId))
@@ -499,7 +506,8 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                 this.toggleIsTalkingInAnotherSection(false);
             }
         });
-        this.app.addEventListener<Types.event.StartedTalkingEvent>("startedTalking", event => {
+
+        this.bindEvent<Types.event.StartedTalkingEvent>(this.app, "startedTalking", event => {
             if (event.sectionId == this.getSection().getId()) {
                 this.toggleIsTalkingInThisSection(true);
             }
@@ -507,7 +515,8 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                 this.toggleIsTalkingInAnotherSection(true);
             }
         });
-        this.app.addEventListener<Types.event.StoppedTalkingEvent>("stoppedTalking", event => {
+
+        this.bindEvent<Types.event.StoppedTalkingEvent>(this.app, "stoppedTalking", event => {
             if (event.sectionId == this.getSection().getId()) {
                 this.toggleIsTalkingInThisSection(false);
             }
@@ -515,12 +524,15 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                 this.toggleIsTalkingInAnotherSection(false);
             }
         });
-        this.app.addEventListener("file-attached-to-task", (event: any) => {
+
+        this.bindEvent(this.app, "file-attached-to-task", (event: any) => {
             this.refreshFileMessagesByDid(event.did);
         });
-        this.app.addEventListener("file-detached-from-task", (event: any) => {
+        this.bindEvent(this.app, "file-detached-from-task", (event: any) => {
             this.refreshFileMessagesByDid(event.did);
         });
+            
+        this.bindEvent<Types.event.GotVideoConferencesPollingResultEvent>(this.app, "got-video-conferences-polling-result", this.onGotVideoConferencesPollingResult.bind(this));
     }
 
     onPersonChange(person: mail.person.Person): void {
@@ -568,13 +580,13 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         if (!section) {
             return;
         }
-        this.app.addEventListener("reopen-section", (event: component.disabledsection.ReopenSectionEvent) => {
+        this.bindEvent(this.app, "reopen-section", (event: component.disabledsection.ReopenSectionEvent) => {
             if (event.element && event.element.getId() == section.getId()) {
                 this.callViewMethod("updateEnabledModules", { notes2: section.isFileModuleEnabled(), tasks: section.isKvdbModuleEnabled() });
                 this.onSectionChange();
             }
-        }, "chat");
-        this.sectionManager.sectionAccessManager.eventDispatcher.addEventListener<Types.event.SectionStateChangedEvent>("section-state-changed", event => {
+        });
+        this.bindEvent<Types.event.SectionStateChangedEvent>(this.sectionManager.sectionAccessManager.eventDispatcher, "section-state-changed", event => {
             if (section.getId() == event.sectionId) {
                 Q().then(() => {
                     return this.sectionManager.load();
@@ -584,7 +596,8 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                         this.callViewMethod("updateEnabledModules", { notes2: section.isFileModuleEnabled(), tasks: section.isKvdbModuleEnabled() });
                     })
             }
-        }, "chat");
+        });
+        
         this.filesMessagesProxyCollection = this.addComponent("filesMessagesCollection", new utils.collection.ProxyCollection<SinkIndexEntry>(section.getChatModule().filesMessagesCollection));
         this.filesMessagesProxyCollection.changeEvent.add(this.onFilesMessagesChange.bind(this));
         this.setChatData({
@@ -682,6 +695,8 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         let active = this.getSection();
         let hasNotes2 = false;
         let hasTasks = false;
+        let canCreateTask = this.chatInfo && !this.chatInfo.conversation;
+
         if (this.chatInfo.type == ChatType.CONVERSATION) {
             hasNotes2 = true;
             hasTasks = this.chatInfo.conversation.isSingleContact();
@@ -692,6 +707,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         }
 
         return {
+            userType: this.session.sectionManager.identityProvider.getType(),
             maxMsgTextSize: ChatMessagesController.MAX_MSG_TEXT_SIZE,
             enterSends: this.enterSends.get("boolean"),
             chatType: this.chatInfo.type,
@@ -706,6 +722,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
             } : null,
             hasNotes2: hasNotes2,
             hasTasks: hasTasks,
+            canCreateTask: canCreateTask,
             unreadMarkers: this.unreadMarkers,
             customStyle: this.app.loadCustomizationAsset("chat-plugin/style.css"),
             customTemplate: this.app.loadCustomizationAsset("chat-plugin/channel-message.html"),
@@ -717,6 +734,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
             viewSettings: this.chatPlugin.getViewSettings(),
             usersWithAccess: this.chatInfo.type == ChatType.CHANNEL ? this.getUsersWithAccess().map(x => ChatPlugin.getPersonModel(x, this.session)) : [],
             platform: this.app.getPlatform(),
+            systemLabel: this.app.isElectronApp() ? (<any>this.app).getSystemLabel() : null,
             contextSize: ChatMessagesController.SEARCH_CONTEXT_SIZE,
             isInVoiceChatInThisSection: this.isInVoiceChatInThisSection(),
             isVoiceChatActiveInThisSection: this.isVoiceChatActiveInThisSection(),
@@ -724,7 +742,9 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
             isTalkingInThisSection: this.isTalkingInThisSection(),
             isTalkingInAnotherSection: this.isTalkingInAnotherSection(),
             isRingTheBellAvailable: this.isRingTheBellAvailable(),
-            isVoiceChatEnabled: (<any>this.app).serverConfigForUser.privmxStreamsEnabled
+            isVoiceChatEnabled: ChatMessagesController.IS_VOICE_CHAT_ENABLED && (<any>this.app).serverConfigForUser.privmxStreamsEnabled,
+            inAnyVideoConference: this.isUserInAnyVideoConference(),
+            inVideoConferenceInThisSection: this.isUserInVideoConferenceInThisSection(),
         };
     }
     
@@ -777,6 +797,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         this.refreshMatches();
         this.updateSearchState();
         this.callViewMethod("updateMessagesFiltered", this.isFilterEnabled());
+        this.updateSectionVideoConferenceModelIfChanged();
         this.afterViewLoaded.resolve();
     }
 
@@ -791,27 +812,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         this.chatPlugin.openTask(this.session, null, id, scrollToComments);
     }
 
-    onViewOpenNotes2() {
-        let cnt = <window.container.ContainerWindowController>this.app.windows.container;
-        if (this.chatInfo.type == ChatType.CHANNEL) {
-            cnt.redirectToAppWindow("notes2", this.chatInfo.section.getId());
-        }
-        else {
-            cnt.redirectToAppWindow("notes2", this.chatInfo.conversation.id);
-        }
-    }
-
-    onViewOpenTasks() {
-        let cnt = <window.container.ContainerWindowController>this.app.windows.container;
-        if (this.chatInfo.type == ChatType.CHANNEL) {
-            cnt.redirectToAppWindow("tasks", this.chatInfo.section.getId());
-        }
-        else if (this.chatInfo.type == ChatType.CONVERSATION) {
-            cnt.redirectToAppWindow("tasks", this.chatInfo.conversation.id);
-        }
-    }
-
-    onViewNewFiles(): void {
+    onViewOpenFileChooser(): void {
         let notes2Plugin = this.app.getComponent("notes2-plugin");
         if (!notes2Plugin) {
             return null;
@@ -827,17 +828,34 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
             })
         });
     }
-
-    onViewNewTask(): void {
-        let section = this.getSection();
-        let tasksModule = section.getKvdbModule();
-        let tasksPlugin = this.app.getComponent("tasks-plugin");
-        if (!tasksModule || !tasksPlugin) {
-            return null;
-        }
-        (<any>tasksPlugin).openNewTaskWindow(this.session, section);
+    
+    onViewUploadFile(): void {
+        this.upload("/");
     }
-
+    
+    onViewCreateNewNote(type: "text-note" | "mindmap" | "new-audioAndVideo-note-window" | "new-audio-note-window" | "new-photo-note-window"): void {
+        let sectionId = this.getSection().getId();
+        let notes2Plugin = this.app.getComponent("notes2-plugin");
+        if (!notes2Plugin) {
+            return;
+        }
+        if (type == "text-note") {
+            notes2Plugin.openNewTextNoteWindow(this.session, sectionId, "/");
+        }
+        else if (type == "mindmap") {
+            notes2Plugin.openNewMindmapWindow(this.session, sectionId, "/");
+        }
+        else if (type == "new-audioAndVideo-note-window") {
+            notes2Plugin.openNewAudioAndVideoNoteWindow(this.session, sectionId, "/");
+        }
+        else if (type == "new-audio-note-window") {
+            notes2Plugin.openNewAudioNoteWindow(this.session, sectionId, "/");
+        }
+        else if (type == "new-photo-note-window") {
+            notes2Plugin.openNewPhotoNoteWindow(this.session, sectionId, "/");
+        }
+    }
+    
     onViewDeleteMessage(originalMessageId: number) {
         this.parent.confirm(this.i18n("plugin.chat.component.chatMessages.deleteMessageQuestion")).then(result => {
             if (result.result == "yes") {
@@ -884,12 +902,23 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         return lastSinkEntry.id == sinkEntry.id;
     }
 
+    private closeSearchIfOpened(): void {
+        let search = this.app.searchModel.get();
+        if (search.visible) {
+            search.visible = false;
+            this.app.searchModel.set(search);
+        }
+
+    }
+
     onViewSendMessage(text: string): void {
+        this.closeSearchIfOpened();
         this.encryptionEffect.customShowForChat(text);
         this.sendingQueue.add(text);
     }
 
     onViewEditMessage(originalMessageId: number, text: string): void {
+        this.closeSearchIfOpened();
         this.editMessage(originalMessageId, text);
     }
 
@@ -934,18 +963,18 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         return Q().then(() => {
             return section.getFileTree();
         })
-            .then(tree => {
-                if (tree.collection.list.filter(x => x.ref.did == did).length == 0) {
-                    throw "File doesn't exist";
-                }
-                return tree.getPathFromDescriptor(did);
-            })
-            .then(path => {
-                if (path.indexOf("/.trash/") >= 0) {
-                    throw "File doesn't exist";
-                }
-                return section.getFileOpenableElement(path, false)
-            })
+        .then(tree => {
+            if (tree.collection.list.filter(x => x.ref.did == did).length == 0) {
+                throw "File doesn't exist";
+            }
+            return tree.getPathFromDescriptor(did);
+        })
+        .then(path => {
+            if (path.indexOf("/.trash/") >= 0) {
+                throw "File doesn't exist";
+            }
+            return section.getFileOpenableElement(path, false)
+        })
     }
 
     isFileExistsByDid(did: string, section: mail.section.SectionService): Q.Promise<boolean> {
@@ -971,22 +1000,23 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         Q().then(() => {
             return did.length > 0 ? this.getSectionFileByDid(section, did) : section.getFileOpenableElement(path, true);
         })
-            .then(element => {
-                this.actionOpenableElement(element);
-            })
-            .fail(e => {
-                if (privfs.exception.PrivFsException.is(e, "FILE_DOES_NOT_EXIST") ||
-                    privfs.exception.PrivFsException.is(e, "DIRECTORY_DOES_NOT_EXIST") ||
-                    privfs.exception.PrivFsException.is(e, "ELEMENT_IS_NOT_DIRECTORY")) {
-                    this.parent.alert(this.i18n("plugin.chat.component.chatMessages.info.fileDoesNotExist"));
-                    return;
-                }
-                if (privfs.exception.PrivFsException.is(e, "ELEMENT_IS_NOT_FILE")) {
-                    this.parent.alert(this.i18n("plugin.chat.component.chatMessages.info.fileInvalidType"));
-                    return;
-                }
-                this.errorCallback(e);
-            });
+        .then(element => {
+            console.log("element", element ? element.getName() : "element is null")
+            this.actionOpenableElement(element);
+        })
+        .fail(e => {
+            if (privfs.exception.PrivFsException.is(e, "FILE_DOES_NOT_EXIST") ||
+                privfs.exception.PrivFsException.is(e, "DIRECTORY_DOES_NOT_EXIST") ||
+                privfs.exception.PrivFsException.is(e, "ELEMENT_IS_NOT_DIRECTORY")) {
+                this.parent.alert(this.i18n("plugin.chat.component.chatMessages.info.fileDoesNotExist"));
+                return;
+            }
+            if (privfs.exception.PrivFsException.is(e, "ELEMENT_IS_NOT_FILE")) {
+                this.parent.alert(this.i18n("plugin.chat.component.chatMessages.info.fileInvalidType"));
+                return;
+            }
+            this.errorCallback(e);
+        });
     }
 
     onViewSetEnterSends(checked: boolean): void {
@@ -1285,6 +1315,28 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         }
         return null;
     }
+    
+    async getOrCreateSection(): Promise<mail.section.SectionService> {
+        let section = this.getSection();
+        if (!section && this.chatInfo.type == ChatType.CONVERSATION && !this.creatingUserGroupLock) {
+            try {
+                section = await this.conv2Service.createUserGroup(this.chatInfo.conversation.users);
+                if (this.isActive) {
+                    this.chatPlugin.activeSinkId = this.chatInfo.conversation.sinkIndex ? this.chatInfo.conversation.sinkIndex.sink.id : null;
+                    this.chatPlugin.activeSinkHostHash = this.session.hostHash;
+                }
+            }
+            catch {
+                this.creatingUserGroupLock = false;
+            }
+        }
+        return section;
+    }
+    
+    getSectionId(): string {
+        let section = this.getSection();
+        return section ? section.getId() : null;
+    }
 
     getCollectionSize() {
         let sentCount = 0;
@@ -1503,7 +1555,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                 this.callViewMethod("removeSendingMessageIfRealMessageExists", sendingId, info.sinkId + "/" + info.serverId);
         
                 if (options.text) {
-                    section.linkFileCreator.uploadLinkFilesFromText(options.text, this.errorCallback);
+                    this.uploadLinkFilesFromText(options.text);
                 }
             })
             .fail(e => {
@@ -1538,6 +1590,29 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
 
             })
         });
+    }
+    
+    uploadLinkFilesFromText(text: string): void {
+        let section = this.getSection();
+        if (section) {
+            let numberOfLinks = section.linkFileCreator.getLinksFromText(text).length;
+            Q().then(() => {
+                if (numberOfLinks >= 3) {
+                    return this.parent.confirm(this.i18n("plugin.chat.component.chatMessages.confirmCreatingUrlFiles"))
+                    .then(result => {
+                        return result.result == "yes";
+                    });
+                }
+                else {
+                    return true;
+                }
+            })
+            .then(createLinkFiles => {
+                if (createLinkFiles) {
+                    section.linkFileCreator.uploadLinkFilesFromText(text, this.errorCallback);
+                }
+            });
+        }
     }
     
     falsyMessageTest(): Q.Promise<void> {
@@ -1625,7 +1700,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                 .then(() => {
                     this.finishEditingMessage(originalMessageId);
                     if (text) {
-                        section.linkFileCreator.uploadLinkFilesFromText(text, this.errorCallback);
+                        this.uploadLinkFilesFromText(text);
                     }
                 })
                 .fail(e => {
@@ -1683,6 +1758,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                 }
             }
         }
+        
         let emojiMap: { [id: string]: Types.webUtils.EmojiIconModel } = {};
         let section = this.getSection();
         if (section) {
@@ -1706,7 +1782,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                     username: person.username,
                     name: person.getName(),
                     present: person.isPresent(),
-                    avatar: person.getAvatar(),
+                    avatar: person.getAvatarWithVersion(),
                     description: person.getDescription(),
                     lastUpdate: person.getLastUpdate().getTime(),
                     isEmail: person.isEmail(),
@@ -1823,6 +1899,10 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         if (!obj || !obj.taskIds) {
             return [];
         }
+        obj.taskIds = obj.taskIds
+            .filter(x => !!x)
+            .map(x => x.toString())
+            .filter((val, idx, self) => self.indexOf(val) === idx);
         return obj.taskIds
             .sort((a, b) => parseInt(a) - parseInt(b))
             .map(taskId => {
@@ -2049,6 +2129,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
             return;
         }
         this.isActive = false;
+        this.messagesFilterUpdater.onDeactivateMessages();
     }
 
 
@@ -2132,6 +2213,14 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                             this.creatingUserGroupLock = true;
                             return Q().then(() => {
                                 return this.conv2Service.createUserGroup(this.chatInfo.conversation.users);
+                            })
+                            .then(usergroup => {
+                                if (this.isActive) {
+                                    this.chatPlugin.activeSinkId = this.chatInfo.conversation.sinkIndex ? this.chatInfo.conversation.sinkIndex.sink.id : null;
+                                    this.chatPlugin.activeSinkHostHash = this.session.hostHash;
+                                }
+                                this.creatingUserGroupLock = false;
+                                return usergroup;
                             });
                         }
                         return section;
@@ -2173,6 +2262,14 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                         this.creatingUserGroupLock = true;
                         return Q().then(() => {
                             return this.conv2Service.createUserGroup(this.chatInfo.conversation.users);
+                        })
+                        .then(usergroup => {
+                            if (this.isActive) {
+                                this.chatPlugin.activeSinkId = this.chatInfo.conversation.sinkIndex ? this.chatInfo.conversation.sinkIndex.sink.id : null;
+                                this.chatPlugin.activeSinkHostHash = this.session.hostHash;
+                            }
+                            this.creatingUserGroupLock = false;
+                            return usergroup;
                         });
                     }
                     return section;
@@ -2476,6 +2573,55 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         }
     }
     
+    upload(path: string, content: privfs.lazyBuffer.IContent|privfs.lazyBuffer.IContent[] = null, fileNamesDeferred: Q.Deferred<string[]> = null) {
+        let getCnt: Q.Promise<privfs.lazyBuffer.IContent[]>;
+        if (content) {
+            getCnt = Q(Array.isArray(content) ? content : [content]);
+        }
+        else {
+            getCnt = this.app.shellRegistry.callAppMultiAction("core.upload-multi", null, this.parent.getClosestNotDockedController().nwin);
+        }
+        return getCnt.then(contents => {
+            if (!contents || (contents && contents.length == 0)) {
+                return;
+            }
+            let notificationId = this.notifications.showNotification(this.i18n("plugin.chat.component.chatMessages.notification.importingFile"), {autoHide: false, progress: true});
+            let ids: string[] = [];
+            let prom = Q();
+            for (let content of contents) {
+                prom = prom.then(() => {
+                    return this.uploadFile({
+                        data: content,
+                        path: path
+                    })
+                    .then(result => {
+                        ids.push(result.fileResult.entryId);
+                    });
+                });
+            }
+            return prom.then(result => {
+                if (fileNamesDeferred) {
+                    fileNamesDeferred.resolve(ids);
+                }
+            })
+            .progress(progress => {
+                this.notifications.progressNotification(notificationId, progress);
+            })
+            .fin(() => {
+                this.notifications.hideNotification(notificationId);
+            });
+        })
+        .fail(this.errorCallback);
+    }
+    
+    uploadFile(options: Types.section.UploadFileOptions): Q.Promise<Types.section.UploadFileResult> {
+        let section = this.getSection();
+        if (section == null) {
+            throw new Error("Cannot upload file, current chatMessages has no assigned section");
+        }
+        return section.uploadFile(options);
+    }
+    
     
     
     
@@ -2572,11 +2718,130 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         this.getSection().getChatModule().sendVoiceChatActivityMessage("left-voicechat", this.identity.hashmail);
         this.updateVoiceChatUsersOfMine();
     }
-
+    
+    async onViewJoinVideoConference(): Promise<void> {
+        const polling = this.app.videoConferencesService.polling.recentPollingResults;
+        let conferenceExists: boolean = false;
+        const section = await this.getOrCreateSection();
+        if (polling && polling[this.session.hostHash] && polling[this.session.hostHash].conferencesData) {
+            const sectionId = section.getId();
+            const conferenceData = polling[this.session.hostHash].conferencesData.filter(conferenceData => conferenceData.sectionId == sectionId)[0];
+            conferenceExists = !!conferenceData;
+        }
+        
+        if (this.isUserInAnyVideoConference() && this.chatPlugin.currentVideoConferenceWindowController) {
+            if (this.isUserInVideoConferenceInThisSection()) {
+                // console.log("!!! bringing - 0");
+                this.chatPlugin.bringVideoConferenceWindowToFront();
+            }
+            else {
+                const result = await this.parent.msgBox({
+                    message: this.i18n("plugin.chat.switchVideoConferenceMsgBox.message"),
+                    
+                    yes: {
+                        faIcon: "",
+                        btnClass: "btn-success",
+                        label: this.i18n("plugin.chat.switchVideoConferenceMsgBox.switch"),
+                        visible: true,
+                    },
+                    // no: {
+                    //     faIcon: "",
+                    //     btnClass: "btn-default",
+                    //     label: this.i18n("plugin.chat.switchVideoConferenceMsgBox.bringToFront"),
+                    //     visible: true,
+                    // },
+                    cancel: {
+                        faIcon: "",
+                        btnClass: "btn-default",
+                        label: this.i18n("plugin.chat.switchVideoConferenceMsgBox.cancel"),
+                        visible: true,
+                    },
+                });
+                if (result.result == "yes") {
+                    // console.log("!!! leaving, joining");
+                    let title = "";
+                    if (!conferenceExists) {
+                        const titleOrCancel = await this.obtainNewVideoConferenceTitle();
+                        if (titleOrCancel === false) {
+                            return;
+                        }
+                        title = titleOrCancel;
+                    }
+                    this.chatPlugin.switchVideoConference(
+                        this.session,
+                        this.chatInfo.type == ChatType.CHANNEL ? this.chatInfo.section : null,
+                        this.chatInfo.type == ChatType.CHANNEL ? null : this.chatInfo.conversation,
+                        title,
+                    );
+                }
+                else if (result.result == "no") {
+                    // console.log("!!! bringing");
+                    setTimeout(() => {
+                        this.chatPlugin.bringVideoConferenceWindowToFront();
+                    }, 500);
+                }
+                else if (result.result == "cancel") {
+                    // Do nothing
+                    // console.log("!!! doing nothing");
+                }
+            }
+        }
+        else {
+            let title = "";
+            if (!conferenceExists) {
+                const titleOrCancel = await this.obtainNewVideoConferenceTitle();
+                if (titleOrCancel === false) {
+                    return;
+                }
+                title = titleOrCancel;
+            }
+            this.app.dispatchEvent<Types.event.JoinVideoConferenceEvent>({
+                type: "join-video-conference",
+                hostHash: this.session.hostHash,
+                section: this.chatInfo.type == ChatType.CHANNEL ? this.chatInfo.section : null,
+                conversation: this.chatInfo.type == ChatType.CHANNEL ? null : this.chatInfo.conversation,
+                roomMetadata: {
+                    creatorHashmail: this.session.conv2Service.identity.hashmail,
+                    title: title,
+                },
+            });
+        }
+    }
+    
+    async obtainNewVideoConferenceTitle(): Promise<string | false> {
+        const title = await this.retrieveFromView<string|false>("askForNewConferenceTitle");
+        return title;
+    }
+    
+    onViewVideoConferenceDisconnect(): void {
+        if (!this.isUserInAnyVideoConference() || !this.isUserInVideoConferenceInThisSection()) {
+            return;
+        }
+        let section = this.getSection();
+        if (!section) {
+            return;
+        }
+        this.app.dispatchEvent<Types.event.LeaveVideoConferenceEvent>({
+            type: "leave-video-conference",
+        });
+        let conferenceId = this.app.videoConferencesService.getConferenceIdBySection(this.session, section);
+        this.app.videoConferencesService.leaveConference(this.session, section, conferenceId);
+    }
+    
+    onViewVideoConferenceGong(message: string): void {
+        let section = this.getSection();
+        if (section) {
+            this.chatPlugin.gong(this.session, section, message);
+        }
+    }
+    
     updateVoiceChatUsersOfMine(): void {
         let section = this.chatInfo.section ? this.chatInfo.section: null;
         let conv = this.chatInfo.conversation ? this.chatInfo.conversation: null;
-
+        if (conv == null && section == null) {
+            Logger.warn("updateVoiceChatUsersOfMine on not fully loaded section");
+            return;
+        }
         let id = section ? section.getId(): conv.id;
         this.app.eventDispatcher.dispatchEvent<UpdateVoiceChatUsersEvent>({type: "update-voice-chat-users", hostHash: this.session.hostHash, sectionId: id });
     }
@@ -2607,5 +2872,81 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         }
     }
     
+    onGotVideoConferencesPollingResult(event: Types.event.GotVideoConferencesPollingResultEvent): void {
+        this.updateSectionVideoConferenceModelIfChanged();
+    }
+    
+    updateSectionVideoConferenceModelIfChanged(): void {
+        const sectionVideoConferenceModelStr = JSON.stringify(this.getSectionVideoConferenceModel());
+        if (sectionVideoConferenceModelStr != this.previousSectionVideoConferenceModelStr) {
+            this.previousSectionVideoConferenceModelStr = sectionVideoConferenceModelStr;
+            this.callViewMethod("setSectionVideoConferenceModel", sectionVideoConferenceModelStr);
+        }
+    }
+    
+    doesHostHashMatchCurrentSession(hostHash: string): boolean {
+        return this.session && this.session.hostHash == hostHash;
+    }
+    
+    convertHashmailToVideoConferencePersonModel(hashmail: string): VideoConferencePersonModel {
+        let contact = this.getContactFromHashmail(hashmail);
+        if (!contact) {
+            return null;
+        }
+        return {
+            hashmail: hashmail,
+            name: contact.getDisplayName(),
+        };
+    }
+    
+    getContactFromHashmail(hashmail: string): mail.contact.Contact {
+        let person = this.personService.getPerson(hashmail);
+        return person ? person.contact : null;
+    }
+    
+    isUserInAnyVideoConference(): boolean {
+        return this.chatPlugin.isUserInAnyVideoConference();
+    }
+    
+    isUserInVideoConferenceInThisSection(): boolean {
+        return this.chatPlugin.isInVideoConference(
+            this.session,
+            this.chatInfo.type == ChatType.CHANNEL ? this.chatInfo.section : null,
+            this.chatInfo.type == ChatType.CHANNEL ? null : this.chatInfo.conversation
+        );
+    }
+    
+    isVideoConferenceActive(): boolean {
+        return this.chatPlugin.isVideoConferenceActive(
+            this.session,
+            this.chatInfo.type == ChatType.CHANNEL ? this.chatInfo.section : null,
+            this.chatInfo.type == ChatType.CHANNEL ? null : this.chatInfo.conversation
+        );
+    }
+    
+    getVideoConferenceParticipantHashmails(): string[] {
+        return this.chatPlugin.getVideoConferenceParticipantHashmails(
+            this.session,
+            this.chatInfo.type == ChatType.CHANNEL ? this.chatInfo.section : null,
+            this.chatInfo.type == ChatType.CHANNEL ? null : this.chatInfo.conversation
+        );
+    }
+    
+    getSectionVideoConferenceModel(): SectionVideoConferenceModel {
+        if (!this.chatInfo) {
+            return {
+                isUserInAnyVideoConference: this.isUserInAnyVideoConference(),
+                isUserParticipating: false,
+                isVideoConferenceActive: false,
+                personModels: [],
+            };
+        }
+        return {
+            isUserInAnyVideoConference: this.isUserInAnyVideoConference(),
+            isUserParticipating: this.isUserInVideoConferenceInThisSection(),
+            isVideoConferenceActive: this.isVideoConferenceActive(),
+            personModels: this.getVideoConferenceParticipantHashmails().map(hashmail => this.convertHashmailToVideoConferencePersonModel(hashmail)),
+        };
+    }
     
 }

@@ -36,7 +36,13 @@ export class Conv2ListView extends ComponentView {
     ) {
         super(parent);
         this.baseOnAfterRenderContactList = this.options.extList.onAfterListRender;
-        this.options.extList.onAfterListRender = this.onAfterRenderContactList.bind(this);
+        let origOnAfterListRender = this.options.extList.onAfterListRender;
+        this.options.extList.onAfterListRender = view => {
+            if (origOnAfterListRender) {
+                origOnAfterListRender(view);
+            }
+            this.onAfterRenderContactList();
+        };
         this.options.extList.template = this.options.extList.template || listElementTemplate;
         this.conversations = this.addComponent("conversations", new ExtListView(this, this.options.extList));
         this.personsTooltip = this.addComponent("infoTooltip", new InfoTooltip(this));

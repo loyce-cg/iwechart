@@ -39,7 +39,7 @@ export class SubidentityLoginService {
             return privmxRegistry.getIdentity().then(identity => {
                 let map: {[domain: string]: {mode: FilterMode}} = {};
                 map[identity.host] = {mode: FilterMode.ALLOW};
-                return new MailFilter(new InMemoryKvdbMap(map));
+                return new MailFilter(new InMemoryKvdbMap(map), identity.host);
             });
         });
         privmxRegistry.registerServices();
@@ -130,19 +130,21 @@ export class SubidentityLoginService {
                     keyId: data.sectionKeyId,
                     key: Buffer.from(data.sectionKey, "base64")
                 },
-                sectionPubKey: {
+                sectionPubKey: data.pubKey ? {
                     sectionId: data.sectionId,
                     keyId: SectionUtils.PUBLIC_KEY_ID,
                     key: Buffer.from(data.pubKey, "base64")
-                },
+                } : null,
                 section: null,
                 privmxRegistry: privmxRegistry
             };
             return privmxRegistry.getSectionManager();
         })
         .then(sectionManager => {
-            sectionManager.sectionKeyManager.storeKey(res.sectionKey);
-            sectionManager.sectionKeyManager.storeKey(res.sectionPubKey);
+            sectionManager.sectionKeyManager.storeKey(res.sectionKey, Date.now());
+            if (res.sectionPubKey) {
+                sectionManager.sectionKeyManager.storeKey(res.sectionPubKey, Date.now());
+            }
             return sectionManager.addSection(res.sectionId);
         })
         .then(section => {

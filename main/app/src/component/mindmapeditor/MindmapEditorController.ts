@@ -135,13 +135,32 @@ export class MindmapEditorController extends ComponentController {
         }
         this.notifications = this.addComponent("notifications", this.componentFactory.createComponent("notification", [this]));
         this.app.addEventListener(PrivMxClipboard.CHANGE_EVENT, () => {
-            let data = this.app.clipboard.get(undefined, "privmx");
-            if (data && data.mm2nodes) {
-                if (data.mm2nodes.id != this._uniqueId) {
-                    this.callViewMethod("setClipboardNodes", data.mm2nodes.str);
+            this.refreshClipboardData();
+        });
+    }
+    
+    refreshClipboardData(): void {
+        let data = this.app.clipboard.get(undefined, "privmx");
+        if (data && data.mm2nodes) {
+            if (data.mm2nodes.id != this._uniqueId) {
+                this.callViewMethod("setClipboardNodes", data.mm2nodes.str);
+            }
+        }
+    }
+    
+    onViewGetClipboardString(channelId: number): void {
+        this.refreshClipboardData();
+        let text = null;
+        if (this.app.clipboard.storedElements.length > 0) {
+            let recentData = this.app.clipboard.storedElements[this.app.clipboard.storedElements.length - 1];
+            if (recentData.source == "system" && recentData.data && recentData.data.text) {
+                let prev = this.app.clipboard.storedElements[this.app.clipboard.storedElements.length - 2];
+                if (!(prev && prev.source == "privmx" && prev.data && prev.data.mm2nodes)) {
+                    text = recentData.data.text;
                 }
             }
-        });
+        }
+        this.sendToViewChannel(channelId, text);
     }
     
     ready(): Q.Promise<void> {
@@ -160,10 +179,10 @@ export class MindmapEditorController extends ComponentController {
     
     setMindmap(mindmap: Mindmap): void {
         this.mindmap = mindmap;
-        this.updateTaskStatuses();
         let relatedSectionId = this.openableElement && this.openableElement instanceof section.OpenableSectionFile && this.openableElement.section ? this.openableElement.section.getId() : null;
         let relatedHostHash = this.session.hostHash;
         this.callViewMethod("setMindmap", JSON.stringify(mindmap), relatedHostHash, relatedSectionId);
+        this.updateTaskStatuses();
         this.afterViewLoaded.promise.then(() => {
             let data = this.app.clipboard.get();
             if (data && data.mm2nodes) {
@@ -175,6 +194,8 @@ export class MindmapEditorController extends ComponentController {
     }
     
     reopen(openableElement: OpenableElement): void {
+        this.stopLockInterval();
+        this.stopAutoSaveInterval();
         this.afterMindmapRendered = Q.defer();
         this.readyDeferred = Q.defer();
         this.openableElement = openableElement;
@@ -775,6 +796,10 @@ export class MindmapEditorController extends ComponentController {
             if (this.currentViewId != viewId) {
                 return;
             }
+            if (editMode) {
+                this.startLockInterval();
+                this.startAutoSaveInterval();
+            }
             this.readyDeferred.resolve();
         })
         .catch(e => {
@@ -851,6 +876,8 @@ export class MindmapEditorController extends ComponentController {
     
     beforeClose(): void {
         this.tasksPlugin.unWatch(this.session, "task", "*", "*", this.taskChangedHandlerBound);
+        this.stopLockInterval();
+        this.stopAutoSaveInterval();
     }
     
     /**************************************************

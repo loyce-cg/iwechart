@@ -1,8 +1,6 @@
-import { component, window as wnd, JQuery as $, Q, Starter, Types } from "pmc-web";
+import { component, window as wnd, JQuery as $, Q, Types } from "pmc-web";
 import { Model } from "./DatePickerController";
 import { func as mainTemplate } from "./template/main.html";
-import { RequestCustomSelectViewEvent } from "privfs-mail-client-tasks-plugin/src/main/Types";
-import { CustomSelectView } from "privfs-mail-client-tasks-plugin/src/component/customSelect/CustomSelectView";
 
 export class DatePickerView extends component.base.ComponentView {
     
@@ -10,21 +8,17 @@ export class DatePickerView extends component.base.ComponentView {
     $main: JQuery;
     parent: wnd.base.BaseWindowView<any>;
     model: Model;
-    customSelectDay: CustomSelectView;
-    customSelectMonth: CustomSelectView;
-    customSelectYear: CustomSelectView;
+    customSelectDay: component.customselect.CustomSelectView;
+    customSelectMonth: component.customselect.CustomSelectView;
+    customSelectYear: component.customselect.CustomSelectView;
     overridePrevNextAbsDelta: () => number = null;
     
     constructor(parent: Types.app.ViewParent) {
         super(parent);
         
-        for (let csName of ["customSelectDay", "customSelectMonth", "customSelectYear"]) {
-            Starter.dispatchEvent<RequestCustomSelectViewEvent>({
-                type: "request-custom-select-view",
-                parent: this,
-                name: csName,
-            });
-        }
+        this.customSelectDay = this.addComponent("customSelectDay", new component.customselect.CustomSelectView(this, {}));
+        this.customSelectMonth = this.addComponent("customSelectMonth", new component.customselect.CustomSelectView(this, {}));
+        this.customSelectYear = this.addComponent("customSelectYear", new component.customselect.CustomSelectView(this, {}));
         
         this.documentMouseDownBound = this.onDocumentMouseDown.bind(this);
         this.documentKeyDownBound = this.onDocumentKeyDown.bind(this);
@@ -74,18 +68,6 @@ export class DatePickerView extends component.base.ComponentView {
         this.$container.on("click", ".ok-btn", this.onOkBtnClick.bind(this));
         this.$container.on("click", ".cancel-btn", this.onCancelBtnClick.bind(this));
         this.$container.data("events-bound", "1");
-    }
-    
-    registerCustomSelectView(csName: string, view: CustomSelectView): void {
-        if (csName == "customSelectDay") {
-            this.customSelectDay = this.addComponent("customSelectDay", view);
-        }
-        else if (csName == "customSelectMonth") {
-            this.customSelectMonth = this.addComponent("customSelectMonth", view);
-        }
-        else if (csName == "customSelectYear") {
-            this.customSelectYear = this.addComponent("customSelectYear", view);
-        }
     }
     
     setModel(model: Model) {

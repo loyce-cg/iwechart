@@ -2,7 +2,6 @@ import { window, component, utils, Q, mail, app } from "pmc-mail";
 import { Types } from "pmc-mail";
 import { TasksPlugin, TasksComponentFactory } from "../../main/TasksPlugin";
 import { ProjectId, EventHandler, Action, Watchable, TaskGroupId } from "../../main/Types";
-import { CustomSelectItem } from "../../component/customSelect/CustomSelectController";
 import Dependencies = utils.decorators.Dependencies;
 import { i18n } from "./i18n/index";
 import { DetachTaskGroupWindowController } from "../detachTaskGroup/DetachTaskGroupWindowController";
@@ -67,10 +66,19 @@ export class TaskGroupFormWindowController extends window.base.BaseWindowControl
         
         // Custom select: projects
         let availProjects = this.tasksPlugin.getAvailableProjects(this.session);
-        let projects: Array<CustomSelectItem> = [];
+        let projects: Array<component.customselect.CustomSelectItem> = [];
         for (let k in availProjects) {
             let proj = availProjects[k];
-            projects.push({icon:"@asset-DEFAULT_PRIVMX_ICON", val:k, text:proj.getName(), selected:k == projectId});
+            projects.push({
+                type: "item",
+                icon: <Types.webUtils.IconAsset>{
+                    type: "asset",
+                    assetName: "DEFAULT_PRIVMX_ICON",
+                },
+                value: k,
+                text: proj.getName(),
+                selected: k == projectId,
+            });
         }
         this.tasksPlugin.registerWindow(this.getWindowId(), this);
         this.notifications = this.addComponent("notifications", this.componentFactory.createComponent("notification", [this]));

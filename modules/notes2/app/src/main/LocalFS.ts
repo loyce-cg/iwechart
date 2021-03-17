@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as origFs from "original-fs";
 import * as trash from "trash";
 import * as drivelist from "drivelist";
 import * as ncp from "ncp";
@@ -7,6 +8,7 @@ import * as os from "os";
 import { app, utils, Q, mail, privfs } from "pmc-mail";
 import { FileEntryBase } from "./Notes2Utils";
 import DirStats = mail.filetree.nt.DirStats;
+const hidefile = require("hidefile");
 
 export type LocalEntryType = "file"|"directory";
 
@@ -21,6 +23,7 @@ export class LocalEntry {
     mtime: Date;
     mime?: string;
     dirStats?: DirStats;
+    hidden?: boolean;
     
     constructor(obj: { [key: string]: any }) {
         for (let key in obj) {
@@ -61,6 +64,10 @@ export class LocalOpenableElement extends app.common.shelltypes.OpenableElement 
     
     isEditable(): boolean {
         return LocalFS.isWritable(this.entry.path, false);
+    }
+    
+    isLocalFile(): boolean {
+        return true;
     }
     
     save(data: privfs.lazyBuffer.IContent): Q.Promise<void> {
@@ -137,7 +144,6 @@ export class LocalFS {
             path = LocalFS.getHomeDir();
         }
         this.currentPath = path;
-        this.onPathChange(this.currentPath);
         return LocalFS.listEntries(path).then(fileNames => {
             this.watch(path);
             let arr: LocalEntry[] = [];
@@ -153,9 +159,68 @@ export class LocalFS {
             });
             this.currentFileNamesCollection.clear();
             this.currentFileNamesCollection.addAll(arr);
+            this.onPathChange(this.currentPath);
+        });
+    }
+
+    browseWithParent(path: string): Q.Promise<void> {
+        if (path == "" || !LocalFS.exists(path) || !LocalFS.isDir(path) || !LocalFS.isReadable(path, true)) {
+            path = LocalFS.getHomeDir();
+        }
+        this.currentPath = path;
+        return LocalFS.listEntries(path).then(fileNames => {
+            let arr: LocalEntry[] = [];
+            let parentEntry = LocalFS.getEntry(path);
+            fileNames.forEach(fn => {
+                let entry = LocalFS.getEntry(fn, parentEntry);
+                if (!entry) {
+                    return;
+                }
+                if (LocalFS.isReadable(entry.path, entry.isDirectory())) {
+                    arr.push(entry);
+                }
+            });
+            if (parentEntry && this.currentPath != "/") {
+                let entry = Object.assign({}, parentEntry);
+                let parentDir = entry.path.split("/").slice(0, -1).join("/");
+                if (parentDir == "") {
+                    parentDir = "/";
+                }
+                entry.path = parentDir;
+                entry.id = "parent";
+                entry.name = "..";
+                arr = [entry, ...arr];
+            }
+            this.currentFileNamesCollection.clear();
+            this.currentFileNamesCollection.addAll(arr);
+            this.onPathChange(this.currentPath);
+        });
+    }
+
+
+    browseEx(path: string): Q.Promise<LocalEntry[]> {
+        if (path == "" || !LocalFS.exists(path) || !LocalFS.isDir(path) || !LocalFS.isReadable(path, true)) {
+            path = LocalFS.getHomeDir();
+        }
+        this.currentPath = path;
+        return LocalFS.listEntries(path).then(fileNames => {
+            let arr: LocalEntry[] = [];
+            let parentEntry = LocalFS.getEntry(path);
+            fileNames.forEach(fn => {
+                let entry = LocalFS.getEntry(fn, parentEntry);
+                if (!entry) {
+                    return;
+                }
+                if (LocalFS.isReadable(entry.path, entry.isDirectory())) {
+                    arr.push(entry);
+                }
+            });
+            return arr;
         });
     }
     
+
+
     static listEntries(path: string): Q.Promise<string[]> {
         if (path != "/") {
             if (!LocalFS.isReadable(path, true)) {
@@ -195,8 +260,16 @@ export class LocalFS {
     
     static getEntry(path: string, parentEntry: LocalEntry = null): LocalEntry {
         let stat: fs.Stats;
+        let isHidden: boolean;
         try {
-            stat = fs.lstatSync(path);
+            stat = origFs.lstatSync(path);
+
+            try {
+                isHidden = hidefile.isHiddenSync(path);
+            }
+            catch (e) {
+                isHidden = true;
+            }
         }
         catch (e) {
             return null;
@@ -232,12 +305,17 @@ export class LocalFS {
             ctime: stat.ctime,
             mime: mime,
             dirStats: dirStats,
+            hidden: isHidden
         });
     }
-    
+
     static getParentEntry(entry: LocalEntry): LocalEntry {
         let path = pathUtils.dirname(entry.path);
         return LocalFS.getEntry(path);
+    }
+
+    static getDirName(path: string): string {
+        return pathUtils.dirname(path);
     }
     
     static countChildren(path: string): { directories:number, files:number } {

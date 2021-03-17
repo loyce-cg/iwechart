@@ -18,6 +18,8 @@
     </div>
   </div>
   <div class="updates-container"></div>
-  <div class="version-info">PrivMX Desktop version: {{@model.appVersion}}</div>
+  {{ if (model.isElectron) { {{
+    <div class="version-info">PrivMX Desktop version: {{@model.appVersion}}</div>
+  }} } }}
   <div class="status-bar"></div>
 </div>

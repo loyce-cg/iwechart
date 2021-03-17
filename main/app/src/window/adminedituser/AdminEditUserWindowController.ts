@@ -8,11 +8,11 @@ import {UserAdminService} from "../../mail/UserAdminService";
 import {AdminDataCreatorService} from "../../mail/admin/AdminDataCreatorService";
 import { MailConst } from "../../mail/MailConst";
 import { AdminKeySender } from "../../mail/admin/AdminKeySender";
-import { LocaleService } from "../../mail";
+import { LocaleService, UtilApi } from "../../mail";
 import { i18n } from "./i18n";
 import { ContactService } from "../../mail/contact/ContactService";
 import { PersonService } from "../../mail/person/PersonService";
-
+import * as PmxApi from "privmx-server-api";
 export type UserType = "managable"|"private";
 
 export interface Model {
@@ -24,6 +24,8 @@ export interface Model {
     secureFormsCount: number;
     contactFormLink: string;
     adminData: mail.AdminData;
+    myself: boolean;
+    blocked: boolean;
 }
 
 export class AdminEditUserWindowController extends BaseWindowController {
@@ -50,6 +52,7 @@ export class AdminEditUserWindowController extends BaseWindowController {
     @Inject authData: privfs.types.core.UserDataEx;
     @Inject personService: PersonService;
     @Inject contactService: ContactService;
+    @Inject utilApi: UtilApi;
     
     constructor(parent: app.WindowParent, username: string, userAlias: string) {
         super(parent, __filename, __dirname);
@@ -76,6 +79,9 @@ export class AdminEditUserWindowController extends BaseWindowController {
     
     init(): Q.Promise<void> {
         return Q().then(() => {
+            return this.userAdminService.refreshUsersCollection()
+        })
+        .then(() => {
             return this.srpSecure.sinkGetAllByUser(this.username)
             .then(data => {
                 if (data && data.length) {
@@ -132,7 +138,9 @@ export class AdminEditUserWindowController extends BaseWindowController {
             secureFormsCount: this.secureFormsCount,
             contactFormLink: this.userConfig.userContactFormUrl + "?" + this.username,
             adminData: this.adminData,
-            userType: userType
+            userType: userType,
+            myself: this.username == this.identity.user,
+            blocked: (<any>user).blocked
         };
     }
     
@@ -289,4 +297,29 @@ export class AdminEditUserWindowController extends BaseWindowController {
         this.sendActivationData(model.currentUsername, (<any>model.adminData).generatedPassword, model.user.email);
     }
     
+    onViewBlockUser(): void {
+        this.confirm()
+        .then(res => {
+            if (res.result != "yes") {
+                return;
+            }
+            return this.utilApi.setUserBlocked((this.username as PmxApi.api.core.Username), true)
+            .then(() => {
+                this.close();
+            })
+        });
+    }
+
+    onViewUnblockUser(): void {
+        this.confirm()
+        .then(res => {
+            if (res.result != "yes") {
+                return;
+            }
+            return this.utilApi.setUserBlocked((this.username as PmxApi.api.core.Username), false)
+            .then(() => {
+                this.close();
+            })
+        });
+    }
 }

@@ -3,11 +3,11 @@
 @model Model
 <div class="window-login-activate page">
   <div class="inner with-bottom-link">
-    <header>
+    <header class="flex-row">
       <h1><div class="logo-127x112-container"><img src="{{#Helper.getAssetByName('CUSTOM_LOGO_127X112')}}" /></div></h1>
       <div class="header-info">{{@Helper.i18n("window.login.activate.header")}}</div>
     </header>
-    <form name="register" method="post" onsubmit="return false;">
+    <form name="register" method="post" onsubmit="return false;" class="flex-row">
       <section>
           
           <div class="row">
@@ -22,17 +22,30 @@
               </div>
             </div>
           </div>
+
+          <div class="row host-input hide">
+            <div class="col-xs-12">
+              <div style="font-family: source_sans_pro,arial,sans-serif; font-size: 13px; width: 100%; text-align: left; padding-bottom: 4px;">
+                {{@Helper.i18n("window.login.activate.host.label")}}
+              </div>
+              <div class="form-group">
+                <div class="holder">
+                  <input type="text" class="form-control words" name="host" placeholder='{{@Helper.i18n("window.login.activate.host.placeholder")}}'></input>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="row key-info"></div>
       </section>
     </form>
-    <div class="buttons-container">
-      <button type="button" class="btn btn-primary" data-action="open-login">
-        {{@Helper.i18n("window.login.activate.btn.back")}}
-      </button>
-      
+    <div class="buttons-container flex-row">
       <button type="button" class="btn btn-primary" data-action="go-next">
         {{@Helper.i18n("window.login.activate.btn.continue")}}
       </button>
+      <button type="button" class="btn btn-primary" data-action="open-login">
+        {{@Helper.i18n("window.login.activate.btn.back")}}
+      </button>      
     </div>
   </div>
   <div class="pre-info-box">

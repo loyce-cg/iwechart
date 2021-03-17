@@ -19,6 +19,7 @@ import { ViewSettings } from "../../main/ViewSettings";
 import { i18n } from "./i18n";
 import SectionManager = mail.section.SectionManager;
 import { Notes2WindowController } from "../../window/notes2/Notes2WindowController";
+import { FilesImporterWindowController } from "../../window/filesimporter/FilesImporterWindowController";
 
 export enum SelectionMode {
     SINGLE,
@@ -63,6 +64,7 @@ export interface Model {
     isTrash: boolean;
     isAll: boolean;
     isLocal: boolean;
+    isElectron: boolean;
     currentPath: string;
     viewMode: ViewMode;
     computerLocalName?: string;
@@ -70,6 +72,7 @@ export interface Model {
     hasNoPrivateSection: boolean;
     canWrite: boolean;
     showFilePreview: boolean;
+    showHiddenFiles: boolean;
     showUrlFiles: boolean;
     selectedIdsStr: string;
     asFileChooser: boolean;
@@ -94,8 +97,8 @@ export interface FilesInfo {
 }
 
 export class FilesFilterUpdater {
-    static UPDATE_DELAY: number = 200;
-    static MIN_CHARS_NUM: number = 2;
+    static UPDATE_DELAY: number = 500;
+    static MIN_CHARS_NUM: number = 3;
     toUpdate: FilesFilterData;
     previousFilter: FilesFilterData;
     filter: FilesFilterData;
@@ -503,11 +506,13 @@ export class FilesListController extends window.base.WindowComponentController<w
             isTrash: this.isTrash,
             isAll: this.isAll,
             isLocal: this.isLocal,
+            isElectron: this.app.isElectronApp(),
             viewMode: this.viewMode,
             hasNoPrivateSection: this.notes2Plugin.sectionManager.getMyPrivateSection() == null,
             canWrite: this.canWrite(),
             showFilePreview: this.showFilePreview(),
             showUrlFiles: this.showUrlFiles(),
+            showHiddenFiles: this.showHiddenFiles(),
             selectedIdsStr: JSON.stringify(this.getSelectedIds()),
             asFileChooser: this.asFileChooser,
             isDeletedUserSection: this.isDeletedUserSection,
@@ -665,6 +670,9 @@ export class FilesListController extends window.base.WindowComponentController<w
     
     filterEntry(x: FileEntryBaseEx): boolean {
         if (x.id != "parent" && !this.showUrlFiles() && this.isUrlFile(x)) {
+            return false;
+        }
+        if (Notes2Utils.isLocalEntry(x) && x.hidden && !this.showHiddenFiles()) {
             return false;
         }
         if (Notes2Utils.isLocalEntry(x)) {
@@ -918,16 +926,18 @@ export class FilesListController extends window.base.WindowComponentController<w
     }
     
     withOpenableElement(id: string, func: (element: app.common.shelltypes.OpenableElement) => void, endAtNull?: boolean) {
-        Q().then(() => {
-            return this.getOpenableElement(id);
-        })
-        .then(element => {
-            if (endAtNull !== false && element == null) {
-                return;
+        new Promise<void>(async () => {
+            try {
+                const element = await this.getOpenableElement(id);
+                if (endAtNull !== false && element == null) {
+                    return;
+                }    
+                func(element);    
             }
-            func(element);
+            catch (e) {
+                this.logErrorCallback(e);
+            }
         })
-        .fail(this.logErrorCallback);
     }
     
     onViewSetActiveFile(id: string): void {
@@ -977,25 +987,15 @@ export class FilesListController extends window.base.WindowComponentController<w
         this.sendSelectionToView();
     }
     
-    onViewOpenChat(): void {
-        let cnt = <window.container.ContainerWindowController>this.app.windows.container;
-        cnt.redirectToAppWindow("chat", this.destination);
-    }
-    
-    onViewOpenTasks(): void {
-        let cnt = <window.container.ContainerWindowController>this.app.windows.container;
-        let dst = this.destination;
-        if (dst == "my") {
-            dst = this.notes2Plugin.sectionManager.getMyPrivateSection().getId();
-        }
-        else if (dst == "all") {
-            dst = "all-tasks";
-        }
-        cnt.redirectToAppWindow("tasks", dst);
-    }
-    
     onViewMenuAction(id: string) {
-        if (id == "new-text-note-window" || id == "new-mindmap-window") {
+        let newNoteIds = [
+            "new-text-note-window",
+            "new-mindmap-window",
+            "new-audioAndVideo-note-window",
+            "new-audio-note-window",
+            "new-photo-note-window",
+        ];
+        if (newNoteIds.indexOf(id) >= 0) {
             Q().then(() => {
                 if (this.fileListId == FilesListController.LOCAL_FILES) {
                     return FilesListController.LOCAL_FILES;
@@ -1018,6 +1018,15 @@ export class FilesListController extends window.base.WindowComponentController<w
                 else if (id == "new-mindmap-window") {
                     this.notes2Plugin.openNewMindmapWindow(this.session, fileListId, this.currentPath);
                 }
+                else if (id == "new-audioAndVideo-note-window") {
+                    this.notes2Plugin.openNewAudioAndVideoNoteWindow(this.session, fileListId, this.currentPath);
+                }
+                else if (id == "new-audio-note-window") {
+                    this.notes2Plugin.openNewAudioNoteWindow(this.session, fileListId, this.currentPath);
+                }
+                else if (id == "new-photo-note-window") {
+                    this.notes2Plugin.openNewPhotoNoteWindow(this.session, fileListId, this.currentPath);
+                }
             });
         }
         else if (id == "new-directory") {
@@ -1025,6 +1034,10 @@ export class FilesListController extends window.base.WindowComponentController<w
         }
         else if (id == "upload") {
             if (!this.isLocal) {
+                if (this.app.isElectronApp()) {
+                    this.uploadThroughImporterWindow();
+                    return;
+                }
                 this.upload(this.currentPath);
             }
         }
@@ -1078,6 +1091,9 @@ export class FilesListController extends window.base.WindowComponentController<w
         }
         else if (action == "exportFiles") {
             this.askExportFiles();
+        }
+        else if (action == "importFiles") {
+            this.openFilesImporter();
         }
         else if (action == "history") {
             this.showHistory();
@@ -1222,6 +1238,10 @@ export class FilesListController extends window.base.WindowComponentController<w
         .fail(this.errorCallback);
     }
     
+    uploadThroughImporterWindow(): void {
+        this.openFilesImporter()
+    }
+
     upload(path: string, content: IContent|IContent[] = null, fileNamesDeferred: Q.Deferred<string[]> = null) {
         let getCnt: Q.Promise<IContent[]>;
         if (content) {
@@ -1231,36 +1251,40 @@ export class FilesListController extends window.base.WindowComponentController<w
             getCnt = this.app.shellRegistry.callAppMultiAction("core.upload-multi", null, this.parent.getClosestNotDockedController().nwin);
         }
         return getCnt.then(contents => {
-            if (!contents || (contents && contents.length == 0)) {
-                return;
-            }
-            let notificationId = this.notifications.showNotification(this.i18n("plugin.notes2.component.filesList.notifier.importingFile"), {autoHide: false, progress: true});
-            let ids: string[] = [];
-            let prom = Q();
+            // if (!contents || (contents && contents.length == 0)) {
+            //     return;
+            // }
+            // let notificationId = this.notifications.showNotification(this.i18n("plugin.notes2.component.filesList.notifier.importingFile"), {autoHide: false, progress: true});
+            // let ids: string[] = [];
+            // let prom = Q();
+            // for (let content of contents) {
+            //     prom = prom.then(() => {
+            //         return this.uploadFile({
+            //             data: content,
+            //             path: path
+            //         })
+            //         .then(result => {
+            //             ids.push(result.fileResult.entryId);
+            //         });
+            //     });
+            // }
+            // return prom.then(result => {
+            //     if (fileNamesDeferred) {
+            //         fileNamesDeferred.resolve(ids);
+            //     }
+            // })
+            // .progress(progress => {
+            //     this.notifications.progressNotification(notificationId, progress);
+            // })
+            // .fin(() => {
+            //     this.notifications.hideNotification(notificationId);
+            // });
+            
             for (let content of contents) {
-                prom = prom.then(() => {
-                    return this.uploadFile({
-                        data: content,
-                        path: path
-                    })
-                    .then(result => {
-                        ids.push(result.fileResult.entryId);
-                    });
-                });
+                this.app.uploadService.addFile({content: content, session: this.session, destination: this.getSectionId(), path: this.currentPath});
             }
-            return prom.then(result => {
-                if (fileNamesDeferred) {
-                    fileNamesDeferred.resolve(ids);
-                }
-            })
-            .progress(progress => {
-                this.notifications.progressNotification(notificationId, progress);
-            })
-            .fin(() => {
-                this.notifications.hideNotification(notificationId);
-            });
         })
-        .fail(this.errorCallback);
+        // .fail(this.errorCallback);
     }
     
     processDragDrop(fileHandle: Types.app.FileHandle[])  {
@@ -1339,10 +1363,21 @@ export class FilesListController extends window.base.WindowComponentController<w
             return;
         }
         this.withOpenableElement(active.id, openableElement => {
+            let sourceSectionId: string = null;
+            let sourcePath: string = null;
+            let sourceDid: string = null;
+            if ((openableElement instanceof mail.section.OpenableSectionFile) && openableElement.section) {
+                sourceSectionId = openableElement.section.getId();
+                sourcePath = openableElement.path;
+                sourceDid = openableElement.handle.ref.did;
+            }
             this.app.sendFile({
                 getData: () => openableElement,
                 notifications: this.notifications,
                 parent: this.parent.getClosestNotDockedController(),
+                sourceSectionId: sourceSectionId,
+                sourcePath: sourcePath,
+                sourceDid: sourceDid,
             });
         });
     }
@@ -2356,7 +2391,7 @@ export class FilesListController extends window.base.WindowComponentController<w
             if (el) {
                 this.activeCollection.setSelected(el);
             }
-            this.activeCollection.setActive(el);
+            this.activeCollection.setActive(this.activeCollection.get(index));
         }
         else if (selectionChangeMode == SelectionChangeMode.SHRINK && this.activeCollection.selectedIndexes.length == 1) {
         }
@@ -2702,7 +2737,14 @@ export class FilesListController extends window.base.WindowComponentController<w
             }
         });
     }
+
+    openFilesImporter() {
+        this.app.ioc.create(FilesImporterWindowController, [this.parent, this.getSection(), this.currentPath]).then(win => {
+            this.parent.openChildWindow(win);
+        });
+    }
     
+
     print() {
         if (this.isPrinting || this.isSavingAsPdf) {
             return;
@@ -3378,6 +3420,10 @@ export class FilesListController extends window.base.WindowComponentController<w
     showUrlFiles(): boolean {
         return this.notes2Plugin.getSetting(this.session, ViewSettings.SHOW_URL_FILES, this.fileListId, this.context) == 1;
     }
+
+    showHiddenFiles(): boolean {
+        return this.notes2Plugin.getSetting(this.session, ViewSettings.SHOW_HIDDEN_FILES, this.fileListId, this.context) == 1;
+    }
     
     onViewToggleSetting(setting: string): void {
         let currState: boolean;
@@ -3386,6 +3432,9 @@ export class FilesListController extends window.base.WindowComponentController<w
         }
         else if (setting == ViewSettings.SHOW_URL_FILES) {
             currState = this.showUrlFiles();
+        }
+        else if (setting == ViewSettings.SHOW_HIDDEN_FILES) {
+            currState = this.showHiddenFiles();
         }
         else {
             return;
@@ -3653,8 +3702,12 @@ export class FilesListController extends window.base.WindowComponentController<w
     updateLockUnlockButtons(): Q.Promise<void> {
         // update actions buttons
         let active = this.getSelectedEntry();
-        if (! active) {
-            return;
+        if (!active) {
+            return Q();
+        }
+        if (active.type == "directory") {
+            this.hideLockUnlockButtons();
+            return Q();
         }
         return Q().then(() => {
             return this.getOpenableElement(active.id);
@@ -3670,4 +3723,9 @@ export class FilesListController extends window.base.WindowComponentController<w
     updateLockInfoOnActionButtons(locked: boolean, canUnlock: boolean) {
         this.callViewMethod("updateLockInfoOnActionButtons", locked, canUnlock);
     }
+    
+    hideLockUnlockButtons(): void {
+        this.callViewMethod("hideLockUnlockButtons");
+    }
+    
 }

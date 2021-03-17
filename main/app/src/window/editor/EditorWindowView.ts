@@ -19,7 +19,7 @@ export class EditorWindowView<T = app.BlobData> extends BaseWindowView<Model> {
     currentDataUrl: string;
     previewMode: boolean;
     printMode: boolean;
-        
+
     constructor(parent: app.ViewParent, template?: webUtils.MailTemplateDefinition<Model>) {
         super(parent, template || mainTemplate);
         this.notifications = this.addComponent("notifications", new NotificationView(this));
@@ -58,7 +58,7 @@ export class EditorWindowView<T = app.BlobData> extends BaseWindowView<Model> {
     
     reopen(currentViewId: number): void {
         this.currentViewId = currentViewId;
-        if (this.loaded) {
+        if (this.isViewLoaded()) {
             this.clearState(true);
             this.triggerEvent("load");
         }
@@ -91,8 +91,13 @@ export class EditorWindowView<T = app.BlobData> extends BaseWindowView<Model> {
     getResourceDataUrl(data: app.BlobData): string {
         if (this.currentDataUrl) {
             URL.revokeObjectURL(this.currentDataUrl);
+            this.currentDataUrl = null;
         }
         return this.currentDataUrl = WebUtils.createObjectURL(data);
+    }
+
+    getNamedResourceDataURL(name: string, data: app.BlobData): string {
+        return this.currentDataUrl = WebUtils.createNamedObjectURL(name, data);
     }
     
     setData(currentViewId: number, data: T, buttonsState: ButtonsState): void {
@@ -122,4 +127,5 @@ export class EditorWindowView<T = app.BlobData> extends BaseWindowView<Model> {
         this.$inner.closest(".window-editor-main").prepend(`<div class="print-header">${printHeader}</div>`);
     }
     
+    revokeOnClose(): void {}
 }

@@ -34,7 +34,17 @@
     
     .avatar-item {
       max-width: 400px;
-      
+      &.with-description {
+        .image-with-data {
+          p.name {
+            margin-top: -8px;
+          }
+          p.desc {
+            margin-top: -5px;
+            line-height: 16px;
+          }
+        }
+      }
       .image-with-data {
         padding: 10px 10px 10px 0;
       }

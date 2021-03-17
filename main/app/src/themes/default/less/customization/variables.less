@@ -1,10 +1,22 @@
 :root {
   
-  --color-success-h: 83;
-  --color-success-s: 99%;
-  --color-success-l: 42%;
-  --color-success-a: 1;
+  --color-success-default-h: 190;
+  --color-success-default-s: 72%;
+  --color-success-default-l: 61%;
+  --color-success-default-a: 1;
+  --color-success-default: hsla(var(--color-success-default-h), var(--color-success-default-s), var(--color-success-default-l), var(--color-success-default-a));
+  
+  --color-success-h: var(--color-success-default-h);
+  --color-success-s: var(--color-success-default-s);
+  --color-success-l: var(--color-success-default-l);
+  --color-success-a: var(--color-success-default-a);
   --color-success: hsla(var(--color-success-h), var(--color-success-s), var(--color-success-l), var(--color-success-a));
+  
+  --color-online-h: var(--color-success-h);
+  --color-online-s: var(--color-success-s);
+  --color-online-l: var(--color-success-l);
+  --color-online-a: var(--color-success-a);
+  --color-online: hsla(var(--color-online-h), var(--color-online-s), var(--color-online-l), var(--color-online-a));
   
   --color-warning-h: 28;
   --color-warning-s: 99%;
@@ -259,10 +271,10 @@
   --main-panel-secondary-bg-a: var(--preview-panel-bg-a);
   --main-panel-secondary-bg: hsla(var(--main-panel-secondary-bg-h), var(--main-panel-secondary-bg-s), var(--main-panel-secondary-bg-l), var(--main-panel-secondary-bg-a));
   
-  --unread-color-h: 190;
-  --unread-color-s: 72%;
-  --unread-color-l: 61%;
-  --unread-color-a: 1;
+  --unread-color-h: var(--color-success-h);
+  --unread-color-s: var(--color-success-s);
+  --unread-color-l: var(--color-success-l);
+  --unread-color-a: var(--color-success-a);
   --unread-color: hsla(var(--unread-color-h), var(--unread-color-s), var(--unread-color-l), var(--unread-color-a));
   
   --task-status-todo-h: 0;

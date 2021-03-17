@@ -1,7 +1,7 @@
 @import "../../../../node_modules/pmc-web/src/component/notification/index.less";
+@import "../../../../node_modules/pmc-web/src/component/customselect/template/main.less";
 @import "../../../../node_modules/pmc-web/src/themes/default/less/form.less";
 @import "../../../window/main/template/common.less";
-@import "../../customSelect/template/main.less";
 @import "../../../window/taskGroupForm/template/icon.less";
 
 
@@ -248,6 +248,13 @@
   &.docked.readonly.horizontal-layout {
     .btn-success[data-trigger="add-comment"] {
       float: right;
+      margin-bottom: 45px;
+    }
+  }
+  
+  &.docked.readonly {
+    .btn-success[data-trigger="add-comment"] {
+      margin-bottom: 30px;
     }
   }
   
@@ -259,6 +266,8 @@
   
   .screen-buttons {
     bottom: 8px;
+    left: 15px;
+    right: 15px;
   }
   
   &.readonly {
@@ -836,6 +845,10 @@
     .history-entry span.message {
       text-indent: -20px;
       padding-left: 20px;
+      
+      .link[data-did] {
+        font-size: var(--font-size-s);
+      }
     }
     .when.comment.first {
       // margin-top: 15px;
@@ -960,7 +973,8 @@
     
     input[type=checkbox] {
       position: relative;
-      top: 1px;
+      top: 2px;
+      margin-right: 2px;
     }
     
     label {
@@ -1487,10 +1501,12 @@
   .project-full-name {
     .project-prefix,
     .project-name {
+      margin-top: 0;
       display: block;
-      line-height: 1;
+      line-height: 1.2;
       overflow: hidden;
       text-overflow: ellipsis;
+      text-align: right;
     }
     .project-prefix {
       font-size: var(--font-size-xs);
@@ -1500,12 +1516,18 @@
     .project-name {
     }
   }
+  .custom-select-project .project-full-name {
+    .project-prefix,
+    .project-name {
+      text-align: left;
+    }
+  }
   
 }
 .taskgroupspanel-container:not(.single-header) {
   .taskgroups.pf-scrollable:not(.custom-select-dropdown) {
     top: 42px;
-    bottom: 34px;
+    bottom: 54px;
   }
 }
 

@@ -84,7 +84,7 @@ export class SettingsTwofaWindowController extends window.settings.BaseControlle
             return Q().then(() => {
                 return this.twofaService.api.enable(data);
             })
-            .then(() => {
+            .then(res => {
                 let als: AdditionalLoginStepData = {
                     reason: "twofa",
                     type: data.type,
@@ -94,7 +94,13 @@ export class SettingsTwofaWindowController extends window.settings.BaseControlle
                 if (!CodeWindowController.isSupported(als)) {
                     return Q.reject<void>("Unsupported 2FA type " + data.type);
                 }
-                return this.ioc.create(CodeWindowController, [this.parent, als, this.twofaService.api, true]).then(win => {
+                return this.ioc.create(CodeWindowController, [this.parent, {
+                    data: als,
+                    api: this.twofaService.api,
+                    cancellable: true,
+                    host: this.identity.host,
+                    u2f: {register: res.webauthnRegister, login: null}
+                }]).then(win => {
                     win.open();
                     return win.getPromise().then(() => {
                         this.parent.alert(this.i18n("plugin.twofa.window.settingstwofa.successEnable"));

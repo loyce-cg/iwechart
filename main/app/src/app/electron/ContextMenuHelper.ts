@@ -53,7 +53,7 @@ export class ContextMenuHelper {
                 {
                     label: this.localeService.i18n("app.contextmenu.select_all"),
                     accelerator: 'CmdOrCtrl+A',
-                    role: 'selectall'
+                    role: 'selectAll'
                 },
             ]
         }
@@ -131,7 +131,7 @@ export class ContextMenuHelper {
                         },
                         {
                             label: this.localeService.i18n("app.contextmenu.select_all"),
-                            role: 'selectall'
+                            role: 'selectAll'
                         }
 
                     ]

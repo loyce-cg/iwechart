@@ -120,7 +120,7 @@ export class MailFilter {
     currentFilter: TheFilter;
     listChangeEvent: Event<any, any, any>
     
-    constructor(kvdb: utils.IKvdbMap<MailFilterEntry>) {
+    constructor(kvdb: utils.IKvdbMap<MailFilterEntry>, public mainHost: string) {
         this.kvdb = kvdb;
         this.filteredCollections = [];
         this.domainsCollections = new DomainsCollections();
@@ -232,6 +232,9 @@ export class TheFilter {
     
     filter(sinkIndexEntry: SinkIndexEntry): boolean {
         let domain = sinkIndexEntry.host;
+        if (domain == this.mailFilter.mainHost) {
+            return true;
+        }
         this.mailFilter.domainsCollections.addDomain(domain);
         if (domain in this.domains) {
             return this.domains[domain].mode == FilterMode.ALLOW;

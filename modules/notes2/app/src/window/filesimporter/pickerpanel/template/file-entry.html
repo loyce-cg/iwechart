@@ -1,0 +1,33 @@
+@import {FileEntryModel} from "../Types";
+@import {component} from "pmc-web";
+@model FileEntryModel
+@context component.extlist.Context<FileEntryModel>
+
+<div class="file-entry {{@context.isActive ? 'active' : ''}}" data-type="{{@model.fileType}}" data-id="{{@model.id}}" data-isparentdir="{{@model.isParentDir}}">
+  <span class="actions">
+    {{ if (model.id != "parent") { {{
+      <button tabindex="-1" class="btn btn-xs btn-default gray add-remove-btn" data-action="add-item">
+        <span class="btn-icon">&raquo;</span>
+      </button>  
+    }} } }}
+  </span>
+  <span class="file-name">
+    <i class="fa {{@model.icon}}"></i>
+    <span class="file-name-text">
+      {{@model.name}}
+    </span>
+  </span>
+
+  <!-- <td class="file-size">
+    {{ if (model.fileType == "file") { {{
+      {{@Helper.bytesSize2(model.size)}}
+    }} } }}
+  </td>
+  <td class="file-mod-date no-modifier">
+    {{ if (model.modificationDate) { {{
+      <div class="file-date" title="{{@Helper.dateWithHourLocal(model.modificationDate)}}" data-timeago-type="calendarDate" data-timeago="{{@model.modificationDate}}">
+        {{@Helper.calendarDate(model.modificationDate)}}
+      </div>
+    }} } }}
+  </td> -->
+</div>

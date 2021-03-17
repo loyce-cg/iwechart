@@ -33,7 +33,7 @@
                           <span class="lab">{{@Helper.i18n("window.login.form.remember.label")}}</span>
                         </label>
                       </div>
-                    </div>                  
+                    </div>
                   </div>
                 </div>
 
@@ -54,15 +54,15 @@
                           <span class="lab">{{@Helper.i18n("window.login.form.remember.label")}}</span>
                         </label>
                       </div>
-                    </div>                   
+                    </div>
                   </div>
 
-                </div>               
+                </div>
               </div>
 
             </div>
             <div class="box-buttons">
-              <button type="submit" class="btn btn-primary btn-block btn-lg login-btn">
+              <button type="button" data-action="submit" class="btn btn-primary btn-block btn-lg login-btn">
                 <span class="icon-holder"></span>
                 {{@Helper.i18n("window.login.form.button.login.label")}}
               </button>
@@ -73,32 +73,26 @@
                 {{$Helper.i18n("window.login.forgotLogin.info")}}<br/>
               </div>
             </div>
-
-            {{if (!Helper.isDemo() && model.isMnemonicEnabled) { {{
-              <div class="bottom-link">
-                <a data-action="open-alternative-login" href="javascript:void(0)">
-                  {{@Helper.i18n("window.login.form.alternativeLogin.link")}}
-                </a>
-              </div>
-            }} } }}
         </section>
       </form>
     </div>
 
     <div class="pre-info-box">
       <div class="activate-link">
-        <a class="activation-link" trigger-action="managers-zone" href="javascript:void(0)">
-          <span class="ccLoader"></span>
-          <span class="bold">{{@Helper.i18n("window.login.login.managerszone.link")}}</span> {{@Helper.i18n("window.login.login.managerszone.link.description")}}
-        </a>
+        {{ if (model.isElectron) { {{
+          <a class="activation-link" trigger-action="managers-zone" href="javascript:void(0)">
+            <span class="ccLoader"></span>
+            <span class="bold">{{@Helper.i18n("window.login.login.managerszone.link")}}</span> {{@Helper.i18n("window.login.login.managerszone.link.description")}}
+          </a>
+        }} } }}
   
         <a class="activation-link" data-action="activate-account" href="javascript:void(0)">
           <i class="fa fa-key"></i><span class="bold">{{@Helper.i18n("window.login.form.activateTeamServer.link")}}</span> {{@Helper.i18n("window.login.form.activateTeamServer.link.description")}}
         </a>
-      </div>   
+      </div>
     </div>
     <div class="selectable">
-      <a href="https://privmx.com" class="privmx-link"><i class="fa fa-globe"></i>{{@Helper.i18n("window.login.learnMore.info.website")}}</a>
+      <a href="https://privmx.com" target="_blank" class="privmx-link"><i class="fa fa-globe"></i>{{@Helper.i18n("window.login.learnMore.info.website")}}</a>
     </div>
   </div>
 </div>

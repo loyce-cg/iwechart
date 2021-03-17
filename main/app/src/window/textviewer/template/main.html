@@ -1,10 +1,30 @@
 @import {Model} from "../TextViewerWindowController";
 @model Model
 <div class="window-textviewer-main">
-  <div class="text">{{@model.text}}</div>
+  {{ if (model.useTextArea) {
+    {{ 
+      <div class="input-area">
+        <textarea id="user-info-area" class="form-control" type="text" rows="5" readonly>{{@model.text}}</textarea>
+      </div>    
+    }}
+  } else { {{
+    <div class="text">{{@model.text}}</div>
+  }} } }}
+  
   <div class="buttons">
     <button class="btn btn-default cancel" data-action="close">
       {{@Helper.i18n("window.textviewer.button.close.label")}}
     </button>
+  {{
+      if (model.useTextArea) {
+        {{
+          <button class="btn btn-default" data-copy-textarea-id="user-info-area">          
+            <i class="fa fa-copy"></i>
+            <span class="txt">{{@Helper.i18n("core.copy")}}</span>
+          </button>
+        }}
+      }
+    }}
+
   </div>
 </div>

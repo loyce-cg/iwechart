@@ -155,8 +155,8 @@ export class CalendarWindowView extends web.window.base.BaseWindowView<Model> {
             },
         }));
         this.datePicker = this.addComponent("datePicker", new DatePickerView(this));
-        this.sidebar.customElementList.customElements.addEventListener("ext-list-change", this.personsComponent.refreshAvatars.bind(this.personsComponent));
-        this.sidebar.customElementList.customElementsA.addEventListener("ext-list-change", this.personsComponent.refreshAvatars.bind(this.personsComponent));
+        this.bindEvent(this.sidebar.customElementList.customElements, "ext-list-change", this.personsComponent.refreshAvatars.bind(this.personsComponent));
+        this.bindEvent(this.sidebar.customElementList.customElementsA, "ext-list-change", this.personsComponent.refreshAvatars.bind(this.personsComponent));
         this.turnTimeAgoRefresher(5 * 60 * 1000);
         
         web.Starter.dispatchEvent<any>({
@@ -473,6 +473,12 @@ export class CalendarWindowView extends web.window.base.BaseWindowView<Model> {
     }
     
     keyboardHandler(e: KeyboardEvent): void {
+        if ((e.key == "ArrowLeft" || e.key == "ArrowRight") && (e.altKey && (e.ctrlKey || e.metaKey))) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            this.triggerEvent("history" + e.key);
+        }
+        
         if (e.key == "Tab") {
             if (!e.ctrlKey && !e.metaKey) {
                 e.preventDefault();
@@ -664,7 +670,11 @@ export class CalendarWindowView extends web.window.base.BaseWindowView<Model> {
     
     flashCustomSelects($container: JQuery): void {
         if ($container && $container.length > 0) {
-            $container.find(".top .component-custom-select-main, .top .prev-btn, .top .next-btn, .top .today-btn").fadeOut(150).fadeIn(300);
+            const $elem = $container.find(".top .component-custom-select-main, .top .prev-btn, .top .next-btn, .top .today-btn");
+            $elem.removeClass("fadeInOut");
+            setTimeout(() => {
+                $elem.addClass("fadeInOut");
+            }, 0);
         }
     }
     

@@ -27,7 +27,7 @@ export class AboutWindowController extends BaseWindowController {
     lastProgressStatus: app.UpdaterProgressStatus;
         
     constructor(parent: app.WindowParent) {
-        super(parent, __filename, __dirname);
+        super(parent, __filename, __dirname, null, null, "basic");
         this.ipcMode = true;
         this.openWindowOptions.position = "center";
         this.openWindowOptions.width = 600;
@@ -35,12 +35,12 @@ export class AboutWindowController extends BaseWindowController {
         this.openWindowOptions.title = this.i18n("window.about.title");
         this.openWindowOptions.icon = "icon ico-question-mark";
         this.openWindowOptions.resizable = false;
-        this.openWindowOptions.backgroundColor = "#292929";
+        // this.openWindowOptions.backgroundColor = "#292929";
     }
     
     init() {
         return Q().then(() => {
-            this.app.addEventListener<event.UpdateStatusChangeEvent>("update-status-change", event => {
+            this.bindEvent<event.UpdateStatusChangeEvent>(this.app, "update-status-change", event => {
                 if (event.status == "downloading") {
                     this.callViewMethod("setDownloadProgress", Math.round(event.downloaded * 100 / event.total));
                     if (this.lastProgressStatus != event.status) {

@@ -38,6 +38,10 @@ export class ChangePasswordWindowController extends BaseWindowController {
             if (!currentPassword) {
                 return this.alert(this.i18n("window.changePassword.submit.error.emptyPassword"));
             }
+            if (currentPassword != this.app.userCredentials.password) {
+                return this.alert(this.i18n("window.changePassword.submit.error.invalidPassword"));
+            }
+
             if (newPassword.length < 8) {
                 return this.alert(this.i18n("window.changePassword.submit.error.tooShortPassword"));
             }

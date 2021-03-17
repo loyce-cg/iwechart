@@ -14,7 +14,7 @@
                 <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
               </div>
               <span class="parent-name" vf-model="parentName" vf-class="{'hide': this.parentId == 'not-selected'}"></span>
-              <!-- <button class="btn btn-link edit-btn" vf-visible="editable" vf-click="move()" vf-disabled="loading" vf-class="{'btn-value': this.parentId == 'not-selected'}">
+              <!-- <button class="btn btn-link link edit-btn" vf-visible="editable" vf-click="move()" vf-disabled="loading" vf-class="{'btn-value': this.parentId == 'not-selected'}">
                 <span vf-visible="{this.parentId == 'not-selected'}">{{@Helper.i18n("window.sectionNew.selectSection")}}</span>
                 <span vf-visible="{this.parentId != 'not-selected'}">{{@Helper.i18n("core.button.change.label")}}</span>
               </button> -->
@@ -34,26 +34,37 @@
           </div>
         </div>
         <div class="field">
-          <div class="field-value">
-            {{ if (model.state.isAdmin) { {{
-            <div class="radio">
-              <label>
-                <input type="radio" value="false" vf-model="isPrivate" vf-disabled="loading">
-                <span class="bolder">{{@Helper.i18n("window.sectionNew.ismanaged")}}</span> - <span>{{@Helper.i18n("window.sectionNew.managed")}}</span>
-              </label>
-            </div>
-            <div class="radio">
-              <label>
-                <input type="radio" value="true" vf-model="isPrivate" vf-disabled="loading">
-                <span class="bolder">{{@Helper.i18n("window.sectionNew.isnotmanaged")}}</span> - <span>{{@Helper.i18n("window.sectionNew.notmanaged")}}</span>
-              </label>
-
-            </div>
-          }} } else { {{
-            <span class="bolder">{{@Helper.i18n("window.sectionNew.isnotmanaged.only")}}</span> - <span>{{@Helper.i18n("window.sectionNew.notmanaged")}}</span>
-          }} } }}
+          <div class="info input-info">
+            {{@Helper.i18n("window.sectionNew.section_description.label")}}
+          </div>
+          <div class="input">
+            <input type="text" class="name-input" vf-model="description" maxlength="100" placeholder="{{@Helper.i18n('window.sectionNew.section_description.placeholder')}}" vf-readonly="editable == false" vf-disabled="loading">
           </div>
         </div>
+
+        <div class="field">
+          <div class="info">
+            {{@Helper.i18n("window.sectionNew.access.label")}}
+          </div>
+          <div class="field-value" data-acl="group">
+            <div class="preview" vf-visible="group.editMode == false">
+              <span vf-model="group.getLabel()"></span>
+              <button class="btn btn-link" vf-click="chooseUsers('group')" vf-disabled="loading" vf-visible="editable">
+                              {{@Helper.i18n("core.button.change.label")}}
+              </button>
+            </div>
+          </div>
+        </div>
+        {{function aclInfo(type: string) { {{
+          <div class="field-value">
+            <div class="preview" vf-visible="acl.{{@type}}.editMode == false">
+              <span vf-model="acl.{{@type}}.getLabel()"></span>
+              <button class="btn btn-link" vf-click="chooseUsers('{{@type}}')" vf-disabled="loading"  vf-visible="editable">
+                {{@Helper.i18n("core.button.change.label")}}
+              </button>
+            </div>
+          </div>
+        }} }; }}
         
         <div class="field">
           <div class="info">

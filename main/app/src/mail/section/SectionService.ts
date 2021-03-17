@@ -98,9 +98,17 @@ export class SectionService {
     getName(): string {
         return this.secured != null ? this.secured.name : null;
     }
+
+    getDescription(): string {
+        return this.secured != null ? this.secured.description : null;
+    }
     
     isDecrypted(): boolean {
         return this.secured != null;
+    }
+
+    isPrimary(): boolean {
+        return this.sectionData.primary;
     }
     
     isValid(onlyEnabled?: boolean): boolean {
@@ -319,7 +327,7 @@ export class SectionService {
                 })
                 .then(k => {
                     key = k;
-                    return this.manager.sectionKeyManager.storeKey(key);
+                    return this.manager.sectionKeyManager.storeKey(key, Date.now());
                 })
                 .then(() => {
                     return SectionService.encode(params.data, key.key);
@@ -753,7 +761,7 @@ export class SectionService {
                     username: identity.user,
                     wif: identity.privWif
                 },
-                pubKey: pubKey.key.toString("base64"),
+                pubKey: pubKey ? pubKey.key.toString("base64") : null,
                 sectionId: this.getId(),
                 sectionKeyId: this.key.keyId,
                 sectionKey: this.key.key.toString("base64")
@@ -1055,6 +1063,19 @@ export class SectionService {
             let sink = chatModule.getSink();
             let priv = sink.priv.getPrivateEncKey();
             let buffer = Buffer.concat([Buffer.from("voice-chat-encryption-key"), priv.slice(0, 24)]);
+            return privfs.crypto.service.sha256(buffer);
+        });
+    }
+    
+    getVideoEncryptionKey() {
+        return Q().then(() => {
+            let chatModule = this.getChatModule();
+            if (chatModule == null || !chatModule.hasModule()) {
+                throw new Error("Cannot obtain video encryption key");
+            }
+            let sink = chatModule.getSink();
+            let priv = sink.priv.getPrivateEncKey();
+            let buffer = Buffer.concat([Buffer.from("video-encryption-key"), priv.slice(0, 24)]);
             return privfs.crypto.service.sha256(buffer);
         });
     }

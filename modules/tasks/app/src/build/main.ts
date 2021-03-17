@@ -1,7 +1,6 @@
 import * as Mail from "pmc-mail";
 import { MainWindowController } from "../window/main/MainWindowController";
 import { TasksPlugin } from "../main/TasksPlugin";
-import { CustomSelectController } from "../component/customSelect/CustomSelectController";
 import { IconPickerController } from "../component/iconPicker/IconPickerController";
 import { TaskPanelController } from "../component/taskPanel/TaskPanelController";
 import { TaskGroupsPanelController } from "../component/taskGroupsPanel/TaskGroupsPanelController";
@@ -23,7 +22,6 @@ export class Plugin {
         tasksPlugin.registerTexts(app.localeService);
         
         // i18n: components
-        CustomSelectController.registerTexts(app.localeService);
         IconPickerController.registerTexts(app.localeService);
         TaskGroupsPanelController.registerTexts(app.localeService);
         TaskPanelController.registerTexts(app.localeService);
@@ -37,7 +35,6 @@ export class Plugin {
         TaskGroupSelectorWindowController.registerTexts(app.localeService);
         TasksWindowController.registerTexts(app.localeService);
         
-        app.ioc.registerComponent("taskscustomselect", CustomSelectController);
         app.ioc.registerComponent("iconpicker", IconPickerController);
         app.ioc.registerComponent("taskpanel", TaskPanelController);
         app.ioc.registerComponent("taskGroupsPanel", TaskGroupsPanelController);

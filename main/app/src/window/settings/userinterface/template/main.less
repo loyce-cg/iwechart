@@ -11,4 +11,40 @@
       margin-left: 2px;
     }
   }
+  
+  .base-form .fields .field-customSuccessColor {
+    display: none;
+    .color-selector {
+      label {
+        display: block;
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        .check-marker {
+          width: 16px;
+          position: relative;
+          top: -1px;
+        }
+        input {
+          display: none;
+          &:checked {
+            ~ span .check-marker-off {
+              display: none;
+            }
+          }
+          &:not(:checked) {
+            ~ span .check-marker-on {
+              display: none;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+body.show-hidden-fields {
+  .base-form .fields .field-customSuccessColor {
+    display: block;
+  }
 }

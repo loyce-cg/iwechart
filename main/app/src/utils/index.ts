@@ -25,6 +25,7 @@ import {TarHelper, TarPack} from "./TarHelper";
 import {ZipHelper, ZipPack} from "./ZipHelper";
 import {Utils, MultiProvider} from "./Utils";
 import {ContentEditableEditorMetaData} from "../web-utils/ContentEditableEditorMetaData";
+import {Debouncer} from "./Utils";
 
 export {
     collection,
@@ -58,4 +59,5 @@ export {
     Utils,
     MultiProvider,
     ContentEditableEditorMetaData,
+    Debouncer
 }

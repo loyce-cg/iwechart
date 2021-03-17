@@ -1,6 +1,5 @@
-import { utils, window, Q, mail } from "pmc-mail";
+import { utils, window, Q, mail, component } from "pmc-mail";
 import { CalendarPlugin, CalendarComponentFactory } from "../../main/CalendarPlugin";
-import { CustomSelectController, CustomSelectItem } from "privfs-mail-client-tasks-plugin/src/component/customSelect/CustomSelectController";
 import { DateUtils } from "../../main/DateUtils";
 import Dependencies = utils.decorators.Dependencies;
 import { i18n } from "./i18n/index";
@@ -27,7 +26,7 @@ export interface Model {
     selectedYear: number;
 }
 
-@Dependencies(["taskscustomselect"])
+@Dependencies(["customselect"])
 export class DatePickerController extends window.base.WindowComponentController<window.base.BaseWindowController> {
     
     static textsPrefix: string = "plugin.calendar.component.datePicker.";
@@ -38,9 +37,9 @@ export class DatePickerController extends window.base.WindowComponentController<
     
     calendarPlugin: CalendarPlugin;
     afterViewLoaded: Q.Deferred<void> = Q.defer();
-    customSelectDay: CustomSelectController;
-    customSelectMonth: CustomSelectController;
-    customSelectYear: CustomSelectController;
+    customSelectDay: component.customselect.CustomSelectController;
+    customSelectMonth: component.customselect.CustomSelectController;
+    customSelectYear: component.customselect.CustomSelectController;
     componentFactory: CalendarComponentFactory;
     currDataModel: Model;
     _valueChangedHandler: () => void = null;
@@ -55,9 +54,30 @@ export class DatePickerController extends window.base.WindowComponentController<
         this.calendarPlugin = this.app.getComponent("calendar-plugin");
         this.correctOptions(options);
         
-        this.customSelectDay = this.addComponent("customSelectDay", this.componentFactory.createComponent("taskscustomselect", [this, [], { multi:false, editable:true, firstItemIsStandalone:false, scrollToFirstSelected:true, gridColsCount:7 }]));
-        this.customSelectMonth = this.addComponent("customSelectMonth", this.componentFactory.createComponent("taskscustomselect", [this, [], { multi:false, editable:true, firstItemIsStandalone:false, scrollToFirstSelected:true, gridColsCount:3 }]));
-        this.customSelectYear = this.addComponent("customSelectYear", this.componentFactory.createComponent("taskscustomselect", [this, [], { multi:false, editable:true, firstItemIsStandalone:false, scrollToFirstSelected:true, gridColsCount:5 }]));
+        this.customSelectDay = this.addComponent("customSelectDay", this.componentFactory.createComponent("customselect", [this, {
+            multi: false,
+            editable: true,
+            firstItemIsStandalone: false,
+            scrollToFirstSelected: true,
+            gridColsCount: 7,
+            items: [],
+        }]));
+        this.customSelectMonth = this.addComponent("customSelectMonth", this.componentFactory.createComponent("customselect", [this, {
+            multi: false,
+            editable: true,
+            firstItemIsStandalone: false,
+            scrollToFirstSelected: true,
+            gridColsCount: 3,
+            items: [],
+        }]));
+        this.customSelectYear = this.addComponent("customSelectYear", this.componentFactory.createComponent("customselect", [this, {
+            multi: false,
+            editable: true,
+            firstItemIsStandalone: false,
+            scrollToFirstSelected: true,
+            gridColsCount: 5,
+            items: [],
+        }]));
     }
     
     init() {
@@ -209,10 +229,10 @@ export class DatePickerController extends window.base.WindowComponentController<
         this.triggerValueChanged();
     }
     
-    getCustomSelectDayItems(): CustomSelectItem[] {
+    getCustomSelectDayItems(): component.customselect.CustomSelectItem[] {
         let nowD = new Date().getDate();
         let n = DateUtils.numDaysInMonth(this.currDataModel.selectedMonth, this.currDataModel.selectedYear);
-        let arr: CustomSelectItem[] = [];
+        let arr: component.customselect.CustomSelectItem[] = [];
         let days: number[] = [];
         if (this.options.duration) {
             days.push(0);
@@ -223,7 +243,8 @@ export class DatePickerController extends window.base.WindowComponentController<
         }
         for (let day of days) {
             arr.push({
-                val: day.toString(),
+                type: "item",
+                value: day.toString(),
                 text: day.toString(),
                 textNoEscape: true,
                 icon: null,
@@ -234,16 +255,17 @@ export class DatePickerController extends window.base.WindowComponentController<
         return arr;
     }
 
-    getCustomSelectMonthItems(): CustomSelectItem[] {
+    getCustomSelectMonthItems(): component.customselect.CustomSelectItem[] {
         let nowM = new Date().getMonth();
-        let arr: CustomSelectItem[] = [];
+        let arr: component.customselect.CustomSelectItem[] = [];
         let months: number[] = [];
         for (let i = 0; i < 12; ++i) {
             months.push(i);
         }
         for (let month of months) {
             arr.push({
-                val: month.toString(),
+                type: "item",
+                value: month.toString(),
                 text: this.i18n("plugin.calendar.component.datePicker.month.short." + month),
                 textNoEscape: true,
                 icon: null,
@@ -254,17 +276,18 @@ export class DatePickerController extends window.base.WindowComponentController<
         return arr;
     }
 
-    getCustomSelectYearItems(): CustomSelectItem[] {
+    getCustomSelectYearItems(): component.customselect.CustomSelectItem[] {
         let nowY = new Date().getFullYear();
         let diff = 10;
-        let arr: CustomSelectItem[] = [];
+        let arr: component.customselect.CustomSelectItem[] = [];
         let years: number[] = [];
         for (let i = nowY - diff; i < nowY + diff; ++i) {
             years.push(i);
         }
         for (let year of years) {
             arr.push({
-                val: year.toString(),
+                type: "item",
+                value: year.toString(),
                 text: year.toString(),
                 textNoEscape: true,
                 icon: null,

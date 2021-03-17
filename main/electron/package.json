@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "devtron": "^1.4.0",
-    "electron": "^6.0.12",
+    "electron": "^11.3.0",
     "electron-packager": "13.1.0"
   }
 }

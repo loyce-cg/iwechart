@@ -37,7 +37,13 @@ export class SectionListView extends ComponentView {
         this.options.extList.template = this.options.extList.template || listElementTemplate;
         this.sections = this.addComponent("sections", new ExtListView(this, this.options.extList));
         this.personsTooltip = this.addComponent("infoTooltip", new InfoTooltip(this));
-        this.options.extList.onAfterListRender = this.onAfterRenderContactList.bind(this);
+        let origOnAfterListRender = this.options.extList.onAfterListRender;
+        this.options.extList.onAfterListRender = view => {
+            if (origOnAfterListRender) {
+                origOnAfterListRender(view);
+            }
+            this.onAfterRenderContactList();
+        };
     }
     
     init(): Q.Promise<void> {

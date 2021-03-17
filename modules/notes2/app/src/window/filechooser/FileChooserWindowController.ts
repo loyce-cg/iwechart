@@ -293,7 +293,7 @@ export class FileChooserWindowController extends window.base.BaseWindowControlle
                     id: FilesListController.ALL_FILES,
                     icon: {
                         type: "fa",
-                        value: "fa-file-o"
+                        value: "privmx-icon privmx-icon-notes2",
                     },
                     label: this.i18n("plugin.notes2.window.filechooser.filter.all"),
                     private: false
@@ -625,6 +625,9 @@ export class FileChooserWindowController extends window.base.BaseWindowControlle
                 section: section
             }, false);
             this.callViewMethod("toggleDisabledSection", !section.isFileModuleEnabled());
+            if (filesId) {
+                this.callViewMethod("hideLoading");
+            }
             return Q();
         }
 
@@ -787,28 +790,21 @@ export class FileChooserWindowController extends window.base.BaseWindowControlle
                 return this.expandRemoteSectionsList(event.element.host);
             }
             else if (event.element.type == component.sidebar.SidebarElementType.REMOTE_SECTION) {
-                this.app.viewContext = "section:" + event.element.section.getId();
-                // console.log("opening remote channel...");
                 return this.openRemoteChannel(event.element.hostHash, event.element.section.getId());
             }
             else if (event.element.type == component.sidebar.SidebarElementType.REMOTE_CONVERSATION) {
-                this.app.viewContext = event.element.conv2.id;
                 return this.openRemoteConversationView(event.element.hostHash, event.element.conv2.id);
             }
             else if (event.element.type == component.sidebar.SidebarElementType.CONVERSATION) {
-                this.app.viewContext = event.element.conv2.id;
                 return this.openConversationView(event.element.conv2.id);
             }
             else if (event.element.type == component.sidebar.SidebarElementType.SECTION) {
-                // console.log("opening channel..");
-                this.app.viewContext = "section:" + event.element.section.getId();
                 return this.openChannel(event.element.section.getId());
 
             }
             else if (event.element.type == component.sidebar.SidebarElementType.CUSTOM_ELEMENT) {
                 this.notes2Plugin.activeSinkId = null;
                 this.notes2Plugin.activeSinkHostHash = null;
-                this.app.viewContext = "custom:" + event.element.customElement.id;
 
                 if (event.element.customElement.id == FilesListController.MY_FILES) {
                     return this.openMy();

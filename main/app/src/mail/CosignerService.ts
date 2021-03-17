@@ -2,11 +2,11 @@ import * as RootLogger from "simplito-logger";
 import * as privfs from "privfs-client";
 import * as Q from "q";
 import { PromiseUtils } from "simplito-promise";
-import { Utils } from "../utils/Utils";
 import { MessageTagsFactory } from "./MessageTagsFactory";
 import { MessageService } from "./MessageService";
 import { HashmailResolver } from "./HashmailResolver";
 import { LocaleService } from "./LocaleService";
+import { UUID } from "../utils/UUID";
 let Logger = RootLogger.get("privfs-mail-client.mail.CosignerService");
 
 export class CosignerService {
@@ -50,7 +50,7 @@ export class CosignerService {
             return PromiseUtils.oneByOne(notAddedDomains, (_i, entry) => {
                 return this.srpSecure.setCosigner(entry.domain, {
                     state: "ACTIVE",
-                    uuid: Utils.generateUUID(),
+                    uuid: UUID.generateUUID(),
                     hashmail: "unknown#" + entry.domain,
                     keystore: entry.keystore
                 })
@@ -89,7 +89,7 @@ export class CosignerService {
             if (!info.receivers.length) {
                 throw new Error("Cannot send message to " + hashmail);
             }
-            let uuid = Utils.generateUUID();
+            let uuid = UUID.generateUUID();
             let data = {
                 state: "PENDING",
                 uuid: uuid,

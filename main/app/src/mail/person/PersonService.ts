@@ -49,24 +49,6 @@ export class PersonService {
         return this.persons.getProxyEx(lowUser ? lowUser.email : user.hashmail, user);
     }
     
-    getPersonAvatarByHashmail(hashmail: string): app.PersonAvatar {
-        let person = this.getPerson(hashmail);
-        if (person == null) {
-            return {
-                hashmail: hashmail,
-                avatar: null,
-                isEmail: false,
-                lastUpdate: 0
-            };
-        }
-        return {
-            hashmail: hashmail,
-            avatar: person.getAvatar(),
-            isEmail: person.isEmail(),
-            lastUpdate: person.getLastUpdate().getTime()
-        };
-    }
-    
     updateExtraInfos(extraInfo: PmxApi.api.user.UsernameEx[]): void {
         extraInfo.forEach(extInfo => {
             let hashmail = new privfs.identity.Hashmail({user: extInfo.username, host: this.identity.host});

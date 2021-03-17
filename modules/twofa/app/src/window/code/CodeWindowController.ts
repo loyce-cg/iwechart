@@ -1,11 +1,27 @@
-import {window, Types, Q, mail} from "pmc-mail";
+import {window, Types, Q, mail, app} from "pmc-mail";
 import {AdditionalLoginStepData} from "../../main/TwofaService";
-import {TwofaApi} from "../../main/TwofaApi";
+import {TwofaApi, ChallengeModel} from "../../main/TwofaApi";
 import {i18n} from "./i18n/index";
+import * as webauthn from "webauthn-js";
+import {DataEncoder} from "../../main/DataEncoder";
 
 export interface Model {
     data: AdditionalLoginStepData;
     cancellable: boolean;
+    u2f: U2FData;
+}
+
+export interface U2FData {
+    register: webauthn.Types.PublicKeyCredentialCreationOptions;
+    login: webauthn.Types.PublicKeyCredentialRequestOptions;
+}
+
+export interface CodeWindowOptions {
+    data: AdditionalLoginStepData,
+    api: TwofaApi,
+    cancellable: boolean,
+    host: string,
+    u2f: U2FData
 }
 
 export class CodeWindowController extends window.base.BaseWindowController {
@@ -20,34 +36,39 @@ export class CodeWindowController extends window.base.BaseWindowController {
     api: TwofaApi;
     defer: Q.Deferred<void>;
     cancellable: boolean;
+    u2f: U2FData;
     
-    constructor(parent: Types.app.WindowParent, data: AdditionalLoginStepData, api: TwofaApi, cancellable?: boolean) {
+    constructor(parent: Types.app.WindowParent, options: CodeWindowOptions) {
         super(parent, __filename, __dirname);
         this.ipcMode = true;
-        this.data = data;
-        this.cancellable = !!cancellable;
+        this.data = options.data;
+        this.cancellable = !!options.cancellable;
         
         this.setPluginViewAssets("twofa");
         this.openWindowOptions.position = "center-always";
         this.openWindowOptions.width = 400;
-        this.openWindowOptions.height = 400;
+        this.openWindowOptions.height = 200;
         this.openWindowOptions.modal = true;
         this.openWindowOptions.widget = false;
         this.openWindowOptions.draggable = false;
         this.openWindowOptions.resizable = false;
         this.openWindowOptions.title = this.i18n("plugin.twofa.window.code.title");
-        this.api = api;
+        this.openWindowOptions.electronPartition = app.ElectronPartitions.HTTPS_SECURE_CONTEXT;
+        (<any>this.loadWindowOptions).host = options.host;
+        this.api = options.api;
+        this.u2f = options.u2f;
         this.defer = Q.defer<void>();
     }
     
     static isSupported(data: AdditionalLoginStepData) {
-        return data.type == "googleAuthenticator" ||  data.type == "email" ||  data.type == "sms";
+        return data.type == "googleAuthenticator" ||  data.type == "email" ||  data.type == "sms" ||  data.type == "u2f";
     }
     
     getModel(): Model {
         return {
             data: this.data,
             cancellable: this.cancellable,
+            u2f: DataEncoder.decode(this.u2f)
         };
     }
     
@@ -55,9 +76,9 @@ export class CodeWindowController extends window.base.BaseWindowController {
         return this.defer.promise;
     }
     
-    onViewSubmit(code: string, rememberDeviceId: boolean) {
+    onViewSubmit(model: ChallengeModel) {
         Q().then(() => {
-            return this.api.challenge(code, rememberDeviceId);
+            return this.api.challenge(DataEncoder.encode(model));
         })
         .then(() => {
             this.callViewMethod("clearState");

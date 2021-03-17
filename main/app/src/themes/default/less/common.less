@@ -192,29 +192,79 @@ canvas.external.default-avatar[data-tooltip-trigger] {
   color: var(--task-status-fg) !important;
 }
 
-.privmx-icon {
-  font-family: "privmx-icons";
-  font-style: normal;
+input[type=checkbox],
+input[type=radio] {
+  visibility: hidden;
+  position: relative;
   
-  &.privmx-icon-pdf:before {
-    content: "0";
+  &::after,
+  &::before {
+    visibility: visible;
+    display: inline-block;
+    cursor: pointer;
+    font-family: "FontAwesome";
+    font-size: var(--font-size-l);
+    top: -2px;
   }
-  &.privmx-icon-chat:before {
-    content: "A";
+  
+  &:disabled {
+    &::after,
+    &::before {
+      cursor: not-allowed;
+    }
+    &:checked::before {
+      opacity: 0.5;
+    }
+    &:not(:checked)::after {
+      opacity: 0.25;
+    }
   }
-  &.privmx-icon-notes2:before {
-    content: "B";
+  
+  &::before {
+    color: var(--body-fg);
+    content: "\f0c8";
+    position: absolute;
+    transform: scale(0.75);
   }
-  &.privmx-icon-tasks:before {
-    content: "C";
+  
+  &::after {
+    position: relative;
   }
-  &.privmx-icon-calendar:before {
-    content: "D";
+  
+  &:not(:checked)::before {
+    opacity: 0;
   }
-  &.privmx-icon-mindmap:before {
-    content: "M";
+  
+  &:not(:checked)::after {
+    color: #fff;
+    opacity: 0.5;
+    mix-blend-mode: difference;
   }
-  &.privmx-icon-logo:before {
-    content: "P";
+  
+  &:checked::after {
+    color: var(--color-success);
+  }
+}
+  
+input[type=checkbox] {
+  &:not(:checked)::after {
+    content: "\f096";
+  }
+  
+  &:checked::after {
+    content: "\f14a";
+  }
+}
+
+input[type=radio] {
+  &::before {
+    border-radius: 100px;
+  }
+  &:not(:checked)::after {
+    content: "\f10c";
+  }
+  
+  &:checked::after {
+    content: "\f192";
   }
 }

@@ -37,6 +37,7 @@ export class Persons {
         if (event.type == "add") {
             let person = this.get(event.element.getHashmail());
             person.setContact(event.element);
+            person.changeSeq++;
             this.changeEvent.trigger(person);
         }
         else if (event.type == "remove") {
@@ -51,11 +52,13 @@ export class Persons {
                     return true;
                 });
             }
+            person.changeSeq++;
             this.changeEvent.trigger(person);
         }
         else if (event.type == "update") {
             let person = this.get(event.element.getHashmail());
             person.updateContact(event.element);
+            person.changeSeq++;
             this.changeEvent.trigger(person);
         }
         else if (event.type == "rebuild") {
@@ -66,6 +69,7 @@ export class Persons {
                 }
                 let person = this.get(x.getHashmail());
                 person.setContact(x);
+                person.changeSeq++;
                 this.changeEvent.trigger(person);
             });
         }
@@ -80,6 +84,7 @@ export class Persons {
                 contact.dataVersion = new Date().getTime();
                 contact.profile = identityContactProfile;
                 person.updateContact(contact);
+                person.changeSeq++;
                 this.changeEvent.trigger(person);
             }
         }
@@ -91,6 +96,7 @@ export class Persons {
             identityContact.profile = identityContactProfile;
             identityContact.starred = false;
             person.setContact(identityContact);
+            person.changeSeq++;
             this.changeEvent.trigger(person);
         }
     }
@@ -140,6 +146,7 @@ export class Persons {
         let person = this.map[hashmail];
         if (person) {
             person.extraInfo = extraInfo;
+            person.changeSeq++;
             if (triggerChangeEvent) {
                 this.changeEvent.trigger(person);
             }
@@ -150,6 +157,7 @@ export class Persons {
         let person = this.map[hashmail];
         if (person && person.extraInfo) {
             person.extraInfo.pkiRevision = pkiRevision;
+            person.changeSeq++;
         }
     }
 }

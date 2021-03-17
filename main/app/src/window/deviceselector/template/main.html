@@ -1,0 +1,46 @@
+@import { Model } from "../DeviceSelectorWindowController";
+@model Model
+<div class="window-deviceselector-main {{@model.docked?'docked':''}}">
+  <div class="device-selector-inner">
+    {{ if (model.chooseVideoInput && model.withPreviews) { }}
+      <div class="video-preview-container">
+        <video class="video-preview"></video>
+      </div>
+    {{ } }}
+    {{ if (model.chooseVideoInput) { }}
+      <span data-for="video-input" class="device-group-label">{{@Helper.i18n("window.deviceselector.videoInput")}}<i class="privmx-icon privmx-icon-videocall"></i></span>
+      <div>
+        <!-- <select data-device-selector="video-input"></select> -->
+        <div class="video-input-custom-select-container"></div>
+      </div>
+    {{ } }}
+    {{ if (model.chooseAudioInput) { }}
+      <span data-for="audio-input" class="device-group-label">{{@Helper.i18n("window.deviceselector.audioInput")}}<i class="fa fa-microphone"></i></span>
+      <div>
+        <!-- <select data-device-selector="audio-input"></select> -->
+        <div class="audio-input-custom-select-container"></div>
+        <span class="audio-input-preview-text">{{@Helper.i18n("window.deviceselector.previewAudioInput")}}:</span>
+        <span class="audio-input-preview"></span>
+      </div>
+    {{ } }}
+    {{ if (model.chooseAudioOutput) { }}
+      <span data-for="audio-output" class="device-group-label">{{@Helper.i18n("window.deviceselector.audioOutput")}}<i class="fa fa-volume-up"></i></span>
+      <div>
+        <!-- <select data-device-selector="audio-output"></select> -->
+        <div class="audio-output-custom-select-container"></div>
+        {{ if (model.withPreviews) { }}
+          <span class="link" data-action="preview-audio-output">{{@Helper.i18n("window.deviceselector.previewAudioOutput")}} <i class="fa fa-volume-up previewing-indicator"></i></span>
+        {{ } }}
+      </div>
+    {{ } }}
+    <div class="buttons">
+      <button class="btn btn-success" data-action="save"><i class="fa fa-save"></i> {{@Helper.i18n("window.deviceselector.button.save")}}</button>
+      <button class="btn btn-default gray" data-action="cancel">{{@Helper.i18n("window.deviceselector.button.cancel")}}</button>
+    </div>
+  </div>
+  <div class="loading-container visible">
+    <div class="loading-spinner">
+      <i class="fa fa-spin fa-circle-o-notch"></i>
+    </div>
+  </div>
+</div>

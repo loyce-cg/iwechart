@@ -87,8 +87,13 @@ import { FileRenameObserver } from "./FileRenameObserver";
 import { VoiceChatService } from "./voicechat/VoiceChatService";
 import { PlayerHelperWindowController } from "../../window/playerhelper/PlayerHelperWindowController";
 import { UsersPresenceChecker } from "../../mail/UsersPresenceChecker";
+import { VideoConferencesService } from "./videoconferences/VideoConferencesService";
 import { PersonService } from "../../mail/person/PersonService";
 import { FilesLockingService } from "./fileslockingservice/FilesLockingService";
+import { UploadService } from "./uploadservice/UploadService";
+import { ContextHistory, NewContextAddedToHistoryEvent } from "./contexthistory/ContextHistory";
+import { Router } from "./router/Router";
+import { DevConsoleWindowController } from "../../window/devconsole/main";
 
 let Logger = RootLogger.get("app.common.CommonApplication");
 
@@ -133,13 +138,12 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     ioc: IOC;
     taskStream: ParallelTaskStream;
     options: app.AppOptions;
-    viewContext: string;
     countModels: Model<number>[];
     commonNotificationsService: NotificationsService;
     customizedTheme: CustomizationData = null;
     temporaryCustomizedTheme: CustomizationData = null;
     isUsingTemporaryCustomizedTheme: boolean = false;
-    isMnemonicEnabled: boolean = false;
+    isMnemonicEnabled: boolean = true;
     dataCleared: boolean = false;
     needShiftToSwitchWithContext: boolean = false;
     contextModifierPresent: boolean = false;
@@ -151,7 +155,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     serverConfigPromise: Q.Promise<privfs.types.core.ConfigEx>;
     serverConfigForUser: privfs.types.core.UserConfig;
     filesLockingService: FilesLockingService;
-    
+    uploadService: UploadService;
     openTryMarkAsReadConfirms: { event: event.TryMarkAsReadEvent, window: Window }[] = [];
     soundsLibrary: SoundsLibrary = new SoundsLibrary();
     keyboardShortcuts: KeyboardShortcuts = null;
@@ -167,10 +171,17 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     identity: privfs.identity.Identity;
     fileRenameObserver: FileRenameObserver;
     voiceChatService: VoiceChatService;
+    videoConferencesService: VideoConferencesService;
     usersPresenceChecker: UsersPresenceChecker;
+    router: Router;
+    contextHistory: ContextHistory;
+    deviceId: string;
+
+    static instance: CommonApplication;
     
     constructor(public ipcMain: Types.ipc.IpcMain, storage: utils.Storage<string, string>, localeService: LocaleService, mailResourceLoader: mail.MailResourceLoader, assetsManager: AssetsManager) {
         super();
+        CommonApplication.instance = this;
         this.ioc = new IOC();
         this.ioc.registerComponent("autorefresh", components.autorefresh.AutoRefreshController);
         this.ioc.registerComponent("progress", components.channel.ProgressController);
@@ -202,7 +213,6 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         this.ioc.registerComponent("titletooltip", components.titletooltip.TitleTooltipController);
         this.ioc.registerComponent("sectiontooltip", components.sectiontooltip.SectionTooltipController);
         this.ioc.registerComponent("userslisttooltip", components.userslisttooltip.UsersListTooltipController);
-        
         this.ioc.registerComponent("tree", components.tree.TreeController);
         this.ioc.registerComponent("emojipicker", components.emojipicker.EmojiPickerController);
         this.ioc.registerComponent("emojiviewbar", components.emojiviewbar.EmojiViewBarController);
@@ -214,6 +224,8 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         this.ioc.registerComponent("loading", components.loading.LoadingController);
         this.ioc.registerComponent("thumbs", components.thumbs.ThumbsController);
         this.ioc.registerComponent("voicechatcontrols", components.voicechatcontrols.VoiceChatControlsController);
+        this.ioc.registerComponent("audioplayer", components.audioplayer.AudioPlayerController);
+        this.ioc.registerComponent("customselect", components.customselect.CustomSelectController);
         
         // i18n: components
         components.autorefresh.AutoRefreshController.registerTexts(localeService);
@@ -256,6 +268,8 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         components.userguide.UserGuideController.registerTexts(localeService);
         components.loading.LoadingController.registerTexts(localeService);
         components.voicechatcontrols.VoiceChatControlsController.registerTexts(localeService);
+        components.audioplayer.AudioPlayerController.registerTexts(localeService);
+        components.customselect.CustomSelectController.registerTexts(localeService);
         
         // i18n: windows
         windows.about.AboutWindowController.registerTexts(localeService);
@@ -308,7 +322,8 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         windows.secureformdev.SecureFormDevWindowController.registerTexts(localeService);
         windows.selectcontacts.SelectContactsWindowController.registerTexts(localeService);
         windows.settings.SettingsWindowController.registerTexts(localeService);
-        windows.settings.account.AccountController.registerTexts(localeService);
+        windows.settings.alternativeLogin.AlternativeLoginController.registerTexts(localeService);
+        windows.settings.changepassword.ChangePasswordController.registerTexts(localeService);
         windows.settings.contactform.ContactFormController.registerTexts(localeService);
         windows.settings.hotkeys.HotkeysController.registerTexts(localeService);
         windows.settings.mail.MailController.registerTexts(localeService);
@@ -319,6 +334,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         windows.settings.sysinfo.SysInfoController.registerTexts(localeService);
         windows.settings.sysinfoext.SysInfoExtController.registerTexts(localeService);
         windows.settings.userinterface.UserInterfaceController.registerTexts(localeService);
+        windows.settings.devices.DevicesController.registerTexts(localeService);
         windows.settings.whitelist.WhitelistController.registerTexts(localeService);
         windows.source.SourceWindowController.registerTexts(localeService);
         windows.subid.SubIdWindowController.registerTexts(localeService);
@@ -335,7 +351,12 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         windows.textviewer.TextViewerWindowController.registerTexts(localeService);
         windows.support.SupportWindowController.registerTexts(localeService);
         windows.switchvoicechatconfirm.SwitchVoiceChatConfirmWindowController.registerTexts(localeService);
-        
+        windows.videorecorder.VideoRecorderWindowController.registerTexts(localeService);
+        windows.deviceselector.DeviceSelectorWindowController.registerTexts(localeService);
+        windows.devconsole.DevConsoleWindowController.registerTexts(localeService);
+        windows.videoconferenceinfo.VideoConferenceInfoWindowController.registerTexts(localeService);
+        windows.uploadservice.UploadServiceWindowController.registerTexts(localeService);
+
         this.localeService = this.ioc.registerByValue("localeService", localeService, Lifecycle.ETERNAL);
         this.assetsManager = this.ioc.registerByValue("assetsManager", assetsManager, Lifecycle.ETERNAL);
         this.networkStatusService = this.ioc.registerByValue("networkStatusService", new NetworkStatusService(), Lifecycle.ETERNAL);
@@ -346,6 +367,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         this.ioc.registerByValue("eventDispatcher", this, Lifecycle.ETERNAL);
         this.ioc.registerByValue("componentFactory", this.ioc, Lifecycle.ETERNAL);
         this.ioc.registerByValue("stickersProvider", {getStickers: () => StickersList.get()}, Lifecycle.ETERNAL);
+        
         this.options = {
             sinkFilter: this.ioc.registerByValue("sinkFilter", {value: null}, Lifecycle.ETERNAL),
             defaultPki: this.ioc.registerByValue("defaultPki", {value: false}, Lifecycle.ETERNAL),
@@ -362,11 +384,28 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         
         this.app = this;
         this.manager = new BaseWindowManager(null, null);
+
+        this.contextHistory = new ContextHistory(this);
+        this.app.addEventListener<NewContextAddedToHistoryEvent>("new-context-added-to-history", event => {
+            let currentContext = this.contextHistory.getCurrent();
+            this.app.setContainerWindowHistoryEntry({
+                    pathname: "/" + currentContext.getModuleName(),
+                    state: currentContext
+                }, false);
+        }, "main", "ethernal");
+        
+
+        this.router = new Router(this.manager, this.contextHistory);
+
+        this.ioc.registerByValue("contextHistory", this.contextHistory, Lifecycle.ETERNAL);
+        this.ioc.registerByValue("router", this.router, Lifecycle.ETERNAL);
+
+
         
         this.ipcChannelId = 0;
         this.msgBox = MsgBox.create(this, this.localeService, this.ioc);
         this.errorLog = new ErrorLog(Logger, this, this.msgBox);
-        this.viewLogLevel = "ERROR";
+        this.viewLogLevel = "WARN";
         this.mcaFactory = new McaFactory(this.localeService, this, this.ioc);
         this.defaultSettings.get("endpoints").then(endpoints => {
             if (endpoints) {
@@ -384,7 +423,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             if (e.markingAsRead == false) {
                 this.tryPlayBubblePopSound();
             }
-        });
+        }, "main");
         this.addEventListener<event.OpenEditSectionDialogEvent>("open-edit-section-dialog", e => {
             this.openEditSectionDialogFromSidebar(e.sectionId);
         }, "main", "ethernal");
@@ -410,6 +449,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         this.thumbsManager = new ThumbsManager(this);
         this.fileRenameObserver = new FileRenameObserver(this);
         this.voiceChatService = new VoiceChatService(this);
+        this.videoConferencesService = new VideoConferencesService(this);
     }
     
     openChildWindow<T extends BaseWindowController>(win: T, delayedOpenDeferred?: Q.Deferred<T>): T {
@@ -599,6 +639,8 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             return this.sessionManager.initAfterLogin();
         })
         .then(() => {
+            this.uploadService = new UploadService(this);
+            // console.log("create player helper window")
             this.ioc.create(PlayerHelperWindowController, [this]).then(helperWindow => {
                 helperWindow.playerManager = new PlayerManager(this, helperWindow);
                 this.windows.playerHelper = this.registerInstance(helperWindow);
@@ -651,6 +693,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             // lazy loaded serverConfig for admin windows
             this.serverConfigPromise = identityProvider.isAdmin() ? srpSecure.getConfigEx() : Q.resolve(null);
             this.serverConfigForUser = userConfig;
+            this.setSentryEnabled(this.serverConfigForUser && (<any>this.serverConfigForUser).clientDebugLevel);
             
             customizationApi.getCustomization().then(theme => {
                 theme.cssVariables = CssParser.parseVariables(theme.css).cssVars;
@@ -666,13 +709,14 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                 this.connectionStatusChecker = new ConnectionStatusChecker(srpSecure, this.identity, networkStatusService, this, <Event<any, any, any>><any>srpSecure.gateway.onConnectionLostEvent);
             }
             this.eventDispatcher = eventDispatcher;
-            eventDispatcher.addEventListener<event.UserPreferencesChangeEvent>("userpreferenceschange", this.onUserPreferencesChange.bind(this));
+            eventDispatcher.addEventListener<event.UserPreferencesChangeEvent>("userpreferenceschange", this.onUserPreferencesChange.bind(this), "main");
             this.onUserPreferencesChange({
                 type: "userpreferenceschange",
                 operation: "load",
                 userPreferences: userPreferences
             });
             this.voiceChatService.initAfterLogin();
+            this.videoConferencesService.initAfterLogin();
             
             this.getPlayerManager().init(eventDispatcher);
             this.getPlayerManager().onUserPreferencesChange({
@@ -681,8 +725,8 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                 userPreferences: userPreferences
             });
             this.registerStreamsEvents(eventDispatcher);
-            eventDispatcher.addEventListener<event.RevertSinkIndexEntry>("revertsinkindexentry", this.onRevertEntry.bind(this));
-            eventDispatcher.addEventListener<event.UserPreferencesChangeEvent>("userpreferenceschange", this.onUserPreferencesChange.bind(this));
+            eventDispatcher.addEventListener<event.RevertSinkIndexEntry>("revertsinkindexentry", this.onRevertEntry.bind(this), "main");
+            eventDispatcher.addEventListener<event.UserPreferencesChangeEvent>("userpreferenceschange", this.onUserPreferencesChange.bind(this), "main");
             this.addCountModel(contactService.starredContactCountModel);
             
             this.commonNotificationsService = new NotificationsService(this, eventDispatcher);
@@ -988,6 +1032,10 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         })
     }
     
+    openDevConsole(): void {
+        this.openSingletonWindow("devConsole", DevConsoleWindowController);
+    }
+
     openSettings(section?: string): void {
         this.openSingletonWindow("settings", SettingsWindowController, section);
     }
@@ -1001,7 +1049,24 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     }
     
     openSupport(): void {
-        this.openSingletonWindow("support", SupportWindowController);
+        this.refreshUserConfig().then(() => {
+            this.openSingletonWindow("support", SupportWindowController);
+        });
+    }
+    
+    refreshUserConfig() {
+        return Q().then(() => {
+            return this.mailClientApi.privmxRegistry.getSrpSecure();
+        })
+        .then(srpSecure => {
+            return srpSecure.getUserConfig();
+        })
+        .then(userConfig => {
+            this.serverConfigForUser = userConfig;
+        })
+        .fail(e => {
+            Logger.error("Error during refreshing user config", e);
+        });
     }
     
     openSwitchVoiceChatConfirm(): Q.Promise<boolean> {
@@ -1091,13 +1156,12 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     abstract getTokenRegistrationUrl(token: string): string;
     
     setContainerWindowHistoryEntry(entry: app.HistoryEntry, _replace: boolean): void {
-        entry.key = "k-" + (this.historyKey++).toString();
         if ("container" in this.windows) {
             (<ContainerWindowController>this.windows.container).onHistoryChange(entry);
         }
     }
     
-    playAudio(_soundName: string, _force: boolean = false): void {
+    playAudio(_soundName: string, _force: boolean = false, _ignoreSilentMode: boolean = undefined): void {
     }
     
     onUserPreferencesChange(event: event.UserPreferencesChangeEvent): void {
@@ -1252,9 +1316,9 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         });
     }
     
-    abstract directSaveContent(content: privfs.lazyBuffer.IContent, session: Session, parent?: Types.app.WindowParentEx): Q.Promise<void>;
+    abstract directSaveContent(content: privfs.lazyBuffer.IContent, session: Session, parent?: Types.app.WindowParentEx): Promise<void>;
     
-    abstract saveContent(content: privfs.lazyBuffer.IContent, session: Session, parent?: Types.app.WindowParentEx): Q.Promise<void>;
+    abstract async saveContent(content: privfs.lazyBuffer.IContent, session: Session, parent?: Types.app.WindowParentEx): Promise<void>;
     
     abstract getScreenResolution(currentInsteadOfPrimary?: boolean): {width: number, height: number};
     
@@ -1352,6 +1416,9 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             try {
                 setTimeout(() => {
                     let nwin = (<BaseWindowController>toOpen.window).nwin;
+                    if (! nwin) {
+                        return;
+                    }
                     if (nwin.isMinimized()) {
                         nwin.minimizeToggle();
                     }
@@ -1373,9 +1440,10 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     
     registerViewersEditors() {
         MimeTypeTree.add(".url", "application/internet-shortcut");
+        MimeTypeTree.add(".ts", "text/x-typescript");
         
         this.shellRegistry.registerMimetypeIcon("image/*", "fa fa-file-image-o");
-        this.shellRegistry.registerMimetypeIcon("video/*", "fa fa-video-camera");
+        this.shellRegistry.registerMimetypeIcon("video/*", "fa fa-file-video-o");
         this.shellRegistry.registerMimetypeIcon("audio/*", "fa fa-music");
         this.shellRegistry.registerMimetypeIcon("text/plain", "fa fa-file-text-o");
         this.shellRegistry.registerMimetypeIcon("application/zip", "fa fa-file-archive-o");
@@ -1499,7 +1567,9 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                     return this.saveContent(options.element, options.session, options.parent);
                 })
                 .fail(e => {
-                    Logger.error("Error during downloading", e);
+                    if (e != "no-choose") {
+                        Logger.warn("Error during downloading", e);
+                    }
                 });
                 return null;
             }
@@ -1588,6 +1658,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                 }
                 let notificationId = options.notifications ? options.notifications.showNotification(this.localeService.i18n("app.sendFile.sending"), {autoHide: false, progress: true}) : null;
                 let data: privfs.lazyBuffer.IContent;
+                let dstSection: section.SectionService;
                 Q.all([
                     this.app.mailClientApi.privmxRegistry.getConv2Service(),
                     this.app.mailClientApi.privmxRegistry.getSectionManager(),
@@ -1618,9 +1689,50 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                     return conv2Section.section;
                 })
                 .then(section => {
-                    return section.uploadFile({
-                        data: data
-                    });
+                    dstSection = section;
+                    if (options.sourceSectionId && options.sourceSectionId == section.getId()) {
+                        return this.msgBox.confirmEx({
+                            width: 600,
+                            title: this.localeService.i18n("app.sendFile.sameLocationInfo.title"),
+                            message: this.localeService.i18n("app.sendFile.sameLocationInfo.message"),
+                            yes: {
+                                visible: true,
+                                label: this.localeService.i18n("app.sendFile.sameLocationInfo.button.yes"),
+                            },
+                            no: {
+                                visible: true,
+                                label: this.localeService.i18n("app.sendFile.sameLocationInfo.button.no"),
+                            },
+                            cancel: {
+                                visible: true,
+                                label: this.localeService.i18n("app.sendFile.sameLocationInfo.button.cancel"),
+                            },
+                        })
+                        .then(result => {
+                            if (result.result == "yes") {
+                                return app.SendFileSameLocationAction.UPLOAD_FILE;
+                            }
+                            else if (result.result == "no") {
+                                return app.SendFileSameLocationAction.ONLY_SEND_CHAT_MESSAGE;
+                            }
+                            else {
+                                return app.SendFileSameLocationAction.CANCEL;
+                            }
+                        });
+                    }
+                    else {
+                        return app.SendFileSameLocationAction.UPLOAD_FILE;
+                    }
+                })
+                .then(action => {
+                    if (action == app.SendFileSameLocationAction.UPLOAD_FILE) {
+                        return dstSection.uploadFile({
+                            data: data,
+                        });
+                    }
+                    else if (action == app.SendFileSameLocationAction.ONLY_SEND_CHAT_MESSAGE) {
+                        return dstSection.getChatModule().sendCreateFileMessage(options.sourcePath, data.getSize(), data.getMimeType(), options.sourceDid).thenResolve(null);
+                    }
                 })
                 .fail(e => {
                     if (e instanceof Exception && e.message == "invalid-receivers") {
@@ -1756,7 +1868,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                 win.parent = parent;
             }
             this.openChildWindow(win).getSectionPromise().then(section => {
-                sectionId = (section.getId() == SectionPickerWindowController.ROOT_ID ? null : section.getId());
+                sectionId = section ? section.getId() : null;
                 return this.app.mailClientApi.privmxRegistry.getSectionManager()
             })
             .then(manager => {
@@ -1827,8 +1939,10 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     openLicenseVendorsWindow(): void {
     }
     
-    openErrorWindow(_error: Types.app.Error): void {
+    openErrorWindow(_error: any): void {
     }
+
+    reportToSentry(error: any): void {}
     
     getHelpCenterUrl(helpCenterCode: number): string {
         return "http://127.0.0.1/PrivMXHelpCenter/" + helpCenterCode;
@@ -2036,7 +2150,83 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     }
     
     getClipboardElementToPaste(_allowedPrivMxFormats: string[], _allowedSystemFormats: string[], _onlyPlainText: boolean = false): Q.Promise<ClipboardElement> {
-        return Q(null);
+        this.clipboard.populateFromSystem();
+        let elementPrivMx: ClipboardElement = null;
+        let elementSystem: ClipboardElement = null;
+        let elementPrivMxId: number = null;
+        let elementSystemId: number = null;
+        for (let i = this.clipboard.storedElements.length - 1; i >= 0 && (elementPrivMx === null || elementSystem === null); --i) {
+            let el = this.clipboard.storedElements[i];
+            if (el.source == "privmx" && elementPrivMx === null) {
+                for (let format of _allowedPrivMxFormats) {
+                    if (this.clipboard.elementMatches(el, format, "privmx")) {
+                        elementPrivMx = el;
+                        elementPrivMxId = i;
+                        break;
+                    }
+                }
+            }
+            if (el.source == "system" && elementSystem === null) {
+                for (let format of _allowedSystemFormats) {
+                    if (this.clipboard.elementMatches(el, format, "system")) {
+                        elementSystem = el;
+                        elementSystemId = i;
+                        break;
+                    }
+                }
+            }
+        }
+        if (elementPrivMx === null && elementSystem === null) {
+            return Q(null);
+        }
+        let element: ClipboardElement = null;
+        // let integrationEnabled: boolean = false;
+        return Q().then(() => {
+            if (elementSystem && (!elementPrivMx || elementSystemId > elementPrivMxId)) {
+                // return this.tryAskSystemClipboardIntegration().then(integration => {
+                //     integrationEnabled = integration;
+                //     if (integration) {
+                //         return elementSystem;
+                //     }
+                //     else {
+                //         return elementPrivMx;
+                //     }
+                // });
+                return elementSystem;
+            }
+            else {
+                return elementPrivMx;
+            }
+        }).then(_element => {
+            if (!_element) {
+                return null;
+            }
+            element = _element;
+            let filesStr: string = element.data[Clipboard.FORMAT_SYSTEM_FILES];
+            if (filesStr && !_onlyPlainText) {
+                let files: { path?: string, mime: string }[] = JSON.parse(filesStr);
+                if (files.filter(x => !x.path).length == 0) {
+                    return this.app.tryPasteFiles(files.map(x => x.path));
+                }
+                else if (files.length == 1 && (<any>files[0].mime).startsWith("image/")) {
+                    return this.app.tryPasteImageData();
+                }
+            }
+            return true;
+        })
+        .then(paste => {
+            if (paste === null) {
+                return null;
+            }
+            if (paste === false) {
+                let el = JSON.parse(JSON.stringify(element));
+                el.data = {
+                    text: el.data.text,
+                };
+                return el.data.text ? el : null;
+            }
+            return element;
+        });
     }
     
     generateUniqueFileName(section: section.SectionService|"local", path: string, ext: string): Q.Promise<string> {
@@ -2161,7 +2351,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             }
         })
         .fail(e => {
-            Logger.error(e);
+            Logger.warn("Payment status update failed", e);
         })
     }
     
@@ -2287,10 +2477,18 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         return null;
     }
     
-    askForMicrophoneAccess(): Q.Promise<boolean> {
-        return Q.resolve(true);
+    async askForMicrophoneAccess(): Promise<boolean> {
+        return true;
     }
-    
+
+    async askForCameraAccess(): Promise<boolean> {
+        return true;
+    }
+
+    async openMacOSSystemPreferencesWindow(pane: string, section?: string): Promise<void> {
+        return;
+    }
+
     getSystemPlatfrom(): string {
         return "";
     }
@@ -2309,4 +2507,15 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     getAssetSafeUrl(path: string) {
         return this.assetsManager.getAsset(path);
     }
+
+    reportToSentryOnErrorCallback(e: any): void {}
+
+    getGPUInfo(): any {
+    }
+    
+    abstract getEnviromentLocale(): string;
+
+    abstract getInMemoryCacheSize(): number;
+
+    protected abstract setSentryEnabled(enabled: boolean): void;
 }

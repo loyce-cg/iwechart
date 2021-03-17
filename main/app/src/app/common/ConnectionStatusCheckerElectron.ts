@@ -24,6 +24,7 @@ export class ConnectionStatusCheckerElectron {
     reconnecting: boolean = false;
     relogging: boolean = false;
     lastConnectedTime: number;
+    onRpcConnectionLostBinded: () => void;
 
     onResumeFunc:() => void;
 
@@ -39,6 +40,18 @@ export class ConnectionStatusCheckerElectron {
         this.app.addEventListener<event.AfterPasswordChangedEvent>("afterPasswordChanged", event => {
             this.userCredentials = event.userCredentials;
         }, "ConnectionStatusChecker");
+    }
+
+    private registerRpcEvents(srpSecure: privfs.core.PrivFsSrpSecure): void {
+        // bind onConnectionLost event from rpc
+        this.onRpcConnectionLostBinded = this.onRpcConnectionLost.bind(this);
+        srpSecure.gateway.onConnectionLostEvent.add(this.onRpcConnectionLostBinded);
+    }
+
+    private unregisterRpcEvents(srpSecure: privfs.core.PrivFsSrpSecure): void {
+        if (this.onRpcConnectionLostBinded) {
+            srpSecure.gateway.onConnectionLostEvent.remove(this.onRpcConnectionLostBinded);
+        }
     }
 
     registerPowerEvents(): void {
@@ -95,6 +108,9 @@ export class ConnectionStatusCheckerElectron {
             .then(res => {
                 this.networkStatusService = res[0];
                 this.srpSecure = res[1];
+
+                this.registerRpcEvents(this.srpSecure);
+
                 this.identityProvider = res[2];
                 this.utilApi = new UtilApi(this.srpSecure);
             })
@@ -103,6 +119,7 @@ export class ConnectionStatusCheckerElectron {
     
     onLogout(): void {
         this.unregisterPowerEvents();
+        this.unregisterRpcEvents(this.srpSecure);
         clearInterval(this.reconnectTimer);
         this.reconnectTimer = null;
         this.reconnecting = false;
@@ -163,8 +180,8 @@ export class ConnectionStatusCheckerElectron {
                 this.reconnecting = false;
 
                 if (result) {
-                    this.app.onServerConnectionRestored();
                     this.stopReconnectChecker(connId);
+                    this.onConnectionResumed();
                 }
                 else {
                     this.showCoverMsg("reloginFailed");
@@ -187,7 +204,8 @@ export class ConnectionStatusCheckerElectron {
             this.reconnectTimer = null;
         }
     }
-      
+
+
     tryReconnect(): Q.Promise<boolean> {
         let isConnected: boolean = false;
         return Q().then(() => {
@@ -220,7 +238,7 @@ export class ConnectionStatusCheckerElectron {
             .then(() => {
                 this.app.log("re-logged, restoring network activity");
                 this.networkStatusService.restoreNetworkActivity();
-                this.app.onServerConnectionRestored();
+                this.onConnectionResumed();
                 this.resetCoverMsg();
                 isConnected = true;
                 this.relogging = false;
@@ -244,54 +262,19 @@ export class ConnectionStatusCheckerElectron {
         })
     }
 
-    hasServerConnection(): Q.Promise<boolean> {
-        return Q().then(() => {
-            return this.app.isHostAvailable(this.identityProvider.getIdentity().host)
-        })
-        .then(dnsResult => {
-            // if (! dnsResult) {
-            //     return Q.reject<boolean>(false);
-            // }
-            // else {
-            //     return this.utilApi.plainPing().catch((e: Error) => {
-            //         return Q.resolve<boolean>(e.message.indexOf("Connection Broken") == -1);
-            //     })
-            //     .then(plainPingResult => {
-            //         return plainPingResult ? this.utilApi.pingWithRetry() : Q.reject<string>("");
-            //     })
-            //     .then(data => {
-            //         if(data == "pong") {
-            //             return true;
-            //         }
-            //         else {
-            //             return false;
-            //         }
-            //     })
-        
-            // }
-            if (! dnsResult) {
-                return Q.reject<boolean>(false);
+
+    async hasServerConnection(): Promise<boolean> {
+        try {
+            const pingResult = await this.utilApi.pingWithRetry();
+            if (pingResult == "pong") {
+                this.resetLastConnectedTime();
+                return true;
             }
-            else {
-                return this.utilApi.pingWithRetry()
-                .then(pingOk => {
-                    if (pingOk == "pong") {
-                        return this.srpSecure.request("sinkGetAllMy", {})
-                        .then(allMy => {
-                            if (allMy) {
-                                this.resetLastConnectedTime();
-                                return true;
-                            }
-                            return false;
-                        })
-                    }
-                    return false;
-                })
-            }
-        })
-        .fail(e => {
             return false;
-        })
+        }
+        catch (e) {
+            return false;
+        }
     }
 
     // public
@@ -338,4 +321,12 @@ export class ConnectionStatusCheckerElectron {
         this.lastConnectedTime = Date.now();
     }
 
+    private onRpcConnectionLost(): void {
+        this.app.dispatchEvent<event.NetworkStatusChangeEvent>({type: "network-status-change", status: "lost"});
+        this.startReconnectChecker();
+    }
+
+    private onConnectionResumed(): void {
+        this.app.dispatchEvent<event.NetworkStatusChangeEvent>({type: "network-status-change", status: "resumed"});
+    }
 }

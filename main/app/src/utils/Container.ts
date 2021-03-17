@@ -5,6 +5,7 @@ import {Lang} from "../utils/Lang";
 import * as Types from "../Types";
 import * as privfs from "privfs-client";
 import * as RootLogger from "simplito-logger";
+import { NonReportableError } from "./error/NonReportableError";
 
 let Logger = RootLogger.get("privfs-mail-client.utils.Container");
 
@@ -29,6 +30,10 @@ export class Container extends EventDispatcher {
     
     registerInstance<T>(instance: T): T {
         if (!(<any>instance).__registered)  {
+            if (this.isDestroyed()) {
+                Logger.warn("Trying to register instance in destroyed container");
+                return;
+            }
             (<any>instance).__registered = true;
             this.dispatchEvent<Types.event.InstanceRegisteredEvent>({
                 type: "instanceregistered",
@@ -53,6 +58,9 @@ export class Container extends EventDispatcher {
     }
     
     addComponent<T extends IComponent>(id: string, component: T): T {
+        if (this.isDestroyed()) {
+            throw new NonReportableError("Trying to add component (id='" + id + "') to destroyed container");
+        }
         if (id in this.components) {
             throw new Error("Component with id '" + id + "' already added");
         }
@@ -111,8 +119,12 @@ export class Container extends EventDispatcher {
     }
     
     bindEvent<T extends Types.event.Event>(eventDispatcher: EventDispatcher, eventType: string, listener: Types.event.EventListener<T>) {
+        if (this.isDestroyed()) {
+            Logger.warn("Trying to bind event in destroyed container")
+            return;
+        }
         let bindedListener = listener.bind(this);
-        eventDispatcher.addEventListener(eventType, bindedListener);
+        eventDispatcher.addEventListener(eventType, bindedListener, this.getUUID());
         this.bindedEvents.push({
             eventDispatcher: eventDispatcher,
             eventType: eventType,
@@ -133,6 +145,10 @@ export class Container extends EventDispatcher {
     registerChangeEvent<T = any, U = any, V = any>(changeEvent: ChangeEvent<T, U, V>, handler: Types.utils.EventCallback<T, U, V>, type?: "single"): void
     registerChangeEvent<T = any, U = any, V = any>(changeEvent: ChangeEvent<T, U, V>, handler: Types.utils.EventsCallback<T, U, V>, type?: "multi"): void
     registerChangeEvent<T = any, U = any, V = any>(changeEvent: ChangeEvent<T, U, V>, handler: Function, type?: "single"|"multi"): void {
+        if (this.isDestroyed()) {
+            Logger.warn("Trying register change event in destroyed container");
+            return;
+        }
         let bindedHandler = handler.bind(this);
         changeEvent.add(bindedHandler, <any>type);
         let entry = {
@@ -155,6 +171,10 @@ export class Container extends EventDispatcher {
     }
     
     registerNamedEvents(events: ChangeEvents, eventName: string, handler: Function, type?: string): void {
+        if (this.isDestroyed()) {
+            Logger.warn("Trying register named event in destroyed container", eventName)
+            return;
+        }
         let bindedHandler = handler.bind(this);
         events.on(eventName, bindedHandler, type);
         let entry = {
@@ -176,6 +196,10 @@ export class Container extends EventDispatcher {
     }
     
     registerPmxEvent(event: privfs.crypto.utils.Event, handler: Function): void {
+        if (this.isDestroyed()) {
+            Logger.warn("Trying register PmxEvent in destroyed container")
+            return;
+        }
         let bindedHandler = handler.bind(this);
         event.add(bindedHandler);
         let entry = {
@@ -191,7 +215,8 @@ export class Container extends EventDispatcher {
         if (index == -1) {
             return;
         }
-        event.remove(<any>this.bindedChangeEvents[index].bindedHandler);
+        
+        event.remove(<any>this.bindedPmxEvents[index].bindedHandler);
         this.bindedPmxEvents.splice(index, 1);
     }
     
@@ -214,8 +239,11 @@ export class Container extends EventDispatcher {
         this.bindedPmxEvents.forEach(x => {
             x.event.remove(<() => void>x.bindedHandler);
         });
-        this.bindedPmxEvents = [];  
+        this.bindedPmxEvents = [];
     }
-
-    destroy() {}
+    
+    destroy() {
+        this.removeComponentsAndEvents();
+        super.destroy();
+    }
 }

@@ -10,7 +10,6 @@ import { FastList, FastListEntry } from "../../main/FastList";
 import { TasksSorter } from "../../main/TasksSorter";
 import { Task, TaskStatus } from "../../main/data/Task";
 import { TaskGroupsSorter } from "../../main/TaskGroupsSorter";
-import { CustomSelectView } from "../customSelect/CustomSelectView";
 import { IconPickerData } from "../iconPicker/IconPickerData";
 import { DragDrop } from "../../main/utils/DragDrop";
 import { LazyRenderScheduler } from "./LazyRenderScheduler";
@@ -132,7 +131,7 @@ export class TaskGroupsPanelView extends component.base.ComponentView {
     freeAvatars: { [user: string]: HTMLElement[] } = {};
     hasAvatarsToRender: boolean = false;
     
-    customSelectFilter: CustomSelectView;
+    customSelectFilter: component.customselect.CustomSelectView;
     // personsComponent: component.persons.PersonsView;
     personTooltip: component.persontooltip.PersonTooltipView;
     taskTooltip: component.tasktooltip.TaskTooltipView;
@@ -183,7 +182,7 @@ export class TaskGroupsPanelView extends component.base.ComponentView {
         this.taskTooltip = this.addComponent("tasktooltip", new component.tasktooltip.TaskTooltipView(this));
         this.taskTooltip.refreshAvatars = () => { this.personsComponent.refreshAvatars(); };
         this.notifications = this.addComponent("notifications", new component.notification.NotificationView(this, {xs: true}));
-        this.customSelectFilter = this.addComponent("customSelectFilter", new CustomSelectView(this)).onChange(this.onFilterChange.bind(this));
+        this.customSelectFilter = this.addComponent("customSelectFilter", new component.customselect.CustomSelectView(this, {})).onChange(this.onFilterChange.bind(this));
         this._statuses = Task.getStatuses();
     }
     
@@ -221,9 +220,6 @@ export class TaskGroupsPanelView extends component.base.ComponentView {
         this.$container.on("click", ".pin-task", this.onPinTaskClick.bind(this));
         this.$container.on("click", ".btn.refresh", this.onFullRefreshClick.bind(this));
         this.$container.on("click", "[data-action=\"mark-all-as-read\"]", this.onMarkAllAsReadClick.bind(this));
-        this.$container.on("click", "[data-action=open-chat]", this.onOpenChatClick.bind(this));
-        this.$container.on("click", "[data-action=open-notes]", this.onOpenNotesClick.bind(this));
-        this.$container.on("click", "[data-action=open-calendar]", this.onOpenCalendarClick.bind(this));
         this.$container.on("click", ".taskgroup-header", this.onTaskGroupHeaderClick.bind(this));
         this.$container.on("click", "th[data-sort-by], td[data-sort-by]", this.onTableHeaderClick.bind(this));
         this.$container.on("mousedown", ".col-resizer", this.onColResizerMouseDown.bind(this));
@@ -282,8 +278,8 @@ export class TaskGroupsPanelView extends component.base.ComponentView {
                 hEmptyTgInfo: 43,
                 hKanbanEmptyTgInfo: 43 + 40,
                 hHiddenTasksInfo: 43,
-                hKanbanEntryBox: 63,
-                hKanbanLastEntryBox: 63 + 40,
+                hKanbanEntryBox: 68,
+                hKanbanLastEntryBox: 68 + 40,
             };
             this.collapsedTaskGroups = JSON.parse(<string>this.model.settings["collapsed-taskgroups"]);
             this.updateColumnsVisibilityInfo();
@@ -474,7 +470,7 @@ export class TaskGroupsPanelView extends component.base.ComponentView {
     }
     
     updateSettingsMenu(): void {
-        let safeId = this.model.projectId.replace(/:/g, "---").replace(/\|/g, "___");
+        let safeId = this.model.uniqueSafeId;
         for (let k in this.model.settings) {
             this.$container.find("#tasks-settings-" + k + "-" + safeId).prop("checked", this.getSetting(k));
         }
@@ -501,7 +497,6 @@ export class TaskGroupsPanelView extends component.base.ComponentView {
             "show-status-column",
             "show-attachments-column",
             "show-created-column",
-            "show-task-numbers",
         ];
         if (!this.isKanban()) {
             kanbanDisabledSettings = [];
@@ -1606,16 +1601,19 @@ export class TaskGroupsPanelView extends component.base.ComponentView {
                 data.taskCache = cache;
             }
             
-            if (!this.isKanban() && !this.isInRecentlyModifiedMode()) {
+            const isKanban = this.isKanban();
+            const hideTaskNumbers = !this.model.settings["show-task-numbers"];
+            
+            if (!isKanban && !this.isInRecentlyModifiedMode()) {
                 element.setAttribute("draggable", "true");
             }
             
             let taskFullId = data.context.projectId + "/" + data.context.taskGroupId + "/" + data.task.id;
             let pinned = data.task.pinnedInTaskGroupIds.indexOf(data.context.taskGroupId) >= 0;
             let overdue = this.isTaskOverdue(data.task);
-            element.className = "entry entry-task" + (this.isKanban() ? "" : " dropzone") + (this.isTaskSelected(taskFullId) ? " selected" : "") + (this.isTaskCut(taskFullId) ? " cut" : "") + (pinned ? " pinned" : "") + (data.task.unread ? " unread" : "") + (overdue ? " overdue" : "") + " status-" + data.task.status;
+            element.className = "entry entry-task" + (isKanban ? "" : " dropzone") + (this.isTaskSelected(taskFullId) ? " selected" : "") + (this.isTaskCut(taskFullId) ? " cut" : "") + (pinned ? " pinned" : "") + (data.task.unread ? " unread" : "") + (overdue ? " overdue" : "") + " status-" + data.task.status;
             (<HTMLElement>childNodes[1].childNodes[0]).className = "task-label " + data.task.labelClass;
-            (<HTMLElement>childNodes[1].childNodes[0]).innerText = "#" + data.task.id;
+            (<HTMLElement>childNodes[1].childNodes[0]).innerText = "#" + (isKanban && hideTaskNumbers ? "" : data.task.id);
             (<HTMLElement>childNodes[2].childNodes[0]).style.height = (entry.height - 7) + "px";
             (<HTMLElement>childNodes[2].childNodes[0].childNodes[0].childNodes[0]).innerText = data.task.title;
             (<HTMLElement>childNodes[2].childNodes[0].childNodes[0].childNodes[2]).innerText = data.task.description;
@@ -1737,6 +1735,8 @@ export class TaskGroupsPanelView extends component.base.ComponentView {
             element.className = "entry entry-kanban-header" + (this.isKanban() ? " kanban-dropzone" : "");
         }
         else if (data.tasksByStatus) {
+            const isKanban = this.isKanban();
+            const hideTaskNumbers = !this.model.settings["show-task-numbers"];
             element.className = "entry entry-kanban-tasks" + (data.isLastTGRow ? " last-row-in-tg" : "");
             let taskStatuses = this._statuses;
             let nTaskStatuses = taskStatuses.length;
@@ -1749,6 +1749,7 @@ export class TaskGroupsPanelView extends component.base.ComponentView {
                 let taskFullId = (task && context) ? (context.projectId + "/" + context.taskGroupId + "/" + task.id) : "";
                 let td = childNodes[x + i];
                 let box: HTMLElement = <HTMLElement>td.childNodes[0];
+                element.setAttribute(`data-kanban-has-${taskStatuses[i]}`, task ? "1" : "0");
                 box.classList.toggle("empty", !task);
                 box.classList.toggle("selected", task && this.isTaskSelected(taskFullId));
                 box.classList.toggle("unread", task && task.unread);
@@ -1758,7 +1759,7 @@ export class TaskGroupsPanelView extends component.base.ComponentView {
                 td.setAttribute("data-kanban-dropzone-taskgroup-full-id", taskGroupFullId);
                 box.setAttribute("draggable", task ? "true" : "false");
                 box.setAttribute("data-task-full-id", taskFullId);
-                box.childNodes[0].childNodes[0].textContent = task ? ("#" + task.id) : "";
+                box.childNodes[0].childNodes[0].textContent = task ? ("#" + (isKanban && hideTaskNumbers ? "" : task.id)) : "";
                 (<HTMLElement>box.childNodes[0].childNodes[0]).className = "task-label "  + (task ? (task.labelClass + " has-task-tooltip") : "");
                 (<HTMLElement>box.childNodes[0].childNodes[0]).setAttribute("data-task-id", task ? task.id : "");
                 $(box.childNodes[0].childNodes[0]).data("task-id", task ? task.id : "");
@@ -2311,18 +2312,6 @@ export class TaskGroupsPanelView extends component.base.ComponentView {
         this.$settingsMenu.removeClass("visible");
         
         this.triggerEvent("markAllAsRead");
-    }
-    
-    onOpenChatClick(): void {
-        this.triggerEvent("openChat");
-    }
-    
-    onOpenNotesClick(): void {
-        this.triggerEvent("openNotes");
-    }
-    
-    onOpenCalendarClick(): void {
-        this.triggerEvent("openCalendar");
     }
     
     onTableHeaderClick(e: MouseEvent): void {

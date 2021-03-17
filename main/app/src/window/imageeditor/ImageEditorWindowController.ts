@@ -60,7 +60,7 @@ export class ImageEditorWindowController extends BaseWindowController {
     openableElement: OpenableElement;
     deferred: Q.Deferred<ScreenshotResult>;
     notificationId: number;
-    newFileName: string;
+    currentFileName: string;
     personsComponent: PersonsController;
     notifications: NotificationController;
     taskTooltip: TaskTooltipController;
@@ -76,6 +76,7 @@ export class ImageEditorWindowController extends BaseWindowController {
     attachToTaskLocked: boolean = false;
     isRenaming: boolean = false;
     documentSectionId: string;
+    imageSizeDetected: boolean = false;
     
     constructor(parent: app.WindowParent, public session: Session, public options: Options) {
         super(parent, __filename, __dirname);
@@ -94,20 +95,21 @@ export class ImageEditorWindowController extends BaseWindowController {
         this.addViewScript({path: "build/tui/tui-image-editor/examples/js/theme/black-theme.js"});
         this.addViewScript({path: "build/tui/tui-image-editor/examples/js/theme/white-theme.js"});
         this.openableElement = options.openableElement;
+        const initialWindowSize = this.calculateAdaptiveWindowSize();
         this.openWindowOptions = {
             modal: false,
             maximized: this.options.editMode ? this.openWindowOptions.maximized : true,
-            alwaysOnTop: true,
+            alwaysOnTop: !this.options.openableElement,
             showInactive: false,
             toolbar: false,
             maximizable: true,
             minimizable: true,
             show: false,
             position: "center-always",
-            minWidth: 800,
-            minHeight: 600,
-            width: 800,
-            height: 600,
+            minWidth: 300,
+            minHeight: 200,
+            width: initialWindowSize.width,
+            height: initialWindowSize.height,
             resizable: true,
             title: this.getTitle(),
             backgroundColor: "#1e1e1e",
@@ -120,11 +122,11 @@ export class ImageEditorWindowController extends BaseWindowController {
         this.mimeType = mimeType == "image/png" || mimeType == "image/jpeg" ? mimeType : "image/png";
         
         if (this.openableElement) {
-            this.newFileName = this.openableElement.getName();
+            this.currentFileName = this.openableElement.getName();
         }
         else {
-            this.newFileName = this.createNewFileName();
-            this.setTitle(this.newFileName);
+            this.currentFileName = this.createNewFileName();
+            this.setTitle(this.currentFileName);
         }
         this.personsComponent = this.addComponent("personsComponent", this.componentFactory.createComponent("persons", [this]));
         this.notifications = this.addComponent("notifications", this.componentFactory.createComponent("notification", [this]));
@@ -142,7 +144,7 @@ export class ImageEditorWindowController extends BaseWindowController {
         this.registerPmxEvent(client.storageProviderManager.event, this.onStorageEvent);
         
         this.enableTaskBadgeAutoUpdater();
-        this.app.addEventListener<event.FileRenamedEvent>("fileRenamed", event => {
+        this.bindEvent<event.FileRenamedEvent>(this.app, "fileRenamed", event => {
             if (!this.openableElement) {
                 return;
             }
@@ -176,13 +178,28 @@ export class ImageEditorWindowController extends BaseWindowController {
         });
     }
     
+    onViewDetectImageSize(width: number, height: number): void {
+        if (this.imageSizeDetected) {
+            return;
+        }
+        this.imageSizeDetected = true;
+        if (!this.options.openableElement) {
+            return;
+        }
+        if (this.nwin) {
+            const windowSize = this.calculateAdaptiveWindowSize(width, height, undefined, undefined, true);
+            this.nwin.setInnerSize(windowSize.width + 22, windowSize.height + 121);
+            this.nwin.center();
+        }
+    }
+    
     getModel(): Model {
         return {
             docked: this.docked,
             name: this.name,
             image: this.app.assetsManager.getAsset("icons/app-icon.png"),
             iconsPath: this.app.assetsManager.getAsset("icons/tui-editor"),
-            fileName: this.newFileName,
+            fileName: this.currentFileName,
             editMode: this.options.editMode,
             boundTasksStr: this.getBoundTasksStr(),
         };
@@ -302,6 +319,9 @@ export class ImageEditorWindowController extends BaseWindowController {
             .then(needSave => {
                 if (!needSave) {
                     this.manager.stateChanged(BaseWindowManager.STATE_IDLE);
+                    let client = this.session.sectionManager.client;
+                    this.unregisterPmxEvent(client.storageProviderManager.event, this.onStorageEvent);
+            
                     defer.resolve();
                 }
                 else {
@@ -339,31 +359,279 @@ export class ImageEditorWindowController extends BaseWindowController {
             this.save(dataUrl);
             return;
         }
-        let notificationId = this.notifications.showNotification(this.i18n("window.imageeditor.actions.save"), {autoHide: false, progress: false});
-        this.callViewMethod("setDirty", false);
-        let content = privfs.lazyBuffer.Content.createFromBase64(dataUrl.split(",")[1], "image/png", this.newFileName);
-        
-        Q().then(() => {
-            return this.uploadToMy(content)
-            .then(result => {
-                this.openableElement = result.openableElement;
+        else {
+            new Promise<void>(async() => {
+                await this.saveNew(dataUrl);
+                this.openForEditing();
             })
-            .fin(() => {
-                this.notifications.hideNotification(notificationId);
-            });
+        }
+
+    }
+
+    async saveNew(dataUrl: string): Promise<void> {
+        let notificationId = this.notifications.showNotification(this.i18n("window.imageeditor.actions.save"), {autoHide: false, progress: false});
+        try {
+            let content = privfs.lazyBuffer.Content.createFromBase64(dataUrl.split(",")[1], "image/png", this.currentFileName);
+            const uploadResult = await this.uploadToMy(content);
+            this.openableElement = uploadResult.openableElement;
+            this.callViewMethod("setDirty", false);    
+        }        
+        finally {
+            this.notifications.hideNotification(notificationId);
+        }
+
+
+        // Q().then(() => {
+        //     return this.uploadToMy(content)
+        //     .then(result => {
+        //         this.openableElement = result.openableElement;
+        //     })
+        //     .fin(() => {
+        //         this.notifications.hideNotification(notificationId);
+        //     });
+        // })
+        // .then(() => {
+        //     return this.openForEditing();
+        // });
+
+    }
+    
+    onViewSendScreenshot(dataUrl: string): void {
+        this.sendScreenshot(dataUrl);
+    }
+
+    onViewAttachToTask(dataUrl: string) {
+        this.attachToTask(dataUrl);
+    }    
+
+    onViewPrint() {
+        if (this.isPrinting || this.openableElement == null) {
+            return;
+        }
+        this.isPrinting = true;
+        let notificationId = this.notifications.showNotification(this.i18n("window.imageeditor.printing"), {autoHide: false, progress: true});
+        Q().then(() => {
+            return this.app.print(this.session, this.openableElement);
         })
-        .then(() => {
-            return this.openForEditing();
+        .then(printed => {
+            if (printed) {
+                setTimeout(() => {
+                    this.notifications.showNotification(this.i18n("window.imageeditor.printed"));
+                }, 500);
+            }
+        })
+        .fin(() => {
+            this.notifications.hideNotification(notificationId);
+            this.isPrinting = false;
         });
     }
     
+    onViewSetDirty(isDirty: boolean) {
+        this.nwin.setDirty(isDirty);
+    }
+    
+    onViewHistory(): void {
+        if (this.openableElement instanceof shelltypes.OpenableFile) {
+            this.app.dispatchEvent<event.OpenHistoryViewEvent>({
+                type: "open-history-view",
+                parent: this,
+                fileSystem: this.openableElement.fileSystem,
+                path: this.openableElement.path,
+                hostHash: this.session.hostHash
+            });
+        }
+    }
+    
+    onViewOpenTask(taskIdsStr: string): void {
+        let entryId = this.openableElement.getElementId();
+        taskIdsStr += "";
+        let resolved = this.session.sectionManager.resolveFileId(entryId);
+        
+        let taskId: string = "";
+        if (taskIdsStr.indexOf(",") >= 0) {
+            this.taskChooser.options.onlyTaskIds = taskIdsStr.split(",");
+            this.taskChooser.refreshTasks();
+            this.taskChooser.showPopup().then(result => {
+                if (result.taskId) {
+                    this.tasksPlugin.openTask(resolved.section.getId(), result.taskId);
+                }
+            });
+        }
+        else {
+            taskId = taskIdsStr;
+            this.tasksPlugin.openTask(resolved.section.getId(), taskId);
+        }
+    }
+
+    onViewEnterEditMode(): void {
+        this.openableElement.getBlobData().then(data => {
+            return this.openForEditing().thenResolve(data);
+        })
+        .then(data => {
+            this.callViewMethod("editImage", data, this.openableElement.getName(), this.mimeType);
+            this.showEditModeNotification();
+        })
+        .fail(e => {
+            if (privfs.core.ApiErrorCodes.is(e, "DESCRIPTOR_LOCKED") || e.message == "locked-in-another-session-by-me") {
+                this.editMode = false;
+                return Q(this.onError(e));
+            }
+        });
+    }
+
+    onViewRename(): void {
+        if (this.isRenaming) {
+            return;
+        }
+        this.isRenaming = true;
+        Q().then(() => {
+            return this.prompt(this.i18n("window.imageeditor.rename.message"), this.openableElement.name);
+        })
+        .then(result => {
+            if (result.result == "ok" && result.value != this.openableElement.name) {
+                let notificationId = this.notifications.showNotification(this.i18n("window.imageeditor.rename.notification.renaming"), { autoHide: false, progress: true });
+                let notifKey: string = "renamed";
+                return Q().then(() => {
+                    if (this.openableElement instanceof OpenableSectionFile) {
+                        let osf: OpenableSectionFile = this.openableElement;
+                        let newFullFileName: string = "";
+                        return osf.section.getFileTree().then(tree => {
+                            return tree.refreshDeep(true).thenResolve(tree);
+                        })
+                        .then(tree => {
+                            if (tree.collection.list.find(x => x.name == result.value)) {
+                                notifKey = "alreadyExists";
+                                return true;
+                            }
+                            else {
+                                newFullFileName = osf.path.substr(0, osf.path.lastIndexOf("/")) + "/" + result.value;
+                                return tree.fileSystem.rename(osf.path, result.value)
+                                .then(() => {
+                                    this.app.fileRenameObserver.dispatchFileRenamedEvent(osf.handle.ref.did, newFullFileName, osf.path, this.session.hostHash);
+                                })
+                                .thenResolve(true);
+                            }
+                        })
+                        .then(res => {
+                            notifKey = res ? "renamed" : "error";
+                        })
+                        .fail(() => {
+                            notifKey = "error";
+                        });
+                    }
+                    else if ((<any>this.openableElement).openableElementType == "LocalOpenableElement") {
+                        let el = <any>this.openableElement;
+                        let oldPath = el.entry.path;
+                        el.rename(result.value)
+                        .then(() => {
+                            let newFullFileName = el.entry.path.substr(0, el.entry.path.lastIndexOf("/")) + "/" + result.value;
+                            this.app.fileRenameObserver.dispatchLocalFileRenamedEvent(newFullFileName, oldPath);
+                        });
+                    }
+                })
+                .fin(() => {
+                    this.notifications.hideNotification(notificationId);
+                    if (notifKey) {
+                        setTimeout(() => {
+                            this.notifications.showNotification(this.i18n(`window.imageeditor.rename.notification.${notifKey}`));
+                        }, 900);
+                    }
+                });
+            }
+        })
+        .fin(() => {
+            this.isRenaming = false;
+        });
+    }
+
+    getResult(): Q.Promise<ScreenshotResult> {
+        return this.deferred.promise;
+    }
+
+    sendScreenshot(dataUrl: string) {
+        this.app.sendFile({
+            getData: () => {
+                return privfs.lazyBuffer.Content.createFromBase64(dataUrl.split(",")[1], "image/png", this.currentFileName);
+            },
+            notifications: this.notifications,
+            parent: this.getClosestNotDockedController(),
+        });
+    }
+
+    isNewFile(): boolean {
+        return this.openableElement == null;
+    }
+
+    async attachToTask(dataUrl: string): Promise<void> {
+        if (this.attachToTaskLocked) {
+            return;
+        }
+        this.attachToTaskLocked = true;
+
+
+        const hasChangesToSave = await this.hasChangesToSave();
+        if (hasChangesToSave) {
+            const saveConfirmed = await this.askToSaveBeforeAttachConfirm();
+            if (! saveConfirmed) {
+                this.attachToTaskLocked = false;
+                return;
+            }
+            if(this.isNewFile()) {
+                await this.saveNew(dataUrl);
+            }
+            else {
+                await this.save(dataUrl);
+            }
+        }
+
+        if ((<any>this.openableElement).openableElementType == "LocalOpenableElement") {
+            let tasksPlugin = this.app.getComponent("tasks-plugin");
+            TaskChooserWindowController.attachLocalFileToTask(this.parent.getClosestNotDockedController(), this.session, tasksPlugin, this.openableElement, this.notifications);
+        }
+        else {
+            this.session.sectionManager.getFileOpenableElement(this.openableElement.getElementId(), false).then(file => {
+                let resolved = this.session.sectionManager.resolveFileId(file.getElementId());
+                let section = resolved.section;
+                let tasksModule = section.getKvdbModule();
+                let tasksPlugin = this.app.getComponent("tasks-plugin");
+                if (!tasksModule || !tasksPlugin) {
+                    return null;
+                }
+                TaskChooserWindowController.attachFileToTask(this, this.session, tasksPlugin, section, file, this.handle);
+            });
+        }
+        this.attachToTaskLocked = false;
+    } 
+    
+    async askToSaveBeforeAttachConfirm(): Promise<boolean> {
+        try {
+            const hasChanges = await this.hasChangesToSave();
+            if (hasChanges) {
+                const confirmResult = await this.confirmEx({
+                    message: this.i18n("window.imageeditor.unsavedWarning.text", [this.currentFileName]),
+                    yes: {label: this.i18n("window.imageeditor.save.confirm.yes.label")},
+
+                    cancel: {visible: false},
+                });
+                return confirmResult.result == "yes";
+            }    
+        }
+        catch (e) {
+            this.logError(e);
+        }
+    }
+
+    async hasChangesToSave(): Promise<boolean> {
+        return await this.retrieveFromView<boolean>("isDirty");
+    }
+
     save(dataUrl: string): Q.Promise<void> {
         let notificationId: number;
         return Q().then(() => {
             this.releasingLock = true;
             if (this.handle) {
                 notificationId = this.notifications.showNotification(this.i18n("window.imageeditor.actions.save"), {autoHide: false, progress: false});
-                let content = privfs.lazyBuffer.Content.createFromBase64(dataUrl.split(",")[1], this.mimeType, this.openableElement.getName());
+                let content = privfs.lazyBuffer.Content.createFromBase64(dataUrl.split(",")[1], this.mimeType, this.currentFileName);
                 return this.handle.write(content)
                 .catch(e => {
                     if (privfs.core.ApiErrorCodes.is(e, "DESCRIPTOR_LOCKED")) {
@@ -469,125 +737,6 @@ export class ImageEditorWindowController extends BaseWindowController {
         })
     }
     
-    getResult(): Q.Promise<ScreenshotResult> {
-        return this.deferred.promise;
-    }
-    
-    onViewPrint() {
-        if (this.isPrinting || this.openableElement == null) {
-            return;
-        }
-        this.isPrinting = true;
-        let notificationId = this.notifications.showNotification(this.i18n("window.imageeditor.printing"), {autoHide: false, progress: true});
-        Q().then(() => {
-            return this.app.print(this.session, this.openableElement);
-        })
-        .then(printed => {
-            if (printed) {
-                setTimeout(() => {
-                    this.notifications.showNotification(this.i18n("window.imageeditor.printed"));
-                }, 500);
-            }
-        })
-        .fin(() => {
-            this.notifications.hideNotification(notificationId);
-            this.isPrinting = false;
-        });
-    }
-    
-    onViewSendScreenshot(dataUrl: string): void {
-        this.app.sendFile({
-            getData: () => {
-                return privfs.lazyBuffer.Content.createFromBase64(dataUrl.split(",")[1], "image/png", this.newFileName);
-            },
-            notifications: this.notifications,
-            parent: this.getClosestNotDockedController(),
-        });
-    }
-    
-    onViewAttachToTask(dataUrl: string) {
-        if (this.attachToTaskLocked) {
-            return;
-        }
-        this.attachToTaskLocked = true;
-        Q().then(() => {
-            if (! this.openableElement) {
-                return Q().then(() => {
-                    let content = privfs.lazyBuffer.Content.createFromBase64(dataUrl.split(",")[1], this.mimeType, this.newFileName);
-                    return this.uploadToMy(content)
-                })
-                .then(result => {
-                    this.callViewMethod("setDirty", false);
-                    this.openableElement = result.openableElement;
-                    return;
-                })
-            }
-            else {
-                return;
-            }
-        })
-        .then(() => {
-            if (this.openableElement) {
-                if ((<any>this.openableElement).openableElementType == "LocalOpenableElement") {
-                    let tasksPlugin = this.app.getComponent("tasks-plugin");
-                    TaskChooserWindowController.attachLocalFileToTask(this.parent.getClosestNotDockedController(), this.session, tasksPlugin, this.openableElement, this.notifications);
-                }
-                else {
-                    this.session.sectionManager.getFileOpenableElement(this.openableElement.getElementId(), false).then(file => {
-                        let resolved = this.session.sectionManager.resolveFileId(file.getElementId());
-                        let section = resolved.section;
-                        let tasksModule = section.getKvdbModule();
-                        let tasksPlugin = this.app.getComponent("tasks-plugin");
-                        if (!tasksModule || !tasksPlugin) {
-                            return null;
-                        }
-                        TaskChooserWindowController.attachFileToTask(this, this.session, tasksPlugin, section, file, this.handle);
-                    });
-                }
-            }
-        })
-        .fin(() => {
-            this.attachToTaskLocked = false;
-        });
-    }
-    
-    onViewSetDirty(isDirty: boolean) {
-        this.nwin.setDirty(isDirty);
-    }
-    
-    onViewHistory(): void {
-        if (this.openableElement instanceof shelltypes.OpenableFile) {
-            this.app.dispatchEvent<event.OpenHistoryViewEvent>({
-                type: "open-history-view",
-                parent: this,
-                fileSystem: this.openableElement.fileSystem,
-                path: this.openableElement.path,
-                hostHash: this.session.hostHash
-            });
-        }
-    }
-    
-    onViewOpenTask(taskIdsStr: string): void {
-        let entryId = this.openableElement.getElementId();
-        taskIdsStr += "";
-        let resolved = this.session.sectionManager.resolveFileId(entryId);
-        
-        let taskId: string = "";
-        if (taskIdsStr.indexOf(",") >= 0) {
-            this.taskChooser.options.onlyTaskIds = taskIdsStr.split(",");
-            this.taskChooser.refreshTasks();
-            this.taskChooser.showPopup().then(result => {
-                if (result.taskId) {
-                    this.tasksPlugin.openTask(resolved.section.getId(), result.taskId);
-                }
-            });
-        }
-        else {
-            taskId = taskIdsStr;
-            this.tasksPlugin.openTask(resolved.section.getId(), taskId);
-        }
-    }
-    
     getBoundTasksStr(): string {
         let tree = this.fileTree;
         if (!tree) {
@@ -669,23 +818,7 @@ export class ImageEditorWindowController extends BaseWindowController {
             this.editMode = true;
         });
     }
-    
-    onViewEnterEditMode(): void {
-        this.openableElement.getBlobData().then(data => {
-            return this.openForEditing().thenResolve(data);
-        })
-        .then(data => {
-            this.callViewMethod("editImage", data, this.openableElement.getName(), this.mimeType);
-            this.showEditModeNotification();
-        })
-        .fail(e => {
-            if (privfs.core.ApiErrorCodes.is(e, "DESCRIPTOR_LOCKED") || e.message == "locked-in-another-session-by-me") {
-                this.editMode = false;
-                return Q(this.onError(e));
-            }
-        });
-    }
-    
+        
     onError(e: any): void {
         if (e.message == "locked-in-another-session-by-me") {
             return;
@@ -722,70 +855,5 @@ export class ImageEditorWindowController extends BaseWindowController {
         this.updatedFullFileName = newFullFileName;
         this.setTitle(newTitle);
         this.callViewMethod("updateFileName", newFileName, newFullFileName, newTitle);
-    }
-    
-    onViewRename(): void {
-        if (this.isRenaming) {
-            return;
-        }
-        this.isRenaming = true;
-        Q().then(() => {
-            return this.prompt(this.i18n("window.imageeditor.rename.message"), this.openableElement.name);
-        })
-        .then(result => {
-            if (result.result == "ok" && result.value != this.openableElement.name) {
-                let notificationId = this.notifications.showNotification(this.i18n("window.imageeditor.rename.notification.renaming"), { autoHide: false, progress: true });
-                let notifKey: string = "renamed";
-                return Q().then(() => {
-                    if (this.openableElement instanceof OpenableSectionFile) {
-                        let osf: OpenableSectionFile = this.openableElement;
-                        let newFullFileName: string = "";
-                        return osf.section.getFileTree().then(tree => {
-                            return tree.refreshDeep(true).thenResolve(tree);
-                        })
-                        .then(tree => {
-                            if (tree.collection.list.find(x => x.name == result.value)) {
-                                notifKey = "alreadyExists";
-                                return true;
-                            }
-                            else {
-                                newFullFileName = osf.path.substr(0, osf.path.lastIndexOf("/")) + "/" + result.value;
-                                return tree.fileSystem.rename(osf.path, result.value)
-                                .then(() => {
-                                    this.app.fileRenameObserver.dispatchFileRenamedEvent(osf.handle.ref.did, newFullFileName, osf.path, this.session.hostHash);
-                                })
-                                .thenResolve(true);
-                            }
-                        })
-                        .then(res => {
-                            notifKey = res ? "renamed" : "error";
-                        })
-                        .fail(() => {
-                            notifKey = "error";
-                        });
-                    }
-                    else if ((<any>this.openableElement).openableElementType == "LocalOpenableElement") {
-                        let el = <any>this.openableElement;
-                        let oldPath = el.entry.path;
-                        el.rename(result.value)
-                        .then(() => {
-                            let newFullFileName = el.entry.path.substr(0, el.entry.path.lastIndexOf("/")) + "/" + result.value;
-                            this.app.fileRenameObserver.dispatchLocalFileRenamedEvent(newFullFileName, oldPath);
-                        });
-                    }
-                })
-                .fin(() => {
-                    this.notifications.hideNotification(notificationId);
-                    if (notifKey) {
-                        setTimeout(() => {
-                            this.notifications.showNotification(this.i18n(`window.imageeditor.rename.notification.${notifKey}`));
-                        }, 900);
-                    }
-                });
-            }
-        })
-        .fin(() => {
-            this.isRenaming = false;
-        });
     }
 }

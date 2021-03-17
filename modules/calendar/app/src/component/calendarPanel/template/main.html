@@ -92,42 +92,42 @@
       <li>
         <span class="hide-in-summary">
           {{ checked = model.settings["enable-day-preview-panel"] ? " checked" : ""; }}
-          <input type="checkbox" id="calendar-settings-enable-day-preview-panel-{{@model.safeProjectId}}-{{@model.calendarId}}" data-setting="enable-day-preview-panel" {{@checked}} />
-          <label for="calendar-settings-enable-day-preview-panel-{{@model.safeProjectId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.enable-day-preview-panel")}}</label>
+          <input type="checkbox" id="calendar-settings-enable-day-preview-panel-{{@model.uniqueSafeId}}-{{@model.calendarId}}" data-setting="enable-day-preview-panel" {{@checked}} />
+          <label for="calendar-settings-enable-day-preview-panel-{{@model.uniqueSafeId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.enable-day-preview-panel")}}</label>
         </span>
       </li>
       <li>
         <span class="hide-in-summary">
           {{ checked = model.settings["show-task-preview-panel"] ? " checked" : ""; }}
-          <input type="checkbox" id="calendar-settings-show-task-preview-panel-{{@model.safeProjectId}}-{{@model.calendarId}}" data-setting="show-task-preview-panel" {{@checked}} />
-          <label for="calendar-settings-show-task-preview-panel-{{@model.safeProjectId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.show-task-preview-panel")}}</label>
+          <input type="checkbox" id="calendar-settings-show-task-preview-panel-{{@model.uniqueSafeId}}-{{@model.calendarId}}" data-setting="show-task-preview-panel" {{@checked}} />
+          <label for="calendar-settings-show-task-preview-panel-{{@model.uniqueSafeId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.show-task-preview-panel")}}</label>
         </span>
       </li>
       <li class="subitem hide-in-summary">
         <span>
           {{ checked = model.settings["horizontal-task-preview-window-layout"] ? " checked" : ""; }}
-          <input type="checkbox" id="calendar-settings-horizontal-task-preview-window-layout-{{@model.safeProjectId}}-{{@model.calendarId}}" data-setting="horizontal-task-preview-window-layout" {{@checked}} />
-          <label for="calendar-settings-horizontal-task-preview-window-layout-{{@model.safeProjectId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.horizontal-task-preview-window-layout")}}</label>
+          <input type="checkbox" id="calendar-settings-horizontal-task-preview-window-layout-{{@model.uniqueSafeId}}-{{@model.calendarId}}" data-setting="horizontal-task-preview-window-layout" {{@checked}} />
+          <label for="calendar-settings-horizontal-task-preview-window-layout-{{@model.uniqueSafeId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.horizontal-task-preview-window-layout")}}</label>
         </span>
       </li>
       <li>
         <span>
           {{ checked = model.settings["show-task-tooltip"] ? " checked" : ""; }}
-          <input type="checkbox" id="calendar-settings-show-task-tooltip-{{@model.safeProjectId}}-{{@model.calendarId}}" data-setting="show-task-tooltip" {{@checked}} />
-          <label for="calendar-settings-show-task-tooltip-{{@model.safeProjectId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.show-task-tooltip")}}</label>
+          <input type="checkbox" id="calendar-settings-show-task-tooltip-{{@model.uniqueSafeId}}-{{@model.calendarId}}" data-setting="show-task-tooltip" {{@checked}} />
+          <label for="calendar-settings-show-task-tooltip-{{@model.uniqueSafeId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.show-task-tooltip")}}</label>
         </span>
       </li>
       <li>
         <span>
           {{ checked = model.settings["show-files"] ? " checked" : ""; }}
-          <input type="checkbox" id="calendar-settings-show-files-{{@model.safeProjectId}}-{{@model.calendarId}}" data-setting="show-files" {{@checked}} />
-          <label for="calendar-settings-show-files-{{@model.safeProjectId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.show-files")}}</label>
+          <input type="checkbox" id="calendar-settings-show-files-{{@model.uniqueSafeId}}-{{@model.calendarId}}" data-setting="show-files" {{@checked}} />
+          <label for="calendar-settings-show-files-{{@model.uniqueSafeId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.show-files")}}</label>
         </span>
       </li>
       <li class="settings-item--sort-files-by">
         <span>
           {{ let sortFilesBy = model.settings["sort-files-by"]; }}
-          <label for="calendar-settings-sort-files-by-{{@model.safeProjectId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.sort-files-by")}}</label>
+          <label for="calendar-settings-sort-files-by-{{@model.uniqueSafeId}}-{{@model.calendarId}}">{{@Helper.i18n("plugin.calendar.component.calendarPanel.settings.sort-files-by")}}</label>
           <ul class="option-chooser" data-setting="sort-files-by">
             <li class="option-chooser-option {{@sortFilesBy == 'created' ? 'active' : ''}}" data-option="created">created</li>
             <li class="option-chooser-option {{@sortFilesBy == 'modified' ? 'active' : ''}}" data-option="modified">modified</li>

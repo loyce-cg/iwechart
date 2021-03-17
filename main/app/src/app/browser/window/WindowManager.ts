@@ -65,6 +65,7 @@ export class WindowManager {
         iframeContainer.classList.add("iframe-container");
         iframeContainer.appendChild(iframe);
         winMgr.domElement = wrapper;
+        winMgr.updateAlwaysOnTop();
         if (options.decoration || options.widget) {
             container.appendChild(wrapper);
         }
@@ -106,6 +107,15 @@ export class WindowManager {
                 }
                 else {
                     winMgr.header.hideMaximizeButton();
+                }
+                if (options.canSetAlwaysOnTop === false) {
+                    winMgr.header.buttons.toggleAlwaysOnTop.classList.add("hide");
+                }
+                else {
+                    winMgr.header.buttons.toggleAlwaysOnTop.addEventListener("click", event => {
+                        event.stopPropagation();
+                        winMgr.setAlwaysOnTop(!winMgr.isAlwaysOnTop());
+                    });
                 }
                 wrapper.appendChild(winMgr.header.domElement);
                 if (options.draggable) {
@@ -292,4 +302,5 @@ export class WindowManager {
         }
         Logger.warn("Not handled event from docked", event, arg);
     }
+    
 }

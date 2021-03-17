@@ -3,9 +3,11 @@ import {func as chatListElementTemplate} from "../window/mail/template/chat-list
 import * as Web from "pmc-web";
 import * as Mail from "pmc-mail";
 import { ChatMessagesView } from "../component/chatmessages/ChatMessagesView";
+import { VideoConferenceWindowView } from "../window/videoConference/VideoConferenceWindowView";
 let c = ChatMessagesView;
 
 Web.Starter.objectFactory.register(ChatWindowView);
+Web.Starter.objectFactory.register(VideoConferenceWindowView);
 
 interface MailPluginView {
     registerTemplate(template: any): void;

@@ -338,15 +338,7 @@ export class PlayerControlsController extends ComponentController {
     }
     
     onViewSetMuted(muted: boolean) {
-        if (this.independent) {
-            return;
-        }
         this.dispatchPlayerEvent<SetPlayerOptionEvent>({
-            type: "set-player-option",
-            option: "muted",
-            value: muted,
-        });
-        this.dispatchEvent<SetPlayerOptionEvent>({
             type: "set-player-option",
             option: "muted",
             value: muted,

@@ -50,6 +50,11 @@ import * as support from "./support/main";
 import * as error from "./error/main";
 import * as textviewer from "./textviewer/main";
 import * as switchvoicechatconfirm from "./switchvoicechatconfirm/main";
+import * as videorecorder from "./videorecorder/main";
+import * as deviceselector from "./deviceselector/main";
+import * as devconsole from "./devconsole/main";
+import * as videoconferenceinfo from "./videoconferenceinfo/main";
+import * as uploadservice from "./uploadservice/main";
 
 export {
     about,
@@ -104,4 +109,9 @@ export {
     textviewer,
     mindmapeditor,
     switchvoicechatconfirm,
+    videorecorder,
+    deviceselector,
+    devconsole,
+    videoconferenceinfo,
+    uploadservice
 };

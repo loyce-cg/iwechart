@@ -584,4 +584,8 @@ export class Notes2WindowView extends wnd.base.BaseAppWindowView<Model> {
         return remoteSectionsExists;
     }
 
+    hideLoading(): void {
+        this.loading.onFinishedLoading();
+    }
+
 }

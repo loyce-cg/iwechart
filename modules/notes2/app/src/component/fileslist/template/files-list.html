@@ -191,6 +191,7 @@
           <i class="fa fa-download"></i><span>{{@Helper.i18n("plugin.notes2.component.filesList.settings.exportFiles")}}</span>
         </span>
       </li>
+
       {{ if (model.isTrash) { }}
         <li class="with-icon" action-id="empty-trash" data-action="empty-trash">
           <span>
@@ -217,6 +218,14 @@
           <input type="checkbox" {{@model.showUrlFiles ? "checked" : ""}} />
           <span>
             {{@Helper.i18n("plugin.notes2.component.filesList.settings.showUrlFiles")}}
+          </span>
+        </span>
+      </li>
+      <li action-id="show-hidden-files" data-setting="show-hidden-files">
+        <span>
+          <input type="checkbox" {{@model.showHiddenFiles ? "checked" : ""}} />
+          <span>
+            {{@Helper.i18n("plugin.notes2.component.filesList.settings.showHiddenFiles")}}
           </span>
         </span>
       </li>

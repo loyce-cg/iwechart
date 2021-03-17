@@ -34,15 +34,16 @@ export interface SavedWindowState extends app.WindowState {
 
 export interface ContextSection {
     sectionId: string;
-    sectionType: "section" | "conv2" | "private";
+    sectionType: "section" | "conversation" | "private";
 }
 
 @Dependencies(["statusbar", "progress"])
 export class BaseWindowController extends ComponentController {
-    
     static USE_WEBCONTENTS_PRINT: boolean = true;
     
     @Inject componentFactory: ComponentFactory;
+    @Inject contextHistory: ContextHistory;
+    @Inject router: Router;
 
     enableScreenCover: boolean = true;
     manager: BaseWindowManager<BaseWindowController>;
@@ -72,7 +73,6 @@ export class BaseWindowController extends ComponentController {
     msgBoxInstance: MsgBox;
     afterPrinted: Q.Deferred<boolean> = Q.defer();
     afterSavedAsPdf: Q.Deferred<void> = Q.defer();
-    isSpellCheckerEnabled: boolean = null;
     userPreferences: UserPreferences;
     fontMetrics: FontMetricsController;
     personsComponent: PersonsController;
@@ -81,9 +81,10 @@ export class BaseWindowController extends ComponentController {
     pastingInProgress: boolean = false;
     isPickerOpen: boolean = false;
     titleTooltip: titletooltip.TitleTooltipController;
+    componentViewLoadedDeferred: Q.Deferred<void> = Q.defer();
+    afterLoginDeferred: Q.Deferred<void> = Q.defer();
     
-    
-    constructor(parent: app.WindowParent, filename: string, dirname: string, settings?: app.Settings, taskStream?: SyncTaskStream) {
+    constructor(parent: app.WindowParent, filename: string, dirname: string, settings?: app.Settings, taskStream?: SyncTaskStream, viewBundleName?: string) {
         super(parent, false);
         PerformanceLogger.log("openingWindows.BaseWindowController.constructor().start", this.className);
         this.ipcMode = true;
@@ -124,7 +125,10 @@ export class BaseWindowController extends ComponentController {
                 "data-auto-file-picker": (this.app.userPreferences ? this.app.userPreferences.getIsAutoFilePickerEnabled() : false) ? "true" : "false",
             },
         };
-        this.addViewScript({path: "build/privmx-view.js"});
+        this.addViewScript({path: viewBundleName ? "build/privmx-view-" + viewBundleName + ".js" : "build/privmx-view.js"});
+        if (viewBundleName) {
+            this.setViewBasicFonts();
+        }
         this.addViewStyle({path: "window/" + this.reflect.dirName + "/template/main.css"});
         let os = this.app.isElectronApp() ? process.platform : "win32";
         this.addViewStyle({path: "themes/default/css/fonts-" + os.toLowerCase() + ".css"});
@@ -145,23 +149,67 @@ export class BaseWindowController extends ComponentController {
         PerformanceLogger.log("openingWindows.BaseWindowController.constructor().end", this.className);
         this.fontMetrics = new FontMetricsController(this.retrieveFromView.bind(this));
         this.titleTooltip = this.addComponent("titleTooltip", this.componentFactory.createComponent("titletooltip", [this]));
+        this.bindEvent<event.AfterLoginEvent>(this.app, "afterlogin", () => {
+            if (this.app) {
+                this.setUserPreferences(this.app.userPreferences);
+            }
+            this.afterLoginDeferred.resolve();
+        });
+        if (this.app.isLogged()) {
+            if (this.app.userPreferences) {
+                this.setUserPreferences(this.app.userPreferences);
+            }
+            this.afterLoginDeferred.resolve();
+        }
+        
+        this.executePostLoginAndViewLoadedActions();
+    }
+
+    getUUID(): string {
+        return this.uuid;
     }
     
-    onViewComponentViewLoaded(timeoutCall?: boolean): void {
-        if (!timeoutCall && this.app.isElectronApp() && this.nwin && this.openWindowOptions && this.openWindowOptions.keepSpinnerUntilViewLoaded && !this.openWindowOptions.manualSpinnerRemoval) {
+    getEventsReferer(): string {
+        return this.manager ? this.manager.uid : undefined;
+    }
+    
+    onViewComponentViewLoaded(): void {
+        this.componentViewLoadedDeferred.resolve();
+        if (this.app.isElectronApp() && this.nwin && this.openWindowOptions && this.openWindowOptions.keepSpinnerUntilViewLoaded && !this.openWindowOptions.manualSpinnerRemoval) {
             this.nwin.removeSpinner();
         }
         if (!this.app) {
             return;
         }
-        if (!this.app.isLogged() || !this.app.userPreferences) {
-            setTimeout(() => {
-                this.onViewComponentViewLoaded(true);
-            }, 1000);
-            return;
+    }
+    
+    executePostLoginAndViewLoadedActions(): void {
+        Q.all([
+            this.componentViewLoadedDeferred.promise,
+            this.afterLoginDeferred.promise,
+        ])
+        .then(() => {
+            this.trySetupClipboardIntegration();
+            this.updateUserCustomCssVars();
+        });
+    }
+    
+    canSetupClipboardIntegration(): boolean {
+        return this.app && this.app.userPreferences && this.app.isLogged();
+    }
+    
+    trySetupClipboardIntegration(): boolean {
+        if (this.canSetupClipboardIntegration()) {
+            this.setupClipboardIntegration();
+            return true;
         }
-          
-        this.app.userPreferences.eventDispatcher.addEventListener<event.UserPreferencesChangeEvent>("userpreferenceschange", (event) => {
+        else {
+            return false;
+        }
+    }
+    
+    setupClipboardIntegration(): void {
+        this.bindEvent<event.UserPreferencesChangeEvent>(this.app.userPreferences.eventDispatcher, "userpreferenceschange", (event) => {
             if (this.app && this.app.isLogged() && this.app.userPreferences) {
                 this.callViewMethod("setClipboardIntegration", this.getSystemClipboardIntegration());
                 this.callViewMethod("setTaskPickerEnabled", this.app.userPreferences.getIsAutoTaskPickerEnabled());
@@ -208,6 +256,9 @@ export class BaseWindowController extends ComponentController {
     }
     
     createIpcSender(channelName: string = null): app.IpcSender {
+        if (this.isDestroyed()) {
+            throw new NonReportableError("Cannot create IpcSender on destroyed component");
+        }
         if (channelName === null) {
             channelName = this.getIpcChannelName();
         }
@@ -451,7 +502,9 @@ export class BaseWindowController extends ComponentController {
             Logger.debug("no defined parent manager in", this.className);
         }
         let childManager = new BaseWindowManager(this, parentManager);
-
+        if (this.loadWindowOptions.type == "render") {
+            this.loadWindowOptions.docked = true;
+        }
         this.nwin = window.createDockedWindow(id, this.getLoadOptions(), this.openWindowOptions, this.id, this.ipcChannelName, this.app);
         if (!parentManager.openChild(childManager, singletonName, id)) {
             Logger.debug("OpenDocked: this.manager.openChild returned null");
@@ -547,8 +600,10 @@ export class BaseWindowController extends ComponentController {
         if (this.app.eventDispatcher) {
             this.app.eventDispatcher.removeEventListenerByReferrer(this.manager.uid);
         }
+        this.app.removeFromObjectMap(this.id);
         this.nwin.close(true);
-        this.destroy();
+        // console.log("BaseWindowController - nwin.destroy")
+        // this.nwin.destroy();
         // this.parent.onChildWindowClose(this);
     }
     
@@ -686,10 +741,10 @@ export class BaseWindowController extends ComponentController {
         this.app.openUrl(url);
     }
     
-    onViewToogleDevTools(): void {
+    onViewToggleDevTools(): void {
         let nonDocked = this.getClosestNotDockedController();
         if (nonDocked && nonDocked.nwin && this.app.isElectronApp()) {
-            (<any>nonDocked.nwin).toogleDevTools();
+            (<any>nonDocked.nwin).toggleDevTools();
         }
     }
     
@@ -864,7 +919,7 @@ export class BaseWindowController extends ComponentController {
         return this.className + ":windowState";
     }
     
-    loadWindowState(): Q.Promise<void> {
+    loadWindowState(onlyPosition: boolean = false): Q.Promise<void> {
         return Q().then(() => {
             return this.app.getDefaultSettings().get(this.getWindowStateKey());
         })
@@ -872,41 +927,53 @@ export class BaseWindowController extends ComponentController {
             if (state) {
                 if (this.nwin) {
                     this.nwin.setPosition(state.x, state.y);
-                    this.nwin.setSize(state.width, state.height);
-                    if (state.maximized) {
-                        this.openWindowOptions.maximized = true;
-                        
-                        if (!this.app.hiddenMode) {
-                            this.nwin.maximize();
+                    if (!onlyPosition) {
+                        this.nwin.setSize(state.width, state.height);
+                        if (state.maximized) {
+                            this.openWindowOptions.maximized = true;
+                            
+                            if (!this.app.hiddenMode) {
+                                this.nwin.maximize();
+                            }
                         }
                     }
                 }
                 else {
                     this.openWindowOptions.positionX = state.x;
                     this.openWindowOptions.positionY = state.y;
-                    this.openWindowOptions.width = state.width;
-                    this.openWindowOptions.height = state.height;
-                    this.openWindowOptions.maximized = state.maximized;
+                    if (onlyPosition) {
+                        this.openWindowOptions.width = state.width;
+                        this.openWindowOptions.height = state.height;
+                        this.openWindowOptions.maximized = state.maximized;
+                    }
                 }
             }
         });
     }
     
-    saveWindowState(_force?: boolean): Q.Promise<void> {
+    saveWindowState(_force?: boolean, _state?: SavedWindowState): Q.Promise<void> {
         return Q().then(() => {
-            if (!this.nwin) {
+            let savedState: SavedWindowState = _state ? _state : this.getWindowState();
+            if (!savedState) {
                 return;
             }
-            let state = this.nwin.getRestoreState();
-            let savedState: SavedWindowState = {
-                x: state.x,
-                y: state.y,
-                width: state.width,
-                height: state.height,
-                maximized: this.openWindowOptions.maximized
-            };
             return this.app.getDefaultSettings().set(this.getWindowStateKey(), savedState);
         });
+    }
+    
+    getWindowState(): SavedWindowState {
+        if (!this.nwin) {
+            return null;
+        }
+        let state = this.nwin.getRestoreState();
+        let savedState: SavedWindowState = {
+            x: state.x,
+            y: state.y,
+            width: state.width,
+            height: state.height,
+            maximized: this.openWindowOptions.maximized
+        };
+        return savedState;
     }
     
     alert(message?: string): Q.Promise<MsgBoxResult> {
@@ -1034,50 +1101,26 @@ export class BaseWindowController extends ComponentController {
         
     }
     
-    initSpellChecker(userPreferences?: UserPreferences): void {
-        if (!this.app.isElectronApp()) {
+    initSpellChecker(): void {
+        if (!this.app || !this.app.isElectronApp()) {
             return;
         }
-        if (userPreferences) {
-            this.setUserPreferences(userPreferences);
+        if (this.nwin) {
+            this.nwin.updateSpellCheckerLanguages();
         }
-        else if (!this.userPreferences) {
-            Logger.error("No userPreferences provided (BaseWindowController.initSpellChecker())");
-            return;
-        }
-        
-        let lang = this.app.localeService.currentLang;
-        let isSpellCheckerEnabled = this.userPreferences.isSpellCheckerEnabled();
-        if (isSpellCheckerEnabled === this.isSpellCheckerEnabled && SpellCheckerController.currentLang == lang) {
-            return;
-        }
-        
-        if (isSpellCheckerEnabled) {
-            SpellCheckerController.init(lang, process.platform);
-            this.callViewMethod("initSpellChecker", lang);
-            this.isSpellCheckerEnabled = true;
-        }
-        else {
-            this.callViewMethod("stopSpellChecker");
-            this.isSpellCheckerEnabled = false;
-        }
+        this.callViewMethod("triggerSpellCheckerUpdate");
     }
     
     setUserPreferences(userPreferences?: UserPreferences) {
         this.userPreferences = userPreferences;
-        this.userPreferences.eventDispatcher.addEventListener<event.UserPreferencesChangeEvent>("userpreferenceschange", this.onUserPreferencesChange.bind(this), this.manager.uid, "normal");
-    }
-    
-    onViewCheckSpelling(channelId: number, wordsStr: string): void {
-        let words: string[] = JSON.parse(wordsStr);
-        let misspelled: string[] = words.filter(w => SpellCheckerController.isMisspelled(w));
-        this.sendToViewChannel(channelId, JSON.stringify(misspelled));
+        this.bindEvent<event.UserPreferencesChangeEvent>(this.userPreferences.eventDispatcher, "userpreferenceschange", this.onUserPreferencesChange.bind(this));
     }
     
     onUserPreferencesChange(event: event.UserPreferencesChangeEvent): void {
         this.initSpellChecker();
         this.updateUnreadBadgeClickAction();
         this.updateUnreadBadgeUseDoubleClick();
+        this.updateUserCustomCssVars();
     }
     
     updateUnreadBadgeClickAction(): void {
@@ -1106,6 +1149,10 @@ export class BaseWindowController extends ComponentController {
             this.unreadBadgeUseDoubleClick = unreadBadgeUseDoubleClick;
             this.callViewMethod("setUnreadBadgeUseDoubleClick", this.unreadBadgeUseDoubleClick);
         }
+    }
+    
+    updateUserCustomCssVars(): void {
+        this.callViewMethod("updateUserCustomSuccessColor", this.userPreferences.getValue(MailConst.UI_CUSTOM_SUCCESS_COLOR));
     }
     
     onAllWindowsMessage(e: event.AllWindowsMessage): void {
@@ -1158,6 +1205,9 @@ export class BaseWindowController extends ComponentController {
     }
     
     onViewUIEvent(): void {
+        if (! this.app) {
+            return;
+        }
         this.app.getUIEventsListener()();
     }
     
@@ -1168,7 +1218,7 @@ export class BaseWindowController extends ComponentController {
     }
     
     enableTaskBadgeAutoUpdater(): void {
-        this.app.addEventListener<{ type: "task-badge-changed", taskId: string, taskLabelClass: string }>("task-badge-changed", e => {
+        this.bindEvent<{ type: "task-badge-changed", taskId: string, taskLabelClass: string }>(this.app, "task-badge-changed", e => {
             this.callViewMethod("updateTaskBadges", e.taskId, e.taskLabelClass);
         });
     }
@@ -1189,6 +1239,12 @@ export class BaseWindowController extends ComponentController {
     
     onViewCustomCopy(dataStr: string): void {
         let data: { text: string, html: string } = JSON.parse(dataStr);
+        
+        // fix: replace non-breakable space with normal one
+        const searchRegExp = /\u00A0/g;
+        const replaceWith = ' ';
+        data.text = data.text.replace(searchRegExp, replaceWith);
+        
         this.app.setSystemCliboardData(data);
         this.app.clipboard.set(data, new Date(), "privmx");
     }
@@ -1258,14 +1314,14 @@ export class BaseWindowController extends ComponentController {
                 initialSearchText = `#${currentTaskId}`;
             }
             let parent = this.getClosestNotDockedController();
-            let def = Q.defer<void>();
+            let def = Q.defer<string>();
             let session = this.app.sessionManager.getSessionByHostHash(relatedHostHash);
             this.app.ioc.create(TaskChooserWindowController, [parent, { createTaskButton: !disableCreatingTasks, initialSearchText, session: session }]).then(win => {
                 parent.openChildWindow(win);
-                win.taskChooser.addEventListener<TaskChooserCloseEvent>("task-chooser-close", e => {
+                win.taskChooser.bindEvent<TaskChooserCloseEvent>(win.taskChooser, "task-chooser-close", e => {
                     if (e.taskId) {
                         this.callViewMethod("taskPickerResult", e.taskId);
-                        def.resolve();
+                        def.resolve(e.taskId);
                     }
                     else if (e.requestNewTask) {
                         let tasksPlugin: {
@@ -1275,20 +1331,40 @@ export class BaseWindowController extends ComponentController {
                             let relatedSection = sectionManager.getSection(relatedSectionId) || false;
                             return tasksPlugin.openNewTaskWindow(session, relatedSection).then(taskId => {
                                 this.callViewMethod("taskPickerResult", taskId);
+                                return taskId;
+                            })
+                            .then(taskId => {
+                                def.resolve(taskId);
                             })
                             .fail(() => {
-                            })
-                            .fin(() => {
-                                def.resolve();
+                                def.resolve(null);
                             });
                         });
                     }
                     else {
-                        def.resolve();
+                        def.resolve(null);
                     }
                 });
             });
             return def.promise;
+        })
+        .then(taskId => {
+            if (!taskId) {
+                return;
+            }
+            let tasksPlugin = this.app.getComponent("tasks-plugin");
+            let session = this.app.sessionManager.getSessionByHostHash(relatedHostHash);
+            let task = tasksPlugin.getTask(session, taskId);
+            if (!task) {
+                return;
+            }
+            let sectionId = task.getProjectId();
+            let section = session.sectionManager.getSection(sectionId);
+            let relatedSection = session.sectionManager.getSection(relatedSectionId);
+            if (!section || !relatedSection) {
+                return;
+            }
+            this.verifyRecipentsHaveAccess(relatedSection, section, "task");
         })
         .fin(() => {
             this.isPickerOpen = false;
@@ -1348,6 +1424,16 @@ export class BaseWindowController extends ComponentController {
                             elementId,
                             icon: this.app.shellRegistry.resolveIcon(MimeType.resolve(el.path)),
                         }));
+                        let destinationSection = sectionManager.getSection(relatedSectionId);
+                        if (!destinationSection) {
+                            let c2s = conv2Service.collection.find(x => x.id == relatedSectionId);
+                            if (c2s) {
+                                destinationSection = c2s.section;
+                            }
+                        }
+                        if (destinationSection && el.section) {
+                            this.verifyRecipentsHaveAccess(destinationSection, el.section, "file");
+                        }
                     }
                 })
                 .fail(() => {
@@ -1363,6 +1449,23 @@ export class BaseWindowController extends ComponentController {
         });
     }
     
+    verifyRecipentsHaveAccess(msgDestinationSection: section.SectionService, elementSection: section.SectionService, elementType: "file"|"task"): void {
+        let elementSectionContactsWithAccess = elementSection.getContactsWithAccess();
+        let localHost = this.app.sessionManager.getLocalSession().host;
+        let userNamesWithoutAccess = msgDestinationSection.getContactsWithAccess()
+            .filter(contact => elementSectionContactsWithAccess.indexOf(contact) < 0)
+            .map(contact => {
+                let contactName = contact.getDisplayName();
+                if (contactName.split("#").length == 2 && contactName.split("#")[1] == localHost) {
+                    contactName = contactName.split("#")[0];
+                }
+                return contactName;
+            });
+        if (userNamesWithoutAccess.length > 0) {
+            this.alert(this.i18n(`window.base.peopleWontHaveAccess.${elementType}`, userNamesWithoutAccess.join(", ")));
+        }
+    }
+    
     onViewOpenFileFromMetaData(metaDataStr: string): void {
         Q().then(() => {
             let metaData: {
@@ -1373,7 +1476,7 @@ export class BaseWindowController extends ComponentController {
                 sessionHost: string;
             } = JSON.parse(metaDataStr);
             if (!metaData) {
-                return;
+                return false;
             }
             let session: Session = this.app.sessionManager.getLocalSession();
             if (metaData.sessionHost) {
@@ -1392,62 +1495,40 @@ export class BaseWindowController extends ComponentController {
                             element: osf,
                             action: ShellOpenAction.PREVIEW,
                             session: session
+                        })
+                        .then(() => {
+                            return true;
                         });
                     });
                 });
             }
+            return false;
         })
-    }
-
-
-    getSectionIdFromContext(): ContextSection {
-        if (this.app.viewContext) {
-            let contextData = this.app.viewContext.split(":");
-
-
-            if (contextData[0] == "section") {
-                return <ContextSection> {
-                    sectionId: contextData[1],
-                    sectionType: "section"    
-                }
+        .then(success => {
+            if (!success) {
+                this.alert(this.i18n("window.base.cantOpenFile"));
             }
-            else
-            if (contextData[0] == "c2") {
-                return <ContextSection> {
-                    sectionId: this.app.viewContext,
-                    sectionType: "conv2"
-                }
-            }
-            else
-            if (contextData[0] == "custom") {
-                if (contextData[1] == "my") {
-                    return <ContextSection> {
-                        sectionId: null,
-                        sectionType: "private"
-                    }
-                }
-            }
-            return null;
-        }
+        });
     }
 
     onViewShareSection() {
-        let context = this.getSectionIdFromContext();
+        let context = this.contextHistory.getCurrent();
         if (! context) {
             return;
         }
 
+        const isPrivate = context.getType() == "custom" && (context.getContextId() == "custom:my" || context.getContextId() == "custom:private:" + this.app.identity.user);
         let section: SectionService;
-        
-        let session = this.app.sessionManager.getLocalSession();
-        if (context.sectionType == "private") {
+        let session = this.app.sessionManager.getSessionByHostHash(context.getHostHash());
+
+        if (isPrivate) {
             section = session.sectionManager.getMyPrivateSection();
         }
-        else if (context.sectionType == "section") {
-            section = session.sectionManager.getSection(context.sectionId);
+        else if (context.getType() == "section") {
+            section = session.sectionManager.getSection(context.getSectionIdFromContextId());
         }
-        else if (context.sectionType == "conv2") {
-            let conv2 = session.conv2Service.collection.find(x => x.id == context.sectionId);
+        else if (context.getType() == "conversation") {
+            let conv2 = session.conv2Service.collection.find(x => x.id == context.getContextId());
 
             if (! conv2) {
                 return;
@@ -1476,15 +1557,75 @@ export class BaseWindowController extends ComponentController {
         })
         .fail(this.errorCallback);
     }
-
+    
     destroy(): void {
-        this.app = null;
         this.ioc = null;
         this.parent = null;
         this.msgBoxInstance = null;
         this.errorLog = null;
-        
+        this.app = null;
         super.destroy();
+    }
+
+    onViewOpenDevConsole(): void {
+        this.app.openDevConsole();
+    }
+    
+    async onViewGetMediaDevicesStr(channelId: number, types: { videoInput?: boolean, audioInput?: boolean, audioOutput?: boolean }, showDeviceSelector: boolean): Promise<void> {
+        const manager = new SelectedDevicesManager(this.app);
+        let selectedDevices: SelectedDevices;
+        let result: DeviceSelectorResult | null = null;
+        if (showDeviceSelector) {
+            const win = await this.ioc.create(DeviceSelectorWindowController, [this, types]);
+            const deviceSelector = await this.openChildWindow(win);
+            result = await deviceSelector.getResultPromise();
+        }
+        selectedDevices = manager.getCurrentSelectedDevices();
+        this.sendToViewChannel(channelId, JSON.stringify({
+            selectedDevices: selectedDevices || {},
+            rawResult: result,
+        }));
+    }
+    
+    setAlwaysOnTop(alwaysOnTop: boolean): void {
+        if (this.nwin) {
+            this.nwin.setAlwaysOnTop(alwaysOnTop);
+        }
+    }
+    
+    calculateAdaptiveWindowSize(targetWidth: number = 800, targetHeight: number = 600, minWidth: number = 350, minHeight: number = 200, keepAspectRatio: boolean = false): { width: number, height: number } {
+        const screenSize = this.app.getScreenResolution(true);
+        const maxWidth: number = 0.8 * screenSize.width;
+        const maxHeight: number = 0.8 * screenSize.height;
+        let width: number;
+        let height: number;
+        width = targetWidth;
+        height = targetHeight;
+        if (keepAspectRatio) {
+            if (width > maxWidth) {
+                height = height * (maxWidth / width);
+                width = maxWidth;
+            }
+            else if (width < minWidth) {
+                height = height * (minWidth / width);
+                width = minWidth;
+            }
+            if (height > maxHeight) {
+                width = width * (maxHeight / height);
+                height = maxHeight;
+            }
+            else if (height < minHeight) {
+                width = width * (minHeight / height);
+                height = minHeight;
+            }
+            width = Math.min(width, targetWidth);
+            height = Math.min(height, targetHeight);
+        }
+        width = Math.max(minWidth, Math.min(maxWidth, width));
+        height = Math.max(minHeight, Math.min(maxHeight, height));
+        width = Math.round(width);
+        height = Math.round(height);
+        return { width, height };
     }
     
 }
@@ -1493,7 +1634,6 @@ import {MsgBox} from "../../app/common/MsgBox";
 import {BaseWindowManager} from "../../app/BaseWindowManager";
 import { IOC } from "../../mail/IOC";
 import { CustomizationData } from "../../app/common/customization/CustomizationData";
-import { SpellCheckerController } from "../../app/electron/SpellCheckerController";
 import { ElectronWindow } from "../../app/electron/window/ElectronWindow";
 import { PerformanceLogger } from "../../app/common/PerformanceLogger";
 import { FontMetricsController } from "../../app/common/fontMetrics/FontMetricsController";
@@ -1508,4 +1648,9 @@ import { ContentEditableEditorMetaData } from "../../web-utils/ContentEditableEd
 import { session } from "electron";
 import { SectionService } from "../../mail/section/SectionService";
 import { SubIdWindowController } from "../subid/SubIdWindowController";
+import { Router } from "../../app/common/router/Router";
+import { ContextHistory } from "../../app/common/contexthistory/ContextHistory";
+import { SelectedDevices, SelectedDevicesManager } from "../deviceselector/SelectedDevices";
+import { DeviceSelectorResult, DeviceSelectorWindowController } from "../deviceselector/main";
+import { NonReportableError } from "../../utils/error/NonReportableError";
 

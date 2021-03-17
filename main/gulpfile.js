@@ -15,10 +15,16 @@ gutil.log("Building " + baseConfig.buildId + " ...");
 
 //======================
 
+function getMB(size) {
+    return size * 1000 * 1000;
+}
+
 var mainProject = new Project(baseConfig, "app");
+mainProject.maxViewBundleSize = getMB(4);
 mainProject.viewExposedModules.push("jquery");
 mainProject.viewExposedModules.push("jquery-mousewheel");
 mainProject.init();
+mainProject.bundleViewCustomTask("basic", getMB(1.2));
 
 const config = require("./build-config.json");
 
@@ -35,6 +41,14 @@ mainProject.createTask("highlight", [], null, function() {
         reqs: [["./" + mainProject.basePath + "/node_modules/highlight.js/lib/index", {expose: "highlight.js"}]],
         destination: "highlight.js",
         requireName: "privmxLibHighlightRequire"
+    });
+});
+
+mainProject.createTask("aggrid-js", [], null, function() {
+    return mainProject.buildScript({
+        reqs: [["./" + mainProject.basePath + "/node_modules/@ag-grid-community/all-modules", {expose: "ag-grid"}]],
+        destination: "ag-grid.js",
+        requireName: "privmxLibAgGridRequire"
     });
 });
 
@@ -219,8 +233,10 @@ mainProject.createTask("colorpicker", [], null, function() {
 
 mainProject.createTask("mail-client", [
     "main",
+    "bundle-view-basic",
     "zxcvbn",
     "highlight",
+    "aggrid-js",
     "tui",
     "pdf",
     "colorpicker",

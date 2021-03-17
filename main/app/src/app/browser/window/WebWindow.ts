@@ -46,6 +46,7 @@ export class WebWindow extends AppWindow {
     header: WindowHeader;
     widget: WindowWidget;
     closable: boolean;
+    alwaysOnTop: boolean;
     
     constructor(manager: WindowManager, load: app.WindowLoadOptions, iframe: HTMLIFrameElement, container: HTMLElement, iframeContainer: HTMLElement, controllerId: number, ipcChannelName: string) {
         super();
@@ -58,6 +59,7 @@ export class WebWindow extends AppWindow {
         this.ipcChannelName = ipcChannelName;
         this.require = this.manager.electronModule.createRequire();
         this.closable = this.options ? this.options.closable : true;
+        this.alwaysOnTop = this.options ? !!this.options.alwaysOnTop : false;
     }
     
     start(): void {
@@ -447,7 +449,9 @@ export class WebWindow extends AppWindow {
     
     focus(): void {
         let modalWindow = $("#windows-container").children(".modal");
-        if (modalWindow.length > 0 && modalWindow[0] != this.domElement) {
+        let isThisWindowModal = this.domElement.classList.contains("modal");
+        let doesAnyModalWindowExist = modalWindow.length > 0;
+        if (doesAnyModalWindowExist && !isThisWindowModal) {
             return;
         }
         
@@ -555,6 +559,27 @@ export class WebWindow extends AppWindow {
     }
     
     removeSpinner(): void {
+    }
+    
+    updateAlwaysOnTop(): void {
+        if (this.domElement) {
+            this.domElement.classList.toggle("always-on-top", this.alwaysOnTop);
+        }
+    }
+    
+    isAlwaysOnTop(): boolean {
+        return !!this.alwaysOnTop;
+    }
+    
+    setAlwaysOnTop(alwaysOnTop: boolean): void {
+        if (alwaysOnTop != this.alwaysOnTop) {
+            this.alwaysOnTop = alwaysOnTop;
+            this.updateAlwaysOnTop();
+        }
+    }
+    
+    center(): void {
+        this.setPosition("center", "center");
     }
     
 }

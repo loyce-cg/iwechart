@@ -43,6 +43,15 @@ div:focus {
     overflow-y: auto;
     background: var(--main-panel-bg);
     
+    .section-entry {
+      .wi-element .wi-element-inner {
+        color: var(--body-fg);
+      }
+      &.active>.section-name.wi-element .wi-element-inner {
+        color: #fff;
+      }
+    }
+    
     .section-root {
       display: none;
       .wi-element-name {
@@ -101,7 +110,7 @@ div:focus {
       }
     }
     .wi-element-parent:not(.active)>.wi-element.section-name.hidden-section>.wi-element-inner>.wi-element-name {
-      color: hsla(var(--sidebar-bg-h), var(--sidebar-bg-s), calc(var(--sidebar-bg-l) + var(--sidebar-bg-as-text-delta)), 0.7);
+      color: var(--body-fg);
     }
     .disabled-badge,
     .hidden-badge {

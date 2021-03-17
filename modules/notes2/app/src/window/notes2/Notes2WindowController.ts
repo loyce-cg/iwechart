@@ -384,7 +384,7 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
                     id: FilesListController.ALL_FILES,
                     icon: {
                         type: "fa",
-                        value: "fa-file-o"
+                        value: "privmx-icon privmx-icon-notes2",
                     },
                     label: this.i18n("plugin.notes2.window.notes2.filter.all"),
                     private: false
@@ -618,41 +618,55 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
                 else {
                     this.callViewMethod("updateSetting", event.setting, event.value == 1);
                 }
+                if (event.setting == ViewSettings.SHOW_FILE_PREVIEW) {
+                    if (event.value == 1) {
+                        if (this.reusableOpener && this.reusableOpener.win && ("afterShowIframe" in this.reusableOpener.win)) {
+                            (<any>this.reusableOpener.win).afterShowIframe();
+                        }
+                    }
+                    else {
+                        if (this.dockedEditor && ("afterIframeHide" in this.dockedEditor)) {
+                            (<any>this.dockedEditor).afterIframeHide();
+                        }
+                    }
+                }
             });
-            this.openDefaultSection();
             this.app.dispatchEvent({type: "focusChanged",windowId: "notes2"});
         });
     }
     
-    openDefaultSection(): string {
+    async openDefaultSection(): Promise<void> {
         let firstLoginSectionId: string;
+        let handled: boolean = false;
+        let priv = this.notes2Plugin.sectionManager.getMyPrivateSection();
         if (this.notes2Plugin.isFirstLogin()) {
+            this.notes2Plugin.setFirstLoginDone();
             this.notes2Plugin.sectionManager.sectionsCollection.list.forEach(section => {
                 if (section.secured && section.secured.extraOptions && section.secured.extraOptions.openOnFirstLogin) {
                     firstLoginSectionId = section.getId();
-                    this.notes2Plugin.setFirstLoginDone();
                     return;
                 }
             })
-        }
-        let priv = this.notes2Plugin.sectionManager.getMyPrivateSection();
-        if (firstLoginSectionId && this.notes2Plugin.sectionManager.getSection(firstLoginSectionId)) {
-            this.openChannel(firstLoginSectionId)
-            .then(() => {
+            if (firstLoginSectionId && this.notes2Plugin.sectionManager.getSection(firstLoginSectionId)) {
+                await this.openChannel(firstLoginSectionId);
                 this.sidebar.setActive({
                     type: component.sidebar.SidebarElementType.SECTION,
                     section: this.notes2Plugin.sectionManager.getSection(firstLoginSectionId),
                 }, true);
                 this.activateFiles(firstLoginSectionId);
                 this.activeFilesList.loadFilePreview();
-            });
+                handled = true;
+            }
+        }
+        if (handled) {
             return;
         }
-        else if (priv) {
-            this.openMy();
-            return;
+        if (priv) {
+            await this.openMy()
         }
-        this.openAll();
+        else {
+            await this.openAll();
+        }
     }
     
     openNewFiles(hashmails: string[] = []): void {
@@ -801,26 +815,41 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
     }
     
     applyHistoryState(processed: boolean, state: string) {
-        if (this.app.viewContext) {
-            let contextData = this.app.viewContext.split(":");
-            let oldActive = this.activeFilesList;
-            let handled = false;
-              
-            if (this.app.switchModuleWithContext()) {
-                if (contextData[0] == "section") {
-                    let contextSection = this.notes2Plugin.sectionManager.getSection(contextData[1]);
+        const context = this.contextHistory.getCurrent();
+        let oldActive = this.activeFilesList;
+        let handled = false;
+
+        if (context) {              
+            if (this.app.switchModuleWithContext() || state) {
+                if (context.getType() == "section") {
+                    let contextSection = this.notes2Plugin.sectionManager.getSection(context.getSectionIdFromContextId());
                     if (contextSection && contextSection.isFileModuleEnabled()) {
                         this.openChannel(contextSection.getId());
                         handled = true;
                     }
                 }
-                else if (contextData[0] == "c2") {
-                    this.openConversationView(this.app.viewContext);
+                else if (context.getType() == "conversation") {
+                    this.openConversationView(context.getContextId());
                     handled = true;
                 }
-                else if (contextData[0] == "custom") {
-                    if (contextData[1] == "my") {
+                else if (context.getType() == "custom") {
+                    if (context.getContextId() == FilesListController.MY_FILES) {
                         this.openMy();
+                        handled = true;
+                    }
+                    else
+                    if (context.getContextId() == FilesListController.LOCAL_FILES) {
+                        this.openLocal();
+                        handled = true;
+                    }
+                    else
+                    if (context.getContextId() == FilesListController.ALL_FILES) {
+                        this.openAll();
+                        handled = true;
+                    }
+                    else
+                    if (context.getContextId() == FilesListController.TRASH_FILES) {
+                        this.openTrash();
                         handled = true;
                     }
                 }
@@ -835,34 +864,11 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
                     this.activeFilesList.activate();
                 }
             }
-            if (handled) {
-                return;
-            }
         }
-        
-        if (!processed && state) {
-            if (state == FilesListController.MY_FILES) {
-                this.openMy();
-            }
-            else if (state == FilesListController.ALL_FILES) {
-                this.openAll();
-            }
-            else if (state == FilesListController.LOCAL_FILES) {
-                this.openLocal();
-            }
-            else if (state == FilesListController.TRASH_FILES) {
-                this.openTrash();
-            }
-            else {
-                let section = this.notes2Plugin.sectionManager.getSection(state);
-                if (section && section.isFileModuleEnabled()) {
-                    this.openChannel(section.getId());
-                }
-                else {
-                    this.openConversationView(state);
-                }
-            }
+        if (handled) {
+            return;
         }
+        this.openDefaultSection();    
     }
     
     onChildTabSwitch(child: window.base.BaseWindowController, shiftKey: boolean, ctrlKey: boolean): void {
@@ -990,6 +996,14 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
             return this.singletonGetOrCreateFilesList(id, () => this.getOrCreateMy());
         })
         .then(my => {
+            const context = app.common.Context.create({
+                moduleName: Types.section.NotificationModule.NOTES2,
+                contextType: "custom",
+                contextId: id,
+                hostHash: this.app.sessionManager.getLocalSession().hostHash
+            });
+
+            this.contextHistory.append(context);
             this.activeFilesList = my;
             this.sidebar.setActive({
                 type: component.sidebar.SidebarElementType.CUSTOM_ELEMENT,
@@ -1003,6 +1017,13 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
     
     getOrCreateAll(): Q.Promise<FilesListController> {
         let id = FilesListController.ALL_FILES;
+        const context = app.common.Context.create({
+            moduleName: Types.section.NotificationModule.NOTES2,
+            contextType: "custom",
+            contextId: id,
+            hostHash: this.app.sessionManager.getLocalSession().hostHash
+        });
+
         return Q().then(() => {
             if (!(id in this.filesLists)) {
                 let collection = this.getOrCreateCollectionAll();
@@ -1043,6 +1064,13 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
         if (this.getActiveId() == id) {
             return Q();
         }
+        const context = app.common.Context.create({
+            moduleName: Types.section.NotificationModule.NOTES2,
+            contextType: "custom",
+            contextId: id,
+            hostHash: this.app.sessionManager.getLocalSession().hostHash
+        });
+
         return Q().then(() => {
             return this.singletonGetOrCreateFilesList(id, () => this.getOrCreateAll());
         })
@@ -1059,6 +1087,14 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
     
     getOrCreateLocal(): Q.Promise<FilesListController> {
         let id = FilesListController.LOCAL_FILES;
+        const context = app.common.Context.create({
+            moduleName: Types.section.NotificationModule.NOTES2,
+            contextType: "custom",
+            contextId: id,
+            hostHash: this.app.sessionManager.getLocalSession().hostHash
+        });
+
+
         return Q().then(() => {
             if (!(id in this.filesLists)) {
                 let collection = this.localFilesBaseCollection;
@@ -1082,6 +1118,14 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
         if (this.getActiveId() == id) {
             return Q();
         }
+        const context = app.common.Context.create({
+            moduleName: Types.section.NotificationModule.NOTES2,
+            contextType: "custom",
+            contextId: id,
+            hostHash: this.app.sessionManager.getLocalSession().hostHash
+        });
+
+
         return Q().then(() => {
             return this.singletonGetOrCreateFilesList(id, () => this.getOrCreateLocal());
         })
@@ -1150,12 +1194,24 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
     openChannel(sectionId: string): Q.Promise<void> {
         let section = this.notes2Plugin.sectionManager.getSection(sectionId);
         let filesId = Notes2WindowController.getChannelId(this.app.sessionManager.getLocalSession(), section);
+
+        const context = app.common.Context.create({
+            moduleName: Types.section.NotificationModule.NOTES2,
+            contextType: "section",
+            contextId: "section:" + sectionId,
+            hostHash: this.app.sessionManager.getLocalSession().hostHash
+        });
+
+        this.contextHistory.append(context);
         if (this.getActiveId() == filesId) {
             this.sidebar.setActive({
                 type: component.sidebar.SidebarElementType.SECTION,
                 section: section
             }, false);
             this.callViewMethod("toggleDisabledSection", !section.isFileModuleEnabled());
+            if (filesId) {
+                this.callViewMethod("hideLoading");
+            }
             return Q();
         }
 
@@ -1235,6 +1291,13 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
         if (this.getActiveId() == id) {
             return Q();
         }
+        const context = app.common.Context.create({
+            moduleName: Types.section.NotificationModule.NOTES2,
+            contextType: "custom",
+            contextId: id,
+            hostHash: this.app.sessionManager.getLocalSession().hostHash
+        });
+
         return Q().then(() => {
             return this.singletonGetOrCreateFilesList(id, () => this.getOrCreateTrash());
         })
@@ -1251,7 +1314,13 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
     
     openConversationViewFromHashmails(hashmails: string[]): Q.Promise<void> {
         let conversationId = this.conv2Service.getConvIdFromHashmails(hashmails);
-        this.app.viewContext = conversationId;
+        const context = app.common.Context.create({
+            moduleName: Types.section.NotificationModule.NOTES2,
+            contextType: "conversation",
+            contextId: conversationId,
+            hostHash: this.app.sessionManager.getLocalSession().hostHash
+        });
+        this.contextHistory.append(context);
         return this.openConversationView(conversationId);
     }
     
@@ -1365,23 +1434,45 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
                 return this.expandRemoteSectionsList(event.element.host);
             }
             else if (event.element.type == component.sidebar.SidebarElementType.REMOTE_SECTION) {
-                this.app.viewContext = "section:" + event.element.section.getId();
-                // console.log("opening remote channel...");
+                const context = app.common.Context.create({
+                    moduleName: Types.section.NotificationModule.NOTES2,
+                    contextType: "remote-section",
+                    contextId: "section:" + event.element.section.getId(),
+                    hostHash: event.element.hostHash
+                });
+                this.contextHistory.append(context);
                 return this.openRemoteChannel(event.element.hostHash, event.element.section.getId());
             }
             else if (event.element.type == component.sidebar.SidebarElementType.REMOTE_CONVERSATION) {
-                this.app.viewContext = event.element.conv2.id;
+                const context = app.common.Context.create({
+                    moduleName: Types.section.NotificationModule.NOTES2,
+                    contextType: "remote-conversation",
+                    contextId: event.element.conv2.id,
+                    hostHash: event.element.hostHash
+                });
+                this.contextHistory.append(context);
                 return this.openRemoteConversationView(event.element.hostHash, event.element.conv2.id);
             }
             else if (event.element.type == component.sidebar.SidebarElementType.CONVERSATION) {
                 this.onLoading();
-                this.app.viewContext = event.element.conv2.id;
+                const context = app.common.Context.create({
+                    moduleName: Types.section.NotificationModule.NOTES2,
+                    contextType: "conversation",
+                    contextId: event.element.conv2.id,
+                    hostHash: this.app.sessionManager.getLocalSession().hostHash
+                });
+                this.contextHistory.append(context);
                 return this.openConversationView(event.element.conv2.id);
             }
             else if (event.element.type == component.sidebar.SidebarElementType.SECTION) {
                 this.onLoading();
-                // console.log("opening channel..");
-                this.app.viewContext = "section:" + event.element.section.getId();
+                const context = app.common.Context.create({
+                    moduleName: Types.section.NotificationModule.NOTES2,
+                    contextType: "section",
+                    contextId: "section:" + event.element.section.getId(),
+                    hostHash: this.app.sessionManager.getLocalSession().hostHash
+                });
+                this.contextHistory.append(context);
                 return this.openChannel(event.element.section.getId());
 
             }
@@ -1389,7 +1480,14 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
                 this.onLoading();
                 this.notes2Plugin.activeSinkId = null;
                 this.notes2Plugin.activeSinkHostHash = null;
-                this.app.viewContext = "custom:" + event.element.customElement.id;
+
+                const context = app.common.Context.create({
+                    moduleName: Types.section.NotificationModule.NOTES2,
+                    contextType: "custom",
+                    contextId: event.element.customElement.id,
+                    hostHash: this.app.sessionManager.getLocalSession().hostHash
+                });
+                this.contextHistory.append(context);
 
                 if (event.element.customElement.id == FilesListController.MY_FILES) {
                     return this.openMy();
@@ -1436,7 +1534,7 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
                 return;
             }
             if (this.dockedEditor && this.reusableOpener) {
-                this.callViewMethod("hideIframe", this.reusableOpener.iframeId);
+                this.hideIframe(this.dockedEditor, this.reusableOpener);
             }
             this.stopPreviewPlayback();
             this.reusableOpener = null;
@@ -1708,7 +1806,7 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
         this.clearPreviewTrashedInfo();
         if (this.dockedEditor && this.reusableOpener) {
             this.reusableOpener.win.release();
-            this.callViewMethod("hideIframe", this.reusableOpener.iframeId);
+            this.hideIframe(this.dockedEditor, this.reusableOpener);
             this.stopPreviewPlayback();
             this.dockedEditor = null;
             this.reusableOpener = null;

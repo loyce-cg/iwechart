@@ -83,7 +83,7 @@ export class Conv2ListController extends ComponentController {
         this.ipcMode = true;
         this.userPreferences.eventDispatcher.addEventListener<Types.event.UserPreferencesChangeEvent>("userpreferenceschange", (event) => {
             this.onUserPreferencesChange(event);
-        });
+        }, this.getEventsReferer(), "normal");
         this.conv2Service.sectionManager.customSectionNames.userPreferences.eventDispatcher.addEventListener<Types.event.UserPreferencesChangeEvent>("userpreferenceschange", (event) => {
             let customSectionNames = this.conv2Service.sectionManager.customSectionNames.getCustomSectionNames();
             let elemsToUpdate: Types.webUtils.ConversationModel[] = this.convTransform.list.filter(x => x && x.customName != customSectionNames[x.id]);

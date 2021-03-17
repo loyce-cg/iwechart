@@ -105,18 +105,63 @@ export class Formatter {
         }
         defaultLinkTitle = defaultLinkTitle || "";
         
-        let doLinkify = this.linkifyTest(replacedText);
-        if (doLinkify) {
-            replacedText = linkifyText(replacedText, {attributes: {
-                rel: "noopener noreferrer",
-                "data-window-opener": "true",
-                title: defaultLinkTitle
-            }});
+        let textPartsByWords: string[] = replacedText.split(" ");
+
+        for (let i=0; i<textPartsByWords.length; ++i) {
+            const text = textPartsByWords[i];
+            let textPartsByNewLines = text.replace(/<br(\s)*(\/)*(\s)*>/gi, "\n").split("\n");
+            
+            for (let j=0; j < textPartsByNewLines.length; ++j) {
+                let part = textPartsByNewLines[j];
+                let toLinkify = this.linkifyTest(part);
+                if (toLinkify) {
+                    textPartsByNewLines[j] = this.customLinkifyText(part, {attributes: {
+                        rel: "noopener noreferrer",
+                        title: defaultLinkTitle
+                    }});
+                }    
+            }
+            textPartsByWords[i] = textPartsByNewLines.join("\n");
         }
-        // let hashmailPattern = /(^|\s+)(\w+#[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)*)/gim;
-        // replacedText = replacedText.replace(hashmailPattern, '$1<span class="link linkify" data-window-opener="true" title="' + defaultLinkTitle + '" data-url="hashmailto:$2">$2</span>');
-        replacedText = this.nl2br(replacedText);
-        return replacedText;
+        return this.nl2br(textPartsByWords.join(" "));
+    }
+
+    customLinkifyText(text: string, options: {attributes: {rel: string, title: string}}) {
+        // IMPORTANT CHANGE: this is our custm linkifyText method due to bug in original lib which cuts some "(" from the end of the link
+        let urlRegex =/(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;/\(/\)/\[/\]/\'/\"]*[-A-Z0-9+&@#\/%=~_|/\(/\)/\[/\]/\"/\'])/ig;
+        let links = text.match(urlRegex);
+        let result = text;
+        for (let link of links) {
+            let modifLink = link;
+            while (! this.isBalancedParenthesis(modifLink) && modifLink.length > 0) {
+                modifLink = modifLink.slice(0, -1);
+            }
+            const href = this.createHref(modifLink, options);
+            if (modifLink != link) {
+                result = result.replace(modifLink, href)
+            }
+            else {
+                result = result.replace(link, href);
+            }
+        }
+        return result;
+    }
+
+    createHref(text: string, options: {attributes: {rel: string, title: string}}): string {
+        let closingChar = text.includes("'") ? "\"" : "\'";
+        return "<a href="+closingChar+text+closingChar+" class="+closingChar+"linkified"+closingChar+" target="+closingChar+"_blank"+closingChar+" rel="+closingChar+options.attributes.rel+closingChar+" data-window-opener="+closingChar+"true"+closingChar+" title="+closingChar+options.attributes.title+closingChar+">"+text+"</a>";
+    }
+
+    isBalancedParenthesis(str: string) {
+        return !str.split('').reduce((uptoPrevChar, thisChar) => {
+            if(thisChar === '(' || thisChar === '{' || thisChar === '[' ) {
+                return ++uptoPrevChar;
+            } else if (thisChar === ')' || thisChar === '}' || thisChar === ']') {
+                return --uptoPrevChar;
+            }
+    
+            return uptoPrevChar
+        }, 0);
     }
     
     nl2br(text: string): string {
@@ -132,6 +177,9 @@ export class Formatter {
     }
     
     bytesSize(size: number): string {
+        if (size == 0) {
+            return "";
+        }
         let base = 1000;
         let exp = Math.log(size) / Math.log(base) | 0;
         if (exp == 0) {

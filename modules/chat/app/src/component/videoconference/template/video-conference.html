@@ -1,0 +1,75 @@
+@import { Model } from "../VideoConferenceController";
+@model Model
+<div class="video-conference-main" data-local-audio-output-enabled="true" data-local-audio-input-enabled="true" data-local-video-input-enabled="true" data-desktop-sharing-enabled="false" data-user-containers-display-mode="tiles" data-always-on-top-enabled="false">
+  <div class="title-container">
+    <div class="conference-title">{{@model.roomMetadata.title}}</div>
+  </div>
+  <div class="audios-container">
+    <div class="local-audio-container"></div>
+    <div class="remote-audios-container"></div>
+  </div>
+  <div class="videos-container">
+    <div class="remote-videos-container"></div>
+    <div class="local-video-container"></div>
+  </div>
+  <div class="controls-container">
+      <div class="controls-left">
+        <button class="btn btn-default btn-sm small" data-action="disable-local-video-input" title="{{@Helper.i18n('plugin.chat.component.videoconference.button.disableLocalVideoInput.title')}}"><i class="privmx-icon privmx-icon-videocall"></i></button>
+        <button class="btn btn-default btn-sm small" data-action="enable-local-video-input" title="{{@Helper.i18n('plugin.chat.component.videoconference.button.enableLocalVideoInput.title')}}"><i class="privmx-icon privmx-icon-videocall"></i></button>
+        <button class="btn btn-default btn-sm small" data-action="disable-local-audio-input" title="{{@Helper.i18n('plugin.chat.component.videoconference.button.disableLocalAudioInput.title')}}"><i class="fa fa-microphone"></i></button>
+        <button class="btn btn-default btn-sm small" data-action="enable-local-audio-input" title="{{@Helper.i18n('plugin.chat.component.videoconference.button.enableLocalAudioInput.title')}}"><i class="fa fa-microphone-slash"></i></button>
+        <button class="btn btn-default btn-sm small" data-action="disable-local-audio-output" title="{{@Helper.i18n('plugin.chat.component.videoconference.button.disableLocalAudioOutput.title')}}"><i class="fa fa-volume-up"></i></button>
+        <button class="btn btn-default btn-sm small" data-action="enable-local-audio-output" title="{{@Helper.i18n('plugin.chat.component.videoconference.button.enableLocalAudioOutput.title')}}"><i class="fa fa-volume-off"></i></button>
+        <button class="btn btn-default btn-sm small" data-action="toggle-extra-settings" title="{{@Helper.i18n('plugin.chat.component.videoconference.button.toggleExtraSettings.title')}}"><i class="ico-settings"></i></button>
+        <div class="resolution-custom-select-container"></div>
+      </div>
+      <div class="controls-center">
+        <button class="btn btn-default btn-sm small" data-action="disconnect" title="{{@Helper.i18n('plugin.chat.component.videoconference.button.disconnect.title')}}"><i class="fa fa-phone"></i></button>
+      </div>
+      <div class="controls-right">
+        <button class="btn btn-default btn-sm small" data-action="videoconference-gong" title="{{@Helper.i18n('plugin.chat.component.videoconference.button.gong.title')}}"><i class="fa fa-bell"></i></button>
+        <button class="btn btn-default btn-sm small" data-action="disable-desktop-sharing" title="{{@Helper.i18n('plugin.chat.component.videoconference.button.disableDesktopSharing.title')}}"><i class="fa fa-desktop"></i></button>
+        <button class="btn btn-default btn-sm small" data-action="enable-desktop-sharing" title="{{@Helper.i18n('plugin.chat.component.videoconference.button.enableDesktopSharing.title')}}"><i class="fa fa-desktop"></i></button>
+        <button class="btn btn-default btn-sm small" data-action="switch-mode-to-tiles" title="{{@Helper.i18n('plugin.chat.component.videoconference.button.switchModeToTiles.title')}}"><i class="fa fa-th-large"></i></button>
+        <button class="btn btn-default btn-sm small" data-action="switch-mode-to-single-speaker" title="{{@Helper.i18n('plugin.chat.component.videoconference.button.switchModeToSingleSpeaker.title')}}"><i class="fa fa-th-large"></i></button>
+        <!-- <button class="btn btn-default btn-sm small" data-action="enable-always-on-top" title="{{@Helper.i18n('plugin.chat.component.videoconference.button.enableAlwaysOnTop.title')}}"><i class="fa fa-thumb-tack"></i></button>
+        <button class="btn btn-default btn-sm small" data-action="disable-always-on-top" title="{{@Helper.i18n('plugin.chat.component.videoconference.button.disableAlwaysOnTop.title')}}"><i class="fa fa-thumb-tack"></i></button> -->
+      </div>
+      <div class="extra-settings-container">
+        <div class="devices-grid">
+          <span>{{@Helper.i18n('plugin.chat.component.videoconference.audioOutput.label')}}:</span>
+          <select data-action="change-audio-output"></select>
+          <span>{{@Helper.i18n('plugin.chat.component.videoconference.audioInput.label')}}:</span>
+          <select data-action="change-audio-input"></select>
+          <span>{{@Helper.i18n('plugin.chat.component.videoconference.videoInput.label')}}:</span>
+          <select data-action="change-video-input"></select>
+        </div>
+      </div>
+  </div>
+  <div class="loading-overlay">
+    <i class="fa fa-circle-o-notch fa-spin"></i>
+  </div>
+  <div class="message-overlay">
+    <div class="box message-box">
+      <div class="message-text"></div>
+      <button class="btn btn-default btn-sm small gray" data-action="message-box-ok">{{@Helper.i18n('plugin.chat.component.videoconference.button.ok.text')}}</button>
+    </div>
+  </div>
+  <div class="initial-popup-overlay">
+    <div class="box">
+      <div class="initial-devices-grid">
+        <span>{{@Helper.i18n('plugin.chat.component.videoconference.audioOutput.label')}}:</span>
+        <select data-device="audio-output"></select>
+        <span>{{@Helper.i18n('plugin.chat.component.videoconference.audioInput.label')}}:</span>
+        <select data-device="audio-input"></select>
+        <span>{{@Helper.i18n('plugin.chat.component.videoconference.videoInput.label')}}:</span>
+        <select data-device="video-input"></select>
+        <button class="btn btn-default btn-sm small gray" data-action="initial-popup-cancel">{{@Helper.i18n('plugin.chat.component.videoconference.button.cancel.text')}}</button>
+        <button class="btn btn-default btn-sm small btn-success" data-action="initial-popup-join">{{@Helper.i18n('plugin.chat.component.videoconference.button.join.text')}}</button>
+      </div>
+    </div>
+  </div>
+  <div class="notifications-container"></div>
+  <div class="desktop-picker-container"></div>
+  <div class="curtain"></div>
+</div>

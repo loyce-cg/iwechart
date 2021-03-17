@@ -106,17 +106,40 @@ export interface EventListenerObject {
 
 export class EventDispatcher {
     
-    eventListeners: {[type: string]: EventListenerObject[]};
+    static nextUUID: number = Math.round(Math.random() * 1000);
+    
+    private eventListeners: {[type: string]: EventListenerObject[]};
     parent: EventDispatcher;
     bubbleEventsToParent: boolean;
-
+    private _cachedEventsReferer: string;
+    uuid: string;
+    private destroyed: boolean;
+    
     constructor(parent?: EventDispatcher) {
         this.parent = parent;
         this.eventListeners = {};
         this.bubbleEventsToParent = true;
+        this.uuid = "object:" + EventDispatcher.getUUIDPart().toString();
+        this.destroyed = false;
+    }
+    
+    static getUUIDPart(): number {
+        return (++EventDispatcher.nextUUID);
+    }
+    
+    getUUID(): string {
+        return this.uuid;
     }
     
     addEventListener<T extends Types.event.Event = Types.event.Event>(type: string, eventListener: Types.event.EventListener<T>, referrer?: string, lifeTime?: EventLifeTime) {
+        if (this.destroyed) {
+            Logger.warn("Trying to add event listener to destroyed dispatcher");
+            return;
+        }
+        if (this.destroyed) {
+            Logger.warn("Trying add event listener in destroyed container");
+            return;
+        }
         if (!(type in this.eventListeners)) {
             this.eventListeners[type] = [];
         }
@@ -127,7 +150,12 @@ export class EventDispatcher {
         if (!(type in this.eventListeners)) {
             return;
         }
-        let index = this.eventListeners[type].indexOf({listener: eventListener, referrer: referrer});
+        let index: number = -1;
+        this.eventListeners[type].forEach((x, idx) => {
+            if (x.listener == eventListener) {
+                index = idx;
+            }
+        })
         if (index != -1) {
             this.eventListeners[type].splice(index, 1);
         }
@@ -146,7 +174,8 @@ export class EventDispatcher {
         for (let type in this.eventListeners) {
             let typeListeners = this.eventListeners[type];
             let filteredList = typeListeners.filter(obj => obj.referrer != referrer);
-            removed += Math.abs(typeListeners.length - filteredList.length);
+            let removeCount = Math.abs(typeListeners.length - filteredList.length);
+            removed += removeCount;
             this.eventListeners[type] = filteredList;
         }
     }
@@ -164,7 +193,7 @@ export class EventDispatcher {
     }
 
     
-    dispatchEventToListener<T extends Types.event.Event>(event: T, eventListener: Types.event.EventListener<T>) {
+    private dispatchEventToListener<T extends Types.event.Event>(event: T, eventListener: Types.event.EventListener<T>) {
         try {
             eventListener(event);
         }
@@ -179,6 +208,10 @@ export class EventDispatcher {
     }
     
     dispatchEvent<T extends Types.event.Event>(event: T) {
+        if (this.destroyed) {
+            Logger.warn("Trying to dispatch event through destroyed dispatcher");
+            return;
+        }
         if (event.type in this.eventListeners) {
             this.eventListeners[event.type].forEach(eventListenerObject => {
                 this.dispatchEventToListener(event, eventListenerObject.listener);
@@ -195,6 +228,10 @@ export class EventDispatcher {
     }
     
     dispatchEventResult<T = any>(event: Types.event.Event<T>): T {
+        if (this.destroyed) {
+            Logger.warn("Trying to dispatch event through destroyed dispatcher");
+            return null;
+        }
         if (event.type in this.eventListeners) {
             let listenersObjs = this.eventListeners[event.type];
             for (let i = 0; i < listenersObjs.length; i++) {
@@ -219,6 +256,10 @@ export class EventDispatcher {
     }
     
     dispatchEventGather<T = any>(event: Types.event.Event<T>): T[] {
+        if (this.destroyed) {
+            Logger.warn("Trying to dispatch event through destroyed dispatcher");
+            return [];
+        }
         let result: T[] = [];
         if (event.type in this.eventListeners) {
             this.eventListeners[event.type].forEach(eventListenerObj => {
@@ -239,5 +280,22 @@ export class EventDispatcher {
             result = result.concat(parentResult);
         }
         return result;
+    }
+    
+    getEventsReferer(): string {
+        if (this._cachedEventsReferer) {
+            return this._cachedEventsReferer;
+        }
+        this._cachedEventsReferer = this.parent.getEventsReferer();
+        return this._cachedEventsReferer;
+    }
+    
+    isDestroyed(): boolean {
+        return this.destroyed;
+    }
+    
+    destroy(): void {
+        this.eventListeners = {};
+        this.destroyed = true;
     }
 }

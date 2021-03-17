@@ -4,6 +4,7 @@ import * as $ from "jquery";
 import {Model} from "./AdminEditUserWindowController";
 import {func as passwordTemplate} from "./template/password.html";
 import {app} from "../../Types";
+import { ProgressViewContainer } from "../../component/channel/ProgressViewContainer";
 
 @WindowView
 export class AdminEditUserWindowView extends BaseWindowView<Model> {
@@ -18,6 +19,8 @@ export class AdminEditUserWindowView extends BaseWindowView<Model> {
         this.$main.on("click", "[data-action=reset-password]", this.onResetPasswordClick.bind(this));
         this.$main.on("click", "[data-action=close]", this.onCloseClick.bind(this));
         this.$main.on("click", "[data-trigger=send-link]", this.sendActivationData.bind(this));
+        this.$main.on("click", "[data-action='block-user']", this.onBlockUserClick.bind(this));
+        this.$main.on("click", "[data-action='unblock-user']", this.onUnblockUserClick.bind(this));
         this.$main.on("change", ".contact-form-enabled-field select", this.onContactFormEnabledSelectChange.bind(this))
         this.$main.on("click", ".password-show", () => {
             this.$main.find(".password-holder input").attr("type", "text");
@@ -102,5 +105,13 @@ export class AdminEditUserWindowView extends BaseWindowView<Model> {
     onContactFormEnabledSelectChange(): void {
         var val = (<string>this.$main.find(".contact-form-enabled-field select").val()) == "true";
         this.$main.find(".contact-form-enabled-field .sub-info").toggleClass("hide", !val);
+    }
+
+    onBlockUserClick(e: Event): void {
+        this.triggerEvent("blockUser");
+    }
+
+    onUnblockUserClick(e: Event): void {
+        this.triggerEvent("unblockUser");
     }
 }

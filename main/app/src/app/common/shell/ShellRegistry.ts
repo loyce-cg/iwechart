@@ -9,7 +9,7 @@ import { BaseWindowController } from "../../../window/base/BaseWindowController"
 import {app, event} from "../../../Types";
 import { Lang } from "../../../utils/Lang";
 import { Window as AppWindow } from "../window/Window";
-
+import {MimeType} from "../../../mail/filetree/MimeType";
 export class ShellRegistry {
   
     applicationMap: {[id: string]: RegisteredApplication} = {};
@@ -25,7 +25,7 @@ export class ShellRegistry {
     }
     
     resolveApplicationByElement(options: ShellOpenOptions): RegisteredApplication {
-        let mimeType = options.element.getMimeType();
+        let mimeType = MimeType.resolve2(options.element.getName(), options.element.getMimeType());
         let eles: ApplicationBinding[] = [];
         let action = options.action || ShellOpenAction.OPEN;
         //direct action check
@@ -126,14 +126,16 @@ export class ShellRegistry {
         if (application == null) {
             throw new Error("Cannot perform shell open at given parameter");
         }
-        this.app.dispatchEvent<event.FileOpenedEvent>({
-            type: "file-opened",
-            element: options.element,
-            applicationId: options.applicationId,
-            docked: options.docked,
-            action: options.action,
-            hostHash: options.session ? options.session.hostHash : this.app.sessionManager.getLocalSession().hostHash,
-        });
+        if (options.element) {
+            this.app.dispatchEvent<event.FileOpenedEvent>({
+                type: "file-opened",
+                element: options.element,
+                applicationId: options.applicationId,
+                docked: options.docked,
+                action: options.action,
+                hostHash: options.session ? options.session.hostHash : this.app.sessionManager.getLocalSession().hostHash,
+            });
+        }
         return application.open(options);
     }
         

@@ -1,8 +1,7 @@
 import { component, window as wnd, JQuery as $, Q, Starter } from "pmc-web";
 import { Model, TaskModel, FileModel } from "./CalendarPanelController";
 import { func as mainTemplate } from "./template/main.html";
-import { RequestCustomSelectViewEvent, TaskGroupIcon } from "privfs-mail-client-tasks-plugin/src/main/Types";
-import { CustomSelectView } from "privfs-mail-client-tasks-plugin/src/component/customSelect/CustomSelectView";
+import { TaskGroupIcon } from "privfs-mail-client-tasks-plugin/src/main/Types";
 import { Modes } from "../../main/Types";
 import { DatePickerView } from "../datePicker/DatePickerView";
 import { Renderer } from "./renderers/Renderer";
@@ -68,10 +67,10 @@ export class CalendarPanelView extends component.base.ComponentView {
     model: Model;
     isActive: boolean = false;
     isVisible: boolean = true;
-    customSelectMode: CustomSelectView;
-    customSelectFilter: CustomSelectView;
+    customSelectMode: component.customselect.CustomSelectView;
+    customSelectFilter: component.customselect.CustomSelectView;
+    customSelectExtraCalendars: component.customselect.CustomSelectView;
     datePicker: DatePickerView;
-    customSelectExtraCalendars: CustomSelectView;
     // personsComponent: component.persons.PersonsView;
     personTooltip: component.persontooltip.PersonTooltipView;
     notifications: component.notification.NotificationView;
@@ -104,13 +103,10 @@ export class CalendarPanelView extends component.base.ComponentView {
         this.fileTooltip.refreshAvatars = () => { this.personsComponent.refreshAvatars(); };
         this.datePicker = this.addComponent("datePicker", new DatePickerView(this));
         
-        for (let csName of ["customSelectMode", "customSelectFilter", "customSelectExtraCalendars"]) {
-            Starter.dispatchEvent<RequestCustomSelectViewEvent>({
-                type: "request-custom-select-view",
-                parent: this,
-                name: csName,
-            });
-        }
+        this.customSelectMode = this.addComponent("customSelectMode", new component.customselect.CustomSelectView(this, {}));
+        this.customSelectFilter = this.addComponent("customSelectFilter", new component.customselect.CustomSelectView(this, {}));
+        this.customSelectExtraCalendars = this.addComponent("customSelectExtraCalendars", new component.customselect.CustomSelectView(this, {}));
+        
         Starter.dispatchEvent({
             type: "request-fast-list-creator",
             parent: this,
@@ -155,9 +151,6 @@ export class CalendarPanelView extends component.base.ComponentView {
         this.$container.on("dragend", "[data-task-id]", this.onTaskDragEnd.bind(this));
         this.$container.on("dragover", "[data-day]", this.onDragOverDay.bind(this));
         this.$container.on("drop", "[data-day]", this.onDropOnDay.bind(this));
-        this.$container.on("click", "[data-action=open-chat]", this.onOpenChatClick.bind(this));
-        this.$container.on("click", "[data-action=open-notes]", this.onOpenNotesClick.bind(this));
-        this.$container.on("click", "[data-action=open-tasks]", this.onOpenTasksClick.bind(this));
         this.$container.on("click", ".today-btn", this.onGoToTodayClick.bind(this));
         this.$container.on("click", "[data-action=zoom-in]", this.onZoomInClick.bind(this));
         this.$container.on("click", "[data-action=zoom-out]", this.onZoomOutClick.bind(this));
@@ -209,18 +202,6 @@ export class CalendarPanelView extends component.base.ComponentView {
     
     getIconId(icon: TaskGroupIcon) {
         return icon.type + "--" + (icon.type == "fa" ? icon.fa : icon.shape);
-    }
-    
-    registerCustomSelectView(csName: string, view: CustomSelectView): void {
-        if (csName == "customSelectMode") {
-            this.customSelectMode = this.addComponent("customSelectMode", view);
-        }
-        else if (csName == "customSelectFilter") {
-            this.customSelectFilter = this.addComponent("customSelectFilter", view);
-        }
-        else if (csName == "customSelectExtraCalendars") {
-            this.customSelectExtraCalendars = this.addComponent("customSelectExtraCalendars", view);
-        }
     }
     
     registerFastListCreator(csName: string, fastListCreator: FastListCreator): void {
@@ -365,7 +346,7 @@ export class CalendarPanelView extends component.base.ComponentView {
     }
     
     updateSettingsMenu(): void {
-        let safeId = this.model.projectId.replace(/:/g, "---").replace(/\|/g, "___");
+        let safeId = this.model.uniqueSafeId;
         for (let k in this.model.settings) {
             this.$container.find("input#calendar-settings-" + k + "-" + safeId + "-" + this.model.calendarId).prop("checked", this.getSetting(k));
         }
@@ -399,16 +380,16 @@ export class CalendarPanelView extends component.base.ComponentView {
     }
     
     updateCustomSelectMode(mode: string): void {
-        let oldSelectedItem = this.customSelectMode.items.find(x => x.selected);
-        let newSelectedItem = this.customSelectMode.items.find(x => x.val == mode);
+        let oldSelectedItem = this.customSelectMode.items.find(x => x.type == "item" && x.selected) as component.customselect.CustomSelectItem;
+        let newSelectedItem = this.customSelectMode.items.find(x => x.type == "item" && x.value == mode) as component.customselect.CustomSelectItem;
         oldSelectedItem.selected = false;
         newSelectedItem.selected = true;
         this.customSelectMode.updateItems();
     }
     
     updateCustomSelectFilter(filter: string): void {
-        let oldSelectedItem = this.customSelectFilter.items.find(x => x.selected);
-        let newSelectedItem = this.customSelectFilter.items.find(x => x.val == filter);
+        let oldSelectedItem = this.customSelectFilter.items.find(x => x.type == "item" && x.selected) as component.customselect.CustomSelectItem;
+        let newSelectedItem = this.customSelectFilter.items.find(x => x.type == "item" && x.value == filter) as component.customselect.CustomSelectItem;
         oldSelectedItem.selected = false;
         newSelectedItem.selected = true;
         this.customSelectFilter.updateItems();
@@ -587,9 +568,9 @@ export class CalendarPanelView extends component.base.ComponentView {
                 this.lastClickId = null;
                 
                 // Double click
-                let now = new Date();
                 let [d, m, y] = day.split(".").map(x => parseInt(x));
-                this.triggerEvent("newTask", new Date(y, m, d, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds()).getTime());
+                const time = this.getTimeFromCalendarClickEvent(e);
+                this.triggerEvent("newTask", new Date(y, m, d, time.h, time.m, time.s, time.ms).getTime());
             }
             else {
                 this.lastClickId = day;
@@ -611,9 +592,38 @@ export class CalendarPanelView extends component.base.ComponentView {
                 return;
             }
             let day = (<HTMLElement>e.currentTarget).getAttribute("data-day");
-            let now = new Date();
             let [d, m, y] = day.split(".").map(x => parseInt(x));
-            this.triggerEvent("newTask", new Date(y, m, d, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds()).getTime());
+            const time = this.getTimeFromCalendarClickEvent(e);
+            this.triggerEvent("newTask", new Date(y, m, d, time.h, time.m, time.s, time.ms).getTime());
+        }
+    }
+    
+    getTimeFromCalendarClickEvent(e: MouseEvent): { h: number, m: number, s: number, ms: number } {
+        const $target = <JQuery>$(e.target);
+        if ($target.is(".virtual-scroll-zoom-element")) {
+            const rawTotalSeconds = e.offsetY / $target.height() * 86400;
+            const segmentDuration = 15 * 60;
+            const segmentId = Math.max(0, Math.min(86400 / segmentDuration - 1, Math.round(rawTotalSeconds / segmentDuration)));
+            const totalSeconds = segmentId * segmentDuration;
+            const h = Math.floor(totalSeconds / 3600);
+            const m = Math.floor((totalSeconds - h * 3600) / 60);
+            const s = Math.floor((totalSeconds - h * 3600 - m * 60) / 60);
+            const ms = 0;
+            return {
+                h: h,
+                m: m,
+                s: s,
+                ms: ms,
+            };
+        }
+        else {
+            const now = new Date();
+            return {
+                h: now.getHours(),
+                m: now.getMinutes(),
+                s: now.getSeconds(),
+                ms: now.getMilliseconds(),
+            };
         }
     }
     
@@ -625,18 +635,6 @@ export class CalendarPanelView extends component.base.ComponentView {
     
     onTaskMouseOut(e: MouseEvent): void {
         this.$container.find(".hover").removeClass("hover");
-    }
-    
-    onOpenChatClick(): void {
-        this.triggerEvent("openChat");
-    }
-    
-    onOpenNotesClick(): void {
-        this.triggerEvent("openNotes");
-    }
-    
-    onOpenTasksClick(): void {
-        this.triggerEvent("openTasks");
     }
     
     onGoToTodayClick(): void {
@@ -1049,7 +1047,7 @@ export class CalendarPanelView extends component.base.ComponentView {
     updateMainSelectedItem(): void {
         let cs = this.customSelectExtraCalendars;
         let $cont = cs.$selectedItemsContainer;
-        let selectedItems = cs.items.filter(it => it.selected);
+        let selectedItems = cs.items.filter(it => it.type == "item" && it.selected);
         let nSelectedItems = selectedItems.length;
         
         let $li = $cont.children("li.counter-item");

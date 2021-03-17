@@ -1,6 +1,9 @@
 @import "../../base/BaseWindow";
 @import "../../../component/template/bckg-icon.less";
 @import "../../../component/template/wi-element.less";
+@import "../../../themes/default/less/form";
+
+@headerHeight: 70px;
 
 body {
   font-size: var(--font-size);
@@ -17,9 +20,52 @@ div:focus {
 }
 
 .window-sectionpicker-main {
-  .sections-list {
+  .sections-header {
     position: absolute;
     top: 0;
+    left: 0;
+    right: 0;
+    bottom: @headerHeight;
+    background: var(--main-panel-bg);
+    
+    .base-form {
+      .fields {
+        .field {
+          margin: 10px 0 10px 8px;
+          .input {
+            margin: 0 10px 0 25px;
+            label {
+              input {
+                margin-left: -20px;
+              }
+              .label {
+                color: var(--body-fg);
+                font-size: var(--font-size);
+                font-weight: normal;
+                font-family: var(--font-family);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  .sections-list-lock-overlay {
+    z-index: 9999;
+    display: none;
+    background: rgba(1,1,1,0.1);
+    position: absolute;
+    top: @headerHeight;
+    left: 0;
+    bottom: 53px;
+    right: 0;
+    overflow-y: auto;
+    cursor: not-allowed;
+  }
+
+  .sections-list {
+    position: absolute;
+    top: @headerHeight;
     left: 0;
     bottom: 53px;
     right: 0;

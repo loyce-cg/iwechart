@@ -3,6 +3,14 @@
   color: #fff;
   background-color: var(--sidebar-bg);
 }
+
+.wi-element.with-description {
+  .wi-element-inner .wi-element-name {
+    line-height: 15px;
+    margin-top: -2px;
+  }
+}
+
 .wi-element {
   &.pre-activate {
     background-color: var(--sidebar-item-active-bg) !important;  
@@ -77,6 +85,13 @@
       white-space: nowrap;
       text-overflow: ellipsis;
     }
+    .wi-element-description {
+      left: 0;
+      color: #fff;
+      font-size: var(--font-size-xs);
+      opacity: 0.4;
+    }
+
     .wi-element-badge,
     .wi-element-elements-count,
     .wi-element-search-count {

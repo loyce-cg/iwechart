@@ -36,6 +36,7 @@ import { CssParser } from "../common/customization/CssParser";
 import { CustomizationData } from "../common/customization/CustomizationData";
 import { KeyboardShortcuts } from "./KeyboardShortcuts";
 import { Session } from "../../mail/session/SessionManager";
+import { RegisterUtils } from "../../window/login/RegisterUtils";
 
 let Logger = RootLogger.get("privfs-mail-client.app.common.CommonApplication");
 
@@ -507,50 +508,46 @@ export class WebApplication extends CommonApplication {
         return FileUtils.openFiles(this.isTestMode());
     }
     
-    directSaveContent(content: privfs.lazyBuffer.IContent, session: Session, _parent?: app.WindowParentEx): Q.Promise<void> {
+    directSaveContent(content: privfs.lazyBuffer.IContent, session: Session, _parent?: app.WindowParentEx): Promise<void> {
         return this.saveContent(content, session, _parent);
     }
-    
-    saveContent(content: privfs.lazyBuffer.IContent, _session: Session, parent?: app.WindowParentEx): Q.Promise<void> {
-        return Q().then(() => {
-            return content.getContent();
-        })
-        .then(content => {
-            if (is.safari()) {
-                this.ioc.create(MsgBoxWindowController, [parent || this, {
-                    message: this.localeService.i18n("app.saveBlob.text"),
-                    focusOn: "ok",
-                    ok: {
-                        visible: true,
-                        btnClass: "btn-success",
-                        label: this.localeService.i18n("app.saveBlob.button.download.label"),
-                        action: {
-                            type: "hideAndClose",
-                            timeout: 10000
-                        },
-                        link: {
-                            attrs: {
-                                href: content.getDataUrl(),
-                                download: name,
-                                target: "_blank"
-                            }
-                        }
+
+    async saveContent(iContent: privfs.lazyBuffer.IContent, _session: Session, parent?: app.WindowParentEx): Promise<void> {
+        const content = await iContent.getContent();
+        if (is.safari()) {
+            const msgBox = await this.ioc.create(MsgBoxWindowController, [parent || this, {
+                message: this.localeService.i18n("app.saveBlob.text"),
+                focusOn: "ok",
+                ok: {
+                    visible: true,
+                    btnClass: "btn-success",
+                    label: this.localeService.i18n("app.saveBlob.button.download.label"),
+                    action: {
+                        type: "hideAndClose",
+                        timeout: 10000
                     },
-                    cancel: {
-                        visible: true,
-                        label: this.localeService.i18n("app.saveBlob.button.cancel.label")
+                    link: {
+                        attrs: {
+                            href: content.getDataUrl(),
+                            download: name,
+                            target: "_blank"
+                        }
                     }
-                }])
-                .then(msgBox => {
-                    this.registerInstance(msgBox).open();
-                });
-            }
-            else {
-                return FileUtils.saveContent(content, this.isTestMode());
-            }
-        });
+                },
+                cancel: {
+                    visible: true,
+                    label: this.localeService.i18n("app.saveBlob.button.cancel.label")
+                }
+            }])
+            this.registerInstance(msgBox).open();
+        }
+        else {
+            return FileUtils.saveContent(content, this.isTestMode());
+        }
+        
     }
     
+
     parseHash(): {[name: string]: any} {
         if (!this.originalUrl) {
             this.originalUrl = window.location.toString();
@@ -562,14 +559,19 @@ export class WebApplication extends CommonApplication {
     
     initHistory(): void {
         let parsedHash = this.parseHash();
-        let registerTokenInfo: utils.RegisterTokenInfo = {
-            domain: location.host,
-            token: parsedHash.token,
-            key: parsedHash.token && parsedHash.k ? parsedHash.k : undefined,
-            isAdmin: parsedHash.token && parsedHash.a,
-            username: parsedHash.token && parsedHash.u ? parsedHash.u : undefined
+        const registerUtils = new RegisterUtils(this);
+        const tokenCorrect = parsedHash.token ? registerUtils.checkAndSetTokenInfo(parsedHash.token): false;
+
+        if (! tokenCorrect) {
+            let registerTokenInfo: utils.RegisterTokenInfo = {
+                domain: location.host,
+                token: parsedHash.token,
+                key: parsedHash.token && parsedHash.k ? parsedHash.k : undefined,
+                isAdmin: parsedHash.token && parsedHash.a,
+                username: parsedHash.token && parsedHash.u ? parsedHash.u : undefined
+            }
+            this.setRegisterTokenInfo(registerTokenInfo);
         }
-        this.setRegisterTokenInfo(registerTokenInfo);
         // this.token = parsedHash.token;
         // this.registerKey = this.token && parsedHash.k;
         // this.adminRegistration = this.token && parsedHash.a;
@@ -590,6 +592,10 @@ export class WebApplication extends CommonApplication {
     setContainerWindowHistoryEntry(entry: app.HistoryEntry, replace: boolean): void {
         if (replace) {
             this.history.replace(entry);
+            return;
+        }
+        if (! entry.state) {
+            this.onHistoryChange(<history.Location>entry);
         }
         else {
             this.history.push(entry);
@@ -597,6 +603,9 @@ export class WebApplication extends CommonApplication {
     }
     
     onHistoryChange(historyEntry: history.Location): void {
+        if (historyEntry.action != "REPLACE") {
+            this.contextHistory.setCurrentFromHistory(historyEntry.state);
+        }
         if (this.windows.container) {
             (<ContainerWindowController>this.windows.container).onHistoryChange(historyEntry);
         }
@@ -776,4 +785,14 @@ export class WebApplication extends CommonApplication {
             this.screenCover.stop();
         }
     }
+    
+    getEnviromentLocale(): string {
+        return navigator.language;
+    }
+
+    getInMemoryCacheSize(): number {
+        return 0;
+    }
+
+    protected setSentryEnabled(enabled: boolean): void {}
 }

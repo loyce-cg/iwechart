@@ -10,7 +10,15 @@
   .wi-element .wi-element-inner .wi-element-name.with-breadcrumb span.section-breadcrumb {
     color: var(--wi-element-breadcrumb-fg);
   }
-
+  
+  .conversation-element .avatars-wall .avatar-2 {
+    background-color: rgba(0, 0, 0, 19%);
+  }
+  .conversation-element.active .avatars-wall .avatar-2,
+  .conversation-element.pre-activate .avatars-wall .avatar-2 {
+    background-color: rgba(255, 255, 255, 9%);
+  }
+  
   .host-list {
     margin-top: 20px;
     padding-top: 20px;
@@ -54,6 +62,13 @@
     padding: 8px;
     margin-left: 2px;
   }
+  .wi-element.disabled .wi-element-inner .wi-element-icon.fa-plus {
+    color: var(--wi-element-fg);
+    padding: 8px;
+    margin-left: 2px;
+    opacity: 0.2;
+  }
+
   .wi-element .wi-element-inner .wi-element-name {
     &.with-icon {
       display: flex;
@@ -193,7 +208,7 @@
   .handle-dot-horizontal {
     background: rgba(0, 0, 0, 0.05);
   }
-  
+
   .wi-element,
   .conversation-element {
     .wi-element-inner,
@@ -357,9 +372,9 @@
     height: 7px;
     border-radius: 10px;
     position: fixed;
+    z-index: 99999999;
     margin: 2px;
     cursor: pointer;
-    z-index: 999;
     background: rgba(0, 0, 0, 0.25);
     left: 5px;
     margin-top: -4px;
@@ -385,11 +400,8 @@
     height: 0;
     margin-right: 24px;
     display: inline-block;
-    
-    &:not(.visible) {
-      opacity: 0;
-      pointer-events: none;
-    }
+    pointer-events: none;
+    opacity: 0;
     
     &.bubbles-hint-up {
       top: -5px;
@@ -401,7 +413,8 @@
   
   .conversation-element,
   .section-element {
-    &.with-bell-ringing {
+    &.with-bell-ringing,
+    &.with-active-video-conference {
       position: relative;
       &:after {
         font: normal normal normal 14px/1 FontAwesome;
@@ -411,13 +424,31 @@
         position: absolute;
         right: 12px;
         top: 50%;
-        margin-top: -7px;
+        margin-top: -5px;
         color: var(--wi-element-fg);
         animation: ringingTheBellAnimation 0.2s cubic-bezier(0, 0.75, 1, 0.25) infinite;
       }
       .number,
       .elements-count {
-        opacity: 0;
+        margin-right: 20px;
+      }
+    }
+    &.with-active-video-conference:not(.with-bell-ringing) {
+      position: relative;
+      &:after {
+        font-family: "privmx-icons";
+        content: "V";
+        animation: none;
+      }
+    }
+  }
+  
+  .conversation-element {
+    &.with-bell-ringing,
+    &.with-active-video-conference {
+      .number,
+      .elements-count {
+        margin-right: 40px;
       }
     }
   }
@@ -425,6 +456,24 @@
   .conversation-element {
     .name-wrapper.conv {
       display: inline-block;
+    }
+    &.contact .name-wrapper.conv {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline;
+    }
+    .names .name-wrapper.conv {
+      display: -webkit-inline-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      color: #fff;
+      line-height: 0;
+      .name {
+        line-height: 1.1;
+        float: unset;
+        margin-right: 0;
+      }
     }
   }
 

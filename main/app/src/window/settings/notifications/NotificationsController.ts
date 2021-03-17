@@ -24,6 +24,7 @@ export interface Model {
         sounds: Sound[];
         currentSound: string;
     }[];
+    isElectron: boolean;
 }
 
 export interface PartialResult {
@@ -73,6 +74,7 @@ export class NotificationsController extends BaseController {
                 sounds: this.soundsLibrary.getSoundsByCategory(x.name),
                 currentSound: this.userPreferences.getSoundName(x.name),
             })),
+            isElectron: this.app.isElectronApp()
         };
         this.callViewMethod("renderContent", model);
     }

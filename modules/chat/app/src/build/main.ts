@@ -4,7 +4,10 @@ import {ChatMessage} from "../main/ChatMessage";
 import {ChatPlugin, MailPlugin, MailPluginActionEvent} from "../main/ChatPlugin";
 import { ChatMessagesController } from "../component/chatmessages/ChatMessagesController";
 import { PrivateConversationsController } from "../component/privateconversations/PrivateConversationsController";
+import { VideoConferenceController } from "../component/videoconference/VideoConferenceController";
+import { VideoConferenceWindowController } from "../window/videoConference/VideoConferenceWindowController";
 import { NoSectionsController } from "../component/nosections/NoSectionsController";
+import { DesktopPickerController } from "../component/desktoppicker/DesktopPickerController";
 
 let Logger = Mail.Logger.get("privfs-chat-plugin.Plugin");
 
@@ -18,14 +21,19 @@ export class Plugin {
         // i18n: components
         ChatMessagesController.registerTexts(app.localeService);
         PrivateConversationsController.registerTexts(app.localeService);
+        VideoConferenceController.registerTexts(app.localeService);
         NoSectionsController.registerTexts(app.localeService);
+        DesktopPickerController.registerTexts(app.localeService);
         
         // i18n: windows
         ChatWindowController.registerTexts(app.localeService);
+        VideoConferenceWindowController.registerTexts(app.localeService);
         
         app.ioc.registerComponent("chatmessages", ChatMessagesController);
         app.ioc.registerComponent("privateconversations", PrivateConversationsController);
+        app.ioc.registerComponent("videoconference", VideoConferenceController);
         app.ioc.registerComponent("nosections", NoSectionsController);
+        app.ioc.registerComponent("desktoppicker", DesktopPickerController);
 
         app.localeService.sinkPollingTasks.push(app.localeService.i18n("plugin.chat.app.task.sinkPolling.chats"));
         
@@ -100,6 +108,9 @@ export class Plugin {
             Mail.Q().then(() => {
                 return app.mailClientApi.checkLoginCore();
             })
+            .then(() => {
+                app.eventDispatcher.dispatchEvent<Mail.Types.event.PluginModuleReadyEvent>({type: "plugin-module-ready", name: Mail.Types.section.NotificationModule.CHAT});
+            })
             .fail(e => {
                 Logger.error("Error during additional login steps", e);
             });
@@ -116,7 +127,12 @@ export class Plugin {
                 mailPlugin.eventDispatcher.addEventListener<MailPluginActionEvent>("select", event => {
                     if (event.entryType == "chat") {
                         let cnt = <Mail.window.container.ContainerWindowController>app.windows.container;
-                        cnt.redirectToAppWindow("chat", event.entryId);
+                        cnt.redirectToAppWindow("chat", Mail.app.common.Context.create({
+                            contextType: "section",
+                            contextId: event.entryId,
+                            moduleName: Mail.Types.section.NotificationModule.CHAT,
+                            hostHash: app.sessionManager.getLocalSession().hostHash,
+                        }));
                     }
                 });
                 mailPlugin.addViewScript({path: "build/view.js", plugin: "chat"});
@@ -132,7 +148,12 @@ export class Plugin {
                 messageController.onCustomAction(event => {
                     if (event.actionType == "open-chat" && messageController.indexEntry != null && chatPlugin.conversationService) {
                         let container = <Mail.window.container.ContainerWindowController>app.windows.container;
-                        container.redirectToAppWindow("chat", chatPlugin.conversationService.getConversationId(messageController.indexEntry));
+                        container.redirectToAppWindow("chat", Mail.app.common.Context.create({
+                            contextType: "conversation",
+                            contextId: chatPlugin.conversationService.getConversationId(messageController.indexEntry),
+                            moduleName: Mail.Types.section.NotificationModule.CHAT,
+                            hostHash: app.sessionManager.getLocalSession().hostHash,
+                        }));
                     }
                 });
                 messageController.addViewScript({path: "build/view.js", plugin: "chat"});

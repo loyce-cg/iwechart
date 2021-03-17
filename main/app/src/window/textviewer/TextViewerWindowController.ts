@@ -7,11 +7,15 @@ import { i18n } from "./i18n";
 export interface Model {
     title: string;
     text: string;
+    fontSize: string;
+    useTextArea: boolean;
 }
 
 export interface TextViewerWindowOptions {
     title: string;
     text: string;
+    fontSize?: string;
+    useTextArea?: boolean;
 }
 
 export class TextViewerWindowController extends BaseWindowController {
@@ -25,7 +29,7 @@ export class TextViewerWindowController extends BaseWindowController {
     protected options: TextViewerWindowOptions;
     
     constructor(parent: app.WindowParent, options: TextViewerWindowOptions) {
-        super(parent, __filename, __dirname);
+        super(parent, __filename, __dirname, null, null, "basic");
         this.ipcMode = true;
         this.options = options;
         this.openWindowOptions.position = "center";
@@ -45,6 +49,8 @@ export class TextViewerWindowController extends BaseWindowController {
         return {
             title: this.options.title,
             text: this.options.text,
+            useTextArea: this.options.useTextArea,
+            fontSize: this.options.fontSize
         };
     }
     

@@ -413,6 +413,13 @@ export class Task extends DataObject {
         return cachedSearchString.indexOf(searchStr) >= 0;
     }
     
+    updateModifiedServerDateTime(dt: number): void {
+        if (this.modifiedDateTime) {
+            this.history.filter(x => x.when == this.modifiedDateTime).forEach(x => x.when = dt);
+        }
+        this.setModifiedDateTime(dt);
+    }
+    
     // Diff
     diff(other: Task): string[] {
         let diffs: string[] = [];

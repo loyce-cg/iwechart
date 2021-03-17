@@ -70,6 +70,9 @@ export class BaseView<T> extends ComponentView {
     activate(): Q.IWhenable<void> {
     }
     
+    afterDeactivated(): void {
+    }
+    
     triggerEventWithProgress(event: Event, ...args: any[]): ProgressViewContainer {
         return this.triggerEventWithProgressCore.apply(this, Array.prototype.slice.call(arguments, 1))
             .addButton($(event.target).closest("button"));
@@ -132,6 +135,9 @@ export class BaseView<T> extends ComponentView {
                 if (elem.checked) {
                     result[elem.name] = elem.value;
                 }
+            }
+            else if ($elem.is("select[multiple]")) {
+                result[elem.name] = JSON.stringify($elem.val());
             }
             else {
                 let value = Lang.getTrimmedString(elem.value);

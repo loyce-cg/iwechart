@@ -62,7 +62,9 @@ export class TaskChooserWindowController extends BaseWindowController {
     }
     
     onTaskChooserClose(): void {
-        this.close();
+        setTimeout(() => {
+            this.close();
+        }, 0);
     }
     
     static attachFileToTask(parent: BaseWindowController, session: Session, tasksPlugin: any, section: SectionService, file: OpenableSectionFile, handle: privfs.fs.descriptor.Handle, allowOnlyTasksFromGivenSection?: boolean): void {

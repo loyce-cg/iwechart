@@ -9,6 +9,7 @@ export interface Options<T> {
     model: T;
     template: Template<T, any, any>;
     templateManager: TemplateManager;
+    extraClasses?: string[];
 }
 
 export class Dropdown<T> {

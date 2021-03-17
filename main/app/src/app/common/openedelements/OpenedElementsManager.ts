@@ -38,7 +38,12 @@ export class OpenedElementsManager {
         for (let i = 0; i < this.openedElements.length; i++) {
             if (this.openedElements[i].element && this.openedElements[i].element.equals(element)
             && this.openedElements[i].windowType == winType ) {
-                return true;
+                if (this.openedElements[i].window && this.openedElements[i].window.nwin) {
+                    return true;
+                } else {
+                    this.openedElements.splice(i, 1);
+                    return false;
+                }
             }
         }
         return false;

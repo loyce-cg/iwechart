@@ -1,0 +1,5 @@
+@import { component} from "pmc-web";
+@model component.customselect.CustomSelectItem
+<span class="custom-select-task-status-item">
+  <span class="task-label {{@model.extraArg.labelClass}}">#{{@model.extraArg.taskId}}</span><span class="{{@model.extraArg.labelClass}}-color" style="font-weight:600;margin-left:5px;">{{@model.text}}</span>
+</span>
