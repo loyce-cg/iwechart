@@ -196,8 +196,7 @@ export class MindmapEditorWindowController extends BaseWindowController {
                 }
             }
             if (newFullFileName) {
-                let newFileName: string = newFullFileName.substr(newFullFileName.lastIndexOf("/") + 1);
-                this.updateFileName(newFileName, newFullFileName, this.getTitle(newFullFileName));
+                this.updateFileNameFromFullFileName(newFullFileName);
             }
         });
         this.enableTaskBadgeAutoUpdater();
@@ -239,6 +238,8 @@ export class MindmapEditorWindowController extends BaseWindowController {
             return Q.all([this.afterViewLoaded.promise, this.mindmapEditor.afterMindmapRendered.promise, this.mindmapEditor.ready()]);
         })
         .then(() => {
+            const fullFileName = this.getFullFileName();
+            this.updateFileNameFromFullFileName(fullFileName);
             if (openableElement instanceof OpenableSectionFile) {
                 if (this.mindmapEditor.mindmap && (styleName != this.mindmapEditor.mindmap.getStyleName() || fontSize != this.mindmapEditor.mindmap.getFontSize())) {
                     this.app.fileStyleResolver.cacheStyle(openableElement.id, {
@@ -493,6 +494,22 @@ export class MindmapEditorWindowController extends BaseWindowController {
             }
         }
         return JSON.stringify(this.tasksPlugin.getBindedTasksData(boundTasksStr));
+    }
+    
+    getFullFileName(): string {
+        if (!this.mindmapEditor || !this.mindmapEditor.openableElement) {
+            return "";
+        }
+        if (this.mindmapEditor.openableElement instanceof OpenableSectionFile) {
+            const parsed = Entry.parseId(this.mindmapEditor.openableElement.id);
+            if (parsed) {
+                return parsed.path;
+            }
+        }
+        else if ((<any>this.mindmapEditor.openableElement).openableElementType == "LocalOpenableElement") {
+            return this.mindmapEditor.openableElement.getElementId();
+        }
+        return "";
     }
     
     getTitle(overridePath?: string): string {
@@ -822,6 +839,11 @@ export class MindmapEditorWindowController extends BaseWindowController {
         if (this.prepareToPrintDeferred) {
             this.prepareToPrintDeferred.resolve();
         }
+    }
+    
+    updateFileNameFromFullFileName(fullFileName: string): void {
+        let newFileName: string = fullFileName.substr(fullFileName.lastIndexOf("/") + 1);
+        this.updateFileName(newFileName, fullFileName, this.getTitle(fullFileName));
     }
     
     updateFileName(newFileName: string, newFullFileName: string, newTitle: string): void {

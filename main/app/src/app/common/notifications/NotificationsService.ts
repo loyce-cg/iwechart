@@ -69,7 +69,7 @@ export class NotificationsService {
     notifyUser(options: event.NotificationOptions) {
         if (options.sound) {
             const soundCategoryName = options.overrideSoundCategoryName ? options.overrideSoundCategoryName : "notification";
-            this.app.playAudio(soundCategoryName, undefined, options.ignoreSilentMode);
+            this.app.playAudio(soundCategoryName, { ignoreSilentMode: options.ignoreSilentMode });
         }
         if (options.tray) {
             this.eventDispatcher.dispatchEvent<event.ElectronNotificationServiceEvent>({type: "notifyInTray"});

@@ -153,8 +153,20 @@ export class Starter {
         return process.argv && process.argv.indexOf("--no-autostart") != -1;
     }
 
+    isNoMenuEntry(): boolean {
+        return process.argv && process.argv.indexOf("--no-menu-entry") != -1;
+    }
+
+    isExpert(): boolean {
+        return process.argv && process.argv.indexOf("--expert") != -1;
+    }
+
     isDisableGPUAccelerationSet(): boolean {
         return process.argv && process.argv.indexOf("--no-gpu") != -1;
+    }
+
+    isLocalUpdateOnly(): boolean {
+        return process.argv && process.argv.indexOf("--local-update") != -1;
     }
 
     isHelp(): boolean {
@@ -164,7 +176,10 @@ export class Starter {
     showHelp(): void {
         console.log("--no-autostart\t\t\t\t\tdo not add PrivMX to system autostart");
         console.log("--allow-multiple-instances\t\t\tallow to start more then one instance of PrivMX in the same time");
+        console.log("--no-menu-entry\t\t\tdo not add/update Applications menu entry");
         console.log("--no-gpu\t\t\tdisable GPU acceleration");
+        console.log("--expert\t\t\talias for: --no-autostart and --allow-multiple-instances and --no-menu-entry");
+
     }
 
     allowMultipleInstances(): boolean {
@@ -239,10 +254,9 @@ export class Starter {
     }
 
     setupAutoStart(disable?: boolean) {
-        if (this.isInDevMode() || this.isInUpdateMode() || this.isNoAutostart()) {
+        if (this.isInDevMode() || this.isInUpdateMode() || this.isNoAutostart() || this.isExpert()) {
             return;
         }
-
         let appName: string = process.platform != "darwin" ? "PrivMX Desktop Client" : Updater.DARWIN_APP_DIR.split(".")[0];
         let autoLauncher = new AutoLaunch({ name: appName, isHidden: true});
         if ((<any>autoLauncher).opts) {
@@ -257,10 +271,9 @@ export class Starter {
                 if (isEnabled && disable === true) {
                     return autoLauncher.disable();
                 }
-                if (isEnabled) {
-                    return;
+                else if (isEnabled == false && disable == false) {
+                    return autoLauncher.enable();
                 }
-                return autoLauncher.enable()
             })
             .catch(err => {
                 this.logger.log("error", "Error during setup auto launcher: ", err);
@@ -384,7 +397,7 @@ export class Starter {
                 });
                 this.app.setAppUserModelId(process.execPath);
             }
-            else if (process.platform == "linux" && !this.isInDevMode() && !this.isInUpdateMode()) {
+            else if (process.platform == "linux" && !this.isInDevMode() && !this.isInUpdateMode() && !this.isNoMenuEntry() && !this.isExpert()) {
                 const appsPath = require("os").homedir() + "/.local/share/applications/";
                 const executablePath = this.app.getPath("exe");
                 const executableDir = path.resolve(executablePath.replace(/\\/g, "/").split("/").slice(0, -1).join("/"));

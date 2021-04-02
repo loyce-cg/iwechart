@@ -22,7 +22,7 @@ import {WebMonitor} from "../../web-utils/WebMonitor";
 import {Initializer} from "./Initializer";
 import {HttpRequest} from "simplito-net";
 import {func as offlineErrorTemplate} from "../common/window/template/offline-error.html";
-import {app, ipc, utils} from "../../Types";
+import {app, ipc, utils, event} from "../../Types";
 import {UrlResourceLoader, MailResourceLoader} from "./ResourceLoader";
 import {IpcSender} from "./electron/IpcSender";
 import {FileUtils} from "./FileUtils";
@@ -37,6 +37,7 @@ import { CustomizationData } from "../common/customization/CustomizationData";
 import { KeyboardShortcuts } from "./KeyboardShortcuts";
 import { Session } from "../../mail/session/SessionManager";
 import { RegisterUtils } from "../../window/login/RegisterUtils";
+import { MailConst } from "../../mail";
 
 let Logger = RootLogger.get("privfs-mail-client.app.common.CommonApplication");
 
@@ -245,6 +246,13 @@ export class WebApplication extends CommonApplication {
         this.audioPlayer.add("notification", this.assetsManager.getAsset("sounds/new-messages.wav"));
         this.audioPlayer.add("message-sent", this.assetsManager.getAsset("sounds/message-sent.wav"));
         this.audioPlayer.add("message-deleted", this.assetsManager.getAsset("sounds/message-deleted.wav"));
+    }
+    
+    onUserPreferencesChange(event: event.UserPreferencesChangeEvent): void {
+        super.onUserPreferencesChange(event);
+        if (this.audioPlayer) {
+            this.audioPlayer.setDefaultVolume(this.userPreferences.getValue(MailConst.UI_NOTIFICATIONS_VOLUME, 1.0));
+        }
     }
     
     openWindow(load: app.WindowLoadOptions, options: app.WindowOptions, controller: BaseWindowController, _parentWindow: app.WindowParent, singletonName?: string): WebWindow {
@@ -465,8 +473,14 @@ export class WebApplication extends CommonApplication {
         window.document.title = title;
     }
     
-    playAudio(soundName: string, force: boolean = false) {
-        this.audioPlayer.play(soundName, force);
+    playAudio(soundName: string, _options?: app.PlayAudioOptions) {
+        const options: app.PlayAudioOptions = {
+            force: false,
+            ignoreSilentMode: false,
+            defaultVolume: undefined,
+            ..._options,
+        };
+        this.audioPlayer.play(soundName, options);
     }
     
     getWindowsTitleBarButtonsPosition(): string {

@@ -106,6 +106,7 @@ export class NavBarController extends ComponentController {
     basicTooltip: TooltipController;
     personsComponent: PersonsController;
     videoConferenceState: { hostHash: string, section: SectionService, conversation: Conv2Section } = null;
+    videoConferenceStateRefreshTimeout: number | null = null;
     
     constructor(
         parent: BaseAppWindowController
@@ -464,12 +465,7 @@ export class NavBarController extends ComponentController {
     }
     
     onPersonsChange(person: Person): void {
-        if (this.videoConferenceState) {
-            this.updateVideoConferenceState(this.videoConferenceState.hostHash, this.videoConferenceState.section, this.videoConferenceState.conversation);
-        }
-        else {
-            this.updateVideoConferenceState();
-        }
+        this.scheduleVideoConferenceStateRefresh();
         if (person.hashmail != this.identityProvider.getIdentity().hashmail) {
             return;
         }
@@ -551,6 +547,28 @@ export class NavBarController extends ComponentController {
 
     onViewOpenOrderInfo(): void {
         this.app.openOrderInfo();
+    }
+    
+    scheduleVideoConferenceStateRefresh(): void {
+        if (this.videoConferenceStateRefreshTimeout !== null) {
+            this.clearVideoConferenceStateRefresh();
+        }
+        this.videoConferenceStateRefreshTimeout = <any>setTimeout(() => {
+            this.clearVideoConferenceStateRefresh();
+            if (this.videoConferenceState) {
+                this.updateVideoConferenceState(this.videoConferenceState.hostHash, this.videoConferenceState.section, this.videoConferenceState.conversation);
+            }
+            else {
+                this.updateVideoConferenceState();
+            }
+        }, 100);
+    }
+    
+    clearVideoConferenceStateRefresh(): void {
+        if (this.videoConferenceStateRefreshTimeout !== null) {
+            clearTimeout(this.videoConferenceStateRefreshTimeout);
+            this.videoConferenceStateRefreshTimeout = null;
+        }
     }
     
     updateVideoConferenceState(hostHash?: string, section?: SectionService, conversation?: Conv2Section): void {

@@ -103,6 +103,9 @@ export class FilesFilterUpdater {
     previousFilter: FilesFilterData;
     filter: FilesFilterData;
     updateTimer: NodeJS.Timer;
+    
+    lastFilterChangeTime: number;
+    deactivateTime: number;
     onUpdate: () => boolean;
     
     constructor() {
@@ -111,9 +114,18 @@ export class FilesFilterUpdater {
     
     setFilter(filter: FilesFilterData): void {
         this.filter = filter;
+        this.lastFilterChangeTime = Date.now();
+    }
+
+    onDeactivateFiles(): void {
+        this.deactivateTime = Date.now();
     }
     
     needsUpdate(): boolean {
+        if (this.deactivateTime && this.deactivateTime < this.lastFilterChangeTime && this.previousFilter && this.previousFilter.value.length > 0) {
+            return true;
+        }
+
         if (!this.previousFilter || !this.filter) {
             return true;
         }
@@ -3401,6 +3413,7 @@ export class FilesListController extends window.base.WindowComponentController<w
             return;
         }
         this.isActive = false;
+        this.filesFilterUpdater.onDeactivateFiles();
     }
     
     canWrite(): boolean {

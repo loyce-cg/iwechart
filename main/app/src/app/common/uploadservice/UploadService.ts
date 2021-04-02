@@ -22,6 +22,10 @@ export interface UploadFileCancelEvent {
     type: "upload-file-cancel-event";
     fileId: number;
 }
+export interface UploadFileCancelAllEvent {
+    type: "upload-file-cancel-all-event";
+}
+
 export interface UploadFileRetryEvent {
     type: "upload-file-retry-event";
     fileId: number;
@@ -174,6 +178,11 @@ export class UploadService {
         if (! this.hasWaitingUploads() && ! this.hasUploadsInProgress()) {
             clearInterval(this.uploadsQueueCheckInterval);
             this.uploadsQueueCheckInterval = null;
+
+            // last refresh of statuses
+            this.filesToUpload.forEach(x => {
+                this.emitProgressEvent(x);
+            });
             return;
         }
 
@@ -226,6 +235,9 @@ export class UploadService {
         this.app.eventDispatcher.addEventListener<UploadFileCancelEvent>("upload-file-cancel-event", event => {
             this.cancelUpload(event.fileId);
         })
+        this.app.eventDispatcher.addEventListener<UploadFileCancelAllEvent>("upload-file-cancel-all-event", event => {
+            this.cancelAllUploads();
+        })
         this.app.eventDispatcher.addEventListener<UploadFileRetryEvent>("upload-file-retry-event", event => {
             this.retryUpload(event.fileId);
         })
@@ -237,6 +249,17 @@ export class UploadService {
 
     setEventsListenersRegistered(value: boolean): void {
         this.eventsListenersRegistered = value;
+    }
+
+    cancelAllUploads(): void {
+        this.filesToUpload.forEach(f => {
+            if (f.status == "in-progress" || f.status == "wait") {
+                f.fileOptions.streamOptions.cancel = true;
+                f.status = "aborted";
+                this.activeUploads --;
+                this.emitProgressEvent(f);
+            }
+        })
     }
 
     cancelUpload(fileId: number): void {
@@ -268,7 +291,11 @@ export class UploadService {
     }
 
     getAllQueuedFiles(): UploadFileProgressEvent[] {
-        return this.filesToUpload.map(x => this.createProgressEventObject(x));
+        return this.filesToUpload.filter(x => x.status == "in-progress" || x.status == "wait").map(x => this.createProgressEventObject(x));
+    }
+
+    clearAllFinishedUploads(): void {
+        this.filesToUpload = this.filesToUpload.filter(x => x.status != "aborted" && x.status != "done");
     }
 
 }

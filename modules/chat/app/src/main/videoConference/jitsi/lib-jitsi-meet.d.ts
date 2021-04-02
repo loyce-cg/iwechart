@@ -217,11 +217,7 @@ declare module JitsiMeetJS {
         isE2EESupported(): boolean;
         toggleE2EE(isEnabled: boolean): boolean;
         _isE2EEEnabled(): boolean;
-        _e2eEncryption?: {
-            _e2eeCtx?: {
-                setVideoFrameSignatureVerificationRatioInverse: (videoFrameSignatureVerificationRatioInverse: number) => void;
-            };
-        };
+        setVideoFrameSignatureVerificationRatioInverse: (videoFrameSignatureVerificationRatioInverse: number) => void;
         room: ChatRoom;
     }
     
@@ -272,6 +268,33 @@ declare module JitsiMeetJS {
         _hidden : boolean;
         _connectionStatus: ParticipantConnectionStatus;
         _properties: { [key: string]: any };
+    }
+    
+    interface ConferenceStats {
+        bandwidth?: {
+            download?: number;
+            upload?: number;
+        };
+        bitrate?: {
+            video?: {
+                download?: number;
+                upload?: number;
+            };
+            audio?: {
+                download?: number;
+                upload?: number;
+            };
+            download?: number;
+            upload?: number;
+        };
+        packetLoss?: {
+            download?: number;
+            upload?: number;
+        };
+        jvbRTT?: number;
+        e2ePing?: number;
+        connectionQuality?: number;
+        maxEnabledResolution?: number;
     }
     
 }

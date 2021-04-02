@@ -142,6 +142,9 @@ export class Conv2ListView extends ComponentView {
             this.triggerEvent("togglePinned", conv2Id, !$(event.target).closest(".pin-button.active").hasClass("pinned"));
             return;
         }
+        if ($(event.target).closest(".videoconf-button").length > 0) {
+            return;
+        }
         this.activateConv2(conv2Id);
     }
     

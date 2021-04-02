@@ -295,9 +295,10 @@ export class VideoRecorderWindowController extends BaseWindowController {
     }
     
     private async _askAboutChangesBeforeClosing(): Promise<{ close: boolean, saveChanges: boolean }> {
+        const recordingType = this.options.mode === VideoRecorderMode.PHOTO ? "photo" : "audioVideo";
         const result = await this.confirmEx({
-            title: this.i18n("window.videorecorder.unsavedMessage.title"),
-            message: this.i18n("window.videorecorder.unsavedMessage.message"),
+            title: this.i18n(`window.videorecorder.unsavedMessage.${recordingType}.title`),
+            message: this.i18n(`window.videorecorder.unsavedMessage.${recordingType}.message`),
             yes: {
                 visible: true,
                 label: this.i18n("core.button.yes.label"),

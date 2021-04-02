@@ -1186,6 +1186,12 @@ export namespace app {
         orderId?: string,
         dataCenterUser?: {id: string, login: string}
     }
+    
+    export interface PlayAudioOptions {
+        force?: boolean;
+        ignoreSilentMode?: boolean;
+        defaultVolume?: number;
+    }
 }
 
 export namespace mail {

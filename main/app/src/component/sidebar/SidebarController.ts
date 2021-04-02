@@ -655,6 +655,21 @@ export class SidebarController extends ComponentController {
         });
     }
     
+    onViewVideoConfClick(type: "section"|"conversation"|"customElement", id: string, hostId: string): void {
+        const localSession = this.hostList.sessionManager.getLocalSession();
+        const session = this.hostList.sessionManager.getSessionByHostHash(type == "customElement" ? localSession.hostHash : (hostId || localSession.hostHash));
+        this.dispatchEvent<Types.event.JoinVideoConferenceEvent>({
+            type: "join-video-conference",
+            hostHash: session.hostHash,
+            section: type == "section" ? session.sectionManager.getSection(id) : null,
+            conversation: type == "conversation" ? session.conv2Service.collection.find(x => x.id == id) : null,
+            roomMetadata: {
+                creatorHashmail: session.conv2Service.identity.hashmail,
+                title: "",
+            },
+        });
+    }
+    
     registerRemoteSectionsList(hostHash: string, list: RemoteSectionListController): void {
         if (hostHash in this.remoteSectionsLists) {
             return;

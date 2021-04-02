@@ -19,7 +19,6 @@ export class Plugin {
     
     register(_mail: typeof Mail, app: Mail.app.common.CommonApplication) {
         let notes2Plugin = app.addComponent("notes2-plugin", new Notes2Plugin(app));
-        
         // i18n: main
         notes2Plugin.registerTexts(app.localeService);
         

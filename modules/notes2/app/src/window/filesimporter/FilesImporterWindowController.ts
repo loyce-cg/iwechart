@@ -1,4 +1,4 @@
-import {app, component, mail, utils, window, Q, Types, privfs} from "pmc-mail";
+import {app, component, mail, utils, window, Q, Types, privfs, Logger as RootLogger} from "pmc-mail";
 import {Notes2Plugin} from "../../main/Notes2Plugin";
 import { i18n } from "./i18n";
 import Inject = utils.decorators.Inject;
@@ -13,6 +13,7 @@ import { SectionsPickerPanelController } from "./pickerpanel/SectionsPickerPanel
 import { FilesPickerPanelController } from "./pickerpanel/FilesPickerPanelController";
 import { FilesToImportPanelController } from "./pickerpanel/FilesToImportPanelController";
 import { AddItemEvent, RemoveItemEvent, FileEntry } from "./pickerpanel/Types";
+const Logger = RootLogger.get("notes2.FilesImporterWindowController");
 export interface Model {
     sectionName: string;
     sectionType: string;
@@ -109,7 +110,7 @@ export class FilesImporterWindowController extends window.base.BaseWindowControl
                 this.processNewPath(newPath, this.localFS.currentFileNamesCollection);
             });  
             this.initComponents();    
-            this.localFS.browseWithParent("");
+            this.localFS.browseWithParent(LocalFS.getHomeDir());
         })
     }
 
@@ -316,7 +317,7 @@ export class FilesImporterWindowController extends window.base.BaseWindowControl
                 await this.uploadFiles();
             }
             catch(e) {
-                console.log("error in uploadFiles");
+                Logger.error("error in uploadFiles", e);
             }
             this.close();
         })
@@ -336,7 +337,7 @@ export class FilesImporterWindowController extends window.base.BaseWindowControl
         }
 
         if (leaf.type == "directory") {
-            let resolvedBaseDir = baseDir + "/" + relative;
+            let resolvedBaseDir = baseDir == "/" ? baseDir + relative : baseDir + "/" + relative;
             let baseDirExists = resolvedBaseDir == "/" ? true : await sectionTree.fileSystem.exists(resolvedBaseDir);
             if (! baseDirExists) {
                 await sectionTree.fileSystem.mkdirs(resolvedBaseDir);

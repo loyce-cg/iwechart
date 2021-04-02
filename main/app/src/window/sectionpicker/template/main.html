@@ -1,5 +1,9 @@
 @import {Model} from "../../sections/SectionUITypes";
 @model Model
+{{
+  console.log("model", model);
+  const asCreatorString = model.asCreator ? ".asCreator" : "";
+}}
 <div class="window-sectionpicker-main">
   <div class="sections-header">
     <div class="base-form">
@@ -8,28 +12,28 @@
           <div class="input radio">
             <label>
               <input type="radio" id="top-level" name="level" value="top-level"/>
-              <span class="label">{{@Helper.i18n("window.sectionPicker.no_parent.label")}}</span>
+              <span class="label">{{@Helper.i18n("window.sectionPicker.no_parent.label" + asCreatorString)}}</span>
             </label>
             <label>
               <input type="radio" id="sub-section" name="level" value="sub-section"/>
-              <span class="label">{{@Helper.i18n("window.sectionPicker.with_parent.label")}}</span>
+              <span class="label">{{@Helper.i18n("window.sectionPicker.with_parent.label" + asCreatorString)}}</span>
             </label>
           </div>    
         </div>
       </div>
     </div>
+    <div class="sections-list-title">
+      {{@Helper.i18n("window.sectionPicker.selectParentSection.title")}}
+    </div>  
   </div>
-  <div class="sections-list">
-  </div>
-  <div class="sections-list-lock-overlay"></div>
+  <div class="sections-list"></div>
   <div class="buttons-container">
     <div class="buttons">
       <button class="btn btn-success" data-action="select" tabindex="1" {{#model.state.canAdd || model.state.isAdmin ? '' : 'disabled="disabled"'}}>
-        <i class="fa fa-plus"></i>
-        {{@Helper.i18n("window.sectionPicker.actions.move")}}
+        {{@Helper.i18n("window.sectionPicker.actions.move" + asCreatorString)}}
       </button>
       <button class="btn btn-default" data-action="close" tabindex="2">
-        {{@Helper.i18n("core.button.close.label")}}
+        {{@Helper.i18n("core.button.cancel.label")}}
       </button>
     </div>
   </div>

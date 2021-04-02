@@ -28,6 +28,8 @@ export interface SimplePopupOptions {
     $target: JQuery;
     horizontalPlacement: PopupPlacement;
     verticalPlacement: PopupPlacement;
+    theme?: "dark" | "light";
+    adornmentOffset?: number;
 }
 
 export interface SimplePopupBackdropOptions {
@@ -50,6 +52,10 @@ export class SimplePopup {
     }
     
     async init(options: SimplePopupOptions): Promise<void> {
+        if (!("adornmentOffset" in options)) {
+            const isHorizontal = options.verticalPlacement == PopupPlacement.AFTER || options.verticalPlacement == PopupPlacement.BEFORE;
+            options.adornmentOffset = (isHorizontal ? options.$target[0].clientWidth : options.$target[0].clientHeight) / 2 - 5;
+        }
         this.options = options;
         
         this.$main = this.templateManager.createTemplate(mainTemplate).renderToJQ(this.options);

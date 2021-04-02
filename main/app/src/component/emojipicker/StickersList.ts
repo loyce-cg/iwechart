@@ -54,6 +54,7 @@ export class StickersList {
         'beka',
         'fajnoooo',
         'hmmmm',
+        'facepalm',
         'nazimno'
     ];
     static stickersCompat4 = [
@@ -91,6 +92,7 @@ export class StickersList {
                 'zgon1', //9
                 'beka',// 10
                 'hmmmm',// 11
+                'facepalm',
                 'blush1', //12
                 'plus1', //13
                 'minus1',//14

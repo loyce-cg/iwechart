@@ -6,8 +6,8 @@
   "private": true,
   "dependencies": {
     "olm": "https://packages.matrix.org/npm/olm/olm-3.2.1.tgz",
-    "pmc-mail": "^2.25.0-20210316084316946",
-    "pmc-web": "^2.25.0-20210316084316946"
+    "pmc-mail": "^2.25.0-20210325073404486",
+    "pmc-web": "^2.25.0-20210325073404486"
   },
   "scripts": {
     "postinstall": "node postinstall.js"

@@ -328,7 +328,7 @@ export class RecentFilesWindowController extends window.base.BaseWindowControlle
             return;
         }
         this.deferred.resolve(file);
-        this.closeOrHide();
+        this.close();
     }
     
     onViewSelectUp() {
@@ -399,21 +399,13 @@ export class RecentFilesWindowController extends window.base.BaseWindowControlle
     }
     
     onViewClose(): void {
-        this.closeOrHide();
+        this.close();
     }
     
     onNwinClose(): void {
-        this.closeOrHide();
+        this.close();
     }
     
-    closeOrHide(): void {
-        if (this.app.isQuitting() || this.allowClose) {
-            this.close();
-        }
-        else {
-            this.hide();
-        }
-    }
     
     hide() {
         this.nwin.hide();

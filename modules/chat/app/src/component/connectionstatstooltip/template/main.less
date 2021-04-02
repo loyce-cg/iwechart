@@ -1,0 +1,31 @@
+@import "../../../../node_modules/pmc-web/src/component/infotooltip/index.less";
+
+.connection-stats-tooltip {
+    h3 {
+        font-size: var(--font-size);
+        margin-top: 10px;
+    }
+    
+    .data-grid {
+        display: grid;
+        grid-template-columns: max-content auto;
+        grid-auto-rows: 1fr;
+        grid-column-gap: 10px;
+        line-height: 24px;
+        padding: 5px 0 10px 0;
+    }
+
+    .data-entry-title {
+        text-align: right;
+    }
+    
+    .measurement-with-icon {
+        width: 80px;
+        display: inline-block;
+    }
+    
+    .measurement-without-icon {
+        display: inline-block;
+        padding-left: 10px;
+    }
+}

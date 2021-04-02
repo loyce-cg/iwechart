@@ -20,15 +20,21 @@ export class HelperWindowView extends BaseWindowView<void> {
         this.audioPlayer.add("gong", this.helper.getAsset("sounds/new-messages.wav"));
     }
     
+    setDefaultVolume(volume: number): void {
+        if (this.audioPlayer) {
+            this.audioPlayer.setDefaultVolume(volume);
+        }
+    }
+    
     setSound(categoryName: SoundsCategoryName, fileName: string): void {
         this.audioPlayer.add(categoryName, this.helper.getAsset(`sounds/${fileName}`));
     }
     
-    playAudio(soundName: string, force: boolean = false): void {
+    playAudio(soundName: string, options: app.PlayAudioOptions): void {
         if (!this.audioPlayer.has(soundName) && soundName.indexOf(".") >= 0) {
             this.audioPlayer.add(soundName, this.helper.getAsset(`sounds/${soundName}`));
         }
-        this.audioPlayer.play(soundName, force);
+        this.audioPlayer.play(soundName, options);
     }
     
     setAudioEnabled(enabled: boolean): void {

@@ -31,6 +31,15 @@
         </div>
       </div>
       
+      <div class="notifications-volume field">
+        <div class="info"></div>
+        <div class="input">
+          <input type="hidden" value="{{@model.notificationsVolume}}" class="volume-hidden-input" data-setting="ui.notificationsVolume" name="ui.notificationsVolume" />
+          <i class="fa fa-volume-up volume-icon"></i>
+          <div class="volume-slider-container"></div>
+        </div>
+      </div>
+      
       {{ for (let soundsCategory of model.soundsCategories) { }}
         {{ if (soundsCategory.spec.name != "notification") { continue; } }}
         <div class="sounds-category field">

@@ -1,6 +1,5 @@
-import electron = require("electron");
+
 import Q = require("q");
-import {Persons} from "../../../mail/person/Persons";
 import { ElectronApplication } from "../ElectronApplication";
 import { event } from "../../../Types";
 import path = require("path");
@@ -11,6 +10,8 @@ import { EmojiViewBarController } from "../../../component/emojiviewbar/EmojiVie
 import { Session } from "../../../mail/session/SessionManager";
 import * as unescape from "he";
 import * as striptags from "striptags";
+import { NativeImage } from "electron";
+import { AvatarsCache } from "./AvatarsCache";
 
 
 export class NotificationsService {
@@ -19,11 +20,14 @@ export class NotificationsService {
     static readonly APP_MAX_NOTIFICATION_MESSAGE_LEN: number = 50;
     static readonly APP_NOTIFICATION_ELIPSIS: string = " ...";
     
+    private avatarsCache: AvatarsCache;
+
     constructor(
         public app: ElectronApplication, public eventDispatcher: EventDispatcher
     ) {
         eventDispatcher.addEventListener<event.ElectronNotificationServiceEvent>("notifyInTooltip", this.onHandleTooltipNotification.bind(this), "main", "ethernal");
         eventDispatcher.addEventListener<event.ElectronNotificationServiceEvent>("notifyInTray", this.onHandleTrayNotification.bind(this), "main", "ethernal");
+        this.avatarsCache = new AvatarsCache(app);
     }
     
     getPersonFromSender(session: Session, sender: string): Contact {
@@ -47,7 +51,8 @@ export class NotificationsService {
         Q().then(() => {
             if (event.options.withSticker) {
                 let stickersPath = path.join(EmojiViewBarController.getAssetsPath(this.app.assetsManager), event.options.withSticker) + ".png";
-                avatar = this.app.getAvatarFromPath(stickersPath, 72);
+                // avatar = this.app.getAvatarFromPath(stickersPath, 72);
+                avatar = this.avatarsCache.getByPath(stickersPath);
             }
             
             let session = this.app.sessionManager.getSessionByHostHash(event.context.hostHash);
@@ -59,13 +64,15 @@ export class NotificationsService {
             }
             
             if (event.options.sender && event.options.withAvatar && session && session.conv2Service && session.conv2Service.contactService) {
-                let person = this.getPersonFromSender(session, event.options.sender);
-                avatar = this.app.getAvatarFromDataUrl(Person.fromContact(null, person).getAvatar());
+                let contact = this.getPersonFromSender(session, event.options.sender);
+                // avatar = this.app.getAvatarFromDataUrl(Person.fromContact(null, person).getAvatar());
+                avatar = this.avatarsCache.getByPerson(Person.fromContact(null, contact));
             }
             
             if (event.options.withAvatar && !event.options.sender) {
                 
-                avatar = this.app.getAvatarFromDataUrl(this.getNotificationIcon());
+                // avatar = this.app.getAvatarFromDataUrl(this.getNotificationIcon());
+                avatar = this.avatarsCache.getFromBaseNotificationIcon();
             }
             
             let maxLength = event.options.customMessageLength || maxMsgLength;
@@ -85,6 +92,10 @@ export class NotificationsService {
             
         })
         
+    }
+
+    getAvatarsCache(): AvatarsCache {
+        return this.avatarsCache;
     }
     
     onHandleTrayNotification(event: event.ElectronNotificationServiceEvent) {

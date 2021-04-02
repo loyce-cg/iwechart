@@ -4,7 +4,6 @@ import {CommonApplication} from "../common/CommonApplication";
 import {LocaleService} from "../../mail/LocaleService";
 import {DownloadWindowController} from "../../window/download/DownloadWindowController";
 import {HelperWindowController} from "../../window/helper/HelperWindowController";
-import {PlayerHelperWindowController} from "../../window/playerhelper/PlayerHelperWindowController";
 import {File} from "./File";
 import {Version} from "../../utils/Version";
 import electron = require("electron");
@@ -28,15 +27,14 @@ import ObjectMapModule = require("./ObjectMap");
 import {i18n} from "../../i18n";
 import { ContextMenuHelper } from "./ContextMenuHelper";
 import { NotificationsService } from "./notifications/NotificationsService";
-import { ShellOpenOptions, ShellOpenAction, OpenableElement, SimpleOpenableElement, OpenableFile } from "../common/shell/ShellTypes";
+import { ShellOpenOptions, ShellOpenAction, OpenableElement, SimpleOpenableElement } from "../common/shell/ShellTypes";
 import { TrayMenu } from "./traymenu/TrayMenu";
 import { OpenExternalWindowController, Result } from "../../window/openexternal/OpenExternalWindowController";
-import { ImageEditorWindowController, ScreenshotResult } from "../../window/imageeditor/ImageEditorWindowController";
+import { ImageEditorWindowController } from "../../window/imageeditor/ImageEditorWindowController";
 import { MailResourceLoader, UrlResourceLoader } from "./ResourceLoaderCompat";
-import { ClipboardData, Clipboard as PrivMxClipboard, ClipboardElement } from "../common/clipboard/Clipboard";
+import { ClipboardData, Clipboard as PrivMxClipboard } from "../common/clipboard/Clipboard";
 import { BaseWindowManager } from "../BaseWindowManager";
 import { BaseWindowController } from "../../window/base/BaseWindowController";
-import { PlayerManager } from "../common/musicPlayer/PlayerManager";
 import { Updater, UpdaterState, ConfigData } from "./updater/Updater";
 import { PollingItem } from "../../mail/SinkIndex";
 import { CustomizationData } from "../common/customization/CustomizationData";
@@ -46,17 +44,14 @@ import { ElectronScreenCover } from "./ElectronScreenCover";
 import { UserPreferences, PasteAsFileAction, SystemClipboardIntegration } from "../../mail/UserPreferences";
 import { Window as AppWindow } from "../common/window/Window";
 import { ConnectionStatusCheckerElectron } from "../common/ConnectionStatusCheckerElectron";
-import { ConnectionStatusChecker } from "../common/ConnectionStatusChecker";
-import { PerformanceLogger, PerformanceLoggerConfig } from "../common/PerformanceLogger";
+import { PerformanceLogger } from "../common/PerformanceLogger";
 import { ExternalFilesService } from "./ExternalFilesService";
-import { MsgBoxResult } from "../../window/msgbox/MsgBoxWindowController";
 import { ProfilesManagerIPC } from "./profiles/ProfilesManagerIPC";
 import { LicenseVendorsWindowController } from "../../window/licensevendors/LicenseVendorsWindowController";
 import * as Types from "../../Types";
 import { ErrorWindowController } from "../../window/error/main";
 import { ErrorReporter } from "../common/ErrorReporter";
 import * as mime from "mime-types";
-import { MindmapEditorWindowController } from "../../window/mindmapeditor/MindmapEditorWindowController";
 import { MacKeyboardShortcuts } from "./keyboardShortcuts/MacKeyboardShortcuts";
 import { LinuxKeyboardShortcuts } from "./keyboardShortcuts/LinuxKeyboardShortcuts";
 import { WindowsKeyboardShortcuts } from "./keyboardShortcuts/WindowsKeyboardShortcuts";
@@ -66,10 +61,11 @@ import { Session } from "../../mail/session/SessionManager";
 import { WindowUrl } from "./WindowUrl";
 import { ProfileEx, UserProfileSettingChangeEvent } from "./profiles/Types";
 import { ProfilesManager } from "./profiles/ProfilesManager";
-import { ContextType } from "../common/contexthistory/Context";
 import { TasksExecutor } from "./filesimporter/TasksExecutor";
 import { SentryService } from "./sentry/SentryService";
 import { SelfTester } from "./SelfTester";
+import { NotificationsReferencesQueue, NotificationReference } from "./notifications/NotificationsReferencesQueue";
+import * as dns from "dns";
 // import {measure} from "../../utils/Decorators";
 
 let Logger = RootLogger.get("privfs-mail-client.app.electron.ElectronApplication");
@@ -164,7 +160,7 @@ export class ElectronApplication extends CommonApplication {
     internetMonitorTimer: any;
     hasSearchFocus: boolean = false;
     updaterStatus: UpdaterState;
-    notificationsReferences: Electron.Notification[] = [];
+
     forceRefreshLanguageOnLogout: boolean = false;
     externalFilesService: ExternalFilesService;
     hasNetworkConnectionDeferred: Q.Deferred<boolean> = null;
@@ -177,6 +173,7 @@ export class ElectronApplication extends CommonApplication {
     askingSystemClipboardIntegrationWindow: AppWindow = null;
     connectionRestoredDeferred: Q.Deferred<void> = null;
     filesImporterTasksExecutor: TasksExecutor;
+    notificationsReferencesQueue: NotificationsReferencesQueue = new NotificationsReferencesQueue();
 
     static instance: ElectronApplication;
     
@@ -487,12 +484,13 @@ export class ElectronApplication extends CommonApplication {
         this.trayMenu.globalOnShowWindow = () => {
             this.onTryMenuShowClick();
         };
-        
         this.keyboardShortcuts.readStoredShortcuts();
         this.keyboardShortcuts.bindGlobalShortcuts();
         this.buildBaseWindowMenu();
 
-        this.updater.checkForUpdate().catch((e) => {});
+        const localUpdateOnly = this.starter.isLocalUpdateOnly();
+
+        this.updater.checkForUpdate(localUpdateOnly).catch((e) => {});
         this.monitorForUpdates();
         
         this.loadPlugins();
@@ -720,6 +718,9 @@ export class ElectronApplication extends CommonApplication {
     onUserPreferencesChange(event: event.UserPreferencesChangeEvent): void {
         super.onUserPreferencesChange(event);
         let avatarDataUrl = event.userPreferences.getProfileImage();
+        if (this.userAvatar) {
+            this.userAvatar = null;
+        }
         this.userAvatar = this.getAvatarFromDataUrl(avatarDataUrl);
         this.app.assetsManager.setAssetDataUriByName("MY_AVATAR", avatarDataUrl);
         const lang = event.userPreferences.getValue<string>("ui.lang");
@@ -729,22 +730,23 @@ export class ElectronApplication extends CommonApplication {
         }
         this.refreshTrayMenu();
         
+        const helperWindow = (<HelperWindowController>this.windows.helper);
         for (let soundsCategory of this.soundsLibrary.categories) {
-            (<HelperWindowController>this.windows.helper).setSound(soundsCategory.name, this.userPreferences.getSoundName(soundsCategory.name));
+            helperWindow.setSound(soundsCategory.name, this.userPreferences.getSoundName(soundsCategory.name));
         }
+        helperWindow.setDefaultVolume(this.userPreferences.getValue(MailConst.UI_NOTIFICATIONS_VOLUME, 1.0));
     }
     
     getAvatarFromDataUrl(avatarDataUrl: string, size: number = 24) {
-        const {nativeImage} = require("electron");
         if (avatarDataUrl.length > 0) {
-            let avatarImage = nativeImage.createFromDataURL(avatarDataUrl);
+            let avatarImage = electron.nativeImage.createFromDataURL(avatarDataUrl);
             if (avatarImage.isEmpty()) {
                 return null;
             }
             return avatarImage.resize({width: size});
         }
         else {
-            let avatarImage = nativeImage.createFromPath(this.assetsManager.getAsset("icons/user-default.png", true));
+            let avatarImage = electron.nativeImage.createFromPath(this.assetsManager.getAsset("icons/user-default.png", true));
             if (avatarImage.isEmpty()) {
                 return null;
             }
@@ -753,16 +755,16 @@ export class ElectronApplication extends CommonApplication {
     }
 
     getAvatarFromPath(path: string, size: number = 24) {
-        const {nativeImage} = require("electron");
+        console.log("getAvatarFromPath", path)
         if (fs.existsSync(path)) {
-            let avatarImage = nativeImage.createFromPath(path);
+            let avatarImage = electron.nativeImage.createFromPath(path);
             if (avatarImage.isEmpty()) {
                 return null;
             }
             return avatarImage.resize({width: size});
         }
         else {
-            let avatarImage = nativeImage.createFromPath(this.assetsManager.getAsset("icons/user-default.png", true));
+            let avatarImage = electron.nativeImage.createFromPath(this.assetsManager.getAsset("icons/user-default.png", true));
             if (avatarImage.isEmpty()) {
                 return null;
             }
@@ -1064,8 +1066,8 @@ export class ElectronApplication extends CommonApplication {
         return this.version;
     }
     
-    playAudio(soundName: string, force: boolean = false, _ignoreSilentMode: boolean = undefined) {
-        (<HelperWindowController>this.windows.helper).playAudio(soundName, force, _ignoreSilentMode);
+    playAudio(soundName: string, options?: app.PlayAudioOptions) {
+        (<HelperWindowController>this.windows.helper).playAudio(soundName, options);
     }
 
     setAudioEnabled(enabled: boolean) {
@@ -1103,7 +1105,6 @@ export class ElectronApplication extends CommonApplication {
     }
     
     isHostAvailable(addressOrHost: string, servicePort?: number): Q.Promise<boolean> {
-        const dns = require("dns");
         let defer = Q.defer<boolean>();
         
         if (servicePort) {
@@ -1513,7 +1514,7 @@ export class ElectronApplication extends CommonApplication {
     }
     
     allowMultipleInstances(): boolean {
-        return this.starter.allowMultipleInstances();
+        return this.starter.allowMultipleInstances() || this.starter.isExpert();
     }
     
     onNewTextNoteClick(): void {
@@ -1848,7 +1849,7 @@ export class ElectronApplication extends CommonApplication {
             let myNotification = new electron.Notification({
                 title: this.localeService.i18n("app.notifications.new"),
                 body: this.localeService.i18n("app.notifications.new.body"),
-                icon: this.notificationsService.getNotificationIcon(),
+                icon: this.notificationsService.getAvatarsCache().getFromBaseNotificationIcon()
             });
             myNotification.on("click", this.onNotificationClick.bind(this));
             myNotification.show();
@@ -1867,15 +1868,29 @@ export class ElectronApplication extends CommonApplication {
         let myNotification = new electron.Notification({
             title: title && title.length > titleLen ? title.substr(0, titleLen - elipsis.length) + elipsis : title,
             body: notifBody,
-            icon: customIcon ? customIcon : this.notificationsService.getNotificationIcon(),
+            icon: customIcon ? customIcon : this.notificationsService.getAvatarsCache().getFromBaseNotificationIcon(),
             silent: true //bypass OS sound - we do not want to play those sounds - we will play our sounds
         });
-        myNotification.on('click', this.onTooltipClick.bind(this, context));
-        
+        // myNotification.on('click', this.onTooltipClick.bind(this, context));
+
+        const timeNow = Date.now();
+        const refId = this.notificationsReferencesQueue.getNewRef();
+
+        myNotification.on("click", () => {
+            this.onTooltipClick(refId, context);
+        })
+
         // musimy trzymac obiekt notyfikacji w pamieci (na potrzeby sidebara w mac os) bo w innym wypadku system po wyswietleniu tooltipa zniszczy obiekt
         // i zgubimy referencje do niego - pasek powiadomien na mac os przestanie dzialac
-        this.notificationsReferences.push(myNotification);
         
+        const ref: NotificationReference = {
+            notification: myNotification,
+            time: Date.now(),
+            context: context,
+            id: refId
+        };
+
+        this.notificationsReferencesQueue.addNotification(refId, ref);
         // play sound notification only when NOT in voicechat
         if (! this.app.voiceChatService.isInVoiceChat() ) {
             this.playAudio("notification");
@@ -1887,8 +1902,8 @@ export class ElectronApplication extends CommonApplication {
         this.onShowHideClick();
     }
     
-    
-    onTooltipClick(context: event.NotificationContext): void   {
+    onTooltipClick(notificationId: string, context: event.NotificationContext): void   {
+        this.notificationsReferencesQueue.removeNotification(notificationId);
         this.showMainWindow();
         const contextSession = this.sessionManager.getSessionByHostHash(context.hostHash);
         const contextType = this.contextHistory.getContextTypeFromSessionAndSinkId(contextSession, context.sinkId);

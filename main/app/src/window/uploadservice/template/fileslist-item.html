@@ -14,38 +14,31 @@
         <i class="{{@model.icon}}"></i>
         <span class="name">{{@trimSlashOfRootFile(model.fileName)}}</span>
     </span>
+
     <span class="progress-container">
         {{
             if (model.status == "done") {
                 {{
-                    <div class="action-btn" data-action="open"><i class="fa fa-check"></i></div>
+                    <span class="status done">{{@Helper.i18n("window.uploadservice.statusDone")}}</span>
                 }}
             }
-            else if (model.status == "wait" || model.status == "in-progress") {
+            else if (model.status == "wait" ) {
                 {{
-                    <div class="action-btn" data-action="cancel"><i class="fa fa-times"></i></div>
+                    <span class="status wait">... {{@Helper.i18n("window.uploadservice.statusWaiting")}}</span>
+                }}
+            }
+            else if (model.status == "in-progress") {
+                {{
+                    <span class="status in-progress">{{@Helper.i18n("window.uploadservice.statusUploading")}} ... </span><span class="percent">{{@model.progress.percent}}%</span>
                 }}
             }
             else if (model.status == "aborted") {
-                {{
-                    <div class="action-btn" data-action="retry"><i class="fa fa-repeat"></i></div>
+                {{                    
+                    <span class="status wait">{{@Helper.i18n("window.uploadservice.statusCancelled")}}</span>
                     
                 }}
             }
         }}
-        <svg
-            class="progress-ring {{@model.status == 'done' || model.status == 'aborted' ? 'fade-out' : ''}}"
-            width="22"
-            height="22">
-            <circle
-                class="progress-ring__circle"
-                stroke="blue"
-                stroke-width="2"
-                fill="transparent"
-                r="9"
-                cx="11"
-                cy="11"/>
-        </svg>
     </span>
 
 </div>

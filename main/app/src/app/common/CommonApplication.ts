@@ -726,7 +726,6 @@ export abstract class CommonApplication extends Container implements app.IpcCont
             });
             this.registerStreamsEvents(eventDispatcher);
             eventDispatcher.addEventListener<event.RevertSinkIndexEntry>("revertsinkindexentry", this.onRevertEntry.bind(this), "main");
-            eventDispatcher.addEventListener<event.UserPreferencesChangeEvent>("userpreferenceschange", this.onUserPreferencesChange.bind(this), "main");
             this.addCountModel(contactService.starredContactCountModel);
             
             this.commonNotificationsService = new NotificationsService(this, eventDispatcher);
@@ -752,6 +751,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                 this.checkFirstLoginAndSwitchToAppMode(this.userPreferences, containerWindow);
             }
             this.contactService = contactService;
+            
             this.personService = personService;
             personService.startSynchronizationTimer();
             this.startPaymentStatusUpdater();
@@ -785,8 +785,18 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         if (! this.countModels) {
             this.countModels = [];
         }
+        if (this.countModels.includes(model)) {
+            return;
+        }
         this.countModels.push(model);
         model.changeEvent.add(this.onNewCountChange.bind(this), "multi");
+    }
+    
+    removeCountModel(model: Model<number>) {
+        const countModelIndex = this.countModels.indexOf(model);
+        if (countModelIndex >= 0) {
+            this.countModels.splice(countModelIndex, 1);
+        }
     }
     
     onNewCountChange(): void {
@@ -866,6 +876,9 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     }
     
     beforeLogout(): void {
+        if (this.contactService) {
+            this.removeCountModel(this.contactService.starredContactCountModel);
+        }
         this.usersPresenceChecker.stop();
         this.stopPaymentStatusUpdater();
         this.dispatchEvent<Types.event.BeforeLogoutPlugin>({type: "beforelogout", target: this});
@@ -1161,7 +1174,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         }
     }
     
-    playAudio(_soundName: string, _force: boolean = false, _ignoreSilentMode: boolean = undefined): void {
+    playAudio(_soundName: string, _options?: Types.app.PlayAudioOptions): void {
     }
     
     onUserPreferencesChange(event: event.UserPreferencesChangeEvent): void {
@@ -1472,6 +1485,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                     entry: options.element,
                     docked: options.docked,
                     action: options.action,
+                    autoPlay: options.editorOptions && options.editorOptions.autoPlay,
                 }]);
             }
         });
@@ -1520,6 +1534,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                     entry: options.element,
                     docked: options.docked,
                     action: options.action,
+                    autoPlay: options.editorOptions && options.editorOptions.autoPlay,
                 }]);
             }
         });
@@ -1863,7 +1878,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
     
     openNewSectionDialogFromSidebar(parent?: BaseWindowController): void {
         let sectionId: string;
-        this.app.ioc.create(SectionPickerWindowController, [this, null, {title: this.localeService.i18n("app.pickParentSection")}]).then(win => {
+        this.app.ioc.create(SectionPickerWindowController, [this, null, {}, true]).then(win => {
             if (parent) {
                 win.parent = parent;
             }
@@ -1875,7 +1890,8 @@ export abstract class CommonApplication extends Container implements app.IpcCont
                 
                 this.app.ioc.create(SectionNewWindowController, [this, {
                     parentId: sectionId,
-                    manager: manager
+                    manager: manager,
+                    fromPicker: true
                 }])
                 .then(win => {
                     return this.openChildWindow(win);
@@ -2100,7 +2116,7 @@ export abstract class CommonApplication extends Container implements app.IpcCont
         if (this.playBubblePopSoundOnNextSetBubblesStateEvent && !this.getSilentMode() && this.userPreferences.getPlayBubblePopSound()) {
             this.playBubblePopSoundOnNextSetBubblesStateEvent = false;
             setTimeout(() => {
-                this.playAudio("unreadBadgeClick", true);
+                this.playAudio("unreadBadgeClick", { force: true });
             }, 50);
         }
     }

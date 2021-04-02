@@ -2,6 +2,7 @@
 @import "../../../../node_modules/pmc-web/src/component/customselect/template/main.less";
 @import "../../../../node_modules/pmc-web/src/component/simplepopup/template/main.less";
 @import "../../desktoppicker/template/main.less";
+@import "../../connectionstatstooltip/template/main.less";
 
 .video-conference-main {
   position: absolute;
@@ -24,21 +25,40 @@
     min-width: 0;
     
     &.mini {
-      .conference-title {
+      .conference-title,
+      .e2ee-icon,
+      .no-e2ee-icon {
         font-size: var(--font-size-xs);
       }
     }
+    
+    .conference-title,
+    .e2ee-icon,
+    .no-e2ee-icon {
+      font-size: var(--font-size);
+    }
   
     .conference-title {
+      display: inline-block;
       position: relative;
       top: 6px;
       padding: 0 10px;
-      font-size: var(--font-size);
       pointer-events: none;
       color: #fff;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      &:empty {
+        display: none;
+      }
+    }
+    
+    .e2ee-icon {
+      color: #31a035;
+    }
+    
+    .no-e2ee-icon {
+      color: var(--color-warning);
     }
   }
   
@@ -469,6 +489,7 @@
           canvas,
           span {
             opacity: 0;
+            pointer-events: none;
           }
         }
         .no-video-info {
@@ -495,12 +516,14 @@
           }
         }
       }
-      &.no-audio {
-        .no-audio-info {
-          display: inline-block;
-          margin: 5px 2px 5px 5px;
-          opacity: 0.5;
-        }
+      &.no-audio .no-audio-info,
+      .connection-quality-indicator {
+        display: inline-block;
+        margin: 5px 2px 5px 5px;
+        opacity: 0.5;
+      }
+      .connection-quality-indicator {
+        margin-right: 5px;
       }
     }
   }

@@ -34,6 +34,7 @@ export class ControlCenterWindowController extends BaseWindowController {
             hidden: true,
             toolbar: false,
             maximized: false,
+            closable: false,
             show: false,
             position: "center",
             width: 800,
@@ -119,6 +120,9 @@ export class ControlCenterWindowController extends BaseWindowController {
                 hashmail: new privfs.identity.Hashmail({user: this.loginData.login, host: this.loginData.domain}).hashmail,
                 password: this.loginData.password
             });
+        }
+        else {
+            this.app.dispatchEvent<ResetCreateTeamServerButtonStateEvent>({type: "reset-state"});
         }
         this.close();
     }

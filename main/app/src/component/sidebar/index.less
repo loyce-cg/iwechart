@@ -377,7 +377,7 @@
     cursor: pointer;
     background: rgba(0, 0, 0, 0.25);
     left: 5px;
-    margin-top: -4px;
+    margin-top: -2px;
     
     &.on {
       background: var(--color-success);
@@ -411,44 +411,41 @@
     }
   }
   
-  .conversation-element,
-  .section-element {
-    &.with-bell-ringing,
-    &.with-active-video-conference {
-      position: relative;
-      &:after {
-        font: normal normal normal 14px/1 FontAwesome;
-        content: "\f0f3";
-        display: inline-block;
-        vertical-align: middle;
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        margin-top: -5px;
-        color: var(--wi-element-fg);
-        animation: ringingTheBellAnimation 0.2s cubic-bezier(0, 0.75, 1, 0.25) infinite;
-      }
-      .number,
-      .elements-count {
-        margin-right: 20px;
-      }
-    }
-    &.with-active-video-conference:not(.with-bell-ringing) {
-      position: relative;
-      &:after {
-        font-family: "privmx-icons";
-        content: "V";
-        animation: none;
-      }
-    }
+  .videoconf-button {
+    display: none;
   }
   
-  .conversation-element {
-    &.with-bell-ringing,
+  .conversation-element,
+  .section-element {
     &.with-active-video-conference {
-      .number,
-      .elements-count {
-        margin-right: 40px;
+      .videoconf-button {
+        color: var(--wi-element-fg);
+        display: inline-block;
+        background-color: rgba(0, 0, 0, 19%);
+        text-align: center;
+        border-radius: 3px;
+        margin-right: 8px;
+        line-height: 1;
+        padding: 2px 4px 1px 5px;
+        cursor: pointer;
+        align-self: center;
+        font-size: var(--font-size);
+        font-weight: normal;
+        &:hover {
+          background: rgba(0, 0, 0, 30%);
+        }
+      }
+      &.active,
+      &.pre-activate {
+        .videoconf-button {
+          background-color: rgba(255, 255, 255, 9%);
+          &:hover {
+            background-color: rgba(255, 255, 255, 20%);
+          }
+        }
+      }
+      .settings-button {
+        margin-top: -1px;
       }
     }
   }

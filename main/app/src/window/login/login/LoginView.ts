@@ -143,6 +143,10 @@ export class LoginView extends BaseView<Model> {
         }
     }
 
+    lockControls(lock: boolean): void {
+        this.$main.find("[data-action=submit]").prop("disabled", lock);
+    }
+
     setLoginField(login: string): void {
         this.form.hashmail.value = login;
         this.form.password.value = "";

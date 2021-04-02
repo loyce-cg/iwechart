@@ -19,6 +19,8 @@ import { Clipboard as PrivMxClipboard } from "../../app/common/clipboard/Clipboa
 import { BaseWindowController } from "../../window/base/main";
 import { ContentEditableEditorMetaData, Formatter } from "../../utils";
 import { Session } from "../../mail/session/SessionManager";
+import * as RootLogger from "simplito-logger";
+const Logger = RootLogger.get("MindmapEditorController");
 
 export interface MindmapIsDirtyChangedEvent extends Types.event.Event {
     type: "mindmap-is-dirty-changed";
@@ -117,6 +119,8 @@ export class MindmapEditorController extends ComponentController {
     taskIdToNodePathsList: { [taskId: string]: string[] } = {};
     taskChangedHandlerBound: any;
     session: Session;
+    editorOpenDate: number; // do celow diagnostycznych jednego z bledow -- pozniej usuniemy
+    lastDescriptorInfo: any;
 
     constructor(parent: app.WindowParent, public app: CommonApplication, public options: Options) {
         super(parent);
@@ -133,6 +137,7 @@ export class MindmapEditorController extends ComponentController {
         if (this.openableElement) {
             this.openFileForEditingOrPreview();
         }
+        this.editorOpenDate = Date.now();
         this.notifications = this.addComponent("notifications", this.componentFactory.createComponent("notification", [this]));
         this.app.addEventListener(PrivMxClipboard.CHANGE_EVENT, () => {
             this.refreshClipboardData();
@@ -348,7 +353,13 @@ export class MindmapEditorController extends ComponentController {
                     }
                     else
                     if (privfs.core.ApiErrorCodes.is(e, "OLD_SIGNATURE_DOESNT_MATCH")) {
-                        return this.saveFileAsConflicted(content);
+                        return this.handle.refreshAndUpdateToLastVersion()
+                        .then(() => {
+                            if (this.handle.descriptor.lastVersion.raw.modifier == this.lastDescriptorInfo.modifier) {
+                                Logger.error("Error: OLD_SIGNATURE_DOESNT_MATCH", JSON.stringify(this.gatherInfoForErrorReport(this.lastDescriptorInfo, this.handle.descriptor), null, 2));
+                            }
+                            return this.saveFileAsConflicted(content);
+                        })
                     }
                 })
                 .then(() => {
@@ -699,6 +710,9 @@ export class MindmapEditorController extends ComponentController {
                     return Q();
                 }
                 this.handle = handle;
+                let descriptor = this.handle.descriptor;
+                this.lastDescriptorInfo = {did: descriptor.ref.did, version: descriptor.lastVersion.raw.signature, serverDate: descriptor.lastVersion.raw.serverDate, modifier: descriptor.lastVersion.raw.modifier}
+
                 if (editMode) {
                     return Q().then(() => {
                         if (this.currentViewId != viewId) {
@@ -950,5 +964,24 @@ export class MindmapEditorController extends ComponentController {
     
     taskChangedHandler(): void {
         this.updateTaskStatuses(false);
+    }
+
+    gatherInfoForErrorReport(oldDescriptorInfo: any, descriptor: privfs.fs.descriptor.Descriptor) {
+        let el = this.options && this.options.openableElement && this.options.openableElement instanceof section.OpenableSectionFile ? this.options.openableElement : null;
+        
+        return {
+            who: this.app.identity.hashmail,
+            host: this.app.identity.host,
+            platform: this.app.getSystemPlatfrom(),
+            appVersion: this.app.getVersion(),
+            descriptor: {did: descriptor.ref.did, version: descriptor.lastVersion.raw.signature, serverDate: descriptor.lastVersion.raw.serverDate, modifier: descriptor.lastVersion.raw.modifier},
+            oldDescriptor: oldDescriptorInfo,
+            sessionHost: this.session.host,
+            filePath: el ? el.path : null,
+            sectionId: el ? el.section.getId() : null,
+            currentViewId: this.currentViewId,
+            editorOpenDate: this.editorOpenDate,
+            editorType: "mindmap-editor"    
+        }
     }
 }

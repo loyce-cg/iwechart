@@ -161,7 +161,7 @@
                   
                   {{ if (hasThumbnail && !model.nonExistantFileLink) { }}
                     <div class="thumb-container">
-                      <img class="img-in-chat not-loaded {{@isPrivMxVideo?'thumb-type-video':''}} {{@isPrivMxAudio?'thumb-type-audio':''}}" data-action="open-channel-file" data-path="{{@path}}" data-did="{{@fileDid}}" data-thumb-did="{{@fileDid}}" data-thumb-host-hash="{{@model.hostHash}}" data-thumb-section-id="{{@model.sectionId}}" data-thumb-state="{{@component.thumbs.ThumbState.UNINITIALIZED}}" data-thumb-in-place="true" alt="" />
+                      <img class="img-in-chat not-loaded {{@isPrivMxVideo?'thumb-type-video':''}} {{@isPrivMxAudio?'thumb-type-audio':''}}" data-action="open-channel-file" data-auto-play="true" data-path="{{@path}}" data-did="{{@fileDid}}" data-thumb-did="{{@fileDid}}" data-thumb-host-hash="{{@model.hostHash}}" data-thumb-section-id="{{@model.sectionId}}" data-thumb-state="{{@component.thumbs.ThumbState.UNINITIALIZED}}" data-thumb-in-place="true" alt="" />
                       {{ if (isPrivMxVideo) { }}
                         <i class="fa fa-play-circle play-icon"></i>
                       {{ } }}
@@ -169,8 +169,9 @@
                   {{ } }}
                   
                   {{ if (isPrivMxAudio && !model.nonExistantFileLink) { }}
-                    <div class="play-audio-button" data-action="open-channel-file" data-path="{{@path}}" data-did="{{@fileDid}}">
+                    <div class="play-audio-button" data-action="open-channel-file" data-auto-play="true" data-path="{{@path}}" data-did="{{@fileDid}}">
                       <i class="fa fa-play-circle play-icon"></i>
+                      <span class="filename">{{@fileName}}</span>
                     </div>
                   {{ } }}
                 </div>

@@ -13,6 +13,7 @@ export class AudioWindowView extends EditorWindowView<Model> {
     
     data: string;
     audioPlayer: AudioPlayerView;
+    autoPlay: boolean = false;
     private _initialized: boolean = false;
     
     constructor(parent: app.ViewParent) {
@@ -41,6 +42,10 @@ export class AudioWindowView extends EditorWindowView<Model> {
         this.$main.on("click", "[data-action=save]", this.onSaveClick.bind(this));
     }
     
+    setAutoPlay(autoPlay: boolean) {
+        this.autoPlay = autoPlay;
+    }
+    
     clearState(addLoading: boolean) {
         if (this._initialized) {
             this.audioPlayer.beforeContainerDetach();
@@ -60,6 +65,9 @@ export class AudioWindowView extends EditorWindowView<Model> {
         this.clearLoading();
         this.$inner.find(".audio-buttons").css("display", model.canPlay ? "block" : "none");
         this.audioPlayer.afterContainerReattach();
+        if (this.autoPlay) {
+            this.audioPlayer.play();
+        }
     }
     
     detachAudioPlayerContainer(): void {

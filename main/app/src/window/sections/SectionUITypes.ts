@@ -9,6 +9,7 @@ export interface State {
 export interface Model {
     state: State;
     server: string;
+    asCreator?: boolean;
 }
 
 export interface SectionEntry {

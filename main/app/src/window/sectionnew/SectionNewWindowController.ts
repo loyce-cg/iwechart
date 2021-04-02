@@ -64,6 +64,7 @@ export interface Options {
     docked?: boolean;
     empty?: boolean;
     onlyReturnResult?: boolean;
+    fromPicker?: boolean;
 }
 
 export interface ResultEvent {
@@ -109,7 +110,7 @@ export class SectionNewWindowController extends BaseWindowController {
             position: "center",
             width: 560,
             height: 325,
-            title: this.i18n("window.sectionNew.title")
+            title: this.i18n("window.sectionNew.title" + (this.options && this.options.fromPicker ? ".fromPicker" : ""))
         };
         this.modules = this.sectionManager.getSupportedModules();
         this.setState(options.parentId, options.empty);

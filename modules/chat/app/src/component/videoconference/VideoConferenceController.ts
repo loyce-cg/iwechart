@@ -1,8 +1,10 @@
-import { mail, window, Q, component, Types, app } from "pmc-mail";
+import { mail, window, Q, component, Types, app, Logger as RootLogger } from "pmc-mail";
 import { i18n } from "./i18n/index";
-import { VideoConferenceConfiguration } from "../../main/videoConference/Types";
+import { VideoConferenceConnectionOptions } from "../../main/videoConference/Types";
 import { DesktopPickerController } from "../desktoppicker/DesktopPickerController";
 import { ChatComponentFactory, ChatPlugin } from "../../main/ChatPlugin";
+import { ConnectionStatsTooltipController } from "../connectionstatstooltip/ConnectionStatsTooltipController";
+const Logger = RootLogger.get("chat-plugin.window.videoConference.VideoConferenceWindowController");
 
 export interface Model {
     roomMetadata: app.common.videoconferences.RoomMetadata;
@@ -26,6 +28,7 @@ export class VideoConferenceController extends window.base.WindowComponentContro
     desktopPicker: DesktopPickerController;
     talkingWhenMutedNotificationId: number = null;
     resolutionCustomSelect: component.customselect.CustomSelectController;
+    connectionStatsTooltip: ConnectionStatsTooltipController;
     
     constructor(parent: window.base.BaseWindowController, public roomMetadata: app.common.videoconferences.RoomMetadata) {
         super(parent);
@@ -45,6 +48,7 @@ export class VideoConferenceController extends window.base.WindowComponentContro
                 value: null,
             },
         }]));
+        this.connectionStatsTooltip = this.addComponent("connectionStatsTooltip", this.componentFactory.createComponent("connectionstatstooltip", [this]));
     }
     
     init(): Q.Promise<void> {
@@ -57,7 +61,7 @@ export class VideoConferenceController extends window.base.WindowComponentContro
         };
     }
     
-    obtainConfiguration(section: mail.section.SectionService, roomMetadata: app.common.videoconferences.RoomMetadata): Q.Promise<VideoConferenceConfiguration> {
+    obtainConnectionOptions(section: mail.section.SectionService, roomMetadata: app.common.videoconferences.RoomMetadata): Q.Promise<VideoConferenceConnectionOptions> {
         if (!this.session) {
             return Q.reject("VideoConferenceController.obtainConfiguration(): no session");
         }
@@ -68,28 +72,38 @@ export class VideoConferenceController extends window.base.WindowComponentContro
         }
         return Q().then(() => {
             return this.app.videoConferencesService.joinConference(this.session, section, data => {
-                return this.retrieveFromView("connectAndCreateConference", JSON.stringify(<VideoConferenceConfiguration>{
-                    domain: data.domain,
-                    appId: null,
-                    token: null,
-                    
-                    hashmail: hashmail,
-                    
-                    conferenceId: data.roomName,
-                    conferencePassword: data.conferencePassword,
-                    conferenceEncryptionKey: null,
-                    conferenceEncryptionIV: null,
-                }), data.tmpUser.username, data.tmpUser.password)
+                const connectionOptions: VideoConferenceConnectionOptions = {
+                    configuration: {
+                        domain: data.domain,
+                        appId: null,
+                        token: null,
+                        
+                        hashmail: hashmail,
+                        
+                        conferenceId: data.roomName,
+                        conferencePassword: data.conferencePassword,
+                        conferenceEncryptionKey: null,
+                        conferenceEncryptionIV: null,
+                    },
+                    tmpUserName: data.tmpUser.username,
+                    tmpUserPassword: data.tmpUser.password,
+                    options: {
+                        title: roomMetadata.title,
+                        experimentalH264: roomMetadata.experimentalH264,
+                    },
+                };
+                return this.retrieveFromView("connectAndCreateConference", JSON.stringify(connectionOptions))
                 .then((resultStr: string) => {
                     let result: {
-                        status: "ok" | "error" | "cancelled",
+                        status: "ok" | "error" | "cancelled";
                         data?: {
-                            key: string,
-                            iv: string,
-                        }
+                            key: string;
+                            iv: string;
+                        };
+                        errorStr?: string;
                     } = JSON.parse(resultStr);
                     if (result.status == "error") {
-                        throw "could not connect";
+                        throw `could not connect: ${result.errorStr}`;
                     }
                     if (result.status == "cancelled") {
                         throw "cancelled by user";
@@ -113,27 +127,29 @@ export class VideoConferenceController extends window.base.WindowComponentContro
         .then(conference => {
             this.conferenceId = conference.id;
             this.currentSection = section;
-            this.updateConferenceMetadata(conference.roomMetadata);
             return {
-                domain: conference.jitsiDomain,
-                appId: null,
-                token: null,
-                
-                hashmail: hashmail,
-                
-                conferenceId: conference.id,
-                conferencePassword: conference.password,
-                conferenceEncryptionKey: conference.encryptionKey,
-                conferenceEncryptionIV: conference.encryptionIV,
+                configuration: {
+                    domain: conference.jitsiDomain,
+                    appId: null,
+                    token: null,
+                    
+                    hashmail: hashmail,
+                    
+                    conferenceId: conference.id,
+                    conferencePassword: conference.password,
+                    conferenceEncryptionKey: conference.encryptionKey,
+                    conferenceEncryptionIV: conference.encryptionIV,
+                },
+                options: {
+                    title: conference.roomMetadata.title,
+                    experimentalH264: conference.roomMetadata.experimentalH264,
+                },
             };
         });
     }
     
-    updateConferenceMetadata(metaData: app.common.videoconferences.RoomMetadata): void {
-        this.callViewMethod("updateConferenceMetadata", metaData);
-    }
-    
-    onViewLeaveVideoConference(): void {
+    onViewLeaveVideoConference(cause: string): void {
+        this.onConnectionError(cause);
         this.connected = false;
         this.app.dispatchEvent<Types.event.LeaveVideoConferenceEvent>({
             type: "leave-video-conference",
@@ -154,15 +170,26 @@ export class VideoConferenceController extends window.base.WindowComponentContro
         this.session = session;
         this.currentSection = section;
         this.showLoadingOverlay();
-        return this.obtainConfiguration(section, roomMetadata).then(configuration => {
+        return this.obtainConnectionOptions(section, roomMetadata).then(options => {
             if (!this.connected) {
-                this.callViewMethod("connect", JSON.stringify(configuration), undefined, undefined);
+                this.callViewMethod("connect", JSON.stringify(options));
             }
         })
         .catch(e => {
-            console.error("VideoConferenceController.connect() error2:", e);
+            // console.error("VideoConferenceController.connect() error2:", e);
+            this.onConnectionError(`${e}`);
             throw e;
         });
+    }
+    
+    onConnectionError(info: string): void {
+        if (info.includes(".disconnect()")) {
+            console.log(`VideoConference disconnected: ${info}`);
+        }
+        else {
+            console.error(`VideoConference error: ${info}`);
+            this.onError(`VideoConference error: ${info}`);
+        }
     }
     
     onViewConnected(): void {
@@ -172,11 +199,11 @@ export class VideoConferenceController extends window.base.WindowComponentContro
     
     onViewConnectCancelled(): void {
         this.hideLoadingOverlay();
-        console.log(this.app.videoConferencesService.isUserInAnyConference())
-        console.log((<any>this.app.videoConferencesService)._activeConferences)
-        this.onViewLeaveVideoConference();
-        console.log(this.app.videoConferencesService.isUserInAnyConference())
-        console.log((<any>this.app.videoConferencesService)._activeConferences)
+        // console.log(this.app.videoConferencesService.isUserInAnyConference())
+        // console.log((<any>this.app.videoConferencesService)._activeConferences)
+        this.onViewLeaveVideoConference(JSON.stringify({ reason: "connectinCancelledByUser", extraInfo: "VideoConferenceController.onViewConnectCancelled()" }));
+        // console.log(this.app.videoConferencesService.isUserInAnyConference())
+        // console.log((<any>this.app.videoConferencesService)._activeConferences)
         // setInterval(()=> {
         //     console.log(this.app.videoConferencesService.isUserInAnyConference())
         // },300)
@@ -244,6 +271,16 @@ export class VideoConferenceController extends window.base.WindowComponentContro
             }
         });
         this.resolutionCustomSelect.setItems(items);
+    }
+    
+    onViewParticipantConnectionStatsUpdated(participantId: string, statsStr: string | null): void {
+        if (statsStr === null) {
+            this.connectionStatsTooltip.removeStats(participantId);
+        }
+        else {
+            const stats: JitsiMeetJS.ConferenceStats = JSON.parse(statsStr);
+            this.connectionStatsTooltip.setStats(participantId, stats);
+        }
     }
     
 }

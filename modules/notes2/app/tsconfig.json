@@ -9,7 +9,8 @@
         "removeComments": true,
         "preserveConstEnums": true,
         "outDir": "out",
-        "allowUnreachableCode": false
+        "allowUnreachableCode": false,
+        "skipLibCheck": true
     },
     "include": ["src/**/*"],
     "exclude": ["node_modules"]

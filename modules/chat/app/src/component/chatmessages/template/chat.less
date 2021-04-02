@@ -507,11 +507,36 @@
                   margin-right: 43px;
                   display: inline-flex;
                   align-items: center;
-                  padding: 5px;
                   cursor: pointer;
+                  background: var(--main-panel-task-hover-alt-bg);
+                  color: var(--color-success);
+                  padding: 7px 10px;
+                  border-radius: 3px;
+                  &:before {
+                    display: block;
+                    position: absolute;
+                    top: 53px;
+                    left: 56px;
+                    width: 20px;
+                    height: 20px;
+                    content: " ";
+                    border-radius: 10px;
+                    background: #fff;
+                  }
                   i {
                     position: static;
                     font-size: 30px;
+                    z-index: 9;
+                  }
+                  span.filename {
+                    margin-left: 10px;
+                    font-size: var(--font-size-s);
+                  }
+                  &:hover {
+                    i,
+                    span.filename {
+                      color: hsla(var(--color-success-h), var(--color-success-s), calc(var(--color-success-l) - 5%), var(--color-success-a));
+                    }
                   }
                 }
               }
@@ -1195,6 +1220,9 @@
           .message {
             background-color: var(--main-panel-task-hover-alt-bg);
             border-left-color: var(--main-panel-task-hover-alt-bg);
+            &.file-box .file-box.with-audio-player .play-audio-button {
+              background: var(--main-panel-task-hover-bg);
+            }
           }
           &.unread {
             .message {
@@ -1478,6 +1506,12 @@
           hsla(var(--main-panel-bg-h), var(--main-panel-bg-s), calc(var(--main-panel-bg-l) + var(--main-panel-task-hover-bg-delta)), calc(0.75 * var(--main-panel-bg-a))) 50%,
           hsla(var(--main-panel-bg-h), var(--main-panel-bg-s), calc(var(--main-panel-bg-l) + var(--main-panel-task-hover-bg-delta)), 0) 100%
         );
+      }
+      .chat-message .text-col .message.file-box .file-box.with-audio-player .play-audio-button {
+        background: var(--main-panel-task-hover-bg);
+      }
+      .chat-message.incoming .text-col .message.file-box .file-box.with-audio-player .play-audio-button {
+        background: var(--main-panel-task-hover-alt-bg);
       }
     }
     .chat.hide-usernames {

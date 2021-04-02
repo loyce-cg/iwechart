@@ -146,6 +146,7 @@ export class SidebarView extends ComponentView {
             this.$container.on("mouseenter", ".wi-element, .conversation-element", this.onItemMouseEnter.bind(this));
             this.$container.on("mouseleave", ".wi-element, .conversation-element", this.onItemMouseLeave.bind(this));
             this.$container.on("click", ".sort-by-online-button", this.onSortByOnlineButtonClick.bind(this));
+            this.$container.on("click", ".videoconf-button", this.onVideoConfButtonClick.bind(this));
             if (!model.conv2ListEnabled) {
                 return;
             }
@@ -189,11 +190,6 @@ export class SidebarView extends ComponentView {
                 this.conv2Splitter.$bottom.append($conv2List);
                 this.conv2Splitter.$bottom.append($sidebarButtons);
                 this.conv2Splitter.$top.append($hostList);
-
-                if (this.options.conv2List) {
-                    this.conv2Splitter.$bottom.prepend(`<div class="sort-by-online-button"><div class="infotooltip not-rendered" data-tooltip-theme="dark" data-tooltip-message="${this.helper.i18n("component.sidebar.sortByOnlineButton.tooltip")}"></div></div>`);
-                    this.setSortByOnlineButtonState(model.onlineFirst);
-                }
             });
         })
         .then(() => {
@@ -232,6 +228,10 @@ export class SidebarView extends ComponentView {
             $verticalSplitters.each((_i, el) => {
                 $(el).pfScrollExperimental();
             });
+            if (this.options.conv2List) {
+                this.conv2Splitter.$bottom.prepend(`<div class="sort-by-online-button"><div class="infotooltip not-rendered" data-tooltip-theme="dark" data-tooltip-message="${this.helper.i18n("component.sidebar.sortByOnlineButton.tooltip")}"></div></div>`);
+                this.setSortByOnlineButtonState(model.onlineFirst);
+            }
             let $splitterTopContent = $verticalSplitters.filter(".component-splitter-panel-top").children(".pf-content");
             this.$splitterTopContent = $splitterTopContent;
             $splitterTopContent.on("scroll", () => this.updateShadowPosition());
@@ -357,6 +357,23 @@ export class SidebarView extends ComponentView {
         }
         else if (hostId) {
             this.triggerEvent("badgeClick", "host", hostId, hostId);
+        }
+    }
+    
+    onVideoConfButtonClick(e: MouseEvent): void {
+        e.stopPropagation();
+        let sectionId = $(e.target).closest("[data-section-id]").data("section-id");
+        let hostId = $(e.target).closest("[data-host-id]").data("host-id");
+        let conversationId = $(e.target).closest("[data-conversation-id]").data("conversation-id");
+        let customElementId = $(e.target).closest("[data-custom-element-id]").data("custom-element-id");
+        if (sectionId) {
+            this.triggerEvent("videoConfClick", "section", sectionId, hostId);
+        }
+        else if (conversationId) {
+            this.triggerEvent("videoConfClick", "conversation", conversationId, hostId);
+        }
+        else if (customElementId) {
+            this.triggerEvent("videoConfClick", "customElement", customElementId);
         }
     }
 

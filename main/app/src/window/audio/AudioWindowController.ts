@@ -29,10 +29,12 @@ export class AudioWindowController extends EditorWindowController {
     }
     
     audioPlayer: AudioPlayerController;
+    protected auotPlay: boolean;
     
-    constructor(parent: app.WindowParent, public session: Session, options: Options) {    
+    constructor(parent: app.WindowParent, public session: Session, options: Options & { autoPlay?: boolean }) {    
         super(parent, session, __filename, __dirname, options);
         this.ipcMode = true;
+        this.auotPlay = !!options.autoPlay;
         
         this.bindEvent<AddToPlaylistEvent>(this.app, "add-to-playlist", event => {
             if (event.id == this.openableElement.getElementId()) {
@@ -66,6 +68,7 @@ export class AudioWindowController extends EditorWindowController {
     }
     
     onViewLoad(): void {
+        this.callViewMethod("setAutoPlay", this.auotPlay);
         let currentViewId = this.currentViewId;
         this.app.getPlayerManager().canPlayType(this.openableElement.getMimeType()).then(canPlay => {
             let playerManager = this.app.getPlayerManager();

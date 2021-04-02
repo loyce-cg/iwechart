@@ -11,6 +11,7 @@ import SinkIndexEntry = mail.SinkIndexEntry;
 import { SendingQueue } from "./SendingQueue";
 import { SendingFileLocksManager } from "./SendingFileLocksManager";
 import { SectionVideoConferenceModel, VideoConferencePersonModel } from "./Types";
+import { VideoConferenceOptions } from "../../main/videoConference/Types";
 
 const Logger = RootLogger.get("privfs-chat-plugin.Plugin");
 export interface ChannelModel {
@@ -922,7 +923,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         this.editMessage(originalMessageId, text);
     }
 
-    actionOpenableElement(element: app.common.shelltypes.OpenableElement) {
+    actionOpenableElement(element: app.common.shelltypes.OpenableElement, autoPlay?: boolean) {
         let resolvedApp = this.app.shellRegistry.resolveApplicationByElement({ element: element, session: this.session });
         if (resolvedApp.id == "core.unsupported") {
             this.app.shellRegistry.shellOpen({
@@ -937,6 +938,17 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                 element: element,
                 action: app.common.shelltypes.ShellOpenAction.PREVIEW,
                 session: this.session,
+            });
+            return;
+        }
+        if (resolvedApp.id == "core.audio" || resolvedApp.id == "core.video") {
+            this.app.shellRegistry.shellOpen({
+                element: element,
+                action: app.common.shelltypes.ShellOpenAction.PREVIEW,
+                session: this.session,
+                editorOptions: {
+                    autoPlay: autoPlay,
+                },
             });
             return;
         }
@@ -992,7 +1004,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
         })
     }
 
-    onViewOpenChannelFile(path: string, did: string) {
+    onViewOpenChannelFile(path: string, did: string, autoPlay?: boolean) {
         let section = this.getSection();
         if (section == null || !section.hasFileModule()) {
             return;
@@ -1001,8 +1013,7 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
             return did.length > 0 ? this.getSectionFileByDid(section, did) : section.getFileOpenableElement(path, true);
         })
         .then(element => {
-            console.log("element", element ? element.getName() : "element is null")
-            this.actionOpenableElement(element);
+            this.actionOpenableElement(element, autoPlay);
         })
         .fail(e => {
             if (privfs.exception.PrivFsException.is(e, "FILE_DOES_NOT_EXIST") ||
@@ -2759,19 +2770,21 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                 });
                 if (result.result == "yes") {
                     // console.log("!!! leaving, joining");
-                    let title = "";
+                    let options: VideoConferenceOptions = {
+                        title: "",
+                        experimentalH264: false,
+                    };
                     if (!conferenceExists) {
-                        const titleOrCancel = await this.obtainNewVideoConferenceTitle();
-                        if (titleOrCancel === false) {
+                        options = await this.obtainNewVideoConferenceOptions();
+                        if (!options) {
                             return;
                         }
-                        title = titleOrCancel;
                     }
                     this.chatPlugin.switchVideoConference(
                         this.session,
                         this.chatInfo.type == ChatType.CHANNEL ? this.chatInfo.section : null,
                         this.chatInfo.type == ChatType.CHANNEL ? null : this.chatInfo.conversation,
-                        title,
+                        options,
                     );
                 }
                 else if (result.result == "no") {
@@ -2787,13 +2800,15 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
             }
         }
         else {
-            let title = "";
+            let options: VideoConferenceOptions = {
+                title: "",
+                experimentalH264: false,
+            };
             if (!conferenceExists) {
-                const titleOrCancel = await this.obtainNewVideoConferenceTitle();
-                if (titleOrCancel === false) {
+                options = await this.obtainNewVideoConferenceOptions();
+                if (!options) {
                     return;
                 }
-                title = titleOrCancel;
             }
             this.app.dispatchEvent<Types.event.JoinVideoConferenceEvent>({
                 type: "join-video-conference",
@@ -2802,15 +2817,16 @@ export class ChatMessagesController extends window.base.WindowComponentControlle
                 conversation: this.chatInfo.type == ChatType.CHANNEL ? null : this.chatInfo.conversation,
                 roomMetadata: {
                     creatorHashmail: this.session.conv2Service.identity.hashmail,
-                    title: title,
+                    title: options.title,
+                    experimentalH264: options.experimentalH264,
                 },
             });
         }
     }
     
-    async obtainNewVideoConferenceTitle(): Promise<string | false> {
-        const title = await this.retrieveFromView<string|false>("askForNewConferenceTitle");
-        return title;
+    async obtainNewVideoConferenceOptions(): Promise<VideoConferenceOptions> {
+        const optionsStr = await this.retrieveFromView<string>("obtainNewVideoConferenceOptionsStr");
+        return JSON.parse(optionsStr);
     }
     
     onViewVideoConferenceDisconnect(): void {

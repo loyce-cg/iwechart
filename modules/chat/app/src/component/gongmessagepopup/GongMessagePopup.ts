@@ -35,6 +35,7 @@ export class GongMessagePopup {
             $target: $target,
             horizontalPlacement: webUtils.PopupPlacement.COMMON_END,
             verticalPlacement: webUtils.PopupPlacement.BEFORE,
+            theme: "dark",
         });
         simplePopup.show();
         $input[0].focus();
