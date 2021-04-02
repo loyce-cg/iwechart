@@ -126,10 +126,12 @@ export class LoginWindowController extends BaseWindowController {
         this.bindEvent<FillInLoginFieldsEvent>(this.app, "fill-in-login-fields", event => {
             this.settings.objectSet("remember-hashmail-value", event.hashmail);
             this.login.setLoginField(event.hashmail);
+            this.login.callViewMethod("lockControls", false);
         })
 
         this.bindEvent<ResetCreateTeamServerButtonStateEvent>(this.app, "reset-state", () => {
             this.login.callViewMethod("onControlCenterLoad", false);
+            this.login.callViewMethod("lockControls", false);
         })
 
         this.bindEvent<StartFirstUserRegistrationFromCCEvent>(this.app, "start-first-user-registration-from-cc", event => {
@@ -460,6 +462,7 @@ export class LoginWindowController extends BaseWindowController {
             let ccWin = (win as ControlCenterWindowController);
             if (! ccWin.isIframeLoaded()) {
                 this.login.callViewMethod("onControlCenterLoad", true);
+                this.login.callViewMethod("lockControls", true);
                 ccWin.waitOnLoad().then(() => {
                     this.login.callViewMethod("onControlCenterLoad", false);
                 })     

@@ -8,6 +8,35 @@ function name2key(name: string): string {
     return new Buffer(name, "binary").toString("hex");
 }
 
+class InMemoryRecord {
+    static expirationInterval: number = 30 * 1000;
+    private key: string;
+    private value: string;
+    private lastAccessTime: number;
+
+    constructor(key: string, value: string) {
+        this.lastAccessTime = Date.now();
+        this.key = key;
+        this.value = value;
+    }
+
+    public getKey(): string {
+        return this.key;
+    }
+
+    public getValue(): string {
+        return this.value;
+    }
+
+    public updateAccessTime(): void {
+        this.lastAccessTime = Date.now();
+    }
+
+    public isExpired(): boolean {
+        return InMemoryRecord.expirationInterval + this.lastAccessTime < Date.now();
+    }
+}
+
 export class SqlStorage {
     static SERVER_DATA_ID_KEY: string = "serverDataId";
     dirPath: string;
@@ -15,10 +44,12 @@ export class SqlStorage {
     workingPath: string;
     db: DbRepository;
     connected: boolean = false;
-    inMemoryDb: {[key: string]: string} = {};
+    inMemoryDb: {[key: string]: InMemoryRecord} = {};
     savePromises: {[id: number]: Q.Promise<any>} = {};
     saveId: number = 1;
     userLevel: boolean;
+
+    delayedCleanupTimer: NodeJS.Timeout;
 
     inMemoryCacheSize: number = 0;
 
@@ -30,10 +61,36 @@ export class SqlStorage {
         this.db = new DbRepository();
         this.inMemoryDb = {};
     }
+
+    runDelayedCleanup(): void {
+        if (this.delayedCleanupTimer) {
+            clearTimeout(this.delayedCleanupTimer);
+        }
+        this.delayedCleanupTimer = setTimeout(() => {
+            clearTimeout(this.delayedCleanupTimer);
+            this.cleanupInMemory();
+        }, 60 * 1000);
+    }
     
+    cleanupInMemory(all?: boolean): void {
+        this.inMemoryCacheSize = 0;
+        if (this.inMemoryDb) {
+            for (let key in this.inMemoryDb) {
+                if (this.inMemoryDb[key].isExpired() || all) {
+                    this.inMemoryDb[key] = null;
+                    delete this.inMemoryDb[key];
+                }
+                else {
+                    this.inMemoryCacheSize += this.inMemoryDb[key].getValue().length;
+                }
+            }
+        }
+    }
+
     closeDb(): Q.Promise<void> {
         return this.connected ? this.waitForDb().then(() => this.db.closeDb().then(result => {
             this.connected = false;
+            this.cleanupInMemory(true);
             this.inMemoryDb = {};
             return result;
         })) : Q.resolve();
@@ -122,14 +179,16 @@ export class SqlStorage {
     }
 
     findItemValueByKey(key: string): Q.Promise<string> {
+        this.runDelayedCleanup();
         return Q().then(() => {
             if (key in this.inMemoryDb) {
-                return this.inMemoryDb[key];
+                this.inMemoryDb[key].updateAccessTime();
+                return this.inMemoryDb[key].getValue();
             }
             else {
                 return this.getItemFromDb(key)
                 .then(value => {
-                    this.inMemoryDb[key] = value;
+                    this.inMemoryDb[key] = new InMemoryRecord(key, value);
                     this.inMemoryCacheSize += value.length;
                     
                     return value;
@@ -193,10 +252,15 @@ export class SqlStorage {
     }
     
     setItem(name: string, val: string, prefix: string = ""): Q.Promise<void> {
+        this.runDelayedCleanup();
         this.saveId++;
         let localId = this.saveId;
         let key = prefix+name2key(name);
-        this.inMemoryDb[key] = val;
+        if (key in this.inMemoryDb) {
+            this.inMemoryDb[key] = null;
+            delete this.inMemoryDb[key];
+        }
+        this.inMemoryDb[key] = new InMemoryRecord(key, val);
             
         this.savePromises[localId] = this.setItemToDb(key, val);
         this.savePromises[localId].then(() => {
@@ -216,7 +280,10 @@ export class SqlStorage {
 
     removeItem(name: string, prefix: string = ""): Q.Promise<void> {
         let key = prefix + name2key(name);
-        this.inMemoryDb[key] = "";
+        if (key in this.inMemoryDb) {
+            this.inMemoryDb[key] = null;
+            delete this.inMemoryDb[key];
+        }
         this.removeItemFromDb(key);
         return Q.resolve();
     }

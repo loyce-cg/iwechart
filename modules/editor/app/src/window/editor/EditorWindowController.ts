@@ -1,10 +1,10 @@
-import {app, mail, utils, window as wnd, Types, privfs, Q, component} from "pmc-mail";
+import {app, mail, utils, window as wnd, Types, privfs, Q, component, Logger as RootLogger} from "pmc-mail";
 import {MindmapHelpWindowController} from "../mindmaphelp/MindmapHelpWindowController";
 import {EditorPlugin, NotesPreferences, PartialTasksPlugin} from "../../main/EditorPlugin";
 import Dependencies = utils.decorators.Dependencies;
 import { LocalFfWatcher } from "../../main/LocalFsWatcher";
 import {i18n} from "./i18n/index";
-
+const Logger = RootLogger.get("EditorWindowController");
 export interface Options {
     docked: boolean;
     newFile: boolean;
@@ -85,7 +85,9 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
     updatedFullFileName: string = null;
     isRenaming: boolean = false;
     afterViewLoadedDeferred: Q.Deferred<void> = Q.defer();
-    
+    editorOpenDate: number;
+    lastDescriptorInfo: any;
+
     constructor(parentWindow: Types.app.WindowParent, public session: mail.session.Session, public options: Options) {
         super(parentWindow, __filename, __dirname);
         this.ipcMode = true;
@@ -158,6 +160,8 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
             this.watcher.watch(this.openableElement.getElementId(), this.onChangeLocalContent.bind(this));
         }
         
+        this.editorOpenDate = Date.now();
+
         this.bindEvent<Types.event.FileLockChangedEvent>(this.app, "file-lock-changed", event => {
             if (this.openableFileElement) {
                 const did = this.openableFileElement.handle.descriptor.ref.did;
@@ -406,6 +410,9 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
                 })
             })
             .then(() => {
+                let descriptor = this.handle.descriptor;
+                this.lastDescriptorInfo = {did: descriptor.ref.did, version: descriptor.lastVersion.raw.signature, serverDate: descriptor.lastVersion.raw.serverDate, modifier: descriptor.lastVersion.raw.modifier}
+        
                 this.afterViewLoadedDeferred.resolve();
             })
             .fail(e => {
@@ -830,6 +837,7 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
     save(text: string): Q.Promise<void> {
         let content: privfs.lazyBuffer.Content;
         let saved: boolean = false;
+
         return Q().then(() => {
             let obj: { content: string, metaDataStr?: string } = null;
             try {
@@ -866,7 +874,13 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
                     }
                     else
                     if (privfs.core.ApiErrorCodes.is(e, "OLD_SIGNATURE_DOESNT_MATCH")) {
-                        return this.saveFileAsConflicted(content);
+                        return this.handle.refreshAndUpdateToLastVersion()
+                        .then(() => {
+                            if (this.handle.descriptor.lastVersion.raw.modifier == this.lastDescriptorInfo.modifier) {
+                                Logger.error("Error: OLD_SIGNATURE_DOESNT_MATCH", JSON.stringify(this.gatherInfoForErrorReport(this.lastDescriptorInfo, this.handle.descriptor), null, 2));
+                            }
+                            return this.saveFileAsConflicted(content);
+                        })
                     }
                 })
                 .then(() => {
@@ -1728,5 +1742,23 @@ export class EditorWindowController extends wnd.base.BaseWindowController {
     onViewUnlockFile(): void {
         this.unlockFile();
     }
-    
+
+    gatherInfoForErrorReport(oldDescriptorInfo: any, descriptor: privfs.fs.descriptor.Descriptor) {
+        let el = this.options && this.options.entry && this.options.entry instanceof mail.section.OpenableSectionFile ? this.options.entry : null;
+        
+        return {
+            who: this.app.identity.hashmail,
+            host: this.app.identity.host,
+            platform: this.app.getSystemPlatfrom(),
+            appVersion: this.app.getVersion(),
+            descriptor: {did: descriptor.ref.did, version: descriptor.lastVersion.raw.signature, serverDate: descriptor.lastVersion.raw.serverDate, modifier: descriptor.lastVersion.raw.modifier},
+            oldDescriptor: oldDescriptorInfo,
+            sessionHost: this.session.host,
+            filePath: el ? el.path : null,
+            sectionId: el ? el.section.getId() : null,
+            currentViewId: this.currentViewId,
+            editorOpenDate: this.editorOpenDate,
+            editorType: "text-note-editor"    
+        }
+    }  
 }

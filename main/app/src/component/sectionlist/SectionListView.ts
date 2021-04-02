@@ -126,6 +126,9 @@ export class SectionListView extends ComponentView {
             this.triggerEvent("togglePinned", sectionId, !$(event.target).closest(".pin-button.active").hasClass("pinned"));
             return;
         }
+        if ($(event.target).closest(".videoconf-button").length > 0) {
+            return;
+        }
         this.activateSection(sectionId);
     }
     

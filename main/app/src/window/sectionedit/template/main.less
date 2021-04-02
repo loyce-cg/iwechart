@@ -26,11 +26,15 @@ div:focus {
     margin: 0;
     padding: 0;
     cursor: inherit;
+    
+    .wi-element-icon.not-selected {
+      display: none;
+    }
   }
   .wi-element:hover {
     background-color: transparent;
   }
-  span.parent-name {
+  span.parent-name:not(.not-selected) {
     margin-left: 40px;
   }
 

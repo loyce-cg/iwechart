@@ -1,0 +1,93 @@
+@import { ConnectionStatsModel } from "../Types";
+@model ConnectionStatsModel
+{{
+    const isStatPresent = (value: number) => {
+        return typeof(value) === "number" && !isNaN(value);
+    };
+    const formatInt = (value: number) => {
+        if (!isStatPresent(value)) {
+            return "-";
+        }
+        return Math.round(value).toString();
+    };
+}}
+<div class="connection-stats-tooltip">
+    <h3>{{@Helper.i18n("plugin.chat.component.connectionStatsTooltip.title")}}</h3>
+    <div class="data-grid">
+        {{ if (isStatPresent(model.bandwidthDownload) && isStatPresent(model.bandwidthUpload)) { }}
+            <div class="data-entry-title">{{@Helper.i18n("plugin.chat.component.connectionStatsTooltip.bandwidth")}}</div>
+            <div class="data-entry-value">
+                <span class="measurement-with-icon">
+                    <i class="fa fa-long-arrow-down"></i> {{@formatInt(model.bandwidthDownload)}} Kbps
+                </span>
+                <span class="measurement-with-icon">
+                    <i class="fa fa-long-arrow-up"></i> {{@formatInt(model.bandwidthUpload)}} Kbps
+                </span>
+            </div>
+        {{ } }}
+        <div class="data-entry-title">{{@Helper.i18n("plugin.chat.component.connectionStatsTooltip.videoBitrate")}}</div>
+        <div class="data-entry-value">
+            <span class="measurement-with-icon">
+                <i class="fa fa-long-arrow-down"></i> {{@formatInt(model.videoBitrateDownload)}} Kbps
+            </span>
+            <span class="measurement-with-icon">
+                <i class="fa fa-long-arrow-up"></i> {{@formatInt(model.videoBitrateUpload)}} Kbps
+            </span>
+        </div>
+        <div class="data-entry-title">{{@Helper.i18n("plugin.chat.component.connectionStatsTooltip.audioBitrate")}}</div>
+        <div class="data-entry-value">
+            <span class="measurement-with-icon">
+                <i class="fa fa-long-arrow-down"></i> {{@formatInt(model.audioBitrateDownload)}} Kbps
+            </span>
+            <span class="measurement-with-icon">
+                <i class="fa fa-long-arrow-up"></i> {{@formatInt(model.audioBitrateUpload)}} Kbps
+            </span>
+        </div>
+        <div class="data-entry-title">{{@Helper.i18n("plugin.chat.component.connectionStatsTooltip.totalBitrate")}}</div>
+        <div class="data-entry-value">
+            <span class="measurement-with-icon">
+                <i class="fa fa-long-arrow-down"></i> {{@formatInt(model.totalBitrateDownload)}} Kbps
+            </span>
+            <span class="measurement-with-icon">
+                <i class="fa fa-long-arrow-up"></i> {{@formatInt(model.totalBitrateUpload)}} Kbps
+            </span>
+        </div>
+        <div class="data-entry-title">{{@Helper.i18n("plugin.chat.component.connectionStatsTooltip.packetLoss")}}</div>
+        <div class="data-entry-value">
+            <span class="measurement-with-icon">
+                <i class="fa fa-long-arrow-down"></i> {{@formatInt(model.packetLossDownload)}} %
+            </span>
+            <span class="measurement-with-icon">
+                <i class="fa fa-long-arrow-up"></i> {{@formatInt(model.packetLossUpload)}} %
+            </span>
+        </div>
+        <div class="data-entry-title">{{@Helper.i18n("plugin.chat.component.connectionStatsTooltip.ping")}}</div>
+        <div class="data-entry-value">
+            <span class="measurement-without-icon">
+                {{@formatInt(model.ping)}} ms
+            </span>
+        </div>
+        {{ if (isStatPresent(model.e2ePing)) { }}
+            <div class="data-entry-title">{{@Helper.i18n("plugin.chat.component.connectionStatsTooltip.e2ePing")}}</div>
+            <div class="data-entry-value">
+                <span class="measurement-without-icon">
+                    {{@formatInt(model.e2ePing)}} ms
+                </span>
+            </div>
+        {{ } }}
+        <div class="data-entry-title">{{@Helper.i18n("plugin.chat.component.connectionStatsTooltip.connectionQuality")}}</div>
+        <div class="data-entry-value">
+            <span class="measurement-without-icon">
+                {{@formatInt(model.connectionQuality)}} / 100
+            </span>
+        </div>
+        {{ if (isStatPresent(model.maxEnabledResolution)) { }}
+            <div class="data-entry-title">{{@Helper.i18n("plugin.chat.component.connectionStatsTooltip.maxEnabledResolution")}}</div>
+            <div class="data-entry-value">
+                <span class="measurement-without-icon">
+                    {{@formatInt(model.maxEnabledResolution)}}p
+                </span>
+            </div>
+        {{ } }}
+    </div>
+</div>

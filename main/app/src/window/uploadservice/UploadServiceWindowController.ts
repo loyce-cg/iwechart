@@ -5,7 +5,7 @@ import {app, webUtils} from "../../Types";
 import { LocaleService } from "../../mail";
 import { i18n } from "./i18n";
 import { Window } from "../../app/common/window";
-import { UploadFileProgressEvent, UploadFileCancelEvent, UploadFileRetryEvent } from "../../app/common/uploadservice/UploadService";
+import { UploadFileProgressEvent, UploadFileCancelEvent, UploadFileRetryEvent, UploadFileCancelAllEvent } from "../../app/common/uploadservice/UploadService";
 import { ExtListController } from "../../component/extlist/main";
 import { MutableCollection } from "../../utils/collection/MutableCollection";
 import { SortedCollection } from "../../utils/collection";
@@ -72,9 +72,10 @@ export class UploadServiceWindowController extends BaseWindowController {
         this.ipcMode = true;
         this.setViewBasicFonts();
         this.options = Utils.fillByDefaults(options, {
-            width: 800,
+            width: 420,
+            minWidth: 350,
             height: 400,
-            title: "PrivMX",
+            title: this.app.localeService.i18n("window.uploadservice.completed"),
             focusOn: "",
         });
         this.ipcMode = true;
@@ -85,17 +86,17 @@ export class UploadServiceWindowController extends BaseWindowController {
         this.openWindowOptions.widget = false;
         this.openWindowOptions.draggable = true;
         this.openWindowOptions.resizable = true;
-        this.openWindowOptions.title = "Uploads";
 
         this.collection = this.addComponent("mutableCollection", new MutableCollection([]));
         this.sortedCollection = this.addComponent("sortedCollection", new SortedCollection<UploadFileItem>(this.collection, (a, b) => {
-            if (a.status != b.status && (a.status == "in-progress")) {
-                return -1;
-            }
-            if (a.status != b.status && (b.status == "in-progress")) {
-                return 1;
-            }
-            return b.createdTime - a.createdTime;
+            // if (a.status != b.status && (a.status == "in-progress")) {
+            //     return -1;
+            // }
+            // if (a.status != b.status && (b.status == "in-progress")) {
+            //     return 1;
+            // }
+            // return b.createdTime - a.createdTime;
+            return 0;
         }));
         
         this.filesList = this.addComponent("filesList", this.componentFactory.createComponent("extlist", [this, this.sortedCollection]));
@@ -172,12 +173,21 @@ export class UploadServiceWindowController extends BaseWindowController {
         this.app.eventDispatcher.dispatchEvent<UploadFileCancelEvent>({type: "upload-file-cancel-event", fileId: fileId});
     }
 
+    onViewCancelAllUploads(): void {
+        this.app.eventDispatcher.dispatchEvent<UploadFileCancelAllEvent>({type: "upload-file-cancel-all-event"});
+    }
+
+
     onViewRetryFileUpload(fileId: number): void {
         this.app.eventDispatcher.dispatchEvent<UploadFileRetryEvent>({type: "upload-file-retry-event", fileId: fileId});
     }
 
     onViewOpenFile(fileId: number): void {
 
+    }
+
+    beforeClose(): void {
+        this.app.uploadService.clearAllFinishedUploads();
     }
 
     onViewClose(): void {

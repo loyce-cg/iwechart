@@ -234,7 +234,7 @@ export class PlayerHelperWindowController extends BaseWindowController implement
     }
     
     onViewDingDong(): void {
-        this.app.playAudio("notification", true);
+        this.app.playAudio("notification", { force: true });
         this.app.voiceChatService.onDingDong();
     }
     

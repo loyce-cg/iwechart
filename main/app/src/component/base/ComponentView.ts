@@ -198,7 +198,7 @@ export class ComponentView extends Container {
             return;
         }
         let result = (<Function>(<any>this)[methodName]).apply(this, Array.prototype.slice.call(arguments, 2));
-        if (typeof(result) == "object" && typeof(result.then) == "function") {
+        if (typeof(result) == "object" && result && typeof(result.then) == "function") {
             result.then((promiseResult: any) => {
                 this.triggerEvent("response", requestId, promiseResult);
             });

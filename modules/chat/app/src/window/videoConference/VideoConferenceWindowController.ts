@@ -1,11 +1,6 @@
-import {component, mail, privfs, utils, window, Types, Q, app} from "pmc-mail";
-import {ChatMessagesController, MessagesFilterUpdater, ChatUpdateSearchStatsEvent, UpdateVoiceChatUsersEvent} from "../../component/chatmessages/ChatMessagesController";
-import {ChatMessage} from "../../main/ChatMessage";
-import {ChatType} from "../../main/Types";
-import {ChatPlugin, ChatComponentFactory, ChatValidMessageTypeForUnreadChangeEvent, ChatValidMessageTypeForDisplayChangeEvent, GUISettings, RequestOpenChatEvent, UpdateChatSidebarSpinnersEvent, MarkedChatsAsReadEvent } from "../../main/ChatPlugin";
-import Inject = utils.decorators.Inject;
+import {component, mail, utils, window, Types, Q, app} from "pmc-mail";
+import {ChatPlugin, ChatComponentFactory } from "../../main/ChatPlugin";
 import Dependencies = utils.decorators.Dependencies;
-import { PrivateConversationsController } from "../../component/privateconversations/PrivateConversationsController";
 import { i18n } from "./i18n/index";
 import { VideoConferenceController } from "../../component/videoconference/VideoConferenceController";
 

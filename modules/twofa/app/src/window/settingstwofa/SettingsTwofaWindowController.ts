@@ -64,7 +64,7 @@ export class SettingsTwofaWindowController extends window.settings.BaseControlle
     }
     
     onViewEnable(data: TwofaEnableData) {
-        if (data.type == "email" && (!data.email || !/^[a-z0-9\.\+-]+@[a-z0-9\.-]+$/.test(data.email))) {
+        if (data.type == "email" && (!data.email || !/^[a-z0-9_\.\+-]+@[a-z0-9_\.-]+$/.test(data.email))) {
             this.callViewMethod("finishSaving");
             this.parent.alert(this.i18n("plugin.twofa.window.settingstwofa.error.email"));
             return;

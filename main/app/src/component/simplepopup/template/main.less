@@ -11,6 +11,7 @@
   padding: 20px 20px 10px 20px;
   transition: transform 0.15s ease;
   transform: scale(1.0);
+  --adornment-offset: 15px;
   
   &:not(.visible) {
     display: none;
@@ -26,6 +27,91 @@
     transform: scale(1.1);
   }
   
+  &[data-vertical-placement="after"],
+  &[data-vertical-placement="before"],
+  &[data-horizontal-placement="after"],
+  &[data-horizontal-placement="before"] {
+    &:after {
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 0 5px 5px 5px;
+      border-color: transparent transparent var(--preview-panel-bg) transparent;
+      content: "";
+      position: absolute;
+    }
+  }
+  
+  &[data-vertical-placement="after"] {
+    margin-bottom: -5px;
+    &:after {
+      top: -5px;
+    }
+  }
+  
+  &[data-vertical-placement="before"] {
+    margin-top: -5px;
+    &:after {
+      bottom: -5px;
+      transform: rotate(180deg);
+    }
+  }
+  
+  &[data-horizontal-placement="after"] {
+    margin-right: -5px;
+    &:after {
+      left: -7px;
+      transform: rotate(270deg);
+    }
+  }
+  
+  &[data-horizontal-placement="before"] {
+    margin-left: -5px;
+    &:after {
+      right: -7px;
+      transform: rotate(90deg);
+    }
+  }
+  
+  &[data-horizontal-placement="common-start"] {
+    &:after {
+      left: var(--adornment-offset);
+    }
+  }
+  
+  &[data-horizontal-placement="common-end"] {
+    &:after {
+      right: var(--adornment-offset);
+    }
+  }
+  
+  &[data-vertical-placement="common-start"] {
+    &:after {
+      top: var(--adornment-offset);
+    }
+  }
+  
+  &[data-vertical-placement="common-end"] {
+    &:after {
+      bottom: var(--adornment-offset);
+    }
+  }
+  
+  &[data-theme="dark"] {
+    background: var(--context-menu-bg);
+    &:after {
+      border-color: transparent transparent var(--context-menu-bg) transparent;
+    }
+    .content-wrapper .content input[type=text] {
+      background: rgba(0,0,0,0.2);
+      border-color: rgba(0,0,0,0.2);
+      color: #fff;
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.25);
+      }
+    }
+  }
+  
   .content-wrapper {
     flex: 1 1 auto;
     display: flex;
@@ -37,6 +123,9 @@
         color: var(--body-fg);
         padding: 5px;
         width: 100%;
+        &::placeholder {
+          font-style: italic;
+        }
       }
     }
   }

@@ -27,10 +27,10 @@
           <div class="field-value">
             <div class="wi-element">
               <div class="wi-element-inner">
-                <div class="wi-element-icon bckg-icon bckg-icon-inverse2" vf-class="{'bckg-icon-border':this.parentScope == 'private'}">
+                <div class="wi-element-icon bckg-icon bckg-icon-inverse2" vf-class="{'bckg-icon-border':this.parentScope == 'private', 'not-selected': this.parentId == null}">
                   <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
                 </div>
-                <span class="parent-name" vf-model="parentName"></span>
+                <span class="parent-name" vf-model="parentName" vf-class="{'not-selected': this.parentId == null}"></span>
                 <button class="btn btn-link link edit-btn" vf-visible="editable" vf-click="move()" vf-disabled="loading">
                   {{@Helper.i18n("core.button.change.label")}}
                 </button>

@@ -1,8 +1,17 @@
 @import { Model } from "../VideoConferenceController";
+@import { Context } from "../VideoConferenceView";
 @model Model
+@context Context
 <div class="video-conference-main" data-local-audio-output-enabled="true" data-local-audio-input-enabled="true" data-local-video-input-enabled="true" data-desktop-sharing-enabled="false" data-user-containers-display-mode="tiles" data-always-on-top-enabled="false">
   <div class="title-container">
-    <div class="conference-title">{{@model.roomMetadata.title}}</div>
+    {{ if (context.isE2EEEnabled !== null) { }}
+      <div class="conference-title">{{@model.roomMetadata.title}}</div>
+      {{ if (context.isE2EEEnabled) { }}
+        <i class="fa fa-lock e2ee-icon" title="{{@Helper.i18n('plugin.chat.component.videoconference.e2eeEnabled.title')}}"></i>
+      {{ } else { }}
+        <i class="fa fa-unlock no-e2ee-icon" title="{{@Helper.i18n('plugin.chat.component.videoconference.e2eeDisabled.title')}}"></i>
+      {{ } }}
+    {{ } }}
   </div>
   <div class="audios-container">
     <div class="local-audio-container"></div>

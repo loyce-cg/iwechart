@@ -60,6 +60,7 @@ export interface UI {
     windowTitleBarButtonsPosition: string;
     audio: boolean;
     notifications: boolean;
+    notificationsVolume: number;
     seenFirstLoginInfo: boolean;
     lang?: string;
     spellchecker2: boolean;
@@ -139,6 +140,7 @@ export class UserPreferences {
             windowTitleBarButtonsPosition: "right",
             audio: false,
             notifications: true,
+            notificationsVolume: 1.0,
             seenFirstLoginInfo: false,
             spellchecker2: false,
             spellCheckerLanguages: null,

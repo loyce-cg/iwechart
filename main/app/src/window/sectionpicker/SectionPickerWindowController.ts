@@ -34,7 +34,7 @@ export class SectionPickerWindowController extends BaseWindowController {
     sections: ExtListController<SectionEntry>;
     topLevelSelected: boolean;
     
-    constructor(parent: app.WindowParent, public sourceSection: SectionService, options?: app.WindowOptions) {
+    constructor(parent: app.WindowParent, public sourceSection: SectionService, options?: app.WindowOptions, public asSectionCreatorWindow: boolean = false) {
         super(parent, __filename, __dirname);
         this.ipcMode = true;
         this.openWindowOptions = {
@@ -47,7 +47,7 @@ export class SectionPickerWindowController extends BaseWindowController {
             minWidth: 440,
             minHeight: 400,
             icon: "icon fa fa-cubes",
-            title: this.i18n("window.sectionPicker.title")
+            title: this.i18n("window.sectionPicker.title" + (asSectionCreatorWindow ? ".asCreator" : ""))
         };
         if (options) {
             Object.keys(options).forEach( key => {
@@ -141,7 +141,8 @@ export class SectionPickerWindowController extends BaseWindowController {
     getModel(): Model {
         return {
             state: this.getActiveState(),
-            server: this.identityProvider.getIdentity().host
+            server: this.identityProvider.getIdentity().host,
+            asCreator: this.asSectionCreatorWindow
         }
     }
         

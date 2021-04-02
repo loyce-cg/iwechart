@@ -19,14 +19,16 @@
       </div>
       {{ if (model.registerFromDesktopApp) { {{
       <div class="login-info">
-        {{@Helper.i18n('window.login.submitRegister.afterRegister.loginInfoTitle')}}
         <div class="row">
-        <div class="cell cell-20 to-right">{{@Helper.i18n('window.login.submitRegister.afterRegister.userLogin')}}:</div><div class="cell to-left login-placeholder">{{@model.login}}</div>
+          <div class="cell cell-100">{{@Helper.i18n('window.login.submitRegister.afterRegister.loginInfoTitle')}}</div>
         </div>
-        <div class="row">
-        <div class="cell cell-20 to-right">{{@Helper.i18n('window.login.submitRegister.afterRegister.userPassword')}}:</div><div class="cell to-left">********</div>
+        <div class="row to-left">
+          <div class="cell cell-30">{{@Helper.i18n('window.login.submitRegister.afterRegister.userLogin')}}:</div><div class="cell to-left login-placeholder">{{@model.login}}</div>
         </div>
-        <button class="btn btn-primary btn-go-to-login" data-action="login"><i class="fa fa-undo"></i>{{@Helper.i18n('window.login.submitRegister.afterRegister.goToLoginScreen')}}</button>
+        <div class="row to-left">
+          <div class="cell cell-30">{{@Helper.i18n('window.login.submitRegister.afterRegister.userPassword')}}:</div><div class="cell to-left">********</div>
+        </div>
+        <button class="btn btn-primary btn-go-to-login" data-action="login">{{@Helper.i18n('window.login.submitRegister.afterRegister.goToLoginScreen')}}</button>
       </div>
       }} } }}
       

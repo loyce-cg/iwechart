@@ -14,6 +14,7 @@ import { GUISettings } from "../../main/ChatPlugin";
 import { ChatWindowView } from "../../window/chat/ChatWindowView";
 import { SectionVideoConferenceModel, VideoConferencePersonModel } from "./Types";
 import { GongMessagePopup } from "../gongmessagepopup/GongMessagePopup";
+import { VideoConferenceOptions } from "../../main/videoConference/Types";
 
 export interface ActionItemModel {
     id?: string;
@@ -748,8 +749,9 @@ export class ChatMessagesView extends component.base.ComponentView {
     }
     
     onOpenChannelFile(event: MouseEvent): void {
-        let $e = $(event.target).closest(".channel-file, .img-in-chat, .play-audio-button");
-        this.triggerEvent("openChannelFile", $e.data("path"), $e.data("did"));
+        const $e = $(event.target).closest(".channel-file, .img-in-chat, .play-audio-button");
+        const autoPlay = !!$e.data("auto-play");
+        this.triggerEvent("openChannelFile", $e.data("path"), $e.data("did"), autoPlay);
     }
     
     onEnterSendsChange(event: MouseEvent): void {
@@ -1518,13 +1520,38 @@ export class ChatMessagesView extends component.base.ComponentView {
         this.triggerEvent("joinVideoConference");
     }
     
-    async askForNewConferenceTitle(): Promise<string|false> {
+    async obtainNewVideoConferenceOptionsStr(): Promise<string> {
         const simplePopup = new component.simplepopup.SimplePopup(this.templateManager);
         const placeholder = this.helper.escapeHtml(this.helper.i18n("plugin.chat.component.chatMessages.videoConferenceTitleQuestionPopup.titleInput.placeholder"));
-        const $input = $(`<input type="text" placeholder="${placeholder}" maxlength="100" />`);
+        const $content = $(`
+            <div>
+                <div class="input-container"><input type="text" class="conference-title" placeholder="${placeholder}" maxlength="100" /></div>
+                <div class="hidden-options hide">
+                    <label style="margin-bottom:0; position:relative; top:5px; color:#fff; font-weight:400; font-size:13px; display:block; cursor:pointer;">
+                        <input type="checkbox" class="conference-experimentalH264" style="position:relative; top:2px;" />
+                        <span style="margin-left:5px;">Experimental: use H264 and disable E2EE</span>
+                    </label>
+                </div>
+            </div>
+        `);
+        const $input = $content.find("input.conference-title");
+        const $experimentalH264 = $content.find("input.conference-experimentalH264");
+        let areHiddenOptionsVisible = false;
+        const toggleHiddenOptionsKeydownHandler = (e: KeyboardEvent) => {
+            if (e.key == "7" && webUtils.WebUtils.hasCtrlModifier(e)) {
+                areHiddenOptionsVisible = !areHiddenOptionsVisible;
+                $content.find(".hidden-options").toggleClass("hide");
+                const hDelta = 30 * (areHiddenOptionsVisible ? 1 : -1);
+                const $popup = $content.closest(".simple-popup");
+                $popup.css({
+                    height: parseFloat($popup.css("height")) + hDelta,
+                    top: parseFloat($popup.css("top")) - hDelta,
+                });
+            }
+        };
         let join: boolean = false;
         await simplePopup.init({
-            $content: $input,
+            $content: $content,
             buttons: [
                 {
                     icon: "privmx-icon privmx-icon-videocall",
@@ -1544,7 +1571,9 @@ export class ChatMessagesView extends component.base.ComponentView {
             $target: this.$chatReply.find(`[data-action="join-video-conference"]`),
             horizontalPlacement: webUtils.PopupPlacement.COMMON_END,
             verticalPlacement: webUtils.PopupPlacement.BEFORE,
+            theme: "dark",
         });
+        document.addEventListener("keydown", toggleHiddenOptionsKeydownHandler);
         simplePopup.show();
         $input[0].focus();
         $input.on("keydown", e => {
@@ -1558,11 +1587,17 @@ export class ChatMessagesView extends component.base.ComponentView {
             }
         });
         await simplePopup.getClosePromise();
+        document.removeEventListener("keydown", toggleHiddenOptionsKeydownHandler);
         if (join == false) {
-            return false;
+            return null;
         }
         const title = $input.val().toString().trim().substr(0, 100);
-        return title;
+        const experimentalH264 = areHiddenOptionsVisible && $experimentalH264.is(":checked");
+        const options = <VideoConferenceOptions>{
+            title: title,
+            experimentalH264: experimentalH264,
+        };
+        return JSON.stringify(options);
     }
     
     onVideoConferenceDisconnectClick(): void {

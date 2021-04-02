@@ -6,8 +6,14 @@ import {EditorWindowView} from "../editor/EditorWindowView";
 @WindowView
 export class VideoWindowView extends EditorWindowView {
     
+    autoPlay: boolean = false;
+    
     constructor(parent: app.ViewParent) {
         super(parent);
+    }
+    
+    setAutoPlay(autoPlay: boolean) {
+        this.autoPlay = autoPlay;
     }
     
     focus() {
@@ -27,6 +33,9 @@ export class VideoWindowView extends EditorWindowView {
         vid.onloadeddata = this.onVideoLoad.bind(this, currentViewId);
         vid.src = this.getResourceDataUrl(data);
         vid.ondurationchange = this.onVideoDurationChange.bind(this, currentViewId);
+        if (this.autoPlay) {
+            vid.play();
+        }
     }
     
     setSize(type: string): void {

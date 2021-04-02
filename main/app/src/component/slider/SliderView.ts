@@ -194,6 +194,23 @@ export class SliderView extends ComponentView {
             }
             text += (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
         }
+        else if (this.textFormat == SliderTextFormat.NO_TEXT) {
+            text = "";
+        }
+        else if (this.textFormat == SliderTextFormat.INT_PERCENT) {
+            value = Math.round(value * 100);
+            text = `${value}%`;
+        }
+        else if (this.textFormat == SliderTextFormat.FRACTION) {
+            value = Math.round(value * 100) / 100;
+            const maxValue = Math.round(this.max * 100) / 100;
+            text = `${value} / ${maxValue}`;
+        }
+        else if (this.textFormat == SliderTextFormat.INT_FRACTION) {
+            value = Math.round(value);
+            const maxValue = Math.round(this.max);
+            text = `${value} / ${maxValue}`;
+        }
         return text;
     }
     

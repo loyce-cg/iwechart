@@ -97,7 +97,6 @@ export class ChatWindowController extends window.base.BaseAppWindowController {
         this.sectionTooltip = this.addComponent("sectiontooltip", this.componentFactory.createComponent("sectiontooltip", [this]));      
         this.loading = this.addComponent("loading", this.componentFactory.createComponent("loading", [this]));  
         this.enableTaskBadgeAutoUpdater();
-        this.addViewScript({ path: "build/jitsi/lib-jitsi-meet.min.js", plugin: "chat" });
     }
         
     onPrimarySectionChange(event: Types.utils.collection.CollectionEvent<mail.section.SectionService>) {

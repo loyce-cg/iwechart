@@ -11,6 +11,7 @@ import { InfoWindowsManager } from "./InfoWindowsManager";
 export interface RoomMetadata {
     creatorHashmail: string;
     title: string;
+    experimentalH264?: boolean;
 }
 
 

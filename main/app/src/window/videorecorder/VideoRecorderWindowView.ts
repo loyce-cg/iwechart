@@ -152,6 +152,7 @@ export class VideoRecorderWindowView extends BaseWindowView<Model> {
     }
     
     private async _setupVideoRecorder(): Promise<void> {
+        const currentCameraConfiguration = this.videoRecorder ? this.videoRecorder.getCameraConfiguration() : null;
         if (this.videoRecorder) {
             await this.videoRecorder.destroy();
         }
@@ -160,6 +161,7 @@ export class VideoRecorderWindowView extends BaseWindowView<Model> {
             videoInput: this.model.mode !== VideoRecorderMode.AUDIO ? this.selectedVideoInputDeviceId : null,
             audioInput: this.model.mode !== VideoRecorderMode.PHOTO ? this.selectedAudioInputDeviceId : null,
             audioOutput: this.model.mode !== VideoRecorderMode.PHOTO ? this.selectedAudioOutputDeviceId : null,
+            baseCameraConfiguration: currentCameraConfiguration,
         });
         await this.videoRecorder.setup();
     }

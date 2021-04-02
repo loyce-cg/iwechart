@@ -605,6 +605,9 @@ export class TasksPlugin {
                         }
                         this.fire(session, "project", id, "deleted");
                     }
+                    if (id in this.kvdbCs[session.hostHash]) {
+                        delete this.kvdbCs[session.hostHash][id];
+                    }
                 }
                 else if (event.type == "add" && event.element) {
                     this.ensureProjectExists(event.element.getId(), event.element.getName(), session).then(() => {

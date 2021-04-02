@@ -34,6 +34,7 @@ export class MailConst {
     static NOTIFICATIONS_MUTED_SINKS = "notifications.mutedSinks";
     static UI_AUDIO = "ui.audio";
     static UI_NOTIFICATIONS = "ui.notifications";
+    static UI_NOTIFICATIONS_VOLUME = "ui.notificationsVolume";
     static UI_APP_SILENT_MODE = "ui.appSilentMode";
     static UI_SPELLCHECKER = "ui.spellchecker2";
     static UI_SPELLCHECKER_LANGUAGES = "ui.spellCheckerLanguages";

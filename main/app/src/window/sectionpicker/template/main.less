@@ -3,7 +3,8 @@
 @import "../../../component/template/wi-element.less";
 @import "../../../themes/default/less/form";
 
-@headerHeight: 70px;
+@headerHeight: 95px;
+@subMargin: 50px;
 
 body {
   font-size: var(--font-size);
@@ -25,7 +26,7 @@ div:focus {
     top: 0;
     left: 0;
     right: 0;
-    bottom: @headerHeight;
+    height: @headerHeight;
     background: var(--main-panel-bg);
     
     .base-form {
@@ -50,6 +51,11 @@ div:focus {
       }
     }
   }
+
+  .sections-list-title {
+    padding-left: @subMargin;
+  }
+
   .sections-list-lock-overlay {
     z-index: 9999;
     display: none;
@@ -62,7 +68,6 @@ div:focus {
     overflow-y: auto;
     cursor: not-allowed;
   }
-
   .sections-list {
     position: absolute;
     top: @headerHeight;
@@ -70,13 +75,19 @@ div:focus {
     bottom: 53px;
     right: 0;
     overflow-y: auto;
-    background: var(--main-panel-bg);
+    background: var(--preview-panel-bg);
     
     .section-root {
       .wi-element-name {
         font-weight: bold;
       }
     }
+
+
+    .section-entry .section-name.wi-element {
+      padding-left: @subMargin;
+    }
+
     .section-name:hover .bckg-icon {
        background-color: var(--section-color-icon);
        

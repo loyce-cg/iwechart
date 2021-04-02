@@ -415,7 +415,9 @@ export class MindmapNode {
     }
     
     protected _toStringWithoutChildren(): string {
-        return this.label;
+        const domParser = new DOMParser();
+        const parsed = domParser.parseFromString(this.label, "text/html");
+        return parsed.documentElement.textContent;
     }
     
     

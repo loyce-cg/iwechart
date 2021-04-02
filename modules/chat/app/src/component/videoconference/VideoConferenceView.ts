@@ -3,12 +3,17 @@ import { func as videoConferenceTemplate } from "./template/video-conference.htm
 import { Model } from "./VideoConferenceController";
 import { MessageType, VideoConference } from "../../main/videoConference/VideoConference";
 import { JitsiVideoConference } from "../../main/videoConference/jitsi/JitsiVideoConference";
-import { VideoConferenceConnectionLostReason, VideoConferenceConfiguration, VideoConferenceTrack, VideoConferenceState, VideoConferenceParticipant } from "../../main/videoConference/Types";
+import { VideoConferenceConnectionLostReason, VideoConferenceTrack, VideoConferenceState, VideoConferenceParticipant, VideoConferenceConnectionOptions } from "../../main/videoConference/Types";
 import { VideoConferenceLayoutCalculator } from "./VideoConferenceLayoutCalculator";
 import { JitsiMeetScreenObtainerCallback, JitsiMeetScreenObtainerOptions } from "../../main/videoConference/jitsi/JitsiMeetScreenObtainer";
 import { DesktopPickerResult, DesktopPickerView } from "../desktoppicker/DesktopPickerView";
 import { GongMessagePopup } from "../gongmessagepopup/GongMessagePopup";
+import { ConnectionStatsTooltipView } from "../connectionstatstooltip/ConnectionStatsTooltipView";
 const Olm = require("olm");
+
+export interface Context {
+    isE2EEEnabled: boolean;
+}
 
 export class VideoConferenceView extends component.base.ComponentView {
     
@@ -61,6 +66,7 @@ export class VideoConferenceView extends component.base.ComponentView {
     desktopPicker: DesktopPickerView;
     resolutionCustomSelect: component.customselect.CustomSelectView;
     gongMessagePopup: GongMessagePopup;
+    connectionStatsTooltip: ConnectionStatsTooltipView;
     
     // Display mode
     containersDisplayMode: "tiles" | "single-speaker" = "tiles";
@@ -69,8 +75,9 @@ export class VideoConferenceView extends component.base.ComponentView {
     // Misc
     gongButtonStopAnimationTimeout: number = null;
     parent: wnd.base.BaseAppWindowView<any>;
-    videoConferenceTemplate: webUtils.template.Template<Model, void, webUtils.MailClientViewHelper>;
+    videoConferenceTemplate: webUtils.template.Template<Model, Context, webUtils.MailClientViewHelper>;
     isDeviceSelectorOpen: boolean = false;
+    model: Model;
     
     constructor(parent: wnd.base.BaseWindowView<any>, public personsComponent: component.persons.PersonsView) {
         super(parent);
@@ -81,13 +88,15 @@ export class VideoConferenceView extends component.base.ComponentView {
             this.onResolutionCustomSelectChange(value);
         });
         this.gongMessagePopup = new GongMessagePopup(this);
+        this.connectionStatsTooltip = this.addComponent("connectionStatsTooltip", new ConnectionStatsTooltipView(this));
     }
     
     init(model: Model): Q.Promise<void> {
+        this.model = model;
         return Q()
         .then(() => {
-            this.videoConferenceTemplate = this.templateManager.createTemplate(videoConferenceTemplate);
-            this.$main = this.videoConferenceTemplate.renderToJQ(model);
+            this.videoConferenceTemplate = this.templateManager.createTemplate<Model, Context, webUtils.MailClientViewHelper>(videoConferenceTemplate);
+            this.$main = this.videoConferenceTemplate.renderToJQ(model, { isE2EEEnabled: null });
             this.$container.append(this.$main);
             
             // Html elements
@@ -169,6 +178,7 @@ export class VideoConferenceView extends component.base.ComponentView {
                 onLocalVideoInputDisabled: this.onLocalVideoInputDisabled.bind(this),
                 onTrackMutedStatusChanged: this.onTrackMutedStatusChanged.bind(this),
                 onTrackAudioLevelChanged: this.onTrackAudioLevelChanged.bind(this),
+                onParticipantConnectionStatsUpdated: this.onParticipantConnectionStatsUpdated.bind(this),
                 requestShowMessage: this.showMessage.bind(this),
             });
         })
@@ -185,6 +195,10 @@ export class VideoConferenceView extends component.base.ComponentView {
             return this.resolutionCustomSelect.triggerInit();
         })
         .then(() => {
+            this.connectionStatsTooltip.$container = this.$container;
+            return this.connectionStatsTooltip.triggerInit();
+        })
+        .then(() => {
             if ((<any>window).ResizeObserver) {
                 let resizeObserver = new (<any>window).ResizeObserver((entries: any) => {
                     this.onContainerSizeChanged();
@@ -196,7 +210,7 @@ export class VideoConferenceView extends component.base.ComponentView {
     
     disconnect(): Q.Promise<void> {
         if (this.videoConference.getState() == VideoConferenceState.DISCONNECTED) {
-            this.onConnectionLost("connectingFailed");
+            this.onConnectionLost("connectingFailed", "VideoConferenceView.disconnect()");
             return Q();
         }
         else {
@@ -204,12 +218,27 @@ export class VideoConferenceView extends component.base.ComponentView {
         }
     }
     
-    connect(configurationStr: string, tmpUserName?: string, tmpUserPassword?: string): Q.Promise<boolean> {
+    updateTemplate(): void {
+        const $newTemplate = this.videoConferenceTemplate.renderToJQ(this.model, { isE2EEEnabled: this.videoConference.isE2EEEnabled() });
+        
+        const $oldTitleContainer = this.$container.find(".title-container");
+        const $newTitleContainer = $newTemplate.find(".title-container");
+        $oldTitleContainer.html($newTitleContainer.html());
+    }
+    
+    connect(connectionOptionsStr: string): Q.Promise<boolean> {
+        const connectionOptions: VideoConferenceConnectionOptions = JSON.parse(connectionOptionsStr);
+        const { configuration, tmpUserName, tmpUserPassword, options } = connectionOptions;
+        
+        this.model.roomMetadata.title = options.title;
+        this.model.roomMetadata.experimentalH264 = options.experimentalH264;
+        this.videoConference.updateE2EEEnabled(options);
+        this.updateTemplate();
+        
         console.log("%c connect()", "color:#0000ff")
         this.userContainerByParticipantId = {};
         this.audioByParticipantId = {};
         this.videoByParticipantId = {};
-        let configuration: VideoConferenceConfiguration = JSON.parse(configurationStr);
         (<any>window).$ = $;
         return Q().then(() => {
             if (!(<any>window).privmxOlmInitialized) {
@@ -234,8 +263,9 @@ export class VideoConferenceView extends component.base.ComponentView {
         })
         .then(doConnect => {
             if (doConnect) {
-                return this.videoConference.connect(configuration, tmpUserName, tmpUserPassword)
+                return this.videoConference.connect(connectionOptions)
                 .then(() => {
+                    this.updateTemplate();
                     this.triggerEvent("connected");
                 })
                 .then(() => {
@@ -272,7 +302,7 @@ export class VideoConferenceView extends component.base.ComponentView {
         });
     }
     
-    connectAndCreateConference(configurationStr: string, tmpUserName: string, tmpUserPassword: string): Q.Promise<string> {
+    connectAndCreateConference(connectionOptionsStr: string): Q.Promise<string> {
         return Q().then(() => {
             return this.videoConference.generateEncryptionKey();
         })
@@ -284,7 +314,7 @@ export class VideoConferenceView extends component.base.ComponentView {
         .then(generatedEncryptionKey => {
             let generatedEncryptionIV = this.videoConference.generateEncryptionIv();
             this.videoConference.setEncryptionIV(generatedEncryptionIV);
-            return this.connect(configurationStr, tmpUserName, tmpUserPassword).then(doConnect => {
+            return this.connect(connectionOptionsStr).then(doConnect => {
                 if (!doConnect) {
                     return JSON.stringify({
                         status: "cancelled",
@@ -303,9 +333,10 @@ export class VideoConferenceView extends component.base.ComponentView {
             console.error(e);
             return JSON.stringify({
                 status: "error",
+                errorStr: `${e}`,
             });
         });
-        // return this.connect(configurationStr, tmpUserName, tmpUserPassword).then(() => {
+        // return this.connect(connectionOptionsStr).then(() => {
         //     return this.videoConference.generateEncryptionKey();
         // })
         // .then(generatedEncryptionKey => {
@@ -326,10 +357,6 @@ export class VideoConferenceView extends component.base.ComponentView {
         // });
     }
     
-    updateConferenceMetadata(metaData: { title: string }): void {
-        this.$main.find(".conference-title").text(metaData.title);
-    }
-    
     
     
     
@@ -346,11 +373,11 @@ export class VideoConferenceView extends component.base.ComponentView {
         this.fillDevicesHtmlSelect(this.$changeVideoInputSelect, videoInputDevices, this.videoConference.getLocalVideoInputDeviceId());
     }
     
-    onConnectionLost(reason: VideoConferenceConnectionLostReason): void {
+    onConnectionLost(reason: VideoConferenceConnectionLostReason, extraInfo: string): void {
         this.userContainerByParticipantId = {};
         this.audioByParticipantId = {};
         this.videoByParticipantId = {};
-        this.triggerEvent("leaveVideoConference");
+        this.triggerEvent("leaveVideoConference", JSON.stringify({ reason, extraInfo }));
         this.$remoteAudiosContainer.empty();
         this.$remoteVideosContainer.empty();
         this.$localAudioContainer.empty();
@@ -368,6 +395,7 @@ export class VideoConferenceView extends component.base.ComponentView {
         }
         this.removeUserContainer(participantId);
         this.onDominantSpeakerChanged();
+        this.onParticipantConnectionStatsUpdated(participantId, null);
     }
     
     getDominantSpeaker(): VideoConferenceParticipant<any> {
@@ -599,6 +627,10 @@ export class VideoConferenceView extends component.base.ComponentView {
         }
     }
     
+    onParticipantConnectionStatsUpdated(participantId: string, stats: JitsiMeetJS.ConferenceStats | null): void {
+        this.triggerEvent("participantConnectionStatsUpdated", participantId, stats === null ? null : JSON.stringify(stats));
+    }
+    
     
     
     
@@ -797,6 +829,7 @@ export class VideoConferenceView extends component.base.ComponentView {
                     <span>${participantName}</span>
                     <i class="privmx-icon privmx-icon-chat is-talking-icon"></i>
                     <i class="fa fa-microphone-slash no-audio-info"></i>
+                    <i class="fa fa-signal connection-quality-indicator has-connection-stats-tooltip" data-connection-stats-id="${participantId}"></i>
                 </div>
                 <div class="no-video-info">
                     <div class="no-video-info-avatar">
@@ -851,6 +884,11 @@ export class VideoConferenceView extends component.base.ComponentView {
             $userContainer = this.createUserContainer(participantId);
         }
         return $userContainer;
+    }
+    
+    getUserConnectionQualityIndicator(participantId: string): JQuery {
+        const $userContainer = this.getUserContainer(participantId);
+        return $userContainer.find(".connection-quality-indicator");
     }
     
     getLocalUserVideoElement(): JQuery {

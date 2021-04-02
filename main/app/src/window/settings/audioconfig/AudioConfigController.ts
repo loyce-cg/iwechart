@@ -58,7 +58,7 @@ export class AudioConfigController extends BaseController {
     }
     
     onViewPlay(sound: string): void {
-        this.app.playAudio(sound, true);
+        this.app.playAudio(sound, { force: true });
     }
     
     getGlobalNotificationsEnabled(): boolean {

@@ -1,5 +1,6 @@
 import { Q, webUtils, window } from "pmc-web";
-import { VideoConferenceConfiguration, VideoConferenceState, VideoConferenceConnectionLostReason, VideoConferenceTrack, VideoConferenceParticipant } from "./Types";
+import { VideoConferenceConfiguration, VideoConferenceState, VideoConferenceConnectionLostReason, VideoConferenceTrack, VideoConferenceParticipant, VideoConferenceConnectionOptions } from "./Types";
+import * as Types from "./Types";
 
 export type MessageType = "error" | "warning" | "success" | "info";
 
@@ -18,7 +19,7 @@ export interface AvailableDevice {
 export interface VideoConferenceOptions {
     configuration: VideoConferenceConfiguration;
     onDevicesListChanged: (devices: MediaDeviceInfo[]) => void;
-    onConnectionLost: (reason: VideoConferenceConnectionLostReason) => void;
+    onConnectionLost: (reason: VideoConferenceConnectionLostReason, extraInfo: string) => void;
     onUserJoined: (participantId: string) => void;
     onUserLeft: (participantId: string) => void;
     onDominantSpeakerChanged: () => void;
@@ -38,6 +39,7 @@ export interface VideoConferenceOptions {
     onLocalVideoInputDisabled: () => void;
     onTrackMutedStatusChanged: (track: VideoConferenceTrack) => void;
     onTrackAudioLevelChanged: (participantId: string, audioLevel: number) => void;
+    onParticipantConnectionStatsUpdated: (participantId: string, stats: JitsiMeetJS.ConferenceStats) => void;
     requestShowMessage: (i18nKey: string, type: MessageType) => void;
 }
 
@@ -61,7 +63,7 @@ export abstract class VideoConference {
     protected remoteVideoTracks: { [participantId: string]: VideoConferenceTrack } = {};
     protected remoteAudioTracks: { [participantId: string]: VideoConferenceTrack } = {};
     protected onDevicesListChanged: (devices: MediaDeviceInfo[]) => void = () => {};
-    protected onConnectionLost: (reason: VideoConferenceConnectionLostReason) => void = () => {};
+    protected onConnectionLost: (reason: VideoConferenceConnectionLostReason, extraInfo: string) => void = () => {};
     protected onUserJoined: (participantId: string) => void = () => {};
     protected onUserLeft: (participantId: string) => void = () => {};
     protected onDominantSpeakerChanged?: () => void = () => {};
@@ -81,6 +83,7 @@ export abstract class VideoConference {
     protected onLocalVideoInputDisabled?: () => void = () => {};
     protected onTrackMutedStatusChanged?: (track: VideoConferenceTrack) => void = () => {};
     protected onTrackAudioLevelChanged?: (participantId: string, audioLevel: number) => void = () => {};
+    protected onParticipantConnectionStatsUpdated: (participantId: string, stats: JitsiMeetJS.ConferenceStats) => void = () => {};
     protected isDesktopSharingEnabled: boolean = false;
     protected isLocalAudioOutputEnabled: boolean = true;
     protected isLocalAudioInputEnabled: boolean = true;
@@ -126,8 +129,13 @@ export abstract class VideoConference {
         this.onLocalVideoInputDisabled = options.onLocalVideoInputDisabled;
         this.onTrackMutedStatusChanged = options.onTrackMutedStatusChanged;
         this.onTrackAudioLevelChanged = options.onTrackAudioLevelChanged;
+        this.onParticipantConnectionStatsUpdated = options.onParticipantConnectionStatsUpdated;
         this.requestShowMessage = options.requestShowMessage;
     }
+    
+    abstract isE2EEEnabled(): boolean;
+    
+    abstract updateE2EEEnabled(options: Types.VideoConferenceOptions): void;
     
     
     
@@ -152,7 +160,7 @@ export abstract class VideoConference {
     /*****************************************
     *************** Connection ***************
     *****************************************/
-    abstract connect(configuration: VideoConferenceConfiguration, tmpUserName?: string, tmpUserPassword?: string): Q.Promise<void>;
+    abstract connect(connectionOptions: VideoConferenceConnectionOptions): Q.Promise<void>;
     abstract disconnect(): Q.Promise<void>;
     
     

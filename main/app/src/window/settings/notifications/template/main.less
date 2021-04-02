@@ -1,4 +1,5 @@
 @import "../../../../themes/default/less/vars";
+@import "../../../../component/slider/index.less";
 
 .notifications-section {
   .base-form .fields .field input[type=text].invalid {
@@ -44,5 +45,35 @@
   select:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+  .base-form .notifications-volume.field {
+    margin-bottom: -7px;
+    .input {
+      display: flex;
+      align-items: center;
+      margin-left: 233px;
+      .volume-icon {
+        color: var(--body-fg);
+        opacity: 0.75;
+        font-size: var(--font-size);
+      }
+      .volume-slider-container {
+        display: flex;
+        margin-left: 5px;
+        .component-slider {
+          .inner {
+            .fill {
+              background: var(--button-success-bg);
+            }
+            .draggable {
+              box-shadow: var(--body-fg) 0 0 3px;
+            }
+          }
+          .text {
+            color: var(--body-fg);
+          }
+        }
+      }
+    }
   }
 }

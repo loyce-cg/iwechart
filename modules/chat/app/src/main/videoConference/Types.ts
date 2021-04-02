@@ -16,7 +16,18 @@ export interface VideoConferenceConfiguration {
     conferencePassword: string;
     conferenceEncryptionKey: string;
     conferenceEncryptionIV: string;
-    
+}
+
+export interface VideoConferenceOptions {
+    title?: string;
+    experimentalH264?: boolean;
+}
+
+export interface VideoConferenceConnectionOptions {
+    configuration: VideoConferenceConfiguration;
+    tmpUserName?: string;
+    tmpUserPassword?: string;
+    options: VideoConferenceOptions;
 }
 
 export type VideoConferenceConnectionLostReason = "connectingFailed" | "connectionLost" | "disconnected";

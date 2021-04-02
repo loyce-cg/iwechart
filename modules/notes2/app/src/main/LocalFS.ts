@@ -1,13 +1,14 @@
 import * as fs from "fs";
 import * as origFs from "original-fs";
 import * as trash from "trash";
-import * as drivelist from "drivelist";
 import * as ncp from "ncp";
 import * as pathUtils from "path";
 import * as os from "os";
 import { app, utils, Q, mail, privfs } from "pmc-mail";
 import { FileEntryBase } from "./Notes2Utils";
+
 import DirStats = mail.filetree.nt.DirStats;
+
 const hidefile = require("hidefile");
 
 export type LocalEntryType = "file"|"directory";
@@ -114,12 +115,15 @@ export class LocalOpenableElement extends app.common.shelltypes.OpenableElement 
 export class LocalFS {
     
     static REJECT_DIR_NOT_EMPTY = "dir-not-empty";
-    
+    static specialFolders: string[] = [];
     static isWindows: boolean = false;
     static trash: typeof trash = null;
     static staticConstructor(app: app.common.CommonApplication) {
-        if (app.isElectronApp() && LocalFS.trash == null) {
-            LocalFS.trash = require("trash");
+        if (app.isElectronApp()) {
+            LocalFS.prepareSpecialFoldersList(); 
+            if(LocalFS.trash == null) {
+                LocalFS.trash = require("trash");
+            }
         }
         this.isWindows = process.platform == "win32";
     }
@@ -170,26 +174,30 @@ export class LocalFS {
         this.currentPath = path;
         return LocalFS.listEntries(path).then(fileNames => {
             let arr: LocalEntry[] = [];
-            let parentEntry = LocalFS.getEntry(path);
+            let currentEntry = LocalFS.getEntry(path);
+
+            let parentEntry = LocalFS.getEntry(pathUtils.join(path, ".."));
             fileNames.forEach(fn => {
-                let entry = LocalFS.getEntry(fn, parentEntry);
+                let entry = LocalFS.getEntry(fn, currentEntry);
                 if (!entry) {
                     return;
                 }
                 if (LocalFS.isReadable(entry.path, entry.isDirectory())) {
+                    if (LocalFS.isWindows && entry.path.endsWith(":\\")) {
+                        entry.name = entry.path;
+                    }
                     arr.push(entry);
                 }
             });
+
             if (parentEntry && this.currentPath != "/") {
-                let entry = Object.assign({}, parentEntry);
-                let parentDir = entry.path.split("/").slice(0, -1).join("/");
-                if (parentDir == "") {
-                    parentDir = "/";
-                }
-                entry.path = parentDir;
-                entry.id = "parent";
-                entry.name = "..";
-                arr = [entry, ...arr];
+                const isWindowsTopDriveDir = LocalFS.isWindows && path.endsWith(":\\");
+                if (isWindowsTopDriveDir) {
+                    parentEntry.path = "/";
+                }                                
+                parentEntry.name = "..";
+                parentEntry.id = "parent";
+                arr = [parentEntry, ...arr];
             }
             this.currentFileNamesCollection.clear();
             this.currentFileNamesCollection.addAll(arr);
@@ -228,18 +236,14 @@ export class LocalFS {
             }
         }
         let deferred = Q.defer<string[]>();
-        if (path == "/" && LocalFS.isWindows) {
-            drivelist.list().then(driveList => {
-                let driveNamesList: string[] = [];
-                driveList.forEach(drive => {
-                    drive.mountpoints.forEach(mpt => {
-                        driveNamesList.push(mpt.path);
-                    });
-                });
-                deferred.resolve(driveNamesList);
-            }).catch(err => {
-                deferred.reject(err);
-            });
+        if (path == "/" && LocalFS.isWindows) {   
+            LocalFS.importDiskModule().then(nodeDiskInfo => {
+                nodeDiskInfo.getDiskInfo()
+                .then((drivesInfo: any[]) => {
+                    const driveNamesList = drivesInfo.map(x => (<any>x).mounted + "\\");
+                    deferred.resolve(driveNamesList);
+                })    
+            })
         }
         else {
             fs.readdir(path, (err, fileNames) => {
@@ -256,6 +260,37 @@ export class LocalFS {
     
     static moveToTrash(path: string): Q.Promise<void> {
         return Q(LocalFS.trash(path, { glob:false }));
+    }
+
+    static isHomeSpecialFolder(parentEntry: LocalEntry, path: string): boolean {
+        const specialFolders = LocalFS.getSpecialFoldersList();
+        if (process.platform == "darwin") {
+            if (parentEntry && parentEntry.path == os.homedir() && specialFolders.includes(pathUtils.resolve(parentEntry.path, path))) {
+                return true;
+            }
+
+            if (!parentEntry && specialFolders.includes(path)) {
+                return true;
+            }
+
+        }
+        return false;
+    }
+
+    static getSpecialFoldersList(): string[] {
+        return LocalFS.specialFolders;
+    }
+
+    static prepareSpecialFoldersList(): void {
+        const homedir = LocalFS.getHomeDir();
+        LocalFS.specialFolders = [
+            pathUtils.resolve(homedir, "Desktop"),
+            pathUtils.resolve(homedir, "Application"),
+            pathUtils.resolve(homedir, "Documents"),
+            pathUtils.resolve(homedir, "Downloads"),
+            pathUtils.resolve(homedir, "Movies"),
+            pathUtils.resolve(homedir, "Music"),    
+        ];
     }
     
     static getEntry(path: string, parentEntry: LocalEntry = null): LocalEntry {
@@ -279,7 +314,10 @@ export class LocalFS {
         let mime: string = "";
         if (stat.isDirectory()) {
             type = "directory";
-            let counts = LocalFS.countChildren(path);
+            let counts = {directories: 0, files: 0};
+            if (! LocalFS.isHomeSpecialFolder(parentEntry, path)) {
+                counts = LocalFS.countChildren(path);
+            } 
             dirStats = {
                 directoriesCount: counts.directories,
                 filesCount: counts.files,
@@ -542,8 +580,11 @@ export class LocalFS {
         }
     }
     
-    
-    
+    static async importDiskModule(): Promise<any> {
+        const importedModule = await import("node-disk-info");
+        return importedModule;
+    }
+        
     
     
     /****************************************
@@ -654,6 +695,5 @@ export class LocalFS {
     
     static getHomeDir(): string {
         return os.homedir();
-    }
-    
+    }   
 }

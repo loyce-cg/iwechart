@@ -70,6 +70,7 @@
       <div class="controls--center">
         <button class="btn btn-default btn-sm small" data-action="restart-recording"><i class="ico-bin"></i><span>{{@Helper.i18n("window.videorecorder.button.restartRecording." + (isPhoto ? "photo" : "audioVideo"))}}</span></button>
         <button class="btn btn-success btn-sm small" data-action="save"><i class="fa fa-save"></i><span>{{@Helper.i18n("window.videorecorder.button.save." + (isPhoto ? "photo" : hasVideo ? "video" : "audio"))}}</span></button>
+        <button class="btn btn-default btn-sm small" data-action="cancel"><span>{{@Helper.i18n("window.videorecorder.button.cancel")}}</span></button>
       </div>
       <div class="controls--right">
         <span class="switch-container" data-switch-container-for="grayscale" style="{{@hasVideo ? '' : 'display: none;'}}">

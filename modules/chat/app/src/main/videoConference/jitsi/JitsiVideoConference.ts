@@ -1,6 +1,7 @@
 import { Q, window } from "pmc-web";
 import { AvailableDevices, VideoConference, VideoConferenceOptions } from "../VideoConference";
-import { VideoConferenceState, VideoConferenceConfiguration, VideoConferenceParticipant, VideoConferenceConnectionLostReason } from "../Types";
+import { VideoConferenceState, VideoConferenceParticipant, VideoConferenceConnectionLostReason, VideoConferenceConnectionOptions } from "../Types";
+import * as Types from "../Types";
 import { SpecLogger } from "./SpecLogger";
 import { DominantSpeakerService } from "./DominantSpeakerService";
 import { VideoResolutions } from "./VideoResolutions";
@@ -19,7 +20,9 @@ type VideoTrackType = VideoTrackSource;
 export class JitsiVideoConference extends VideoConference {
     
     static readonly ENABLE_E2EE: boolean = true;
+    static readonly ENABLE_E2E_PING: boolean = true;
     
+    protected enableE2EE: boolean = JitsiVideoConference.ENABLE_E2EE;
     protected connection: JitsiMeetJS.JitsiConnection = null;
     protected conference: JitsiMeetJS.JitsiConference = null;
     protected localDesktopTrack: JitsiMeetJS.JitsiLocalTrack = null;
@@ -41,6 +44,14 @@ export class JitsiVideoConference extends VideoConference {
         this.dominantSpeakerService.addOnUpdateHandler(this._onDominantSpeakerChanged.bind(this));
     }
     
+    isE2EEEnabled(): boolean {
+        return this.enableE2EE;
+    }
+    
+    updateE2EEEnabled(options: Types.VideoConferenceOptions): void {
+        this.enableE2EE = JitsiVideoConference.ENABLE_E2EE && !options.experimentalH264;
+    }
+    
     
     
     
@@ -48,7 +59,9 @@ export class JitsiVideoConference extends VideoConference {
     /*****************************************
     ******* Connection and conferences *******
     *****************************************/
-    connect(configuration: VideoConferenceConfiguration, tmpUserName?: string, tmpUserPassword?: string): Q.Promise<void> {
+    connect(connectionOptions: VideoConferenceConnectionOptions): Q.Promise<void> {
+        const { configuration, tmpUserName, tmpUserPassword, options } = connectionOptions;
+        this.updateE2EEEnabled(options);
         let uniqueConnectionId = Math.random().toString(36).substr(2);
         console.log("%c " + uniqueConnectionId, "color:#00ff00;")
         this.uniqueConnectionId = uniqueConnectionId;
@@ -96,17 +109,17 @@ export class JitsiVideoConference extends VideoConference {
                 connectedDeferred.resolve();
             });
             this.connection.addEventListener(JitsiMeetJS.events.connection.CONNECTION_FAILED, (...args: any[]) => {
-                this._onConnectionLost("connectingFailed");
+                this._onConnectionLost("connectingFailed", "JitsiMeetJS.events.connection.CONNECTION_FAILED");
                 connectedDeferred.reject("JitsiVideoConference.connect(): connection failed (JitsiMeetJS.events.connection.CONNECTION_FAILED)");
             });
             this.connection.addEventListener(JitsiMeetJS.events.connection.CONNECTION_DISCONNECTED, () => {
-                this._onConnectionLost("connectionLost");
+                this._onConnectionLost("connectionLost", "JitsiMeetJS.events.connection.CONNECTION_DISCONNECTED");
             });
             this.connection.addEventListener(JitsiMeetJS.errors.connection.SERVER_ERROR, () => {
-                this._onConnectionLost("connectionLost");
+                this._onConnectionLost("connectionLost", "JitsiMeetJS.errors.connection.SERVER_ERROR");
             });
             this.connection.addEventListener(JitsiMeetJS.errors.connection.CONNECTION_DROPPED_ERROR, () => {
-                this._onConnectionLost("connectionLost");
+                this._onConnectionLost("connectionLost", "JitsiMeetJS.errors.connection.CONNECTION_DROPPED_ERROR");
             });
             let ee = (<any>this.connection).xmpp.eventEmitter;
             let orig = ee.emit.bind(ee);
@@ -140,15 +153,20 @@ export class JitsiVideoConference extends VideoConference {
                 openBridgeChannel: "websocket",
                 p2p: {
                     enabled: false,
+                    // enabled: true,
+                    // stunServers: [
+                    //     `stun:${this.configuration.domain}:3478`,
+                    //     `stun:${this.configuration.domain}:443`,
+                    // ],
                 },
                 e2eping: {
-                    pingInterval: -1
+                    pingInterval: JitsiVideoConference.ENABLE_E2E_PING ? 10000 : -1,
                 },
-                // videoQuality: {
-                //     // preferredCodec: "h264",
-                //     // preferredCodec: "h264",
-                //     // disabledCodec: "vp8",
-                // },
+                videoQuality: options.experimentalH264 ? {
+                    preferredCodec: "h264",
+                    // preferredCodec: "vp9",
+                    disabledCodec: "vp8",
+                } : undefined,
             });
             if (!this.conference.isE2EESupported()) {
                 throw VideoConference.ERROR_E2EE_NOT_SUPPORTED;
@@ -189,14 +207,14 @@ export class JitsiVideoConference extends VideoConference {
                 joinedDeferred.resolve();
             });
             this.conference.on(JitsiMeetJS.events.conference.CONFERENCE_FAILED, (...args: any[]) => {
-                this._onConnectionLost("connectingFailed");
+                this._onConnectionLost("connectingFailed", "JitsiMeetJS.events.conference.CONFERENCE_FAILED");
                 joinedDeferred.reject("JitsiVideoConference.connect(): conference failed (JitsiMeetJS.events.conference.CONFERENCE_FAILED)");
             });
             this.conference.addEventListener(JitsiMeetJS.errors.conference.CONNECTION_ERROR, () => {
-                this._onConnectionLost("connectionLost");
+                this._onConnectionLost("connectionLost", "JitsiMeetJS.errors.conference.CONNECTION_ERROR");
             });
             this.conference.addEventListener(JitsiMeetJS.errors.conference.CONFERENCE_DESTROYED, () => {
-                this._onConnectionLost("connectionLost");
+                this._onConnectionLost("connectionLost", "JitsiMeetJS.errors.conference.CONFERENCE_DESTROYED");
             });
             this.conference.addEventListener(JitsiMeetJS.events.conference.PARTICIPANT_PROPERTY_CHANGED, this._onParticipantPropertyChanged.bind(this));
             this.conference.addEventListener(JitsiMeetJS.events.conference.PARTCIPANT_FEATURES_CHANGED, (...args: any[]) => {
@@ -223,6 +241,23 @@ export class JitsiVideoConference extends VideoConference {
             // this.conference.addEventListener(JitsiMeetJS.events.conference.RECORDER_STATE_CHANGED, (...args: any[]) => {
             //     this._log("RECORDER_STATE_CHANGED", args);
             // });
+            // this.conference.addEventListener(JitsiMeetJS.events.conference.ENDPOINT_MESSAGE_RECEIVED, (... args: any[]) => {
+            //     this._log("### conference.ENDPOINT_MESSAGE_RECEIVED", args);
+            // });
+            this.conference.addEventListener(JitsiMeetJS.events.connectionQuality.LOCAL_STATS_UPDATED, (stats: JitsiMeetJS.ConferenceStats) => {
+                const localParticipant = this.getLocalParticipant();
+                if (localParticipant) {
+                    this.updateParticipantConnectionStats(this.localParticipant.id, stats);
+                }
+            });
+            this.conference.addEventListener(JitsiMeetJS.events.connectionQuality.REMOTE_STATS_UPDATED, (participantId: string, stats: JitsiMeetJS.ConferenceStats) => {
+                this.updateParticipantConnectionStats(participantId, stats);
+            });
+            this.conference.addEventListener("e2eping.e2e_rtt_changed", (participant: JitsiMeetJS.JitsiParticipant, e2ePing: number) => {
+                this.updateParticipantConnectionStats(participant._id, {
+                    e2ePing: e2ePing,
+                });
+            });
             this.conference.addEventListener(JitsiMeetJS.events.conference.TRACK_AUDIO_LEVEL_CHANGED, this._onTrackAudioLevelChanged.bind(this));
             this.conference.setDisplayName(encryptedLocalParticipantName);
             if (creatingConference) {
@@ -285,11 +320,17 @@ export class JitsiVideoConference extends VideoConference {
             })
             .then(x => {
                 console.log("D", performance.now());
+                // (<any>this.conference).setReceiverVideoConstraint(2160);
+                // (<any>this.conference).setSenderVideoConstraint(2160);
+                // setTimeout(() => {
+                //     (<any>this.conference).setReceiverVideoConstraint(2160);
+                //     (<any>this.conference).setSenderVideoConstraint(2160);
+                // }, 10000);
                 return x;
             });
         })
         .fail(e => {
-            this._onConnectionLost("connectingFailed");
+            this._onConnectionLost("connectingFailed", `${e}`);
             console.error("JitsiVideoConference.connect():", e);
             throw e;
         });
@@ -308,7 +349,7 @@ export class JitsiVideoConference extends VideoConference {
         return this.cleanup().fin(() => {
             this.setState(VideoConferenceState.DISCONNECTED);
             // Notify
-            this._onConnectionLost("disconnected");
+            this._onConnectionLost("disconnected", "JitsiVideoConference.disconnect()");
         })
         .fail(e => {
             console.error("JitsiVideoConference.disconnect():", e);
@@ -389,7 +430,7 @@ export class JitsiVideoConference extends VideoConference {
     }
     
     protected _areAllRemoteParticipantsE2EEReady(): boolean {
-        if (JitsiVideoConference.ENABLE_E2EE) {
+        if (this.enableE2EE) {
             for (let participantId in this.participants) {
                 let participant = this.participants[participantId];
                 if (!participant.e2ee.enabled || !participant.e2ee.hasKey || !participant.e2ee.hasSignatureKey || !participant.e2ee.supports) {
@@ -408,12 +449,12 @@ export class JitsiVideoConference extends VideoConference {
             }
             // this.clearRemoteTracks();
             // let prom = (<any>this.conference)._e2eEncryption.setEnabled(true);
-            if (JitsiVideoConference.ENABLE_E2EE) {
+            if (this.enableE2EE) {
                 return this.conference.toggleE2EE(true);
             }
         })
         .then(() => {
-            if (JitsiVideoConference.ENABLE_E2EE) {
+            if (this.enableE2EE) {
                 if (!this.conference._isE2EEEnabled()) {
                     throw "Could not enable E2EE";
                 }
@@ -429,7 +470,7 @@ export class JitsiVideoConference extends VideoConference {
     }
     
     protected _enableE2EE(): void {
-        if (JitsiVideoConference.ENABLE_E2EE) {
+        if (this.enableE2EE) {
             SpecLogger.log("TOGGLEE2EE(true)");
             if (this.conference._isE2EEEnabled()) {
                 return;
@@ -450,7 +491,7 @@ export class JitsiVideoConference extends VideoConference {
     }
     
     protected _sendKeys(): void {
-        if (JitsiVideoConference.ENABLE_E2EE) {
+        if (this.enableE2EE) {
             let e = (<any>this.conference)._e2eEncryption;
             e._olmAdapter.updateKey(e._key).then((index:any) => {
                 e._e2eeCtx.setKey(this.conference.myUserId(), e._key, index);
@@ -458,7 +499,7 @@ export class JitsiVideoConference extends VideoConference {
         }
     }
     
-    protected _onConnectionLost(reason: VideoConferenceConnectionLostReason): void {
+    protected _onConnectionLost(reason: VideoConferenceConnectionLostReason, extraInfo: string): void {
         console.warn("-onconlost");
         this.stopLocalAudioLevelObserver();
         this.uniqueConnectionId = null;
@@ -469,7 +510,7 @@ export class JitsiVideoConference extends VideoConference {
         this.cleanup().fin(() => {
             console.warn("cleaned, set stte");
             this.setState(VideoConferenceState.DISCONNECTED);
-            this.onConnectionLost(reason);
+            this.onConnectionLost(reason, extraInfo);
         })
         .then(x=>console.log("Y",x))
         .fail(e=>console.error("X",e));
@@ -994,8 +1035,14 @@ export class JitsiVideoConference extends VideoConference {
     }
     
     private createDesktopTrack(): Q.Promise<void> {
-        let options: JitsiMeetJS.JitsiCreateLocalTracksOptions = {
+        let options: JitsiMeetJS.JitsiCreateLocalTracksOptions = <any>{
             devices: ["desktop"],
+            // minFps: 30,
+            // maxFps: 30,
+            // desktopSharingFrameRate:{
+            //     min: 30,
+            //     max: 30,
+            // },
         };
         return Q().then(() => {
             return JitsiMeetJS.createLocalTracks(options);
@@ -1054,7 +1101,7 @@ export class JitsiVideoConference extends VideoConference {
         if (!participant) {
             return false;
         }
-        if (JitsiVideoConference.ENABLE_E2EE) {
+        if (this.enableE2EE) {
             return participant.e2ee.enabled && participant.e2ee.hasKey && participant.e2ee.hasSignatureKey;
         }
         else {
@@ -1154,6 +1201,10 @@ export class JitsiVideoConference extends VideoConference {
         return this.participants[localParticipantId];
     }
     
+    updateParticipantConnectionStats(participantId: string, stats: JitsiMeetJS.ConferenceStats): void {
+        this.onParticipantConnectionStatsUpdated(participantId, stats);
+    }
+    
     
     
     
@@ -1205,8 +1256,11 @@ export class JitsiVideoConference extends VideoConference {
     }
     
     setVideoFrameSignatureVerificationRatioInverse(videoFrameSignatureVerificationRatioInverse: number): void {
-        if (this.conference && this.conference._e2eEncryption && this.conference._e2eEncryption._e2eeCtx) {
-            this.conference._e2eEncryption._e2eeCtx.setVideoFrameSignatureVerificationRatioInverse(videoFrameSignatureVerificationRatioInverse);
+        try {
+            this.conference.setVideoFrameSignatureVerificationRatioInverse(videoFrameSignatureVerificationRatioInverse);
+        }
+        catch (e) {
+            console.error("Could not set videoFrameSignatureVerificationRatioInverse", e);
         }
     }
 }

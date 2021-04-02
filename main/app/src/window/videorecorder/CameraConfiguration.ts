@@ -96,7 +96,7 @@ export class CameraConfiguration {
     private _properties: Properties | null;
     private _knownResolutions: VideoResolution[];
     
-    constructor(mediaStream: MediaStream, knownResolutions?: VideoResolution[]) {
+    constructor(mediaStream: MediaStream, knownResolutions?: VideoResolution[], private baseCameraConfiguration?: CameraConfiguration) {
         this._mediaStream = mediaStream;
         this._knownResolutions = knownResolutions ? knownResolutions: JSON.parse(JSON.stringify(CameraConfiguration.KNOWN_RESOLUTIONS));
         this._updatePropertiesFromCurrentMediaStream();
@@ -127,6 +127,10 @@ export class CameraConfiguration {
             sharpness: this._createRangeProperty("sharpness", capabilities, settings),
             width: this._createRangeProperty("width", capabilities, settings),
         };
+        if (this.baseCameraConfiguration) {
+            this.setResolution(this.baseCameraConfiguration.getResolution());
+            this.setSaturation(this.baseCameraConfiguration.getSaturation());
+        }
     }
     
     private _getVideoTrack(): MediaStreamTrack {

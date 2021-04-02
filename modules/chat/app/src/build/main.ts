@@ -8,6 +8,7 @@ import { VideoConferenceController } from "../component/videoconference/VideoCon
 import { VideoConferenceWindowController } from "../window/videoConference/VideoConferenceWindowController";
 import { NoSectionsController } from "../component/nosections/NoSectionsController";
 import { DesktopPickerController } from "../component/desktoppicker/DesktopPickerController";
+import { ConnectionStatsTooltipController } from "../component/connectionstatstooltip/ConnectionStatsTooltipController";
 
 let Logger = Mail.Logger.get("privfs-chat-plugin.Plugin");
 
@@ -24,6 +25,7 @@ export class Plugin {
         VideoConferenceController.registerTexts(app.localeService);
         NoSectionsController.registerTexts(app.localeService);
         DesktopPickerController.registerTexts(app.localeService);
+        ConnectionStatsTooltipController.registerTexts(app.localeService);
         
         // i18n: windows
         ChatWindowController.registerTexts(app.localeService);
@@ -34,6 +36,7 @@ export class Plugin {
         app.ioc.registerComponent("videoconference", VideoConferenceController);
         app.ioc.registerComponent("nosections", NoSectionsController);
         app.ioc.registerComponent("desktoppicker", DesktopPickerController);
+        app.ioc.registerComponent("connectionstatstooltip", ConnectionStatsTooltipController);
 
         app.localeService.sinkPollingTasks.push(app.localeService.i18n("plugin.chat.app.task.sinkPolling.chats"));
         

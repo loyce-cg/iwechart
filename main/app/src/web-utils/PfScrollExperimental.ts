@@ -55,6 +55,8 @@ export class PfScrollExperimental {
         this.$ele.append(this.$scrollPanel);
         this.$scrollPanel.append(this.$scroll);
         this.$scroll.append(this.$mover);
+        (this.$content[0].style as any).willChange = "transform";
+        (this.$scroll[0].style as any).willChange = "transform";
         this.horizontal = this.$ele.hasClass("pf-scrollable-horizontal");
         $("body").append(this.$backdrop);
         

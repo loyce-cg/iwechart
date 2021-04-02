@@ -16,6 +16,9 @@ export class UploadServiceWindowView extends BaseWindowView<UploadServiceOptions
     $progressBar: JQuery;
     $progress: JQuery;
     $buttons: JQuery;
+    $closeButton: JQuery;
+    $cancellAllButton: JQuery;
+    $completed: JQuery;
     filesList: ExtListView<UploadFileItem>;
 
     constructor(parent: app.ViewParent) {
@@ -26,6 +29,7 @@ export class UploadServiceWindowView extends BaseWindowView<UploadServiceOptions
         this.options = model;
         this.$main.on("click", "[data-action=open]", this.onOpenFileClick.bind(this));
         this.$main.on("click", "[data-action=cancel]", this.onCancelFileUploadClick.bind(this));
+        this.$main.on("click", "[data-action=cancel-all]", this.onCancelAllUploadsClick.bind(this));
         this.$main.on("click", "[data-action=retry]", this.onRetryFileUploadClick.bind(this));
         this.$main.on("click", "[data-action=close]", this.onClose.bind(this));
 
@@ -33,6 +37,9 @@ export class UploadServiceWindowView extends BaseWindowView<UploadServiceOptions
         this.$progressBar = this.$main.find(".progress-indicator");
         this.$progress = this.$progressBar.find(".percent");
         this.$buttons = this.$main.find(".buttons");
+        this.$closeButton = this.$buttons.find("[data-action=close]");
+        this.$cancellAllButton = this.$buttons.find("[data-action=cancel-all]");
+        this.$completed = this.$buttons.find(".completed");
         this.$files.pfScroll();
 
         this.filesList = this.addComponent("filesList", new ExtListView(this, {
@@ -65,27 +72,32 @@ export class UploadServiceWindowView extends BaseWindowView<UploadServiceOptions
     
 
     setProgress(el: HTMLElement): void {
-        let $el = $(el);
-        let status = $el.data("progress-status");
-        let percent = status == "done" ? 100 : Math.round(Number($el.data("progress")));
         
-        let circle = <any>$el.find("circle")[0];
-        let radius = circle.r.baseVal.value;
-        let circumference = radius * 2 * Math.PI;
+        // let $el = $(el);
+        // let status = $el.data("progress-status");
+        // let percent = status == "done" ? 100 : Math.round(Number($el.data("progress")));
+        
+        // let circle = <any>$el.find("circle")[0];
+        // let radius = circle.r.baseVal.value;
+        // let circumference = radius * 2 * Math.PI;
 
-        circle.style.strokeDasharray = `${circumference} ${circumference}`;
-        circle.style.strokeDashoffset = `${circumference}`;
+        // circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        // circle.style.strokeDashoffset = `${circumference}`;
 
-        const offset = circumference - percent / 100 * circumference;
-        circle.style.strokeDashoffset = offset;
+        // const offset = circumference - percent / 100 * circumference;
+        // circle.style.strokeDashoffset = offset;
   
     }
 
     updateTotalProgress(progress: number): void {
-        let roundedProgress = Math.round(progress);
+        const roundedProgress = Math.round(progress);
+        const uploadsInProgress = roundedProgress < 100;
+
         this.$progress.text(roundedProgress + "%");
-        this.$progressBar.toggleClass("hide", roundedProgress == 100);
-        this.$buttons.toggleClass("hide", roundedProgress < 100);
+        this.$progressBar.toggleClass("hide", ! uploadsInProgress);
+        this.$completed.toggleClass("hide", uploadsInProgress)
+        this.$closeButton.toggleClass("hide", uploadsInProgress);
+        this.$cancellAllButton.toggleClass("hide", ! uploadsInProgress);
     }
 
     onOpenFileClick(e: MouseEvent): void {
@@ -94,6 +106,10 @@ export class UploadServiceWindowView extends BaseWindowView<UploadServiceOptions
 
     onCancelFileUploadClick(e: MouseEvent): void {
         this.triggerEvent("cancelFileUpload", this.getFileIdByMouseEvent(e));
+    }
+
+    onCancelAllUploadsClick(_e: MouseEvent): void {
+        this.triggerEvent("cancelAllUploads");
     }
 
     onRetryFileUploadClick(e: MouseEvent): void {

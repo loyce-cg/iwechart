@@ -1,9 +1,9 @@
 import * as Q from "q";
 import Promise = Q.Promise;
 import * as RootLogger from "simplito-logger";
+import { app } from "../Types";
 let Logger = RootLogger.get("privfs-mail-client.webutils.AudioPlayer");
 
-export type AudioBuffer = number;
 export type AudioDestination = number;
 export interface AudioSource {
     buffer: AudioBuffer;
@@ -11,16 +11,7 @@ export interface AudioSource {
     connect(destination: AudioDestination): void;
     onended: () => void;
 }
-export interface AudioContextType {
-    destination: AudioDestination;
-    state: string;
-    onstatechange: () => void;
-    resume(): void;
-    suspend(): void;
-    close(): void;
-    decodeAudioData(data: any, successCallback: (buffer: AudioBuffer) => void, errorCallback: (e: any) => void): void;
-    createBufferSource(): AudioSource;
-}
+export type AudioContextType = AudioContext;
 let AudioContext: {new(): AudioContextType} = (<any>window).AudioContext || (<any>window).webkitAudioContext;
 
 export class AudioPlayer {
@@ -30,6 +21,8 @@ export class AudioPlayer {
     enabled: boolean;
     playingSourceCount: number;
     context: AudioContextType;
+    private contextGainNode: GainNode;
+    private defaultVolume: number = 1.0;
     
     constructor() {
         this.sounds = {};
@@ -53,12 +46,13 @@ export class AudioPlayer {
         return Promise((resolve, reject) => {
             Logger.debug("prepare", id, url);
             let request = new XMLHttpRequest();
-            request.open('GET', url, true);
-            request.responseType = 'arraybuffer';
+            request.open("GET", url, true);
+            request.responseType = "arraybuffer";
             request.onload = () => {
                 let context = this.context;
                 if (!context) {
-                    context=this.context = new AudioContext();
+                    this.createAudioContext();
+                    context = this.context;
                 }
                 this.context.decodeAudioData(request.response, buffer => {
                     Logger.debug("decoded", id);
@@ -68,6 +62,23 @@ export class AudioPlayer {
             };
             request.send();
         });
+    }
+    
+    createAudioContext(): void {
+        if (this.context && this.contextGainNode) {
+            this.contextGainNode.disconnect(this.context.destination);
+        }
+        this.context = new AudioContext();
+        this.contextGainNode = this.context.createGain();
+        this.contextGainNode.gain.value = this.defaultVolume;
+        this.contextGainNode.connect(this.context.destination);
+    }
+    
+    setDefaultVolume(defaultVolume: number): void {
+        this.defaultVolume = defaultVolume;
+        if (this.contextGainNode) {
+            this.contextGainNode.gain.value = defaultVolume;
+        }
     }
     
     getBuffer(id: string): Q.Promise<AudioBuffer> {
@@ -85,8 +96,8 @@ export class AudioPlayer {
         });
     }
     
-    play(id: string, force: boolean = false): void {
-        if (!this.enabled && !force) {
+    play(id: string, options: app.PlayAudioOptions): void {
+        if (!this.enabled && !options.force) {
             Logger.debug("play - skipped", id);
             return;
         }
@@ -95,13 +106,15 @@ export class AudioPlayer {
         .then(buffer => {
             let source = this.context.createBufferSource();
             source.buffer = buffer;
-            source.connect(this.context.destination);
             if (this.context.state == "suspended") {
                 this.context.resume();
             }
             this.playingSourceCount++;
+            this.contextGainNode.gain.value = typeof(options.defaultVolume) === "number" ? options.defaultVolume : this.defaultVolume;
+            source.connect(this.contextGainNode);
             source.start(0);
             source.onended = () => {
+                source.disconnect(this.contextGainNode);
                 this.playingSourceCount--;
                 if (this.playingSourceCount == 0) {
                     this.context.suspend();
@@ -114,7 +127,7 @@ export class AudioPlayer {
         return Q().then(() => {
             if (!this.enabled) {
                 Logger.debug("enabling");
-                this.context = new AudioContext();
+                this.createAudioContext();
                 this.context.onstatechange = () => {
                     if (this.context) {
                         Logger.debug("audio context state change:", this.context.state);

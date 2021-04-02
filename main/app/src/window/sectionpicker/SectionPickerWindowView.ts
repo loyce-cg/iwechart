@@ -71,8 +71,8 @@ export class SectionPickerWindowView extends BaseWindowView<Model> {
     }
 
     setSectionsChangeLock(lock: boolean): void {
-        // this.$main.find("[data-action=add]").prop("disabled", lock);
-        this.$main.find(".sections-list-lock-overlay").css("display", lock ? "block" : "none");
+        this.$main.find(".sections-list-title").toggleClass("hide", lock);
+        this.$main.find(".sections-list").toggleClass("hide", lock);
     }
 
 

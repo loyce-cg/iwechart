@@ -6,6 +6,7 @@ import {Inject} from "../../../utils/Decorators"
 import { LocaleService, MailConst } from "../../../mail";
 import { i18n } from "../i18n";
 import { SoundsCategory, Sound, SoundsLibrary } from "../../../sounds/SoundsLibrary";
+import { SliderController } from "../../../component/slider/SliderController";
 
 export interface SimpleNotificationEntry {
     userPreferencesKey: string;
@@ -16,6 +17,7 @@ export interface SimpleNotificationEntry {
 export interface Model {
     uiNotifications: boolean;
     notifications: Notifications;
+    notificationsVolume: number;
     entries: SimpleNotificationEntry[];
     uiAppSilentMode: boolean;
     audioNotifications: boolean;
@@ -29,6 +31,7 @@ export interface Model {
 
 export interface PartialResult {
     // notifications: boolean;
+    notificationsVolume: number;
     audioNotifications: boolean;
 }
 
@@ -46,12 +49,20 @@ export class NotificationsController extends BaseController {
     @Inject notifications: utils.Option<mail.NotificationEntry[]>;
     
     soundsLibrary: SoundsLibrary = new SoundsLibrary();
+    volumeSlider: SliderController;
     
     constructor(parent: SettingsWindowController) {
         super(parent);
         this.ipcMode = true;
         this.userPreferences = this.parent.userPreferences;
         this.notifications = this.parent.notifications;
+        this.volumeSlider = this.addComponent("volumeSlider", this.componentFactory.createComponent("slider", [this, {
+            onUserValueChange: value => {
+                this.volumeSlider.value = value;
+            },
+        }]));
+        this.volumeSlider.setMax(1.0);
+        this.volumeSlider.setValue(1.0);
     }
     
     prepare(): void {
@@ -66,6 +77,7 @@ export class NotificationsController extends BaseController {
         let model: Model = {
             uiNotifications: this.getGlobalNotificationsEnabled(),
             notifications: this.userPreferences.getValue<Notifications>("notifications", defaultValue),
+            notificationsVolume: this.getNotificationsVolume(),
             entries: entries.value.filter(x => x.userPreferencesKey != "mails").map(this.convertNotificationEntry),
             uiAppSilentMode: this.app.getSilentMode(),
             audioNotifications: this.getAudioNotificationsEnabled(),
@@ -76,6 +88,7 @@ export class NotificationsController extends BaseController {
             })),
             isElectron: this.app.isElectronApp()
         };
+        this.volumeSlider.setValue(model.notificationsVolume);
         this.callViewMethod("renderContent", model);
     }
     
@@ -100,7 +113,7 @@ export class NotificationsController extends BaseController {
     }
     
     onViewPlay(sound: string): void {
-        this.app.playAudio(sound, true);
+        this.app.playAudio(sound, { force: true, defaultVolume: this.volumeSlider.value });
     }
     
     getAudioNotificationsEnabled(): boolean {
@@ -111,6 +124,14 @@ export class NotificationsController extends BaseController {
         this.userPreferences.set(MailConst.UI_AUDIO, value, true);
     }
     
+    getNotificationsVolume(): number {
+        return this.userPreferences.getValue(MailConst.UI_NOTIFICATIONS_VOLUME, 1.0);
+    }
+    
+    setNotificationsVolume(value: number) {
+        this.userPreferences.set(MailConst.UI_NOTIFICATIONS_VOLUME, value, true);
+    }
+    
     onViewSavePartialResult(resultStr: string): void {
         let result: PartialResult = JSON.parse(resultStr);
         // if (this.getGlobalNotificationsEnabled() != result.notifications) {
@@ -118,6 +139,9 @@ export class NotificationsController extends BaseController {
         // }
         if (this.getAudioNotificationsEnabled() != result.audioNotifications) {
             this.setAudioNotificationsEnabled(result.audioNotifications);
+        }
+        if (this.getNotificationsVolume() != result.notificationsVolume) {
+            this.setNotificationsVolume(result.notificationsVolume);
         }
     }
     

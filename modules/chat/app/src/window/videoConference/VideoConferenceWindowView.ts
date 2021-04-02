@@ -1,4 +1,4 @@
-import { component, window as wnd, Q, JQuery as $, Types, Logger as RootLogger } from "pmc-web";
+import { component, window as wnd, Q, JQuery as $, Types, Logger as RootLogger, webUtils } from "pmc-web";
 import { func as mainTemplate } from "./template/main.html";
 import { Model } from "./VideoConferenceWindowController";
 import { VideoConferenceView } from "../../component/videoconference/VideoConferenceView";
@@ -29,6 +29,11 @@ export class VideoConferenceWindowView extends wnd.base.BaseWindowView<Model> {
         this.personTooltip = new component.persontooltip.PersonTooltipView(this.templateManager, this.personsComponent);
         $(window).on("resize", () => {
             this.updateControlsContainerMiniState();
+        });
+        window.addEventListener("keydown", e => {
+            if (e.key == "7" && webUtils.WebUtils.hasCtrlModifier(e)) {
+                document.body.classList.toggle("show-connection-quality-indicators");
+            }
         });
     }
     

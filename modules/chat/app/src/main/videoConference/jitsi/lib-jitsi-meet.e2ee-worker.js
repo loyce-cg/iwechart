@@ -261,6 +261,7 @@ const RATCHET_WINDOW_SIZE = 8;
 class Context_Context {
     /**
      * @param {string} id - local muc resourcepart
+     * @param {number} videoFrameSignatureVerificationRatioInverse - one in ${videoFrameSignatureVerificationRatioInverse} frames will be verified
      */
     constructor(id, videoFrameSignatureVerificationRatioInverse) {
         // An array (ring) of keys that we use for sending and receiving.
@@ -307,10 +308,15 @@ class Context_Context {
      * Sets a set of keys and resets the sendCount.
      * decryption.
      * @param {Object} keys set of keys.
+     * @param {Number} keyIndex optional
      * @private
      */
-    _setKeys(keys) {
-        this._cryptoKeyRing[this._currentKeyIndex] = keys;
+    _setKeys(keys, keyIndex = -1) {
+        if (keyIndex >= 0) {
+            this._cryptoKeyRing[keyIndex] = keys;
+        } else {
+            this._cryptoKeyRing[this._currentKeyIndex] = keys;
+        }
         this._sendCount = BigInt(0); // eslint-disable-line new-cap
     }
 
@@ -478,7 +484,7 @@ class Context_Context {
         const data = new Uint8Array(encodedFrame.data);
         const keyIndex = data[encodedFrame.data.byteLength - 1] & 0xf; // lower four bits.
 
-        if (this._cryptoKeyRing[keyIndex]) {
+        if (this._cryptoKeyRing[this._currentKeyIndex] && this._cryptoKeyRing[keyIndex]) {
             const counterLength = 1 + ((data[encodedFrame.data.byteLength - 1] >> 4) & 0x7);
             const signatureLength = data[encodedFrame.data.byteLength - 1] & 0x80
                 ? this._signatureOptions.byteLength : 0;
@@ -506,11 +512,7 @@ class Context_Context {
 
                             return;
                         }
-                        // console.log("1/verified");
                     }
-                    // else {
-                    //     console.log("2/skipped verification");
-                    // }
 
                     // TODO: surface this to the app. We are now encrypted and verified.
                 } else {
@@ -541,7 +543,7 @@ class Context_Context {
                         new Uint8Array(calculatedTag.slice(0, DIGEST_LENGTH[encodedFrame.type])))) {
                     validAuthTag = true;
                     if (distance > 0) {
-                        this._setKeys(newKeys);
+                        this._setKeys(newKeys, keyIndex);
                     }
                     break;
                 }
@@ -608,12 +610,6 @@ class Context_Context {
                     controller.enqueue(encodedFrame);
                 }
             });
-        } else if (keyIndex >= this._cryptoKeyRing.length && this._cryptoKeyRing[this._currentKeyIndex]) {
-            // If we are encrypting but don't have a key for the remote drop the frame.
-            // This is a heuristic since we don't know whether a packet is encrypted,
-            // do not have a checksum and do not have signaling for whether a remote participant does
-            // encrypt or not.
-            return;
         }
 
         // TODO: this just passes through to the decoder. Is that ok? If we don't know the key yet
@@ -700,7 +696,6 @@ onmessage = async event => {
         contexts.delete(participantId);
     } else if (operation === 'setVideoFrameSignatureVerificationRatioInverse') {
         videoFrameSignatureVerificationRatioInverse = event.data.videoFrameSignatureVerificationRatioInverse;
-        console.log("WORKER: setVideoFrameSignatureVerificationRatioInverse", videoFrameSignatureVerificationRatioInverse);
         for (var entry of contexts.entries()) {
             const context = entry[1];
             context._videoFrameSignatureVerificationRatioInverse = videoFrameSignatureVerificationRatioInverse;

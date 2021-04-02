@@ -3,7 +3,7 @@
 {{
   const hasButtons = model.buttons && model.buttons.length > 0;
 }}
-<div class="simple-popup {{@hasButtons ? 'with-buttons' : 'without-buttons'}}">
+<div class="simple-popup {{@hasButtons ? 'with-buttons' : 'without-buttons'}}" data-horizontal-placement="{{@model.horizontalPlacement}}" data-vertical-placement="{{@model.verticalPlacement}}" data-theme="{{@model.theme || 'light'}}" style="--adornment-offset: {{@model.adornmentOffset||15}}px;">
   <div class="content-wrapper">
     <div class="content">
     </div>

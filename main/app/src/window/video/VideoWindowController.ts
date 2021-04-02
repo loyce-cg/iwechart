@@ -14,10 +14,12 @@ export class VideoWindowController extends EditorWindowController {
     }
     
     size: {width: number, height: number};
+    protected auotPlay: boolean;
     
-    constructor(parent: app.WindowParent, public session: Session, options: Options) {
+    constructor(parent: app.WindowParent, public session: Session, options: Options & { autoPlay?: boolean }) {
         super(parent, session, __filename, __dirname, options);
         this.ipcMode = true;
+        this.auotPlay = !!options.autoPlay;
         const initialWindowSize = this.calculateAdaptiveWindowSize();
         this.openWindowOptions.width = initialWindowSize.width;
         this.openWindowOptions.height = initialWindowSize.height;
@@ -54,6 +56,11 @@ export class VideoWindowController extends EditorWindowController {
             this.nwin.setInnerSize(windowSize.width + 2, windowSize.height + 52);
             this.nwin.center();
         }
+    }
+    
+    onViewLoad(): void {
+        super.onViewLoad();
+        this.callViewMethod("setAutoPlay", this.auotPlay);
     }
     
     refreshTitle(): void {

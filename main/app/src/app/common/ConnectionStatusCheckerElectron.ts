@@ -57,7 +57,10 @@ export class ConnectionStatusCheckerElectron {
     registerPowerEvents(): void {
         if (! this.powerMonitor) {
             this.powerMonitor = this.app.getPowerMonitor();
-            this.powerMonitor.on("resume", this.onResumeFunc);
+            this.powerMonitor.on("resume", () => {
+                this.app.log("Reconnect on power resume event");
+                this.onResumeFunc();
+            });
         }
     }
 

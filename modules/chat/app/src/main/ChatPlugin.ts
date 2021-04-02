@@ -13,6 +13,8 @@ import { VideoConferenceWindowController } from "../window/videoConference/Video
 import { NoSectionsController } from "../component/nosections/NoSectionsController";
 import { DesktopPickerController } from "../component/desktoppicker/DesktopPickerController";
 import { mail } from "pmc-mail";
+import { ConnectionStatsTooltipController } from "../component/connectionstatstooltip/ConnectionStatsTooltipController";
+import { VideoConferenceOptions } from "./videoConference/Types";
 
 let Logger = Mail.Logger.get("privfs-chat-plugin.ChatPlugin");
 
@@ -139,6 +141,7 @@ export type ChatComponentFactory = Mail.component.ComponentFactory&{
     createComponent(componentName: "videoconference", args: [Mail.window.base.BaseWindowController, Mail.app.common.videoconferences.RoomMetadata]): VideoConferenceController;
     createComponent(componentName: "nosections", args: [Mail.window.base.BaseWindowController]): NoSectionsController;
     createComponent(componentName: "desktoppicker", args: [Mail.window.base.WindowComponentController<Mail.window.base.BaseWindowController>]): DesktopPickerController;
+    createComponent(componentName: "connectionstatstooltip", args: [Mail.window.base.WindowComponentController<Mail.window.base.BaseWindowController>]): ConnectionStatsTooltipController;
 }
 
 export interface ChatValidMessageTypeForDisplayChangeEvent extends Mail.Types.event.Event {
@@ -252,6 +255,7 @@ export class ChatPlugin {
         this.usersGroupApi = null;
         this.loadChannelsPromise = null;
         this.onLoginPromise = null;
+        this.chatUnreadCountModel.setWithCheck(0);
         this.chatUnreadCountFullyLoadedModel.setWithCheck(false);
         this.sectionsWithSpinner = {};
         
@@ -1180,7 +1184,7 @@ export class ChatPlugin {
         
     }
     
-    switchVideoConference(session: Mail.mail.session.Session, section: Mail.mail.section.SectionService, conversation: Mail.mail.section.Conv2Section, title: string): Q.Promise<void> {
+    switchVideoConference(session: Mail.mail.session.Session, section: Mail.mail.section.SectionService, conversation: Mail.mail.section.Conv2Section, options: VideoConferenceOptions): Q.Promise<void> {
         let wnd = this.currentVideoConferenceWindowController;
         let def = Q.defer<void>();
         wnd.closeDeferred.promise.then(() => {
@@ -1193,7 +1197,8 @@ export class ChatPlugin {
                 conversation: conversation,
                 roomMetadata: {
                     creatorHashmail: session.conv2Service.identity.hashmail,
-                    title: title,
+                    title: options.title,
+                    experimentalH264: options.experimentalH264,
                 },
             });
             
@@ -1286,7 +1291,10 @@ export class ChatPlugin {
                         session,
                         section.isUserGroup() ? null : section,
                         conv2section,
-                        "",
+                        {
+                            title: "",
+                            experimentalH264: false,
+                        },
                     );
                 }
                 else if (result.result == "no") {

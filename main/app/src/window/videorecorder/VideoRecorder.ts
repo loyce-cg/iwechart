@@ -7,6 +7,7 @@ export interface VideoRecorderOptions {
     videoInput: string;
     audioInput: string;
     audioOutput: string;
+    baseCameraConfiguration: CameraConfiguration | null;
 }
 
 export class VideoRecorder {
@@ -18,6 +19,10 @@ export class VideoRecorder {
     private _cameraConfiguration: CameraConfiguration | null = null;
     
     constructor(private options: VideoRecorderOptions) {
+    }
+    
+    getCameraConfiguration(): CameraConfiguration | null {
+        return this._cameraConfiguration;
     }
     
     async setup(): Promise<void> {
@@ -35,7 +40,7 @@ export class VideoRecorder {
         }
         this._mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
         if (this.options.videoInput) {
-            this._cameraConfiguration = new CameraConfiguration(this._mediaStream);
+            this._cameraConfiguration = new CameraConfiguration(this._mediaStream, undefined, this.options.baseCameraConfiguration);
         }
     }
     

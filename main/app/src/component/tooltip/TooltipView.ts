@@ -61,6 +61,10 @@ export class TooltipView extends ComponentView {
         }
     }
     
+    getCurrentTargetId(): string {
+        return this.currTargetId;
+    }
+    
     checkTargetId(): void {
         if (this.currTargetId && this.$lastTarget) {
             let targetId = this.$lastTarget.data(this.tooltipName + "-id");

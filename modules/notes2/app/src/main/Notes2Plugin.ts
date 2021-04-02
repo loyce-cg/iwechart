@@ -420,6 +420,7 @@ export class Notes2Plugin {
         this.files2Sections = {};
         this.filesSections = {};
         this.filesRootSections = {};
+        this.filesUnreadCountModel.setWithCheck(0);
         this.filesUnreadCountFullyLoadedModel.setWithCheck(false);
         this.unreadFilesBySection = {};
         this.unreadFileIds = {};

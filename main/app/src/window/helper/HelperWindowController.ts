@@ -31,9 +31,15 @@ export class HelperWindowController extends BaseWindowController {
         this.silentMode = value;
     }
     
-    playAudio(soundName: string, force: boolean = false, _ignoreSilentMode: boolean = undefined): void {
-        if (! this.silentMode || (this.silentMode && force) || _ignoreSilentMode === true) {
-            this.callViewMethod("playAudio", soundName, force);
+    playAudio(soundName: string, _options?: app.PlayAudioOptions): void {
+        const options: app.PlayAudioOptions = {
+            force: false,
+            ignoreSilentMode: false,
+            defaultVolume: undefined,
+            ..._options,
+        };
+        if (! this.silentMode || (this.silentMode && options.force) || options.ignoreSilentMode === true) {
+            this.callViewMethod("playAudio", soundName, options);
         } 
     }
     
@@ -42,6 +48,12 @@ export class HelperWindowController extends BaseWindowController {
         if (this.viewLoaded) {
             this.callViewMethod("setAudioEnabled", this.audioEnabled);
         }
+    }
+    
+    setDefaultVolume(volume: number): void {
+        this.viewLoadedDeferred.promise.then(() => {
+            this.callViewMethod("setDefaultVolume", volume);
+        });
     }
     
     onViewLoad(): void {

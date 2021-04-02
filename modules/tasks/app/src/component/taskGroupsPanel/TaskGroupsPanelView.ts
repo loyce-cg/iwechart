@@ -2044,7 +2044,7 @@ export class TaskGroupsPanelView extends component.base.ComponentView {
             return;
         }
         let taskFullId = ptr.projectId + "/" + ptr.taskGroupId + "/" + ptr.taskId;
-
+        
         Q().then(() => {
             if (this.previewDirty) {
                 this.previewExit = Q.defer();
@@ -2062,7 +2062,8 @@ export class TaskGroupsPanelView extends component.base.ComponentView {
             }
             else {
                 // Select only this one
-                this.selectTask(taskFullId, false); 
+                const isTaskAlreadySelected = this.selectedTasks.includes(taskFullId);
+                this.selectTask(taskFullId, !isTaskAlreadySelected); 
                 // HACK: drugi parameter jest false (bez odznaczania innych taskow) bo jezeli ktos w tym momencie zacznie przeciagac
                 // to straci wczesniej zaznaczone inne taski
                 // W przypadku, jezeli nie zacznie przeciagac i pusci przycisk myszy - zostanie odpalona metoda onTaskMouseUp, gdzie

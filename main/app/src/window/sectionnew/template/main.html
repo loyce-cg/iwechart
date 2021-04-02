@@ -10,10 +10,10 @@
         <div class="field-value">
           <div class="wi-element">
             <div class="wi-element-inner">
-              <div class="wi-element-icon bckg-icon bckg-icon-inverse2" vf-class="{'bckg-icon-border':this.parentScope == 'private', 'not-selected':this.parentId == 'not-selected'}">
+              <div class="wi-element-icon bckg-icon bckg-icon-inverse2" vf-class="{'bckg-icon-border':this.parentScope == 'private', 'not-selected':this.parentId == null}">
                 <img src="{{@Helper.getAssetByName('DEFAULT_PRIVMX_ICON')}}" />
               </div>
-              <span class="parent-name" vf-model="parentName" vf-class="{'hide': this.parentId == 'not-selected'}"></span>
+              <span class="parent-name" vf-model="parentName" vf-class="{'not-selected': this.parentId == null}"></span>
               <!-- <button class="btn btn-link link edit-btn" vf-visible="editable" vf-click="move()" vf-disabled="loading" vf-class="{'btn-value': this.parentId == 'not-selected'}">
                 <span vf-visible="{this.parentId == 'not-selected'}">{{@Helper.i18n("window.sectionNew.selectSection")}}</span>
                 <span vf-visible="{this.parentId != 'not-selected'}">{{@Helper.i18n("core.button.change.label")}}</span>
@@ -95,10 +95,10 @@
   <div class="buttons-container">
     <div class="buttons">
       <button class="btn btn-success" vf-visible="parentId != 'not-selected'" vf-click="confirm()" vf-disabled="loading" tabindex="1">
-        <i class="fa" vf-class="{'fa-plus': this.mode == 'create' && !this.saving, 'fa-floppy-o': this.mode == 'update' && !this.saving, 'fa-circle-o-notch': this.saving, 'fa-spin': this.saving}"></i>
+        <i class="fa" vf-class="{'fa-floppy-o': this.mode == 'update' && !this.saving, 'fa-circle-o-notch': this.saving, 'fa-spin': this.saving}"></i>
         <span vf-visible="mode == 'create'">
           <span vf-visible="saving == false">
-            {{@Helper.i18n("core.button.add.label")}}
+            {{@Helper.i18n("window.sectionNew.actions.add.label")}}
           </span>
           <span vf-visible="saving">
             {{@Helper.i18n("core.button.adding.label")}}

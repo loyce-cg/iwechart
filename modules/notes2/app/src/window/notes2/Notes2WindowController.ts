@@ -240,6 +240,7 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
     filesBaseCollection: utils.collection.MergedCollection<FileEntryBase>;
     localFilesBaseCollection: utils.collection.MutableCollection<FileEntryBase>;
     localFS: LocalFS;
+    localFsInitialPathSetting: utils.Settings;
     dockedEditor: window.base.BaseWindowController;
     reusableOpener: ReusableOpenerEntry;
     editorsId: number = 0;
@@ -268,6 +269,7 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
     pendingGetOrCreateFilesList: { [key: string]: Q.Promise<FilesListController> } = {};
     sessionsByCollectionName: { [collectionName: string]: mail.session.Session} = {};
     isHostLoaded: { [hostHash: string]: boolean } = {};
+    
     
     constructor(parentWindow: window.container.ContainerWindowController) {
         super(parentWindow, __filename, __dirname, {
@@ -316,11 +318,8 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
             this.localFilesBaseCollection = this.addComponent("localFilesBaseCollection", new utils.collection.MutableCollection<FileEntryBase>());
             
             if (this.app.isElectronApp()) {
-                let localFsInitialPath = this.settings.create("local-fs-initial-path");
+                this.localFsInitialPathSetting = this.settings.create("local-fs-initial-path");
                 LocalFS.staticConstructor(this.app);
-                this.localFS = new LocalFS(this.localFilesBaseCollection, localFsInitialPath.get(), newPath => {
-                    localFsInitialPath.set(newPath);
-                });
             }
             
             this.personsComponent = this.addComponent("personsComponent", this.componentFactory.createComponent("persons", [this]));
@@ -1496,6 +1495,9 @@ export class Notes2WindowController extends window.base.BaseAppWindowController 
                     return this.openAll();
                 }
                 if (event.element.customElement.id == FilesListController.LOCAL_FILES) {
+                    this.localFS = new LocalFS(this.localFilesBaseCollection, this.localFsInitialPathSetting.get(), newPath => {
+                        this.localFsInitialPathSetting.set(newPath);
+                    });    
                     return this.openLocal();
                 }
                 if (event.element.customElement.id == FilesListController.TRASH_FILES) {

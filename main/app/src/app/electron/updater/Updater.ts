@@ -530,10 +530,17 @@ export class Updater {
     //////////////////////////
 
     startProcessDetached(fileName: string, args: string[]): void | never {
+        let extArgs: string[] = [...args];
+
+        let resultFilename: string = fileName;
+        if (process.platform == "darwin") {
+            resultFilename = "open";
+            extArgs = ["-n", "-a", fileName, "--args"].concat(args);    
+        }
         try {
             const out = nodeFs.openSync(this.getProcessOutputLogPath(), "a");
             const err = nodeFs.openSync(this.getProcessOutputLogPath(), "a");
-            const proc = child_process.spawn(fileName, args, {detached: true, stdio: ["ignore", out, err]});
+            const proc = child_process.spawn(resultFilename, extArgs, {detached: true, stdio: ["ignore", out, err]});
             proc.unref();
         }
         catch(e) {
@@ -542,70 +549,134 @@ export class Updater {
         }
     }
 
-    checkForUpdate(): Q.Promise<VersionData> {
-        let defer = Q.defer<VersionData>();
+
+    async checkForUpdate(onlyLocally?: boolean): Promise<VersionData> {
         let requestLink = this.getRequestLink();
         if (! requestLink) {
             Logger.warn("No update config available.");
-            return Q(null);
+            return null;
         }
-        request.get(this.getRequestLink() + this.getRequestParams(),{json: true}, (err, res, body) => {
-            const statusCode = res && res.statusCode;
-            const contentType = res && res.headers['content-type'];
-            let error;
-            if (statusCode !== 200) {
-                error = new Error('Request Failed.\n' + `Status Code: ${statusCode}, ${res}`);
-            }
-            else
-            if (contentType.indexOf("application/json") == -1) {
-                error = new Error('Invalid content-type.\n' + `Expected application/json but received ${contentType}`);
-            }
-            if (error) {
-                return defer.reject(error);
-            }
-            if (err) {
-                return defer.reject(err);
-            }
-            if (body) {
-                try {
-                    const parsedData = <VersionData[]>(body);
-                    let versions: VersionData[] = [];
-                    for (let id in parsedData) {
-                        versions.push(parsedData[id]);
-                    }
 
-                    if (! this.versionsDatasetValid(versions)) {
-                        this.log("Versions dataset corrupted.");
-                        return defer.resolve(null);
-                    }
-
-                    let lastVersion = versions[versions.length-1];
-                    if (lastVersion && lastVersion.version !== this.app.getVersion().str) {
-                        this.setUpdatesInfo(lastVersion);
-                        this.emitStatusChangeEvent("new-version-info");
-
-                        // now check if we have that version downloaded already
-                        const versionFile = this.getUpdateVersionFilePath();
-                        if (nodeFs.existsSync(versionFile)) {
-                            let downloadedVersion = <VersionData>JSON.parse(nodeFs.readFileSync(versionFile, "utf8"));
-
-                            if (! this.versionsDatasetValid([downloadedVersion]) || downloadedVersion.version == lastVersion.version) {
-                                this.setUpdatesInfo(lastVersion, true);
-                                this.emitStatusChangeEvent("readyToInstall");
-                            }
-                        }
-
-                        defer.resolve(lastVersion);
-                    }
-                    else {
-                        defer.resolve(null);
-                    }
-                } catch (e) {
-                    defer.reject(e)
+        try {
+            if (onlyLocally) {
+                const downloadedVersion = this.getDownloadedVersion();
+                if (downloadedVersion) {
+                    this.notifyAboutNewVersion(downloadedVersion, "readyToInstall");
+                    return;
                 }
             }
-        });
-        return defer.promise;
+
+            const versions = await this.getVersionsFromServer();
+            if (! this.versionsDatasetValid(versions)) {
+                this.log("Versions dataset corrupted.");
+                return null;
+            }
+    
+            let lastVersion = versions[versions.length-1];
+            
+            // check version on server
+            const newVersionOnServer = this.hasNewVersionOnServer(lastVersion);
+            if (newVersionOnServer) {
+                if (this.isVersionDownloadedAlready(lastVersion)) {
+                    this.notifyAboutNewVersion(lastVersion, "readyToInstall");
+                }
+                else {
+                    this.notifyAboutNewVersion(lastVersion, "new-version-info");
+                }
+            }
+            return newVersionOnServer ? lastVersion : null;
+        }
+        catch (e) {
+            this.log("Error checking for update");
+        }
+
+    }
+
+    private getCurrentVersion(): string {
+        return this.app.getVersion().str;
+    }
+
+    private hasNewVersionOnServer(lastVersion: VersionData): boolean {
+        if (lastVersion && lastVersion.version !== this.getCurrentVersion()) {
+            this.log("found new version on update server.. " + lastVersion.version);
+            return true;
+        }
+        return false;
+    }
+
+    private isVersionDownloadedAlready(versionFromServer: VersionData): boolean {
+        const versionFile = this.getUpdateVersionFilePath();
+        if (nodeFs.existsSync(versionFile)) {
+            let downloadedVersion = <VersionData>JSON.parse(nodeFs.readFileSync(versionFile, "utf8"));
+
+            if (downloadedVersion && downloadedVersion.version == versionFromServer.version) {
+                this.log("Found locally downloaded version..." + downloadedVersion.version);
+                return true;
+            }
+            return false;
+        }
+    }
+
+
+    private getDownloadedVersion(): VersionData {
+        const versionFile = this.getUpdateVersionFilePath();
+        if (nodeFs.existsSync(versionFile)) {
+            let downloadedVersion = <VersionData>JSON.parse(nodeFs.readFileSync(versionFile, "utf8"));
+
+            if (downloadedVersion && downloadedVersion.version) {
+                this.log("Found locally downloaded version..." + downloadedVersion.version);
+                return downloadedVersion;
+            }
+            return null;
+        }
+    }
+
+
+    private notifyAboutNewVersion(lastVersion: VersionData, status: "readyToInstall" | "new-version-info"): void {
+        this.setUpdatesInfo(lastVersion, status == "readyToInstall");
+        this.emitStatusChangeEvent(status);
+    }
+
+
+    private getVersionsFromServer(): Promise<VersionData[]> {
+        return new Promise<VersionData[]>((resolve, reject) => {
+            request.get(this.getRequestLink() + this.getRequestParams(),{json: true}, (err, res, body) => {
+                const statusCode = res && res.statusCode;
+                const contentType = res && res.headers['content-type'];
+                let error;
+                if (statusCode !== 200) {
+                    error = new Error('Request Failed.\n' + `Status Code: ${statusCode}, ${res}`);
+                }
+                else
+                if (contentType.indexOf("application/json") == -1) {
+                    error = new Error('Invalid content-type.\n' + `Expected application/json but received ${contentType}`);
+                }
+                if (error) {
+                    return reject(error);
+                }
+                if (err) {
+                    return reject(err);
+                }
+                if (body) {
+                    try {
+                        let dataToRet: VersionData[] = [];
+                        for (let v in body) {
+                            dataToRet.push(<VersionData>body[v]);
+                        }
+                        if (this.versionsDatasetValid(dataToRet)) {
+                            return resolve(dataToRet);
+                        }
+                        else {
+                            this.log("Versions dataset corrupted.");
+                            return resolve(null);
+                        }
+                    }
+                    catch (e) {
+                        reject(e)
+                    }
+                }
+            });    
+        })        
     }
 
 
@@ -738,12 +809,7 @@ export class Updater {
             let newInstancePath = this.getExecutablePath(this.getApplicationSavedPath());
             this.log("getApplicationSavedPath", this.getApplicationSavedPath());
             this.log("newInstancePath: ", newInstancePath);
-            if (process.platform == "darwin") {
-                this.startProcessDetached("open", ["-a", newInstancePath, "--args"]);
-            }
-            else {
-                this.startProcessDetached(newInstancePath, []);
-            }
+            this.startProcessDetached(newInstancePath, []);
             process.exit();
         }
         catch(e) {
@@ -758,12 +824,7 @@ export class Updater {
         try {
             let newInstancePath = this.getExecutablePath(this.getOldVersionDir());
             this.log("[Revert] Starting app from ", newInstancePath, " as reverter...");
-            if (process.platform == "darwin") {
-                this.startProcessDetached("open", ["-a", newInstancePath, "--args", "--revert"]);
-            }
-            else {
-                this.startProcessDetached(newInstancePath, ["--revert"]);
-            }
+            this.startProcessDetached(newInstancePath, ["--revert"]);
             this.log("[Revert] Exiting main process", this.getCurrentAppPath());
             process.exit();
         }
@@ -781,12 +842,9 @@ export class Updater {
             let keepAsarValue = process.noAsar;
             process.noAsar = true;
 
-            let newInstancePath: string;
-            let args: string[] = [];
-
             // keep old version location in file
             let locationParts = this.app.appDir.split(path.sep);
-            let myLocation: string;
+
             const locationFile = this.getLocationFilePath();
             if (nodeFs.existsSync(locationFile) && ! this.app.isRunningInDevMode()) {
                 try {
@@ -797,16 +855,11 @@ export class Updater {
                 }
             }
 
+            let newInstancePath = this.getExecutablePath(this.getExtractedUpdateDir());
             if (process.platform == "darwin") {
-                newInstancePath = "open";
                 locationParts.splice(-3);
-                myLocation = locationParts.join(path.sep);
-                args = ["-a", this.getExecutablePath(this.getExtractedUpdateDir()), "--args"];
             }
-            else {
-                myLocation = locationParts.join(path.sep);
-                newInstancePath = this.getExecutablePath(this.getExtractedUpdateDir());
-            }
+            let myLocation = locationParts.join(path.sep);
 
             if (! this.app.isRunningInDevMode()) {
                 try {
@@ -819,12 +872,10 @@ export class Updater {
 
             process.noAsar = keepAsarValue;
 
-            args.push("--update");
-
             this.log("Preparing files ...");
             this.prepareFilesBeforeUpdater();
-            this.log("Starting app in update mode ... ", newInstancePath, args.join(" "));
-            this.startProcessDetached(newInstancePath, args);
+            this.log("Starting app in update mode ... ");
+            this.startProcessDetached(newInstancePath, ["--update"]);
             process.exit();    
         }
         catch(ex) {
