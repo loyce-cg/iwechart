@@ -1,10 +1,1 @@
-app
-out
 node_modules
-electron_plugins
-electron-plugins
-dist
-!app/out
-forge.config.js
-.DS_Store
-forge.config.js

@@ -1,0 +1,1 @@
+{"version":3,"sources":["window/filechooser/i18n/notes2-window-filechooser-da.properties.ts"],"names":[],"mappings":";;AACW,QAAA,IAAI,GAA6B,EAAE,CAAC","file":"notes2-window-filechooser-da.properties.js","sourcesContent":["//Generated file do not modify\nexport let i18n: {[name: string]: string} = {};"],"sourceRoot":"../../../../src"}

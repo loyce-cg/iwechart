@@ -1,0 +1,1 @@
+{"version":3,"sources":["window/task/i18n/tasks-window-task-en.properties.ts"],"names":[],"mappings":";;AACW,QAAA,IAAI,GAA6B;IAC1C,OAAO,EAAE,MAAM;CAChB,CAAC","file":"tasks-window-task-en.properties.js","sourcesContent":["//Generated file do not modify\nexport let i18n: {[name: string]: string} = {\n  \"title\": \"Task\"\n};"],"sourceRoot":"../../../../src"}

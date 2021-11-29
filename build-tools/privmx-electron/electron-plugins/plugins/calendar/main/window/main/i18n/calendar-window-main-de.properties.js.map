@@ -1,0 +1,1 @@
+{"version":3,"sources":["window/main/i18n/calendar-window-main-de.properties.ts"],"names":[],"mappings":";;AACW,QAAA,IAAI,GAA6B;IAC1C,OAAO,EAAE,UAAU;CACpB,CAAC","file":"calendar-window-main-de.properties.js","sourcesContent":["//Generated file do not modify\nexport let i18n: {[name: string]: string} = {\n  \"title\": \"Kalender\"\n};"],"sourceRoot":"../../../../src"}

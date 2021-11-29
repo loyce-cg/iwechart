@@ -1,0 +1,1 @@
+{"version":3,"sources":["i18n/calendar-common-nl.properties.ts"],"names":[],"mappings":";;AACW,QAAA,IAAI,GAA6B;IAC1C,kBAAkB,EAAE,UAAU;CAC/B,CAAC","file":"calendar-common-nl.properties.js","sourcesContent":["//Generated file do not modify\nexport let i18n: {[name: string]: string} = {\n  \"app.navbar.label\": \"Kalender\"\n};"],"sourceRoot":"../../src"}

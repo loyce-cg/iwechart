@@ -1,0 +1,1 @@
+{"version":3,"sources":["build/view.ts"],"names":[],"mappings":";;AAAA,gEAA6D;AAC7D,6BAA+B;AAE/B,GAAG,CAAC,OAAO,CAAC,aAAa,CAAC,QAAQ,CAAC,+BAAc,CAAC,CAAC","file":"view.js","sourcesContent":["import {AppsWindowView} from \"../window/apps/AppsWindowView\";\nimport * as Web from \"pmc-web\";\n\nWeb.Starter.objectFactory.register(AppsWindowView);"],"sourceRoot":"../../src"}

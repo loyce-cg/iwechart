@@ -1,0 +1,1 @@
+{"version":3,"sources":["window/iconPicker/i18n/tasks-window-iconPicker-fr.properties.ts"],"names":[],"mappings":";;AACW,QAAA,IAAI,GAA6B,EAAE,CAAC","file":"tasks-window-iconPicker-fr.properties.js","sourcesContent":["//Generated file do not modify\nexport let i18n: {[name: string]: string} = {};"],"sourceRoot":"../../../../src"}
